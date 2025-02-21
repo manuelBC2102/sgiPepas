@@ -1,0 +1,121 @@
+{
+    "_D": "urn:oasis:names:specification:ubl:schema:xsd:Invoice-2",
+    "_S": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+    "_B": "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2",
+    "_E": "urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2",
+    "Invoice": [{
+        "UBLVersionID": [{
+            "IdentifierContent": "2.1"
+        }],
+        "CustomizationID": [{
+            "IdentifierContent": "2.0"
+        }],
+        "ID": [{
+            "IdentifierContent": "FF01-00000021"
+        }],
+        "IssueDate": [{
+            "DateContent": "2023-10-06"
+        }],
+        "IssueTime": [{
+            "DateTimeContent": "12:00:00"
+        }],
+        "InvoiceTypeCode": [{
+            "CodeContent": "01",
+            "CodeListNameText": "Tipo de Documento"
+        }],
+        "Note": [{
+            "TextContent": "MONTO EN LETRAS",
+            "LanguageLocaleIdentifier": "1000"
+        }],
+        "DocumentCurrencyCode": [{
+            "CodeContent": "PEN"
+        }],
+        "LineCountNumeric": [{
+            "NumericContent": 2
+        }],
+        "AccountingSupplierParty": [{
+            "Party": [{
+                "PartyIdentification": [{
+                    "ID": [{
+                        "IdentifierContent": "20551093035"
+                    }]
+                }],
+                "PartyName": [{
+                    "Name": [{
+                        "TextContent": "EMISOR NOMBRE COMERCIAL"
+                    }]
+                }],
+                "PartyLegalEntity": [{
+                    "RegistrationName": [{
+                        "TextContent": "EMISOR RAZON SOCIAL S.A.C."
+                    }]
+                }]
+            }]
+        }],
+        "AccountingCustomerParty": [{
+            "Party": [{
+                "PartyIdentification": [{
+                    "ID": [{
+                        "IdentifierContent": "20409383891"
+                    }]
+                }],
+                "PartyName": [{
+                    "Name": [{
+                        "TextContent": "RECEPTOR NOMBRE COMERCIAL"
+                    }]
+                }],
+                "PartyLegalEntity": [{
+                    "RegistrationName": [{
+                        "TextContent": "RAZON SOCIAL RECEPTOR"
+                    }]
+                }]
+            }]
+        }],
+        "InvoiceLine": [
+            {
+                "ID": [{
+                    "IdentifierContent": "1"
+                }],
+                "InvoicedQuantity": [{
+                    "QuantityContent": "1",
+                    "QuantityUnitCode": "ZZ"
+                }],
+                "LineExtensionAmount": [{
+                    "AmountContent": "100.00"
+                }],
+                "Item": [{
+                    "Description": [{
+                        "TextContent": "DESCRIPCION 1"
+                    }]
+                }],
+                "Price": [{
+                    "PriceAmount": [{
+                        "AmountContent": "100.00"
+                    }]
+                }]
+            },
+            {
+                "ID": [{
+                    "IdentifierContent": "2"
+                }],
+                "InvoicedQuantity": [{
+                    "QuantityContent": "2",
+                    "QuantityUnitCode": "ZZ"
+                }],
+                "LineExtensionAmount": [{
+                    "AmountContent": "200.00"
+                }],
+                "Item": [{
+                    "Description": [{
+                        "TextContent": "DESCRIPCION 2"
+                    }]
+                }],
+                "Price": [{
+                    "PriceAmount": [{
+                        "AmountContent": "200.00"
+                    }]
+                }]
+            }
+        ]
+    }]
+}

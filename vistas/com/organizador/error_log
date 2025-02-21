@@ -1,0 +1,2 @@
+[25-Sep-2019 11:22:33 America/New_York] PHP Notice:  Undefined index: id_usuario in /home/xbkohbsw/01SGI/abc.imaginatechnologies.com/vistas/com/organizador/organizador_form.php on line 33
+[25-Sep-2019 11:22:33 America/New_York] PHP Notice:  Undefined variable: alerta in /home/xbkohbsw/01SGI/abc.imaginatechnologies.com/vistas/com/organizador/organizador_form.php on line 87

@@ -1,0 +1,573 @@
+{
+    "_D": "urn:oasis:names:specification:ubl:schema:xsd:DespatchAdvice-2",
+    "_S": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+    "_B": "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2",
+    "_E": "urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2",
+    "DespatchAdvice": [
+        {
+            "UBLVersionID": [
+                {
+                    "IdentifierContent": "2.1"
+                }
+            ],
+            "CustomizationID": [
+                {
+                    "IdentifierContent": "2.0"
+                }
+            ],
+            "ID": [
+                {
+                    "IdentifierContent": "VP01-000024"
+                }
+            ],
+            "IssueDate": [
+                {
+                    "DateContent": "2025-02-14"
+                }
+            ],
+            "IssueTime": [
+                {
+                    "DateTimeContent": "02:06:43"
+                }
+            ],
+            "DespatchAdviceTypeCode": [
+                {
+                    "IdentifierContent": "31"
+                }
+            ],
+            "Note": [
+                {
+                    "TextContent": "GRAN INMACULADA I CODIGO UNICO: 010000522L SN"
+                }
+            ],
+            "LineCountNumeric": [
+                {
+                    "TextContent": "2"
+                }
+            ],
+            "AdditionalDocumentReference": [
+                {
+                    "ID": [
+                        {
+                            "IdentifierContent": "TP01-000027"
+                        }
+                    ],
+                    "DocumentTypeCode": [
+                        {
+                            "CodeContent": "09"
+                        }
+                    ],
+                    "DocumentType": [
+                        {
+                            "TextContent": "Guia de Remisión Remitente"
+                        }
+                    ],
+                    "IssuerParty": [
+                        {
+                            "PartyIdentification": [
+                                {
+                                    "ID": [
+                                        {
+                                            "IdentifierContent": "20490115804",
+                                            "IdentificationSchemeIdentifier": "6"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "Signature": [
+                {
+                    "ID": [
+                        {
+                            "IdentifierContent": "IDSignature"
+                        }
+                    ],
+                    "SignatoryParty": [
+                        {
+                            "PartyIdentification": [
+                                {
+                                    "ID": [
+                                        {
+                                            "IdentifierContent": "20608911899"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "PartyName": [
+                                {
+                                    "Name": [
+                                        {
+                                            "TextContent": "RL BRAMDING EMPRESA INDIVIDUAL DE RESPONSABILIDAD LIMITADA"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "DigitalSignatureAttachment": [
+                        {
+                            "ExternalReference": [
+                                {
+                                    "URI": [
+                                        {
+                                            "TextContent": "IDSignature"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "DespatchSupplierParty": [
+                {
+                    "Party": [
+                        {
+                            "PartyIdentification": [
+                                {
+                                    "ID": [
+                                        {
+                                            "IdentifierContent": "20608911899",
+                                            "IdentificationSchemeIdentifier": "6"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "PostalAddress": [
+                                {
+                                    "ID": [
+                                        {
+                                            "IdentifierContent": "030406"
+                                        }
+                                    ],
+                                    "StreetName": [
+                                        {
+                                            "TextContent": "JR. CHORRILLOS NRO. SN C.C.  PAMPAMARCA  APURIMAC                                                                                                                           - AYMARAES                                                                                                                           - COTARUSE"
+                                        }
+                                    ],
+                                    "CitySubdivisionName": [
+                                        {
+                                            "TextContent": " "
+                                        }
+                                    ],
+                                    "CityName": [
+                                        {
+                                            "TextContent": "AYMARAES"
+                                        }
+                                    ],
+                                    "CountrySubentity": [
+                                        {
+                                            "TextContent": "APURIMAC"
+                                        }
+                                    ],
+                                    "District": [
+                                        {
+                                            "TextContent": "COTARUSE"
+                                        }
+                                    ],
+                                    "Country": [
+                                        {
+                                            "IdentificationCode": [
+                                                {
+                                                    "IdentifierContent": "PE"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ],
+                            "PartyLegalEntity": [
+                                {
+                                    "RegistrationName": [
+                                        {
+                                            "TextContent": "RL BRAMDING EMPRESA INDIVIDUAL DE RESPONSABILIDAD LIMITADA"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "DeliveryCustomerParty": [
+                {
+                    "Party": [
+                        {
+                            "PartyIdentification": [
+                                {
+                                    "ID": [
+                                        {
+                                            "IdentifierContent": "20536126440",
+                                            "IdentificationSchemeIdentifier": "6"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "PostalAddress": [
+                                {
+                                    "ID": [
+                                        {
+                                            "IdentifierContent": "150131"
+                                        }
+                                    ],
+                                    "StreetName": [
+                                        {
+                                            "TextContent": "CAL.DEAN VALDIVIA NRO. 148 INT. 601 URB. JARDIN (EDIFICIO PLATINUM PLAZA 1) LIMA - LIMA - SAN ISIDRO"
+                                        }
+                                    ],
+                                    "CitySubdivisionName": [
+                                        {
+                                            "TextContent": " "
+                                        }
+                                    ],
+                                    "CityName": [
+                                        {
+                                            "TextContent": "Lima"
+                                        }
+                                    ],
+                                    "CountrySubentity": [
+                                        {
+                                            "TextContent": "Lima"
+                                        }
+                                    ],
+                                    "District": [
+                                        {
+                                            "TextContent": "San Iisdro"
+                                        }
+                                    ],
+                                    "Country": [
+                                        {
+                                            "IdentificationCode": [
+                                                {
+                                                    "IdentifierContent": "PE"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ],
+                            "PartyLegalEntity": [
+                                {
+                                    "RegistrationName": [
+                                        {
+                                            "TextContent": "MINERA VETA DORADA SAC"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "Contact": [
+                                {
+                                    "ElectronicMail": [
+                                        {
+                                            "TextContent": "asdadasdasdasdadasdasd@gmail.com"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "Shipment": [
+                {
+                    "ID": [
+                        {
+                            "IdentifierContent": "SUNAT_Envio"
+                        }
+                    ],
+                    "GrossWeightMeasure": [
+                        {
+                            "MeasureContent": "1.26",
+                            "MeasureUnitCode": "TNE"
+                        }
+                    ],
+                    "SpecialInstructions": [
+                        {
+                            "TextContent": "SUNAT_Envio_IndicadorRetornoVehiculoEnvaseVacio"
+                        }
+                    ],
+                    "SpecialInstructions": [
+                        {
+                            "TextContent": "SUNAT_Envio_IndicadorPagadorFlete_Remitente"
+                        }
+                    ],
+                    "ShipmentStage": [
+                        {
+                            "TransitPeriod": [
+                                {
+                                    "StartDate": [
+                                        {
+                                            "DateContent": "2025-02-14"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "CarrierParty" : [ 
+                                {
+                                    "PartyLegalEntity" : [ 
+                                        {
+                                            "CompanyID" : [ 
+                                                {
+                                                    "IdentifierContent" : "15149137CNG"
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "AgentParty" : [ 
+                                        {
+                                            "PartyLegalEntity" : [ 
+                                                {
+                                                    "CompanyID" : [ 
+                                                        {
+                                                            "IdentifierContent" : "<rucTransportista>",
+                                                            "IdentificationSchemeIdentifier" : "06"
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ],
+                            "DriverPerson": [
+                                {
+                                    "ID": [
+                                        {
+                                            "IdentifierContent": "75944589",
+                                            "IdentificationSchemeIdentifier": "1"
+                                        }
+                                    ],
+                                    "FirstName": [
+                                        {
+                                            "TextContent": "Manuel"
+                                        }
+                                    ],
+                                    "FamilyName": [
+                                        {
+                                            "TextContent": "Balladares Correa"
+                                        }
+                                    ],
+                                    "JobTitle": [
+                                        {
+                                            "TextContent": "Principal"
+                                        }
+                                    ],
+                                    "IdentityDocumentReference": [
+                                        {
+                                            "ID": [
+                                                {
+                                                    "IdentifierContent": "A75944589"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "Delivery": [
+                        {
+                            "DeliveryAddress": [
+                                {
+                                    "ID": [
+                                        {
+                                            "IdentifierContent": "040307"
+                                        }
+                                    ],
+                                    "AddressLine": [
+                                        {
+                                            "Line": [
+                                                {
+                                                    "TextContent": "KM.5 C.P. CHALA VIEJO(KM 5 DEL CORREDOR C.P. CHALA)"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ],
+                            "Despatch": [
+                                {
+                                    "DespatchAddress": [
+                                        {
+                                            "ID": [
+                                                {
+                                                     "IdentifierContent": "030205"
+                                                }
+                                            ],
+                                            "AddressLine": [
+                                                {
+                                                    "Line": [
+                                                        {
+                                                            "TextContent": "GRAN INMACULADA I CODIGO UNICO: 010000522L SN"
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "DespatchParty": [
+                                        {
+                                            "PartyIdentification": [
+				                                {
+				                                    "ID": [
+				                                        {
+				                                            "IdentifierContent": "20490115804",
+				                                            "IdentificationSchemeIdentifier": "6"
+				                                        }
+				                                    ]
+				                                }
+				                            ],
+				                            "PostalAddress": [
+				                                {
+				                                    "ID": [
+				                                        {
+				                                            "IdentifierContent": "030205"
+				                                        }
+				                                    ],
+				                                    "StreetName": [
+				                                        {
+				                                            "TextContent": "PZA.PLAZA DE ARMAS PAMPAMARCA NRO. S/N ANX. PAMPAMARCA (COMUNIDAD DE PAMPAMARCA) APURIMAC - AYMARAES - COTARUSE"
+				                                        }
+				                                    ],
+				                                    "CitySubdivisionName": [
+				                                        {
+				                                            "TextContent": ""
+				                                        }
+				                                    ],
+				                                    "CityName": [
+				                                        {
+				                                            "TextContent": "AYMARAES"
+				                                        }
+				                                    ],
+				                                    "CountrySubentity": [
+				                                        {
+				                                            "TextContent": "APURIMAC"
+				                                        }
+				                                    ],
+				                                    "District": [
+				                                        {
+				                                            "TextContent": "COTARUSE"
+				                                        }
+				                                    ],
+				                                    "Country": [
+				                                        {
+				                                            "IdentificationCode": [
+				                                                {
+				                                                    "IdentifierContent": "PE"
+				                                                }
+				                                            ]
+				                                        }
+				                                    ]
+				                                }
+				                            ],
+				                            "PartyLegalEntity": [
+				                                {
+				                                    "RegistrationName": [
+				                                        {
+				                                            "TextContent": "ASOCIACION DE MINEROS ARTESANALES PEPAS DE ORO DE PAMPAMARCA"
+				                                        }
+				                                    ]
+				                                }
+				                            ],
+				                            "Contact": [
+				                                {
+				                                    "ElectronicMail": [
+				                                        {
+				                                            "TextContent": "asdadasdasdasdadasdasd@gmail.com"
+				                                        }
+				                                    ]
+				                                }
+				                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "TransportHandlingUnit": [
+                        {
+                            "TransportEquipment": [
+                                {
+                                    "ID": [
+                                        {
+                                            "IdentifierContent": "AXH796"
+                                        }
+                                    ],
+                                    "ApplicableTransportMeans": [
+                                        {
+                                            "RegistrationNationalityID": [
+		                                        {
+		                                            "IdentifierContent": "15M24013567E"
+		                                        }
+		                                    ]
+                                        }
+                                    ],
+                                    "ShipmentDocumentReference": [
+                                        {
+                                            "ID": [
+		                                        {
+		                                            "IdentifierContent": "",
+		                                            "IdentificationSchemeIdentifier": "06"
+		                                        }
+		                                    ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "DespatchLine": [
+                {
+                    "ID": [
+                        {
+                            "IdentifierContent": 1
+                        }
+                    ],
+                    "Note": [
+                        {
+                            "TextContent": "TONELADAS"
+                        }
+                    ],
+                    "DeliveredQuantity": [
+                        {
+                            "QuantityContent": "1.26",
+                            "QuantityUnitCode": "ZZ"
+                        }
+                    ],
+                    "OrderLineReference": [
+                        {
+                            "LineID": [
+                                {
+                                    "IdentifierContent": 1
+                                }
+                            ]
+                        }
+                    ],
+                    "Item": [
+                        {
+                            "Description": [
+                                {
+                                    "TextContent": "MINERAL AURIFERO EN BRUTO A GRANEL"
+                                }
+                            ],
+                            "SellersItemIdentification": [
+                                {
+                                    "ID": [
+                                        {
+                                            "IdentifierContent": "01A"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

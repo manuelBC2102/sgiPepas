@@ -1,0 +1,13 @@
+[23-Jan-2019 15:49:57 America/New_York] PHP Notice:  Undefined index: id_usuario in /home/xbkohbsw/01SGI/abc.imaginatechnologies.com/vistas/com/unidad/unidad_form.php on line 49
+[24-Jan-2019 10:28:03 America/New_York] PHP Notice:  Undefined index: id_usuario in /home/xbkohbsw/01SGI/abc.imaginatechnologies.com/vistas/com/unidad/unidad_tipo_form.php on line 37
+[24-Jan-2019 10:28:03 America/New_York] PHP Notice:  Undefined variable: alerta in /home/xbkohbsw/01SGI/abc.imaginatechnologies.com/vistas/com/unidad/unidad_tipo_form.php on line 71
+[24-Jan-2019 10:28:32 America/New_York] PHP Notice:  Undefined index: id_usuario in /home/xbkohbsw/01SGI/abc.imaginatechnologies.com/vistas/com/unidad/unidad_form.php on line 49
+[24-Jan-2019 10:31:31 America/New_York] PHP Notice:  Undefined index: id_usuario in /home/xbkohbsw/01SGI/abc.imaginatechnologies.com/vistas/com/unidad/unidad_tipo_form.php on line 37
+[24-Jan-2019 10:31:31 America/New_York] PHP Notice:  Undefined variable: alerta in /home/xbkohbsw/01SGI/abc.imaginatechnologies.com/vistas/com/unidad/unidad_tipo_form.php on line 71
+[24-Jan-2019 10:31:46 America/New_York] PHP Notice:  Undefined index: id_usuario in /home/xbkohbsw/01SGI/abc.imaginatechnologies.com/vistas/com/unidad/unidad_form.php on line 49
+[24-Jan-2019 10:32:57 America/New_York] PHP Notice:  Undefined index: id_usuario in /home/xbkohbsw/01SGI/abc.imaginatechnologies.com/vistas/com/unidad/unidad_tipo_form.php on line 37
+[24-Jan-2019 10:32:57 America/New_York] PHP Notice:  Undefined variable: alerta in /home/xbkohbsw/01SGI/abc.imaginatechnologies.com/vistas/com/unidad/unidad_tipo_form.php on line 71
+[24-Jan-2019 10:33:04 America/New_York] PHP Notice:  Undefined index: id_usuario in /home/xbkohbsw/01SGI/abc.imaginatechnologies.com/vistas/com/unidad/unidad_form.php on line 49
+[24-Jan-2019 10:44:39 America/New_York] PHP Notice:  Undefined index: id_usuario in /home/xbkohbsw/01SGI/abc.imaginatechnologies.com/vistas/com/unidad/unidad_tipo_form.php on line 37
+[24-Jan-2019 10:44:39 America/New_York] PHP Notice:  Undefined variable: alerta in /home/xbkohbsw/01SGI/abc.imaginatechnologies.com/vistas/com/unidad/unidad_tipo_form.php on line 71
+[24-Jan-2019 10:45:10 America/New_York] PHP Notice:  Undefined index: id_usuario in /home/xbkohbsw/01SGI/abc.imaginatechnologies.com/vistas/com/unidad/unidad_form.php on line 49

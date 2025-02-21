@@ -1,0 +1,613 @@
+{
+        "_D" : "urn:oasis:names:specification:ubl:schema:xsd:Invoice-2",
+        "_S" : "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+        "_B" : "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2",
+        "_E" : "urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2",
+        "Invoice" : [ 
+            {
+                "UBLVersionID" : [ 
+                    {
+                        "IdentifierContent" : "2.1"
+                    }
+                ],
+                "CustomizationID" : [ 
+                    {
+                        "IdentifierContent" : "2.0"
+                    }
+                ],
+                "ID" : [ 
+                    {
+                        "IdentifierContent" : "FP01-000009"
+                    }
+                ],
+                "IssueDate" : [ 
+                    {
+                        "DateContent" : "2025-02-03"
+                    }
+                ],
+		"IssueTime" : [ 
+                    {
+                        "DateTimeContent" : "09:16:17"
+                    }
+                ],
+                "InvoiceTypeCode" : [ 
+                    {
+                        "CodeContent" : "01",
+                        "CodeListNameText" : "Tipo de Documento",
+                        "CodeListSchemeUniformResourceIdentifier" : "urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo51",
+                        "CodeListIdentifier" : "1001",
+                        "CodeNameText" : "Tipo de Operacion",
+                        "CodeListUniformResourceIdentifier" : "urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo01",
+                        "CodeListAgencyNameText" : "PE:SUNAT"
+                    }
+                ],
+                "Note" : [ 
+                    {
+                        "TextContent" : "UNO MIL CIENTO  Y DOS Y 122/100 SOLES",
+                        "LanguageLocaleIdentifier" : "1000"
+                    },
+                     {
+                    "TextContent": "Operación sujeta a detracción",
+                    "LanguageLocaleIdentifier": "2006"
+                    }
+                ],
+                "DocumentCurrencyCode" : [ 
+                    {
+                        "CodeContent" : "PEN",
+                        "CodeListIdentifier" : "ISO 4217 Alpha",
+                        "CodeListNameText" : "Currency",
+                        "CodeListAgencyNameText" : "United Nations Economic Commission for Europe"
+                    }
+                ],
+                "LineCountNumeric" : [ 
+                    {
+                        "NumericContent" : 2
+                    }
+                ],
+                "Signature" : [ 
+                    {
+                        "ID" : [ 
+                            {
+                                "IdentifierContent" : "IDSignature"
+                            }
+                        ],
+                        "SignatoryParty" : [ 
+                            {
+                                "PartyIdentification" : [ 
+                                    {
+                                        "ID" : [ 
+                                            {
+                                                "TextContent" : "20490115804"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "PartyName" : [ 
+                                    {
+                                        "Name" : [ 
+                                            {
+                                                "TextContent" : "ASOCIACION DE MINEROS ARTESANALES PEPAS DE ORO DE PAMPAMARCA"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ],
+                        "DigitalSignatureAttachment" : [ 
+                            {
+                                "ExternalReference" : [ 
+                                    {
+                                        "URI" : [ 
+                                            {
+                                                "TextContent" : "IDSignature"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "AccountingSupplierParty" : [ 
+                    {
+                        "Party" : [ 
+                            {
+                                "PartyIdentification" : [ 
+                                    {
+                                        "ID" : [ 
+                                            {
+                                                "IdentifierContent" : "20490115804",
+                                                "IdentificationSchemeIdentifier" : "6",
+                                                "IdentificationSchemeNameText" : "Documento de Identidad",
+                                                "IdentificationSchemeAgencyNameText" : "PE:SUNAT",
+                                                "IdentificationSchemeUniformResourceIdentifier" : "urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo06"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "PartyName" : [ 
+                                    {
+                                        "Name" : [ 
+                                            {
+                                                "TextContent" : "ASOCIACION DE MINEROS ARTESANALES PEPAS DE ORO DE PAMPAMARCA"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "PartyLegalEntity" : [ 
+                                    {
+                                        "RegistrationName" : [ 
+                                            {
+                                                "TextContent" : "ASOCIACION DE MINEROS ARTESANALES PEPAS DE ORO DE PAMPAMARCA"
+                                            }
+                                        ],
+                                        "RegistrationAddress" : [ 
+                                            {
+                                                "ID" : [ 
+                                                    {
+                                                        "IdentifierContent" : "030205",
+                                                        "IdentificationSchemeAgencyNameText" : "PE:INEI",
+                                                        "IdentificationSchemeNameText" : "Ubigeos"
+                                                    }
+                                                ],
+                                                "AddressTypeCode" : [ 
+                                                    {
+                                                        "CodeContent" : "0000",
+                                                        "CodeListAgencyNameText" : "PE:SUNAT",
+                                                        "CodeListNameText" : "Establecimientos anexos"
+                                                    }
+                                                ],
+                                                "CityName" : [ 
+                                                    {
+                                                        "TextContent" : "APURIMAC"
+                                                    }
+                                                ],
+                                                "CountrySubentity" : [ 
+                                                    {
+                                                        "TextContent" : "AYMARAES"
+                                                    }
+                                                ],
+                                                "District" : [ 
+                                                    {
+                                                        "TextContent" : "COTARUSE"
+                                                    }
+                                                ],
+                                                "AddressLine" : [ 
+                                                    {
+                                                        "Line" : [ 
+                                                            {
+                                                                "TextContent" : "PZA.PLAZA DE ARMAS PAMPAMARCA NRO. S/N ANX. PAMPAMARCA (COMUNIDAD DE PAMPAMARCA) APURIMAC - AYMARAES - COTARUSE"
+                                                            }
+                                                        ]
+                                                    }
+                                                ],
+                                                "Country" : [ 
+                                                    {
+                                                        "IdentificationCode" : [ 
+                                                            {
+                                                                "CodeContent" : "PE",
+                                                                "CodeListIdentifier" : "ISO 3166-1",
+                                                                "CodeListAgencyNameText" : "United Nations Economic Commission for Europe",
+                                                                "CodeListNameText" : "Country"
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "AccountingCustomerParty" : [ 
+                    {
+                        "Party" : [ 
+                            {
+                                "PartyIdentification" : [ 
+                                    {
+                                        "ID" : [ 
+                                            {
+                                                "IdentifierContent" : "20536126440",
+                                                "IdentificationSchemeIdentifier" : "6",
+                                                "IdentificationSchemeNameText" : "Documento de Identidad",
+                                                "IdentificationSchemeAgencyNameText" : "PE:SUNAT",
+                                                "IdentificationSchemeUniformResourceIdentifier" : "urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo06"
+                                            }
+                                        ]
+                                    }
+                                ],
+				"PartyName" : [ 
+                                    {
+                                        "Name" : [ 
+                                            {
+                                                "TextContent" : "MINERA VETA DORADA SAC"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "PartyLegalEntity" : [ 
+                                    {
+                                        "RegistrationName" : [ 
+                                            {
+                                                "TextContent" : "MINERA VETA DORADA SAC"
+                                            }
+                                        ],
+                                        "RegistrationAddress" : [ 
+                                            {
+                                                "ID" : [ 
+                                                    {
+                                                        "IdentifierContent" : "150131",
+                                                        "IdentificationSchemeAgencyNameText" : "PE:INEI",
+                                                        "IdentificationSchemeNameText" : "Ubigeos"
+                                                    }
+                                                ],
+                                                "CityName" : [ 
+                                                    {
+                                                        "TextContent" : "Lima"
+                                                    }
+                                                ],
+                                                "CountrySubentity" : [ 
+                                                    {
+                                                        "TextContent" : "Lima"
+                                                    }
+                                                ],
+                                                "District" : [ 
+                                                    {
+                                                        "TextContent" : "San Iisdro"
+                                                    }
+                                                ],
+                                                "AddressLine" : [ 
+                                                    {
+                                                        "Line" : [ 
+                                                            {
+                                                                "TextContent" : "CAL.DEAN VALDIVIA NRO. 148 INT. 601 URB. JARDIN (EDIFICIO PLATINUM PLAZA 1) LIMA - LIMA - SAN ISIDRO"
+                                                            }
+                                                        ]
+                                                    }
+                                                ],
+                                                "Country" : [ 
+                                                    {
+                                                        "IdentificationCode" : [ 
+                                                            {
+                                                                "CodeContent" : "PE",
+                                                                "CodeListIdentifier" : "ISO 3166-1",
+                                                                "CodeListAgencyNameText" : "United Nations Economic Commission for Europe",
+                                                                "CodeListNameText" : "Country"
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "Contact" : [ 
+                                    {
+                                        "ElectronicMail" : [ 
+                                            {
+                                                "TextContent" : "asdadasdasdasd@gmail.com"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "PaymentMeans": [
+                {
+                    "ID": [
+                        {
+                            "IdentifierContent": "Detraccion"
+                        }
+                    ],
+                    "PaymentMeansCode": [
+                        {
+                            "CodeContent": "999"
+                        }
+                    ],
+                    "PayeeFinancialAccount": [
+                        {
+                            "ID": [
+                                {
+                                    "IdentifierContent": "00181066180"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "PaymentTerms": [
+                {
+                    "ID": [
+                        {
+                            "IdentifierContent": "Detraccion"
+                        }
+                    ],
+                    "PaymentMeansID": [
+                        {
+                            "IdentifierContent": "021"
+                        }
+                    ],
+                    "Note": [
+                        {
+                            "TextContent": "1010"
+                        }
+                    ],
+                    "PaymentPercent": [
+                        {
+                            "NumericContent": "10.00"
+                        }
+                    ],
+                    "Amount": [
+                        {
+                            "AmountContent": "112",
+                            "AmountCurrencyIdentifier": "PEN"
+                        }
+                    ]
+                },
+                {
+                        "ID" : [ 
+                            {
+                                "IdentifierContent" : "FormaPago"
+                            }
+                        ],
+                        "PaymentMeansID" : [ 
+                            {
+                                "IdentifierContent" : "Credito"
+                            }
+                        ],
+                        "Amount" : [ 
+                            {
+                                "AmountContent" : "1010",
+                                "AmountCurrencyIdentifier" : "PEN"
+                            }
+                        ]
+                    },
+                    {
+                        "ID" : [ 
+                            {
+                                "IdentifierContent" : "FormaPago"
+                            }
+                        ],
+                        "PaymentMeansID" : [ 
+                            {
+                                "IdentifierContent" : "Cuota001"
+                            }
+                        ],
+                        "Amount" : [ 
+                            {
+                                "AmountContent" : "1010",
+                                "AmountCurrencyIdentifier" : "PEN"
+                            }
+                        ],
+                        "PaymentDueDate" : [ 
+                            {
+                                "DateContent" : "2025-02-08"
+                            }
+                        ]
+                    }
+            ],
+                "TaxTotal" : [ 
+                    {
+                        "TaxAmount" : [ 
+                            {
+                                "AmountContent" : "171.15",
+                                "AmountCurrencyIdentifier" : "PEN"
+                            }
+                        ],
+                        "TaxSubtotal" : [ 
+                            {
+                                "TaxableAmount" : [ 
+                                    {
+                                        "AmountContent" : "950.85",
+                                        "AmountCurrencyIdentifier" : "PEN"
+                                    }
+                                ],
+                                "TaxAmount" : [ 
+                                    {
+                                        "AmountContent" : "171.15",
+                                        "AmountCurrencyIdentifier" : "PEN"
+                                    }
+                                ],
+                                "TaxCategory" : [ 
+                                    {
+                                        "TaxScheme" : [ 
+                                            {
+                                                "ID" : [ 
+                                                    {
+                                                        "IdentifierContent" : "1000",
+                                                        "IdentificationSchemeNameText" : "Codigo de tributos",
+                                                        "IdentificationSchemeUniformResourceIdentifier" : "urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo05",
+                                                        "IdentificationSchemeAgencyNameText" : "PE:SUNAT"
+                                                    }
+                                                ],
+                                                "Name" : [ 
+                                                    {
+                                                        "TextContent" : "IGV"
+                                                    }
+                                                ],
+                                                "TaxTypeCode" : [ 
+                                                    {
+                                                        "CodeContent" : "VAT"
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "LegalMonetaryTotal" : [ 
+                    {
+                        "LineExtensionAmount" : [ 
+                            {
+                                "AmountContent" : "950.85",
+                                "AmountCurrencyIdentifier" : "PEN"
+                            }
+                        ],
+                        "TaxInclusiveAmount" : [ 
+                            {
+                                "AmountContent" : "1122",
+                                "AmountCurrencyIdentifier" : "PEN"
+                            }
+                        ],
+                        "PayableAmount" : [ 
+                            {
+                                "AmountContent" : "1122",
+                                "AmountCurrencyIdentifier" : "PEN"
+                            }
+                        ]
+                    }
+                ],
+                "InvoiceLine" : [ 
+                    {
+                        "ID" : [ 
+                            {
+                                "IdentifierContent" : "1"
+                            }
+                        ],
+                        "Note" : [ 
+                            {
+                                "TextContent" : "TONELADAS"
+                            }
+                        ],
+                        "InvoicedQuantity" : [ 
+                            {
+                                "QuantityContent" : "63.39",
+                                "QuantityUnitCode" : "ZZ",
+                                "QuantityUnitCodeListIdentifier" : "UN/ECE rec 20",
+                                "QuantityUnitCodeListAgencyNameText" : "United Nations Economic Commission for Europe"
+                            }
+                        ],
+                        "LineExtensionAmount" : [ 
+                            {
+                                "AmountContent" : "950.85",
+                                "AmountCurrencyIdentifier" : "PEN"
+                            }
+                        ],
+                        "PricingReference" : [ 
+                            {
+                                "AlternativeConditionPrice" : [ 
+                                    {
+                                        "PriceAmount" : [ 
+                                            {
+                                                "AmountContent" : "17.7",
+                                                "AmountCurrencyIdentifier" : "PEN"
+                                            }
+                                        ],
+                                        "PriceTypeCode" : [ 
+                                            {
+                                                "CodeContent" : "01",
+                                                "CodeListNameText" : "Tipo de Precio",
+                                                "CodeListAgencyNameText" : "PE:SUNAT",
+                                                "CodeListUniformResourceIdentifier" : "urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo16"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ],
+                        "TaxTotal" : [ 
+                            {
+                                "TaxAmount" : [ 
+                                    {
+                                        "AmountContent" : "171.15",
+                                        "AmountCurrencyIdentifier" : "PEN"
+                                    }
+                                ],
+                                "TaxSubtotal" : [ 
+                                    {
+                                        "TaxableAmount" : [ 
+                                            {
+                                                "AmountContent" : "950.85",
+                                                "AmountCurrencyIdentifier" : "PEN"
+                                            }
+                                        ],
+                                        "TaxAmount" : [ 
+                                            {
+                                                "AmountContent" : "171.15",
+                                                "AmountCurrencyIdentifier" : "PEN"
+                                            }
+                                        ],
+                                        "TaxCategory" : [ 
+                                            {
+                                                "Percent" : [ 
+                                                    {
+                                                        "NumericContent" : 18.00
+                                                    }
+                                                ],
+                                                "TaxExemptionReasonCode" : [ 
+                                                    {
+                                                        "CodeContent" : "10",
+                                                        "CodeListAgencyNameText" : "PE:SUNAT",
+                                                        "CodeListNameText" : "Afectacion del IGV",
+                                                        "CodeListUniformResourceIdentifier" : "urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo07"
+                                                    }
+                                                ],
+                                                "TaxScheme" : [ 
+                                                    {
+                                                        "ID" : [ 
+                                                            {
+                                                                "IdentifierContent" : "1000",
+                                                                "IdentificationSchemeNameText" : "Codigo de tributos",
+                                                                "IdentificationSchemeUniformResourceIdentifier" : "urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo05",
+                                                                "IdentificationSchemeAgencyNameText" : "PE:SUNAT"
+                                                            }
+                                                        ],
+                                                        "Name" : [ 
+                                                            {
+                                                                "TextContent" : "IGV"
+                                                            }
+                                                        ],
+                                                        "TaxTypeCode" : [ 
+                                                            {
+                                                                "CodeContent" : "VAT"
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ],
+                        "Item" : [ 
+                            {
+                                "Description" : [ 
+                                    {
+                                        "TextContent" : "POR EL SERVICIO DE CARGUIO EN MINA"
+                                    }
+                                ],
+                                "SellersItemIdentification" : [ 
+                                    {
+                                        "ID" : [ 
+                                            {
+                                                "IdentifierContent" : "01"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ],
+                        "Price" : [ 
+                            {
+                                "PriceAmount" : [ 
+                                    {
+                                        "AmountContent" : "15",
+                                        "AmountCurrencyIdentifier" : "PEN"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                  
+                ]
+            }
+        ]
+}

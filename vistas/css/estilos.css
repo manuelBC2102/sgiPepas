@@ -1,0 +1,77 @@
+.alignRight {
+    text-align: right;
+}
+
+.alignCenter {
+    text-align: center;
+}
+
+.alignVerticalCenter {
+    vertical-align: middle;
+}
+
+.alignLeft {
+    text-align: left;
+}
+.fondoHeaderTable {
+    background-color: #244061;
+    color: #fff;
+}
+.accionEditar{
+    font-size:16px;
+    /*color:#1ca8dd;*/
+    color:#E8BA2F;
+}
+.accionEliminar{
+    font-size:16px;
+    /*    color:#cb2a2a;*/
+    color:#ef3e3e;
+}
+.accionVisualizar{
+    font-size:16px;
+    color:#1ca8dd;
+}
+.accionComentar{
+    /*    font-size:16px;*/
+    color:#0366b0;
+}
+
+.datatable-reducido{
+    width: 850px !important;
+}
+
+.datatable-ampliado{
+    width: 1100px !important;
+}
+
+body.modal-open div.modal-backdrop { 
+    z-index: 0 !important;  
+}
+
+
+@media  (min-width: 300px) and (max-width: 1030px) {
+    #scroll{
+        min-width: 300px;
+    }
+    #muestrascroll{
+        overflow-x:scroll;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    #scroll{
+        min-width: 300px;
+    }
+    #muestrascroll{
+        overflow-x:scroll;
+    }
+}
+
+.custom-dt-cell-center{
+    text-align: center;
+    vertical-align: middle !important;
+}
+
+.custom-dt-cell-accion-width{
+    width: 20%;
+}

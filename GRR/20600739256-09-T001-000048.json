@@ -1,0 +1,563 @@
+{
+      "_D": "urn:oasis:names:specification:ubl:schema:xsd:DespatchAdvice-2",
+      "_S": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+      "_B": "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2",
+      "_E": "urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2",
+      "DespatchAdvice": [
+          {
+              "UBLVersionID": [
+                  {
+                      "IdentifierContent": "2.1"
+                  }
+              ],
+              "CustomizationID": [
+                  {
+                      "IdentifierContent": "2.0"
+                  }
+              ],
+              "ID": [
+                  {
+                      "IdentifierContent": "T001-000048"
+                  }
+              ],
+              "IssueDate": [
+                  {
+                      "DateContent": "2024-11-05"
+                  }
+              ],
+              "IssueTime": [
+                  {
+                      "DateTimeContent": "12:00:00"
+                  }
+              ],
+              "DespatchAdviceTypeCode": [
+                  {
+                      "IdentifierContent": "09"
+                  }
+              ],
+              "Note": [
+                  {
+                      "TextContent": " "
+                  }
+              ],
+              "LineCountNumeric": [
+                  {
+                      "TextContent": "2"
+                  }
+              ],
+              "AdditionalDocumentReference": [
+                  {
+                      "ID": [
+                          {
+                              "IdentifierContent": " "
+                          }
+                      ],
+                      "DocumentTypeCode": [
+                          {
+                              "CodeContent": "01"
+                          }
+                      ],
+                      "DocumentType": [
+                          {
+                              "TextContent": " "
+                          }
+                      ],
+                      "IssuerParty": [
+                          {
+                              "PartyIdentification": [
+                                  {
+                                      "ID": [
+                                          {
+                                              "IdentifierContent": " ",
+                                              "IdentificationSchemeIdentifier": "6"
+                                          }
+                                      ]
+                                  }
+                              ]
+                          }
+                      ]
+                  }
+              ],
+              "Signature": [
+                  {
+                      "ID": [
+                          {
+                              "IdentifierContent": "IDSignature"
+                          }
+                      ],
+                      "SignatoryParty": [
+                          {
+                              "PartyIdentification": [
+                                  {
+                                      "ID": [
+                                          {
+                                              "IdentifierContent": "20600739256"
+                                          }
+                                      ]
+                                  }
+                              ],
+                              "PartyName": [
+                                  {
+                                      "Name": [
+                                          {
+                                              "TextContent": "GRUPO EMPRESARIAL SOLUCIONES MINERAS S.A.C."
+                                          }
+                                      ]
+                                  }
+                              ]
+                          }
+                      ],
+                      "DigitalSignatureAttachment": [
+                          {
+                              "ExternalReference": [
+                                  {
+                                      "URI": [
+                                          {
+                                              "TextContent": "IDSignature"
+                                          }
+                                      ]
+                                  }
+                              ]
+                          }
+                      ]
+                  }
+              ],
+              "DespatchSupplierParty": [
+                  {
+                      "Party": [
+                          {
+                              "PartyIdentification": [
+                                  {
+                                      "ID": [
+                                          {
+                                              "IdentifierContent": "20600739256",
+                                              "IdentificationSchemeIdentifier": "6"
+                                          }
+                                      ]
+                                  }
+                              ],
+                              "PostalAddress": [
+                                  {
+                                      "ID": [
+                                          {
+                                              "IdentifierContent": "130501"
+                                          }
+                                      ],
+                                      "StreetName": [
+                                          {
+                                              "TextContent": "AV. AMERICA OESTE 10 TORRE UPAO NRO. 706 DPTO. 706 URB. NATASHA ALTA LA LIBERTAD -TRUJILLO - TRUJILLO"
+                                          }
+                                      ],
+                                      "CitySubdivisionName": [
+                                          {
+                                              "TextContent": " "
+                                          }
+                                      ],
+                                      "CityName": [
+                                          {
+                                              "TextContent": "LIMA"
+                                          }
+                                      ],
+                                      "CountrySubentity": [
+                                          {
+                                              "TextContent": "LIMA"
+                                          }
+                                      ],
+                                      "District": [
+                                          {
+                                              "TextContent": "ANCON"
+                                          }
+                                      ],
+                                      "Country": [
+                                          {
+                                              "IdentificationCode": [
+                                                  {
+                                                      "IdentifierContent": "PE"
+                                                  }
+                                              ]
+                                          }
+                                      ]
+                                  }
+                              ],
+                              "PartyLegalEntity": [
+                                  {
+                                      "RegistrationName": [
+                                          {
+                                              "TextContent": "GRUPO EMPRESARIAL SOLUCIONES MINERAS S.A.C."
+                                          }
+                                      ]
+                                  }
+                              ]
+                          }
+                      ]
+                  }
+              ],
+              "DeliveryCustomerParty": [
+                  {
+                      "Party": [
+                          {
+                              "PartyIdentification": [
+                                  {
+                                      "ID": [
+                                          {
+                                              "IdentifierContent": "20409383891",
+                                              "IdentificationSchemeIdentifier": "6"
+                                          }
+                                      ]
+                                  }
+                              ],
+                              "PostalAddress": [
+                                  {
+                                      "ID": [
+                                          {
+                                              "IdentifierContent": ">140124"
+                                          }
+                                      ],
+                                      "StreetName": [
+                                          {
+                                              "TextContent": "PJ. TACNA NRO. 111 (A MEDIA CDRA DE TERRACARGO) TUMBES - ZARUMILLA - AGUAS VERDES"
+                                          }
+                                      ],
+                                      "CitySubdivisionName": [
+                                          {
+                                              "TextContent": "-"
+                                          }
+                                      ],
+                                      "CityName": [
+                                          {
+                                              "TextContent": "LIMA"
+                                          }
+                                      ],
+                                      "CountrySubentity": [
+                                          {
+                                              "TextContent": "LIMA"
+                                          }
+                                      ],
+                                      "District": [
+                                          {
+                                              "TextContent": "LIMA"
+                                          }
+                                      ],
+                                      "Country": [
+                                          {
+                                              "IdentificationCode": [
+                                                  {
+                                                      "IdentifierContent": "PE"
+                                                  }
+                                              ]
+                                          }
+                                      ]
+                                  }
+                              ],
+                              "PartyLegalEntity": [
+                                  {
+                                      "RegistrationName": [
+                                          {
+                                              "TextContent": "GRUPO TEXTIL VALLES S.A.C."
+                                          }
+                                      ]
+                                  }
+                              ],
+                              "Contact": [
+                                  {
+                                      "ElectronicMail": [
+                                          {
+                                              "TextContent": "administracion@solucionesmineras.pe"
+                                          }
+                                      ]
+                                  }
+                              ]
+                          }
+                      ]
+                  }
+              ],
+              "BuyerCustomerParty": [
+                  {
+                      "Party": [
+                          {
+                              "PartyIdentification": [
+                                  {
+                                      "ID": [
+                                          {
+                                              "IdentifierContent": "20496108664",
+                                              "IdentificationSchemeIdentifier": "6"
+                                          }
+                                      ]
+                                  }
+                              ],
+                              "PartyLegalEntity": [
+                                  {
+                                      "RegistrationName": [
+                                          {
+                                              "TextContent": "SOLUCIONES AMBIENTALES PERU E.I.R.L"
+                                          }
+                                      ]
+                                  }
+                              ]
+                          }
+                      ]
+                  }
+              ],
+              "Shipment": [
+                  {
+                      "ID": [
+                          {
+                              "IdentifierContent": "SUNAT_Envio"
+                          }
+                      ],
+                      "HandlingCode": [
+                          {
+                              "IdentifierContent": "03"
+                          }
+                      ],
+                      "HandlingInstructions": [
+                          {
+                              "TextContent": "<motivoTraslado>"
+                          }
+                      ],
+                      "GrossWeightMeasure": [
+                          {
+                              "MeasureContent": "500",
+                              "MeasureUnitCode": "KGM"
+                          }
+                      ],
+                      "ShipmentStage": [
+                          {
+                              "TransportModeCode": [
+                                  {
+                                      "IdentifierContent": "02"
+                                  }
+                              ],
+                              "TransitPeriod": [
+                                  {
+                                      "StartDate": [
+                                          {
+                                              "DateContent": "2024-11-05"
+                                          }
+                                      ]
+                                  }
+                              ],
+                              "DriverPerson": [
+                                  {
+                                      "ID": [
+                                          {
+                                              "IdentifierContent": "70370538",
+                                              "IdentificationSchemeIdentifier": "1"
+                                          }
+                                      ],
+                                      "FirstName": [
+                                          {
+                                              "TextContent": "Carlos"
+                                          }
+                                      ],
+                                      "FamilyName": [
+                                          {
+                                              "TextContent": "silva mendoza"
+                                          }
+                                      ],
+                                      "JobTitle": [
+                                          {
+                                              "TextContent": "Principal"
+                                          }
+                                      ],
+                                      "IdentityDocumentReference": [
+                                          {
+                                              "ID": [
+                                                  {
+                                                      "IdentifierContent": "D70370538"
+                                                  }
+                                              ]
+                                          }
+                                      ]
+                                  }
+                              ]
+                          }
+                      ],
+                      "Delivery": [
+                          {
+                              "DeliveryAddress": [
+                                  {
+                                      "ID": [
+                                          {
+                                              "IdentifierContent": "140124"
+                                          }
+                                      ],
+                                      "CitySubdivisionName": [
+                                          {
+                                              "TextContent": "-"
+                                          }
+                                      ],
+                                      "CityName": [
+                                          {
+                                              "TextContent": "LIMA"
+                                          }
+                                      ],
+                                      "CountrySubentity": [
+                                          {
+                                              "TextContent": "LIMA"
+                                          }
+                                      ],
+                                      "District": [
+                                          {
+                                              "TextContent": "LIMA"
+                                          }
+                                      ],
+                                      "AddressLine": [
+                                          {
+                                              "Line": [
+                                                  {
+                                                      "TextContent": "PJ. TACNA NRO. 111 (A MEDIA CDRA DE TERRACARGO) TUMBES - ZARUMILLA - AGUAS VERDES"
+                                                  }
+                                              ]
+                                          }
+                                      ],
+                                      "Country": [
+                                          {
+                                              "IdentificationCode": [
+                                                  {
+                                                      "IdentifierContent": "PE"
+                                                  }
+                                              ]
+                                          }
+                                      ]
+                                  }
+                              ],
+                              "Despatch": [
+                                  {
+                                      "DespatchAddress": [
+                                          {
+                                              "ID": [
+                                                  {
+                                                      "IdentifierContent": "130501"
+                                                  }
+                                              ],
+                                              "CitySubdivisionName": [
+                                                  {
+                                                      "TextContent": "-"
+                                                  }
+                                              ],
+                                              "CityName": [
+                                                  {
+                                                      "TextContent": "LIMA"
+                                                  }
+                                              ],
+                                              "CountrySubentity": [
+                                                  {
+                                                      "TextContent": "LIMA"
+                                                  }
+                                              ],
+                                              "District": [
+                                                  {
+                                                      "TextContent": "ANCON"
+                                                  }
+                                              ],
+                                              "AddressLine": [
+                                                  {
+                                                      "Line": [
+                                                          {
+                                                              "TextContent": "AV. AMERICA OESTE 10 TORRE UPAO NRO. 706 DPTO. 706 URB. NATASHA ALTA LA LIBERTAD -TRUJILLO - TRUJILLO"
+                                                          }
+                                                      ]
+                                                  }
+                                              ],
+                                              "Country": [
+                                                  {
+                                                      "IdentificationCode": [
+                                                          {
+                                                              "IdentifierContent": "PE"
+                                                          }
+                                                      ]
+                                                  }
+                                              ]
+                                          }
+                                      ],
+                                      "DespatchParty": [
+                                          {
+                                              "AgentParty": [
+                                                  {
+                                                      "PartyLegalEntity": [
+                                                          {
+                                                              "CompanyID": [
+                                                                  {
+                                                                      "IdentifierContent": "20600739256",
+                                                                      "IdentificationSchemeIdentifier": "06"
+                                                                  }
+                                                              ]
+                                                          }
+                                                      ]
+                                                  }
+                                              ]
+                                          }
+                                      ]
+                                  }
+                              ]
+                          }
+                      ],
+                      "TransportHandlingUnit": [
+                          {
+                              "TransportEquipment": [
+                                  {
+                                      "ID": [
+                                          {
+                                              "IdentifierContent": "ATL917"
+                                          }
+                                      ]
+                                  }
+                              ]
+                          }
+                      ]
+                  }
+              ],
+              "DespatchLine": [
+                  {
+                      "ID": [
+                          {
+                              "IdentifierContent": 1
+                          }
+                      ],
+                      "Note": [
+                          {
+                              "TextContent": "UNIDAD"
+                          }
+                      ],
+                      "DeliveredQuantity": [
+                          {
+                              "QuantityContent": "1",
+                              "QuantityUnitCode": "ZZ"
+                          }
+                      ],
+                      "OrderLineReference": [
+                          {
+                              "LineID": [
+                                  {
+                                      "IdentifierContent": 1
+                                  }
+                              ]
+                          }
+                      ],
+                      "Item": [
+                          {
+                              "Description": [
+                                  {
+                                      "TextContent": "PRUEBA"
+                                  }
+                              ],
+                              "SellersItemIdentification": [
+                                  {
+                                      "ID": [
+                                          {
+                                              "IdentifierContent": "01A"
+                                          }
+                                      ]
+                                  }
+                              ]
+                          }
+                      ]
+                  }
+              
+              ]
+          }
+      ]
+    }
+
+    

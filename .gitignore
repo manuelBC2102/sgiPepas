@@ -1,0 +1,18 @@
+# Carpetas de IDE o Editor
+/nbproject/
+
+# Carpeta EAR
+ear/paramentros.php
+ear/Documentos/*.pdf
+
+# Carpeta Modelo
+modelo/core/Connection.php
+
+# Carpeta Utils
+util/uploads/*.txt
+util/uploads/*.xls
+util/formatos/*.xlsx
+util/formatos/documentoActivoFijo/*.xlsx
+
+# Carpeta de Vistas
+vistas/com/movimiento/documentos/*.pdf

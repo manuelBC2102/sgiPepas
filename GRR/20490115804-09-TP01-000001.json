@@ -1,0 +1,529 @@
+{
+    "_D": "urn:oasis:names:specification:ubl:schema:xsd:DespatchAdvice-2",
+    "_S": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+    "_B": "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2",
+    "_E": "urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2",
+    "DespatchAdvice": [
+        {
+            "UBLVersionID": [
+                {
+                    "IdentifierContent": "2.1"
+                }
+            ],
+            "CustomizationID": [
+                {
+                    "IdentifierContent": "2.0"
+                }
+            ],
+            "ID": [
+                {
+                    "IdentifierContent": "TP01-000001"
+                }
+            ],
+            "IssueDate": [
+                {
+                    "DateContent": "2025-01-30"
+                }
+            ],
+            "IssueTime": [
+                {
+                    "DateTimeContent": "16:10:53"
+                }
+            ],
+            "DespatchAdviceTypeCode": [
+                {
+                    "IdentifierContent": "09"
+                }
+            ],
+            "Note": [
+                {
+                    "TextContent": " "
+                }
+            ],
+            "LineCountNumeric": [
+                {
+                    "TextContent": "2"
+                }
+            ],
+            "AdditionalDocumentReference": [
+                {
+                    "ID": [
+                        {
+                            "IdentifierContent": ""
+                        }
+                    ],
+                    "DocumentTypeCode": [
+                        {
+                            "CodeContent": ""
+                        }
+                    ],
+                    "DocumentType": [
+                        {
+                            "TextContent": " "
+                        }
+                    ],
+                    "IssuerParty": [
+                        {
+                            "PartyIdentification": [
+                                {
+                                    "ID": [
+                                        {
+                                            "IdentifierContent": "",
+                                            "IdentificationSchemeIdentifier": "6"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "Signature": [
+                {
+                    "ID": [
+                        {
+                            "IdentifierContent": "IDSignature"
+                        }
+                    ],
+                    "SignatoryParty": [
+                        {
+                            "PartyIdentification": [
+                                {
+                                    "ID": [
+                                        {
+                                            "IdentifierContent": "20490115804"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "PartyName": [
+                                {
+                                    "Name": [
+                                        {
+                                            "TextContent": "ASOCIACION DE MINEROS ARTESANALES PEPAS DE ORO DE PAMPAMARCA"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "DigitalSignatureAttachment": [
+                        {
+                            "ExternalReference": [
+                                {
+                                    "URI": [
+                                        {
+                                            "TextContent": "IDSignature"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "DespatchSupplierParty": [
+                {
+                    "Party": [
+                        {
+                            "PartyIdentification": [
+                                {
+                                    "ID": [
+                                        {
+                                            "IdentifierContent": "20490115804",
+                                            "IdentificationSchemeIdentifier": "6"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "PostalAddress": [
+                                {
+                                    "ID": [
+                                        {
+                                            "IdentifierContent": "030205"
+                                        }
+                                    ],
+                                    "StreetName": [
+                                        {
+                                            "TextContent": "PZA.PLAZA DE ARMAS PAMPAMARCA NRO. S/N ANX. PAMPAMARCA (COMUNIDAD DE PAMPAMARCA) APURIMAC - AYMARAES - COTARUSE"
+                                        }
+                                    ],
+                                    "CitySubdivisionName": [
+                                        {
+                                            "TextContent": " "
+                                        }
+                                    ],
+                                    "CityName": [
+                                        {
+                                            "TextContent": "AYMARAES"
+                                        }
+                                    ],
+                                    "CountrySubentity": [
+                                        {
+                                            "TextContent": "APURIMAC"
+                                        }
+                                    ],
+                                    "District": [
+                                        {
+                                            "TextContent": "COTARUSE"
+                                        }
+                                    ],
+                                    "Country": [
+                                        {
+                                            "IdentificationCode": [
+                                                {
+                                                    "IdentifierContent": "PE"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ],
+                            "PartyLegalEntity": [
+                                {
+                                    "RegistrationName": [
+                                        {
+                                            "TextContent": "ASOCIACION DE MINEROS ARTESANALES PEPAS DE ORO DE PAMPAMARCA"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "DeliveryCustomerParty": [
+                {
+                    "Party": [
+                        {
+                            "PartyIdentification": [
+                                {
+                                    "ID": [
+                                        {
+                                            "IdentifierContent": "",
+                                            "IdentificationSchemeIdentifier": "6"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "PostalAddress": [
+                                {
+                                    "ID": [
+                                        {
+                                            "IdentifierContent": ""
+                                        }
+                                    ],
+                                    "StreetName": [
+                                        {
+                                            "TextContent": ""
+                                        }
+                                    ],
+                                    "CitySubdivisionName": [
+                                        {
+                                            "TextContent": " "
+                                        }
+                                    ],
+                                    "CityName": [
+                                        {
+                                            "TextContent": ""
+                                        }
+                                    ],
+                                    "CountrySubentity": [
+                                        {
+                                            "TextContent": ""
+                                        }
+                                    ],
+                                    "District": [
+                                        {
+                                            "TextContent": ""
+                                        }
+                                    ],
+                                    "Country": [
+                                        {
+                                            "IdentificationCode": [
+                                                {
+                                                    "IdentifierContent": "PE"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ],
+                            "PartyLegalEntity": [
+                                {
+                                    "RegistrationName": [
+                                        {
+                                            "TextContent": ""
+                                        }
+                                    ]
+                                }
+                            ],
+                            "Contact": [
+                                {
+                                    "ElectronicMail": [
+                                        {
+                                            "TextContent": "asdadasdasdasd@gmail.com"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "Shipment": [
+                {
+                    "ID": [
+                        {
+                            "IdentifierContent": "SUNAT_Envio"
+                        }
+                    ],
+                    "HandlingCode": [
+                        {
+                            "IdentifierContent": "01"
+                        }
+                    ],
+                    "HandlingInstructions": [
+                        {
+                            "TextContent": "<motivoTraslado>"
+                        }
+                    ],
+                    "GrossWeightMeasure": [
+                        {
+                            "MeasureContent": "17010.00",
+                            "MeasureUnitCode": "TNE"
+                        }
+                    ],
+                    "ShipmentStage": [
+                        {
+                            "TransportModeCode": [
+                                {
+                                    "IdentifierContent": "01"
+                                }
+                            ],
+                            "TransitPeriod": [
+                                {
+                                    "StartDate": [
+                                        {
+                                            "DateContent": "2025-01-30"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "CarrierParty" : [ 
+                                {
+                                    "PartyIdentification" : [ 
+                                        {
+                                            "ID" : [ 
+                                                {
+                                                    "IdentifierContent" : "",
+                                                    "IdentificationSchemeIdentifier" : "6"
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "PartyLegalEntity" : [ 
+                                        {
+                                            "RegistrationName" : [ 
+                                                {
+                                                    "TextContent" : ""
+                                                }
+                                            ],
+                                            "CompanyID" : [ 
+                                                {
+                                                    "IdentifierContent" : ""
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "AgentParty" : [ 
+                                        {
+                                            "PartyLegalEntity" : [ 
+                                                {
+                                                    "CompanyID" : [ 
+                                                        {
+                                                            "IdentifierContent" : "",
+                                                            "IdentificationSchemeIdentifier" : "06"
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "Delivery": [
+                        {
+                           "DeliveryAddress": [
+                                  {
+                                      "ID": [
+                                          {
+                                              "IdentifierContent": ""
+                                          }
+                                      ],
+                                      "CitySubdivisionName": [
+                                          {
+                                              "TextContent": " "
+                                          }
+                                      ],
+                                      "CityName": [
+                                          {
+                                              "TextContent": ""
+                                          }
+                                      ],
+                                      "CountrySubentity": [
+                                          {
+                                              "TextContent": ""
+                                          }
+                                      ],
+                                      "District": [
+                                          {
+                                              "TextContent": ""
+                                          }
+                                      ],
+                                      "AddressLine": [
+                                          {
+                                              "Line": [
+                                                  {
+                                                      "TextContent": ""
+                                                  }
+                                              ]
+                                          }
+                                      ],
+                                      "Country": [
+                                          {
+                                              "IdentificationCode": [
+                                                  {
+                                                      "IdentifierContent": "PE"
+                                                  }
+                                              ]
+                                          }
+                                      ]
+                                  }
+                              ],
+                            "Despatch": [
+                                {
+                                    "DespatchAddress": [
+                                        {
+                                            "ID": [
+                                                {
+                                                   "IdentifierContent": ""
+                                                }
+                                            ],
+                                            "CitySubdivisionName": [
+                                                {
+                                                   "TextContent": "-"
+                                                }
+                                            ],
+                                            "CityName": [
+                                                {
+                                                     "TextContent": ""
+                                                }
+                                            ],
+                                            "CountrySubentity": [
+                                                {
+                                                   "TextContent": ""
+                                                }
+                                            ],
+                                            "District": [
+                                                {
+                                                    "TextContent": ""
+                                                }
+                                            ],
+                                            "AddressLine": [
+                                                {
+                                                    "Line": [
+                                                        {
+                                                            "TextContent": ""
+                                                        }
+                                                    ]
+                                                }
+                                            ],
+                                            "Country": [
+                                                {
+                                                    "IdentificationCode": [
+                                                        {
+                                                            "IdentifierContent": "PE"
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "DespatchParty": [
+                                        {
+                                            "AgentParty": [
+                                                {
+                                                    "PartyLegalEntity": [
+                                                        {
+                                                            "CompanyID": [
+                                                                {
+                                                                    "IdentifierContent": "20490115804",
+                                                                    "IdentificationSchemeIdentifier": "06"
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "DespatchLine": [
+                {
+                    "ID": [
+                        {
+                            "IdentifierContent": 1
+                        }
+                    ],
+                    "Note": [
+                        {
+                            "TextContent": "UNIDAD"
+                        }
+                    ],
+                    "DeliveredQuantity": [
+                        {
+                            "QuantityContent": "17010.00",
+                            "QuantityUnitCode": "ZZ"
+                        }
+                    ],
+                    "OrderLineReference": [
+                        {
+                            "LineID": [
+                                {
+                                    "IdentifierContent": 1
+                                }
+                            ]
+                        }
+                    ],
+                    "Item": [
+                        {
+                            "Description": [
+                                {
+                                    "TextContent": "MINERAL AURIFERO EN BRUTO A GRANEL, PESO A CONFIRMAR POR EL COMPRADOR"
+                                }
+                            ],
+                            "SellersItemIdentification": [
+                                {
+                                    "ID": [
+                                        {
+                                            "IdentifierContent": "01A"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
+    

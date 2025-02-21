@@ -1,0 +1,613 @@
+{
+        "_D" : "urn:oasis:names:specification:ubl:schema:xsd:Invoice-2",
+        "_S" : "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+        "_B" : "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2",
+        "_E" : "urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2",
+        "Invoice" : [ 
+            {
+                "UBLVersionID" : [ 
+                    {
+                        "IdentifierContent" : "2.1"
+                    }
+                ],
+                "CustomizationID" : [ 
+                    {
+                        "IdentifierContent" : "2.0"
+                    }
+                ],
+                "ID" : [ 
+                    {
+                        "IdentifierContent" : "FF01-000086"
+                    }
+                ],
+                "IssueDate" : [ 
+                    {
+                        "DateContent" : "2025-02-03"
+                    }
+                ],
+		"IssueTime" : [ 
+                    {
+                        "DateTimeContent" : "03:36:12"
+                    }
+                ],
+                "InvoiceTypeCode" : [ 
+                    {
+                        "CodeContent" : "01",
+                        "CodeListNameText" : "Tipo de Documento",
+                        "CodeListSchemeUniformResourceIdentifier" : "urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo51",
+                        "CodeListIdentifier" : "1001",
+                        "CodeNameText" : "Tipo de Operacion",
+                        "CodeListUniformResourceIdentifier" : "urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo01",
+                        "CodeListAgencyNameText" : "PE:SUNAT"
+                    }
+                ],
+                "Note" : [ 
+                    {
+                        "TextContent" : "QUINIENTOS NOVENTA Y OCHO Y 26/100 SOLES",
+                        "LanguageLocaleIdentifier" : "1000"
+                    },
+                     {
+                    "TextContent": "Operación sujeta a detracción",
+                    "LanguageLocaleIdentifier": "2006"
+                    }
+                ],
+                "DocumentCurrencyCode" : [ 
+                    {
+                        "CodeContent" : "PEN",
+                        "CodeListIdentifier" : "ISO 4217 Alpha",
+                        "CodeListNameText" : "Currency",
+                        "CodeListAgencyNameText" : "United Nations Economic Commission for Europe"
+                    }
+                ],
+                "LineCountNumeric" : [ 
+                    {
+                        "NumericContent" : 2
+                    }
+                ],
+                "Signature" : [ 
+                    {
+                        "ID" : [ 
+                            {
+                                "IdentifierContent" : "IDSignature"
+                            }
+                        ],
+                        "SignatoryParty" : [ 
+                            {
+                                "PartyIdentification" : [ 
+                                    {
+                                        "ID" : [ 
+                                            {
+                                                "TextContent" : "20600739256"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "PartyName" : [ 
+                                    {
+                                        "Name" : [ 
+                                            {
+                                                "TextContent" : "GRUPO EMPRESARIAL SOLUCIONES MINERAS S.A.C."
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ],
+                        "DigitalSignatureAttachment" : [ 
+                            {
+                                "ExternalReference" : [ 
+                                    {
+                                        "URI" : [ 
+                                            {
+                                                "TextContent" : "IDSignature"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "AccountingSupplierParty" : [ 
+                    {
+                        "Party" : [ 
+                            {
+                                "PartyIdentification" : [ 
+                                    {
+                                        "ID" : [ 
+                                            {
+                                                "IdentifierContent" : "20600739256",
+                                                "IdentificationSchemeIdentifier" : "6",
+                                                "IdentificationSchemeNameText" : "Documento de Identidad",
+                                                "IdentificationSchemeAgencyNameText" : "PE:SUNAT",
+                                                "IdentificationSchemeUniformResourceIdentifier" : "urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo06"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "PartyName" : [ 
+                                    {
+                                        "Name" : [ 
+                                            {
+                                                "TextContent" : "GRUPO EMPRESARIAL SOLUCIONES MINERAS S.A.C."
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "PartyLegalEntity" : [ 
+                                    {
+                                        "RegistrationName" : [ 
+                                            {
+                                                "TextContent" : "GRUPO EMPRESARIAL SOLUCIONES MINERAS S.A.C."
+                                            }
+                                        ],
+                                        "RegistrationAddress" : [ 
+                                            {
+                                                "ID" : [ 
+                                                    {
+                                                        "IdentifierContent" : "130101",
+                                                        "IdentificationSchemeAgencyNameText" : "PE:INEI",
+                                                        "IdentificationSchemeNameText" : "Ubigeos"
+                                                    }
+                                                ],
+                                                "AddressTypeCode" : [ 
+                                                    {
+                                                        "CodeContent" : "0000",
+                                                        "CodeListAgencyNameText" : "PE:SUNAT",
+                                                        "CodeListNameText" : "Establecimientos anexos"
+                                                    }
+                                                ],
+                                                "CityName" : [ 
+                                                    {
+                                                        "TextContent" : "La libertad"
+                                                    }
+                                                ],
+                                                "CountrySubentity" : [ 
+                                                    {
+                                                        "TextContent" : "Trujillo"
+                                                    }
+                                                ],
+                                                "District" : [ 
+                                                    {
+                                                        "TextContent" : "Trujillo"
+                                                    }
+                                                ],
+                                                "AddressLine" : [ 
+                                                    {
+                                                        "Line" : [ 
+                                                            {
+                                                                "TextContent" : "AV. AMERICA OESTE 10 TORRE UPAO NRO. 706 DPTO. 706 URB. NATASHA ALTA LA LIBERTAD - TRUJILLO - TRUJILLO"
+                                                            }
+                                                        ]
+                                                    }
+                                                ],
+                                                "Country" : [ 
+                                                    {
+                                                        "IdentificationCode" : [ 
+                                                            {
+                                                                "CodeContent" : "PE",
+                                                                "CodeListIdentifier" : "ISO 3166-1",
+                                                                "CodeListAgencyNameText" : "United Nations Economic Commission for Europe",
+                                                                "CodeListNameText" : "Country"
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "AccountingCustomerParty" : [ 
+                    {
+                        "Party" : [ 
+                            {
+                                "PartyIdentification" : [ 
+                                    {
+                                        "ID" : [ 
+                                            {
+                                                "IdentifierContent" : "20536126440",
+                                                "IdentificationSchemeIdentifier" : "6",
+                                                "IdentificationSchemeNameText" : "Documento de Identidad",
+                                                "IdentificationSchemeAgencyNameText" : "PE:SUNAT",
+                                                "IdentificationSchemeUniformResourceIdentifier" : "urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo06"
+                                            }
+                                        ]
+                                    }
+                                ],
+				"PartyName" : [ 
+                                    {
+                                        "Name" : [ 
+                                            {
+                                                "TextContent" : "MINERA VETA DORADA SAC"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "PartyLegalEntity" : [ 
+                                    {
+                                        "RegistrationName" : [ 
+                                            {
+                                                "TextContent" : "MINERA VETA DORADA SAC"
+                                            }
+                                        ],
+                                        "RegistrationAddress" : [ 
+                                            {
+                                                "ID" : [ 
+                                                    {
+                                                        "IdentifierContent" : "150131",
+                                                        "IdentificationSchemeAgencyNameText" : "PE:INEI",
+                                                        "IdentificationSchemeNameText" : "Ubigeos"
+                                                    }
+                                                ],
+                                                "CityName" : [ 
+                                                    {
+                                                        "TextContent" : "Lima"
+                                                    }
+                                                ],
+                                                "CountrySubentity" : [ 
+                                                    {
+                                                        "TextContent" : "Lima"
+                                                    }
+                                                ],
+                                                "District" : [ 
+                                                    {
+                                                        "TextContent" : "San Iisdro"
+                                                    }
+                                                ],
+                                                "AddressLine" : [ 
+                                                    {
+                                                        "Line" : [ 
+                                                            {
+                                                                "TextContent" : "CAL.DEAN VALDIVIA NRO. 148 INT. 601 URB. JARDIN (EDIFICIO PLATINUM PLAZA 1) LIMA - LIMA - SAN ISIDRO"
+                                                            }
+                                                        ]
+                                                    }
+                                                ],
+                                                "Country" : [ 
+                                                    {
+                                                        "IdentificationCode" : [ 
+                                                            {
+                                                                "CodeContent" : "PE",
+                                                                "CodeListIdentifier" : "ISO 3166-1",
+                                                                "CodeListAgencyNameText" : "United Nations Economic Commission for Europe",
+                                                                "CodeListNameText" : "Country"
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "Contact" : [ 
+                                    {
+                                        "ElectronicMail" : [ 
+                                            {
+                                                "TextContent" : "administracion@solucionesmineras.pe"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "PaymentMeans": [
+                {
+                    "ID": [
+                        {
+                            "IdentifierContent": "Detraccion"
+                        }
+                    ],
+                    "PaymentMeansCode": [
+                        {
+                            "CodeContent": "999"
+                        }
+                    ],
+                    "PayeeFinancialAccount": [
+                        {
+                            "ID": [
+                                {
+                                    "IdentifierContent": "00181066180"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "PaymentTerms": [
+                {
+                    "ID": [
+                        {
+                            "IdentifierContent": "Detraccion"
+                        }
+                    ],
+                    "PaymentMeansID": [
+                        {
+                            "IdentifierContent": "021"
+                        }
+                    ],
+                    "Note": [
+                        {
+                            "TextContent": "538.26"
+                        }
+                    ],
+                    "PaymentPercent": [
+                        {
+                            "NumericContent": "10.00"
+                        }
+                    ],
+                    "Amount": [
+                        {
+                            "AmountContent": "60",
+                            "AmountCurrencyIdentifier": "PEN"
+                        }
+                    ]
+                },
+                {
+                        "ID" : [ 
+                            {
+                                "IdentifierContent" : "FormaPago"
+                            }
+                        ],
+                        "PaymentMeansID" : [ 
+                            {
+                                "IdentifierContent" : "Credito"
+                            }
+                        ],
+                        "Amount" : [ 
+                            {
+                                "AmountContent" : "538.26",
+                                "AmountCurrencyIdentifier" : "PEN"
+                            }
+                        ]
+                    },
+                    {
+                        "ID" : [ 
+                            {
+                                "IdentifierContent" : "FormaPago"
+                            }
+                        ],
+                        "PaymentMeansID" : [ 
+                            {
+                                "IdentifierContent" : "Cuota001"
+                            }
+                        ],
+                        "Amount" : [ 
+                            {
+                                "AmountContent" : "538.26",
+                                "AmountCurrencyIdentifier" : "PEN"
+                            }
+                        ],
+                        "PaymentDueDate" : [ 
+                            {
+                                "DateContent" : "2025-02-08"
+                            }
+                        ]
+                    }
+            ],
+                "TaxTotal" : [ 
+                    {
+                        "TaxAmount" : [ 
+                            {
+                                "AmountContent" : "91.26",
+                                "AmountCurrencyIdentifier" : "PEN"
+                            }
+                        ],
+                        "TaxSubtotal" : [ 
+                            {
+                                "TaxableAmount" : [ 
+                                    {
+                                        "AmountContent" : "507",
+                                        "AmountCurrencyIdentifier" : "PEN"
+                                    }
+                                ],
+                                "TaxAmount" : [ 
+                                    {
+                                        "AmountContent" : "91.26",
+                                        "AmountCurrencyIdentifier" : "PEN"
+                                    }
+                                ],
+                                "TaxCategory" : [ 
+                                    {
+                                        "TaxScheme" : [ 
+                                            {
+                                                "ID" : [ 
+                                                    {
+                                                        "IdentifierContent" : "1000",
+                                                        "IdentificationSchemeNameText" : "Codigo de tributos",
+                                                        "IdentificationSchemeUniformResourceIdentifier" : "urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo05",
+                                                        "IdentificationSchemeAgencyNameText" : "PE:SUNAT"
+                                                    }
+                                                ],
+                                                "Name" : [ 
+                                                    {
+                                                        "TextContent" : "IGV"
+                                                    }
+                                                ],
+                                                "TaxTypeCode" : [ 
+                                                    {
+                                                        "CodeContent" : "VAT"
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "LegalMonetaryTotal" : [ 
+                    {
+                        "LineExtensionAmount" : [ 
+                            {
+                                "AmountContent" : "507",
+                                "AmountCurrencyIdentifier" : "PEN"
+                            }
+                        ],
+                        "TaxInclusiveAmount" : [ 
+                            {
+                                "AmountContent" : "598.26",
+                                "AmountCurrencyIdentifier" : "PEN"
+                            }
+                        ],
+                        "PayableAmount" : [ 
+                            {
+                                "AmountContent" : "598.26",
+                                "AmountCurrencyIdentifier" : "PEN"
+                            }
+                        ]
+                    }
+                ],
+                "InvoiceLine" : [ 
+                    {
+                        "ID" : [ 
+                            {
+                                "IdentifierContent" : "1"
+                            }
+                        ],
+                        "Note" : [ 
+                            {
+                                "TextContent" : "TONELADAS"
+                            }
+                        ],
+                        "InvoicedQuantity" : [ 
+                            {
+                                "QuantityContent" : "33.8",
+                                "QuantityUnitCode" : "ZZ",
+                                "QuantityUnitCodeListIdentifier" : "UN/ECE rec 20",
+                                "QuantityUnitCodeListAgencyNameText" : "United Nations Economic Commission for Europe"
+                            }
+                        ],
+                        "LineExtensionAmount" : [ 
+                            {
+                                "AmountContent" : "15",
+                                "AmountCurrencyIdentifier" : "PEN"
+                            }
+                        ],
+                        "PricingReference" : [ 
+                            {
+                                "AlternativeConditionPrice" : [ 
+                                    {
+                                        "PriceAmount" : [ 
+                                            {
+                                                "AmountContent" : "598.26",
+                                                "AmountCurrencyIdentifier" : "PEN"
+                                            }
+                                        ],
+                                        "PriceTypeCode" : [ 
+                                            {
+                                                "CodeContent" : "01",
+                                                "CodeListNameText" : "Tipo de Precio",
+                                                "CodeListAgencyNameText" : "PE:SUNAT",
+                                                "CodeListUniformResourceIdentifier" : "urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo16"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ],
+                        "TaxTotal" : [ 
+                            {
+                                "TaxAmount" : [ 
+                                    {
+                                        "AmountContent" : "91.26",
+                                        "AmountCurrencyIdentifier" : "PEN"
+                                    }
+                                ],
+                                "TaxSubtotal" : [ 
+                                    {
+                                        "TaxableAmount" : [ 
+                                            {
+                                                "AmountContent" : "507",
+                                                "AmountCurrencyIdentifier" : "PEN"
+                                            }
+                                        ],
+                                        "TaxAmount" : [ 
+                                            {
+                                                "AmountContent" : "91.26",
+                                                "AmountCurrencyIdentifier" : "PEN"
+                                            }
+                                        ],
+                                        "TaxCategory" : [ 
+                                            {
+                                                "Percent" : [ 
+                                                    {
+                                                        "NumericContent" : 18.00
+                                                    }
+                                                ],
+                                                "TaxExemptionReasonCode" : [ 
+                                                    {
+                                                        "CodeContent" : "10",
+                                                        "CodeListAgencyNameText" : "PE:SUNAT",
+                                                        "CodeListNameText" : "Afectacion del IGV",
+                                                        "CodeListUniformResourceIdentifier" : "urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo07"
+                                                    }
+                                                ],
+                                                "TaxScheme" : [ 
+                                                    {
+                                                        "ID" : [ 
+                                                            {
+                                                                "IdentifierContent" : "1000",
+                                                                "IdentificationSchemeNameText" : "Codigo de tributos",
+                                                                "IdentificationSchemeUniformResourceIdentifier" : "urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo05",
+                                                                "IdentificationSchemeAgencyNameText" : "PE:SUNAT"
+                                                            }
+                                                        ],
+                                                        "Name" : [ 
+                                                            {
+                                                                "TextContent" : "IGV"
+                                                            }
+                                                        ],
+                                                        "TaxTypeCode" : [ 
+                                                            {
+                                                                "CodeContent" : "VAT"
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ],
+                        "Item" : [ 
+                            {
+                                "Description" : [ 
+                                    {
+                                        "TextContent" : "POR EL SERVICIO DE CARGUIO EN MINA"
+                                    }
+                                ],
+                                "SellersItemIdentification" : [ 
+                                    {
+                                        "ID" : [ 
+                                            {
+                                                "IdentifierContent" : "01"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ],
+                        "Price" : [ 
+                            {
+                                "PriceAmount" : [ 
+                                    {
+                                        "AmountContent" : "507",
+                                        "AmountCurrencyIdentifier" : "PEN"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                  
+                ]
+            }
+        ]
+}

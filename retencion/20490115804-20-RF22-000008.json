@@ -1,0 +1,337 @@
+{
+    "_D": "urn:sunat:names:specification:ubl:peru:schema:xsd:Retention-1",
+    "_A": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+    "_B": "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2",
+    "_E": "urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2",
+    "_SUNAT": "urn:sunat:names:specification:ubl:peru:schema:xsd:SunatAggregateComponents-1",
+    "Retention": [
+        {
+            "UBLVersionID": [
+                {
+                    "_": "2.0"
+                }
+            ],
+            "CustomizationID": [
+                {
+                    "_": "1.0"
+                }
+            ],
+	    "Signature": [
+                {
+                    "ID": [
+                        {
+                            "_": "IDSignature"
+                        }
+                    ],
+                    "SignatoryParty": [
+                        {
+                            "PartyIdentification": [
+                                {
+                                    "ID": [
+                                        {
+                                            "_": "20490115804"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "PartyName": [
+                                {
+                                    "Name": [
+                                        {
+                                            "_": "ASOCIACION DE MINEROS ARTESANALES PEPAS DE ORO DE PAMPAMARCA"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "DigitalSignatureAttachment": [
+                        {
+                            "ExternalReference": [
+                                {
+                                    "URI": [
+                                        {
+                                            "_": "IDSignature"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "ID": [
+                {
+                    "_": "RF22-000008"
+                }
+            ],
+            "IssueDate": [
+                {
+                    "_": "2025-01-23"
+                }
+            ],
+            "AgentParty": [
+                {
+                    "PartyIdentification": [
+                        {
+                            "ID": [
+                                {
+                                    "_": "20490115804",
+                                    "schemeID": "6"
+                                }
+                            ]
+                        }
+                    ],
+                    "PartyName": [
+                        {
+                            "Name": [
+                                {
+                                    "_": "ASOCIACION DE MINEROS ARTESANALES PEPAS DE ORO DE PAMPAMARCA"
+                                }
+                            ]
+                        }
+                    ],
+                    "PostalAddress": [
+                        {
+                            "ID": [
+                                {
+                                    "_": "030205"
+                                }
+                            ],
+                            "StreetName": [
+                                {
+                                    "_": "PZA.PLAZA DE ARMAS PAMPAMARCA NRO. S/N ANX. PAMPAMARCA (COMUNIDAD DE PAMPAMARCA) APURIMAC - AYMARAES - COTARUSE"
+                                }
+                            ],
+                            "CityName": [
+                                {
+                                    "_": "AYMARAES"
+                                }
+                            ],
+                            "CountrySubentity": [
+                                {
+                                    "_": "APURIMAC"
+                                }
+                            ],
+                            "District": [
+                                {
+                                    "_": "COTARUSE"
+                                }
+                            ],
+                            "Country": [
+                                {
+                                    "IdentificationCode": [
+                                        {
+                                            "_": "PE"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "PartyLegalEntity": [
+                        {
+                            "RegistrationName": [
+                                {
+                                    "_": "ASOCIACION DE MINEROS ARTESANALES PEPAS DE ORO DE PAMPAMARCA"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "ReceiverParty": [
+                {
+                    "PartyIdentification": [
+                        {
+                            "ID": [
+                                {
+                                    "_": "20607353493",
+                                    "schemeID": "6"
+                                }
+                            ]
+                        }
+                    ],
+                    "PartyName": [
+                        {
+                            "Name": [
+                                {
+                                    "_": "AR CORPORATION S.A.C."
+                                }
+                            ]
+                        }
+                    ],
+                    "PostalAddress": [
+                        {
+                            "ID": [
+                                {
+                                    "_": "150110"
+                                }
+                            ],
+                            "StreetName": [
+                                {
+                                    "_": "JR. LAS AMERICAS NRO. 667 INT. 2 URB.  LA LIBERTAD  (ALT CDRA 16 DE LA AV PUNO)  LIMA                                                                                                                               - LIMA                                                                                                                               - COMAS"
+                                }
+                            ],
+                            "CityName": [
+                                {
+                                    "_": "LIMA"
+                                }
+                            ],
+                            "CountrySubentity": [
+                                {
+                                    "_": "LIMA"
+                                }
+                            ],
+                            "District": [
+                                {
+                                    "_": "COMAS"
+                                }
+                            ],
+                            "Country": [
+                                {
+                                    "IdentificationCode": [
+                                        {
+                                            "_": "PE"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "PartyLegalEntity": [
+                        {
+                            "RegistrationName": [
+                                {
+                                    "_": "AR CORPORATION S.A.C."
+                                }
+                            ]
+                        }
+                    ],
+                    "Contact": [
+                        {
+                            "ElectronicMail": [
+                                {
+                                    "_": "contabilidad.amapo@pepasdeoro.com.pe"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "SUNATRetentionSystemCode": [
+                {
+                    "_": "01"
+                }
+            ],
+            "SUNATRetentionPercent": [
+                {
+                    "_": "3"
+                }
+            ],
+            "Note": [
+                {
+                    "_": ""
+                }
+            ],
+            "TotalInvoiceAmount": [
+                {
+                    "_": "76.92",
+                    "currencyID": "PEN"
+                }
+            ],
+            "SUNATTotalPaid": [
+                {
+                    "_": "2487.08",
+                    "currencyID": "PEN"
+                }
+            ],
+            "SUNATRetentionDocumentReference": [
+                {
+                    "ID": [
+                        {
+                            "_": "E001-185",
+                            "schemeID": "01"
+                        }
+                    ],
+                    "IssueDate": [
+                        {
+                            "_": "2025-01-17"
+                        }
+                    ],
+                    "TotalInvoiceAmount": [
+                        {
+                            "_": "2564",
+                            "currencyID": "PEN"
+                        }
+                    ],
+                    "Payment": [
+                        {
+                            "ID": [
+                                {
+                                    "_": "1"
+                                }
+                            ],
+                            "PaidAmount": [
+                                {
+                                    "_": "2564",
+                                    "currencyID": "PEN"
+                                }
+                            ],
+                            "PaidDate": [
+                                {
+                                    "_": "2025-01-17"
+                                }
+                            ]
+                        }
+                    ],
+                    "SUNATRetentionInformation": [
+                        {
+                            "SUNATRetentionAmount": [
+                                {
+                                    "_": "76.92",
+                                    "currencyID": "PEN"
+                                }
+                            ],
+                            "SUNATRetentionDate": [
+                                {
+                                    "_": "2025-01-23"
+                                }
+                            ],
+                            "SUNATNetTotalPaid": [
+                                {
+                                    "_": "2487.08",
+                                    "currencyID": "PEN"
+                                }
+                            ],
+                            "ExchangeRate": [
+                                {
+                                    "SourceCurrencyCode": [
+                                        {
+                                            "_": "PEN"
+                                        }
+                                    ],
+                                    "TargetCurrencyCode": [
+                                        {
+                                            "_": "PEN"
+                                        }
+                                    ],
+                                    "CalculationRate": [
+                                        {
+                                            "_": "1"
+                                        }
+                                    ],
+                                    "Date": [
+                                        {
+                                            "_": "2025-01-23"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
