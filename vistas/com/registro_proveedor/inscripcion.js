@@ -26,7 +26,7 @@ function getResponseRegistroProveedorForm(response) {
                 break;
 
             case 'obtenerParametrosIniciales':
-                debugger;
+                ;
                 if(response.data==0){mensajeCulminado(); loaderClose();}
                 else{
                 onResponseObtenerParametrosIniciales(response.data);
@@ -66,7 +66,7 @@ function getResponseRegistroProveedorForm(response) {
                 break;
 
             case 'obtenerDocumentosPlanta':
-                debugger;
+                ;
                 onResponseAjaxpGetDataGridSolicitud(response.data);
                 $('#datatable32').dataTable({
                     "scrollX": true,
@@ -101,7 +101,7 @@ function getResponseRegistroProveedorForm(response) {
                 break;
             
             case 'obtenerDocumentosAdministracion':
-                debugger;
+                ;
                 onResponseAjaxpGetDataGridSolicitud2(response.data);
                 $('#datatable').dataTable({
                     "scrollX": true,
@@ -135,7 +135,7 @@ function getResponseRegistroProveedorForm(response) {
                 break;
 
                 case 'obtenerCoordenadas':
-                    debugger;
+                    ;
                     buildTable(response.data);
                     $('#coordinatesTable').dataTable({
                         "scrollX": true,
@@ -196,12 +196,12 @@ function getResponseRegistroProveedorForm(response) {
              break;
 
             case 'obtenerPlantasXPersona':
-                debugger;
+                ;
                 listarDataSolicitudes(response.data);
                 break;
 
             case 'guardarInvitacionConformidad':
-                debugger;
+                ;
                 loaderClose();
                 $('#modalDocumento').modal('hide');
                 mensajeCulminado();
@@ -227,18 +227,18 @@ function getResponseRegistroProveedorForm(response) {
                 mensajeErrorInscripcion();
                 break;
             case 'obtenerParametrosIniciales':
-                debugger;
+                ;
                 mensajeErrorTiempo();
                 break;
             case 'guardarInvitacionConformidad':
-                debugger;
+                ;
                 loaderClose();
                 $("button[onclick='guardarInvitacion();']").prop("disabled", false);
                 btnEnviar.innerHTML = '<i ></i> Enviar';
                 // mensajeErrorInscripcion();
                 break;
                 case 'obtenerPlantasXPersona':
-                    debugger;
+                    ;
                     loaderClose();
                     break;
             default:
@@ -250,7 +250,7 @@ function getResponseRegistroProveedorForm(response) {
 }
 
 function onResponseAjaxpGetDataGridSolicitud3(data) {
-    debugger;
+    ;
     $("#dataList3").empty();
     var cuerpo_total = '';
     var cuerpo = '';
@@ -287,7 +287,7 @@ function onResponseAjaxpGetDataGridSolicitud3(data) {
 }
 
 function buildTable(data) {
-    debugger;
+    ;
     const tableContainer = document.getElementById('dataList3');
     let tableHTML = `
         <table id="coordinatesTable" class="table table-bordered">
@@ -326,10 +326,10 @@ function buildTable(data) {
 }
 
 function onResponseAjaxpGetDataGridSolicitud2(data) {
-    debugger;
+    ;
     var persona = trim(document.getElementById('secretPersona').value);
     var planta = $('#cboPlantas').val();
-    debugger;
+    ;
     $("#dataList2").empty();
     var cuerpo_total = '';
     var cuerpo = '';
@@ -373,10 +373,10 @@ function onResponseAjaxpGetDataGridSolicitud2(data) {
 }
 
 function onResponseAjaxpGetDataGridSolicitud(data) {
-    debugger;
+    ;
     var persona = trim(document.getElementById('secretPersona').value);
     var planta = $('#cboPlantas').val();
-    debugger;
+    ;
     $("#dataList").empty();
     var cuerpo_total = '';
     var cuerpo = '';
@@ -424,7 +424,7 @@ function onResponseAjaxpGetDataGridSolicitud(data) {
 }
 
 function generarCeldaArchivo2(archivo, id, tipo,persona,planta,persona_archivo_id) {
-    debugger;
+    ;
     loaderClose();
     var inputId = 'file_' + id + '_' + tipo;
     if (archivo) {
@@ -451,7 +451,7 @@ function visualizarArchivo2(archivo) {
 
 function eliminarArchivo2(id, tipo,archivo,persona_archivo_id,planta) {
     loaderShow();
-    debugger;
+    ;
     ax.setAccion("eliminarArchivo2");
     ax.addParamTmp("id", id);
     ax.addParamTmp("archivo", archivo);
@@ -464,7 +464,7 @@ function eliminarArchivo2(id, tipo,archivo,persona_archivo_id,planta) {
 
 function subirArchivo2(id, tipo, inputId,persona,planta) {
     loaderShow();
-    debugger;
+    ;
     var inputFile = document.getElementById(inputId);
     var inputFileName = inputFile.files[0].name;
     if (inputFile && inputFile.files.length > 0) {
@@ -492,7 +492,7 @@ function subirArchivo2(id, tipo, inputId,persona,planta) {
 }
 
 function guardarSolicitud2(base64String, id, tipo,inputFileName,persona,planta) {
-    debugger;
+    ;
     ax.setAccion("subirArchivo2");
     ax.addParamTmp("id", id);
     ax.addParamTmp("file", base64String);
@@ -505,7 +505,7 @@ function guardarSolicitud2(base64String, id, tipo,inputFileName,persona,planta) 
 }
 
 function generarCeldaArchivo(archivo, id, tipo,persona,planta,persona_archivo_id) {
-    debugger;
+    ;
     loaderClose();
     var inputId = 'fileid_' + id + '_' + tipo;
     if (archivo) {
@@ -533,7 +533,7 @@ function visualizarArchivo(archivo) {
 
 function eliminarArchivo(id, tipo,archivo,persona_archivo_id,planta) {
     loaderShow();
-    debugger;
+    ;
     ax.setAccion("eliminarArchivo");
     ax.addParamTmp("id", id);
     ax.addParamTmp("archivo", archivo);
@@ -546,7 +546,7 @@ function eliminarArchivo(id, tipo,archivo,persona_archivo_id,planta) {
 
 function subirArchivo(id, tipo, inputId,persona,planta) {
     loaderShow();
-    debugger;
+    ;
     var inputFile = document.getElementById(inputId);
     var inputFileName = inputFile.files[0].name;
     if (inputFile && inputFile.files.length > 0) {
@@ -574,7 +574,7 @@ function subirArchivo(id, tipo, inputId,persona,planta) {
 }
 
 function guardarSolicitud(base64String, id, tipo,inputFileName,persona,planta) {
-    debugger;
+    ;
     ax.setAccion("subirArchivo");
     ax.addParamTmp("id", id);
     ax.addParamTmp("file", base64String);
@@ -587,7 +587,7 @@ function guardarSolicitud(base64String, id, tipo,inputFileName,persona,planta) {
 }
 
 function obtenerParametrosIniciales() {
-    debugger;
+    ;
     loaderShow();
     let parametros = obtenecionCadenaEncriptada();
     if (isEmpty(parametros)) {
@@ -612,7 +612,7 @@ function obtenerParametrosIniciales() {
 
 var tamanioArchivo = 0;
 $("#file").change(function () {
-    debugger;
+    ;
     $('#idPopover').attr("data-content", !isEmpty($('#file').val().slice(12)) ? $('#file').val().slice(12) : "No se eligió archivo");
     $('#idPopover').popover('show');
     $('.popover-content').css('color', 'black');
@@ -629,12 +629,12 @@ $("#file").change(function () {
 });
 
 function imageIsLoaded(e) {
-    debugger;
+    ;
     $('#secretFile').attr('value', e.target.result);
 }
 
 $("#fileFirma").change(function () {
-    debugger;
+    ;
     if (this.files && this.files[0]) {
         $("#secretNameFirma").val(this.files[0].name);
         var reader = new FileReader();
@@ -654,7 +654,7 @@ function imageFirmaIsLoaded(e) {
 
 
 function agregarDocumento() {
-    debugger;
+    ;
     var documento = {};
     documento.id = "t" + moment().valueOf();
     documento.value = $('#secretFile').val();
@@ -674,7 +674,7 @@ function agregarDocumento() {
 
 
 function onResponseObtenerParametrosIniciales(data) {
-    debugger;
+    ;
     $("#txtCodigoIdentificacion").val(data.datos[0].codigo_identificacion);
     $("#txtNombreCompleto").val(data.datos[0].nombre);
     $("#txtRazonSocial").val(data.datos[0].nombre);
@@ -706,7 +706,7 @@ function onResponseObtenerParametrosIniciales(data) {
 }
 
 function onChangeDocumentoTipoAdjunto(id){
-    debugger;
+    ;
     loaderShow();
     var persona = trim(document.getElementById('secretPersona').value);
     ax.setAccion("obtenerDocumentosPlanta");
@@ -722,7 +722,7 @@ function onChangeDocumentoTipoAdjunto(id){
 
 
 function onChangeDocumentoTipoAdjunto2(){
-    debugger;
+    ;
     loaderShow();
     var planta = $('#cboPlantas').val();
     var persona = trim(document.getElementById('secretPersona').value);
@@ -739,7 +739,7 @@ function onChangeDocumentoTipoAdjunto2(){
 
 
 function obtenerDocumentosAdministracion(){
-    debugger;
+    ;
     var persona = trim(document.getElementById('secretPersona').value);
     ax.setAccion("obtenerDocumentosAdministracion");
     ax.addParam("persona", persona);
@@ -753,7 +753,7 @@ function obtenerDocumentosAdministracion(){
 
 
 function obtenerCoordenadas(){
-    debugger;
+    ;
     var persona = trim(document.getElementById('secretPersona').value);
     ax.setAccion("obtenerCoordenadas");
     ax.addParam("persona", persona);
@@ -766,7 +766,7 @@ function obtenerCoordenadas(){
 }
 
 function mensajeCulminado() {
-    debugger;
+    ;
     swal({
         title: "Invitación registrada",
         type: "warning",
@@ -776,7 +776,7 @@ function mensajeCulminado() {
         closeOnConfirm: false
     }, function (isConfirm) {
         if (isConfirm) {
-debugger;
+;
             window.close();
         }
 
@@ -977,7 +977,7 @@ function enviarInvitacion(){
 }
 
 function listarDataSolicitudes(data) {
-    debugger;
+    ;
     $('#modalDocumento').modal('show');
     $("#datatable2").empty();
     if(data.length!=0){
@@ -1035,7 +1035,7 @@ function getSelectedItems() {
 }
 
 function guardarInvitacion() {
-    debugger;
+    ;
     loaderShow();
     let btnEnviar = document.getElementById('btnEnviar');
 
@@ -1046,7 +1046,7 @@ function guardarInvitacion() {
 
     btnEnviar.disabled = true;
     btnEnviar.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Enviando...';
-    debugger;
+    ;
     const rows = document.querySelectorAll('#coordinatesBody tr');
     const coordinates = [];
     
@@ -1187,7 +1187,7 @@ function guardarInvitacion() {
   
         // Función para capturar las coordenadas y dibujar el polígono
         function dibujarCoordenada() {
-            debugger;
+            ;
           // Obtener las coordenadas de la tabla
           const rows = document.querySelectorAll('#coordinatesBody tr');
           const coordinates = [];

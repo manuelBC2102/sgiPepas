@@ -32,7 +32,7 @@ function togglePesaje(show) {
 }
 
 function traerPesaje(variable) {
-    debugger;
+    ;
     loaderShow();
     ax.setAccion("obtenerPesajeSuminco");
     ax.addParamTmp("variable", variable);
@@ -126,7 +126,7 @@ function successPersona(response) {
                 cargarListarPersonaCancelar();
                 break;
             case 'guardarActaRetiro':
-                debugger;
+                ;
                 mostrarOk("Acta Retiro Registrada");
                 loaderClose();
                 cargarListarPersonaCancelar();
@@ -323,7 +323,7 @@ function onresponseConfiguracionesPersona(data)
 {
 
 
-debugger;
+;
         select2.cargar("cboTransportista", data.transportistas, "id", ["codigo_identificacion", "nombre_completo"]);
         select2.cargar("cboConductor", data.conductores, "id", ["codigo_identificacion", "nombre_completo"]);
         select2.cargar("cboPlanta", data.plantas, "id", ["codigo_identificacion", "nombre_completo"]);
@@ -474,7 +474,7 @@ function guardarSolicitud() {
 
     if (validarSolicitud(fechaEntrega,capacidad,constancia,transportista,conductor,vehiculo,zona,planta)) {
 
-debugger;
+;
         if (commonVars.personaId > 0) {
             actualizarPersona(commonVars.personaId,fechaEntrega,capacidad,constancia,transportista,conductor,vehiculo,zona,planta);
         } else {
@@ -653,7 +653,7 @@ function mostrarMensajeError(nombre)
 }
 function llenarFormularioEditar(data)
 {
-debugger;
+;
     //console.log(data);
     $("#txtFechaEntrega").val(data[0].fecha_entrega);
     $("#txtCapacidad").val(data[0].capacidad);
@@ -1311,7 +1311,7 @@ function getSelectedItems() {
 }
 
 function guardarSolicitud() {
-    debugger;
+    ;
     var selectedItems = getSelectedItems();
     var file = $('#secretImg').val();
     var placaV = trim(document.getElementById('txtPlacaV').value);

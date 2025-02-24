@@ -122,7 +122,7 @@ var id;
 
 
 function listarPersona() {
-    debugger;
+    ;
 //    var nombres = $("#txtNombresBusqueda").val();
 //    var codigo = $("#txtCodigoBusqueda").val();
 //    var tipoPersona = $("#cboTipoPersonaBusqueda").val();
@@ -253,7 +253,7 @@ function openModal(id,token) {
 }
 function confirmarDeleteSolicitud(id)
 {  
-    debugger;
+    ;
     BANDERA_ELIMINAR = false;
     swal({
         title: "Est\xe1s seguro?",
@@ -375,7 +375,7 @@ function obtenerTitulo(dependiente)
 
 
 function buscarPersona(colapsa)
-{   debugger;
+{   ;
     buscar = true;
     var cadena;
     cadena = obtenerDatosBusqueda();
@@ -391,7 +391,7 @@ function buscarPersona(colapsa)
 var actualizandoBusquedaPersona = false;
 
 function colapsarBuscadorPersona() {
-    debugger;
+    ;
     if (actualizandoBusquedaPersona) {
         actualizandoBusquedaPersona = false;
         return;
@@ -408,7 +408,7 @@ function colapsarBuscadorPersona() {
 }
 function obtenerDatosBusqueda()
 {
-    debugger;
+    ;
     var cadena = "";
     var nombres = $("#txtNombresBusqueda").val();
     var codigo = $("#txtCodigoBusqueda").val();
@@ -446,7 +446,7 @@ function obtenerDatosBusqueda()
     return cadena;
 }
 function editarInvitacion(id) {
-    debugger;
+    ;
     loaderShow(null);
     commonVars.invitacionId = id;
     cargarDiv("#window", "vistas/com/invitacion/invitacion_form.php", "Editar Invitación ");
@@ -574,7 +574,7 @@ function obtenerParametrosBusqueda(){
 }
 
 function llenarParametrosBusqueda(nombresTxt,codigoTxt,idTxt,clasePersonaTxt){         
-    debugger;
+    ;
     var clasePersonaIds=[];
     if(!isEmpty(clasePersonaTxt)){
         clasePersonaIds.push(clasePersonaTxt);
@@ -601,7 +601,7 @@ function buscarCriteriosBusquedaSolicitud(){
 }
 
 function onResponseBuscarCriteriosBusquedaSolicitud(data){
-    debugger;
+    ;
     var dataPersona=data.dataPersona;
     var dataPersonaClase=data.dataPersonaClase;  
     

@@ -273,7 +273,7 @@ require_once __DIR__ . '/../../../util/Configuraciones.php';
                                                             $(function () {
                                                                 $(":file").change(function () {
                                                                     if (this.files && this.files[0]) {
-                                                                        debugger;
+                                                                        ;
                                                                         var reader = new FileReader();
                                                                         reader.onload = imageIsLoaded3;
                                                                         reader.readAsDataURL(this.files[0]);
@@ -281,7 +281,7 @@ require_once __DIR__ . '/../../../util/Configuraciones.php';
                                                                 });
                                                             });
                                                             function imageIsLoaded3(e) {
-                                                                debugger;
+                                                                ;
                                                                 $('#secretImg3').attr('value', e.target.result);
                                                                 $('#myImg3').attr('src', e.target.result);
                                                                 $('#myImg3').attr('width', '128px');

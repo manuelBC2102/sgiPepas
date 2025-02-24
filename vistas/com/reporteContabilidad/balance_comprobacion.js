@@ -152,7 +152,7 @@ function onResponseReporteSumaMensual(data) {
                 cuerpo_total += '<td align="right">' + formatearNumeroPorCantidadDecimales(cuenta.haber, 2) + '</td>';
                 cuerpo_total += '<td align="right">' + formatearNumeroPorCantidadDecimales(debe_saldo, 2) + '</td>';
                 cuerpo_total += '<td align="right">' + formatearNumeroPorCantidadDecimales(haber_saldo, 2) + '</td>';
-                // debugger;
+                // ;
                 saldos_iniciales_deudo = saldos_iniciales_deudo + parseFloat(cuenta.debe_inicial);
                 saldos_iniciales_acreedor = saldos_iniciales_acreedor + parseFloat(cuenta.haber_inicial);
                 movimiento_deudo = movimiento_deudo + parseFloat(cuenta.debe);

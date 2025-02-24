@@ -61,7 +61,7 @@ function successPersona(response) {
                 break; 
 
             case 'eliminarArchivos':
-                debugger;
+                ;
                 if(response.data['0'].vout_exito == 1){
                     llenarTablaArchivos();
                     loaderClose();
@@ -113,7 +113,7 @@ function onResponsellenarcomboTipoArchivo(data) {
 }
 
 function renderArchivo(data) {
-    debugger;
+    ;
     var archivoTableBody = $('#archivoTable tbody');
     archivoTableBody.empty();
     
@@ -135,7 +135,7 @@ function renderArchivo(data) {
 // INSERTAR DOCUMENTOS A LA PERSONA
 
 function insertDocumentoDetalle() {
-    debugger;
+    ;
     var personaId = commonVars.personaId;
     var personaTipoArchivo = select2.obtenerValor('cboTipoArchivo');   // arroja el id del tipo de archivo
     var inputFile = $('#secretImg').val();
@@ -151,7 +151,7 @@ function insertDocumentoDetalle() {
 
 // eliminar archivo 
 function deleteArchivo(id, archivo) {
-    debugger;
+    ;
     loaderShow();
     ax.setAccion("eliminarArchivos");
     ax.addParamTmp("id", id);

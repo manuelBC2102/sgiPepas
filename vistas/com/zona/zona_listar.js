@@ -56,7 +56,7 @@ function successZona(response) {
 
 
 function cambiarEstado(id, estado) {
-    debugger
+    
     ax.setAccion("actualizarBotonEstadoZona");
     ax.addParamTmp("id", id);
     ax.addParamTmp("estado", estado);
@@ -84,7 +84,7 @@ function onResponseAjaxpGetDataGridZona(data) {
         "<th style='text-align:center;' width=100px>Acciones</th>" +
         "</tr>" +
         "</thead>";
-        debugger;
+        ;
         if (!isEmpty(data)) {
             let iconoEstado = [{estado_actualizar: 1, color: "#cb2a2a", icono: "ion-flash-off"}, {estado_actualizar: 0, color: "#5cb85c", icono: "ion-checkmark-circled"}];
         

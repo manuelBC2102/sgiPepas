@@ -3,7 +3,7 @@ $(document).ready(function () {
     loaderClose();
     ax.setSuccess("successVehiculo");
     listarVehiculo();
-    debugger;
+    ;
 });
 
 function successVehiculo(response) {
@@ -11,7 +11,7 @@ function successVehiculo(response) {
         switch (response[PARAM_ACCION_NAME]) {
             case 'listarVehiculo':
                 onResponseAjaxpGetDataGridVehiculo(response.data);
-                debugger;
+                ;
                 $('#datatable').dataTable({
                     destroy: true,
                     "language": {
@@ -71,7 +71,7 @@ function onResponseAjaxpGetDataGridVehiculo(data) {
     $("#dataList").empty();
     var cuerpo_total = '';
     var cuerpo = '';
-    debugger;
+    ;
     var cabeza = '<table id="datatable" class="table table-responsive table-striped table-bordered"><thead>' +
             " <tr>" +
             // "<th style='text-align:end;'>#</th>" +
@@ -95,7 +95,7 @@ function onResponseAjaxpGetDataGridVehiculo(data) {
             2: { nombre: 'Carreta', icono: '<i class="fa fa-truck"></i>' },
         };
         $.each(data, function (index, item) {
-            debugger;
+            ;
             var tipo = tipoMap[item.tipo] || { nombre: 'Desconocido', icono: '' };
             var tipoNombreIcono = tipo.icono + ' ' + tipo.nombre;
             if(item.estado==1){
@@ -127,7 +127,7 @@ function onResponseAjaxpGetDataGridVehiculo(data) {
 }
 
 function confirmarDelete(id, descripcion) {
-    debugger;
+    ;
     swal({
         title: "Est\xe1s seguro?",
         text: "Eliminarás " + descripcion + "",
@@ -139,7 +139,7 @@ function confirmarDelete(id, descripcion) {
         cancelButtonText: "No,cancelar !",
          closeOnCancel: false
     }, function (isConfirm) {
-        debugger;
+        ;
         if (isConfirm) {
             cambiarEstado(id, 2);
         } else {

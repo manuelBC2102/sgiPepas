@@ -77,7 +77,7 @@ var id;
 
 
 function listarMatriz() {
-    debugger;
+    ;
     var documentoF = select2.obtenerValor('cboTipoDocumentoF');
     var usuarioF = select2.obtenerValor('cboUsuarioF');
     var zonaF = select2.obtenerValor('cboZonaF');
@@ -212,7 +212,7 @@ function openModal(id, token) {
     $('#linkModal').modal('show');
 }
 function confirmarDeleteSolicitud(id) {
-    debugger;
+    ;
     BANDERA_ELIMINAR = false;
     swal({
         title: "Est\xe1s seguro?",
@@ -333,7 +333,7 @@ function successPersonaListar(response) {
 }
 
 function onResponseObtenerdatosInicialesModal(data) {
-    debugger;
+    ;
 
     let defaultOption = new Option("Todos", "0", true, true);
     $('#cboPlanta').append(defaultOption).trigger('change');
@@ -354,7 +354,7 @@ function onResponseObtenerdatosInicialesModal(data) {
 }
 
 function onResponseObtenerdatosInicialesModal2(data) {
-    debugger;
+    ;
 
     let defaultOption = new Option("Todos", "0", true, true);
     $('#cboPlanta').append(defaultOption).trigger('change');
@@ -440,7 +440,7 @@ function obtenerTitulo(dependiente) {
 
 
 function buscarPersona(colapsa) {
-    debugger;
+    ;
     buscar = true;
     var cadena;
     cadena = obtenerDatosBusqueda();
@@ -456,7 +456,7 @@ function buscarPersona(colapsa) {
 var actualizandoBusquedaPersona = false;
 
 function colapsarBuscadorPersona() {
-    debugger;
+    ;
     if (actualizandoBusquedaPersona) {
         actualizandoBusquedaPersona = false;
         return;
@@ -472,7 +472,7 @@ function colapsarBuscadorPersona() {
     }
 }
 function obtenerDatosBusqueda() {
-    debugger;
+    ;
     var cadena = "";
     var nombres = $("#txtNombresBusqueda").val();
     var codigo = $("#txtCodigoBusqueda").val();
@@ -506,7 +506,7 @@ function obtenerDatosBusqueda() {
     return cadena;
 }
 function editarInvitacion(id) {
-    debugger;
+    ;
     loaderShow(null);
     commonVars.invitacionId = id;
     cargarDiv("#window", "vistas/com/invitacion/invitacion_form.php", "Editar Invitación ");
@@ -629,7 +629,7 @@ function obtenerParametrosBusqueda() {
 }
 
 function llenarParametrosBusqueda(nombresTxt, codigoTxt, idTxt, clasePersonaTxt) {
-    debugger;
+    ;
     var clasePersonaIds = [];
     if (!isEmpty(clasePersonaTxt)) {
         clasePersonaIds.push(clasePersonaTxt);
@@ -656,7 +656,7 @@ function buscarCriteriosBusquedaSolicitud() {
 }
 
 function onResponseBuscarCriteriosBusquedaSolicitud(data) {
-    debugger;
+    ;
     var dataPersona = data.dataPersona;
     var dataPersonaClase = data.dataPersonaClase;
 
@@ -726,7 +726,7 @@ function datosInicialesFiltros(id) {
 
 
 function abrirModalMatriz(id) {
-    debugger;
+    ;
     // Limpiar los campos select2
     $('#cboTipoDocumento').val(null).trigger('change');
     $('#cboUsuario').val(null).trigger('change');
@@ -797,7 +797,7 @@ function onResponseObtenerPersonaActivoXStringBusqueda(data, dataCombo) {
 
 
 $("#file").change(function () {
-    debugger;
+    ;
     $('#idPopover').attr("data-content", !isEmpty($('#file').val().slice(12)) ? $('#file').val().slice(12) : "No se eligió archivo");
     $('#idPopover').popover('show');
     $('.popover-content').css('color', 'black');
@@ -814,12 +814,12 @@ $("#file").change(function () {
 });
 
 function imageIsLoaded(e) {
-    debugger;
+    ;
     $('#secretImg').attr('value', e.target.result);
 }
 
 function guardarAprobador() {
-    debugger;
+    ;
     let btnEnviar = document.getElementById('btnEnviar');
 
     if (btnEnviar) {

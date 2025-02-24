@@ -100,13 +100,13 @@ function successPersona(response) {
                 cargarListarPersonaCancelar();
                 break;
             case 'guardarInvitacionTransportista':
-                debugger;
+                ;
                 mostrarOk("Invitación registrada");
                 loaderClose();
                 cargarListarPersonaCancelar();
                 break;
             case 'actualizarInvitacionTransportista':
-                debugger;
+                ;
                 mostrarOk("Invitación actualizada");
                 loaderClose();
                 cargarListarPersonaCancelar();
@@ -189,7 +189,7 @@ var direccionTipoFiscal;
 var convenioSunatId0 = null;
 function onresponseConfiguracionesPersona(data)
 {
-debugger;
+;
 
     $('#txtrazon').val(data.invitacion[0].nombre).prop('readonly', true);
     $('#txtDireccion').val(data.invitacion[0].ciudad_inscripcion).prop('readonly', true);
@@ -338,7 +338,7 @@ function onResponseValidarSimilitudes(data)
 
 //     if (validarSolicitud(fechaEntrega,capacidad,constancia,transportista,conductor,vehiculo,zona,planta)) {
 
-// debugger;
+// ;
 //         if (commonVars.invitacionId > 0) {
 //             actualizarPersona(commonVars.invitacionId,fechaEntrega,capacidad,constancia,transportista,conductor,vehiculo,zona,planta);
 //         } else {
@@ -424,7 +424,7 @@ function mostrarMensajeError(nombre)
 }
 function llenarFormularioEditar(data)
 {
-debugger;
+;
     //console.log(data);
     $("#txtFechaEntrega").val(data[0].fecha_entrega);
     $("#txtCapacidad").val(data[0].capacidad);
@@ -1084,7 +1084,7 @@ function getSelectedItems() {
 
 function guardarSolicitud() {
     
-    debugger;
+    ;
     var ruc = trim(document.getElementById('txtReinfo').value);
     var codigo = trim(document.getElementById('txtCodigo').value);
     var nombre = trim(document.getElementById('txtrazon').value);
@@ -1124,7 +1124,7 @@ function guardarSolicitud() {
 }
 
 function listarDataSolicitudes(data) {
-    debugger;
+    ;
     if(data==false){
         swal.fire({
             title: "Error",

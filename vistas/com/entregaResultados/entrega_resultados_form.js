@@ -119,7 +119,7 @@ function listarPersona() {
 }
 
 function ingresarRegistrarPesajes(id) {
-    debugger;
+    ;
     loaderShow(null);
     commonVars.personaId = id;
     cargarDiv("#window", "vistas/com/pesajePlanta/pesaje_planta_form.php", "Registrar Pesajes ");
@@ -249,7 +249,7 @@ function successPersonaListar(response) {
 
 
 function onResponseAjaxpGetDataGridSolicitudes(data) {
-    debugger;
+    ;
     $("#dataList").empty(); // Limpiar contenido anterior
 
     if (Array.isArray(data) && data.length > 0) {
@@ -400,9 +400,9 @@ function onResponseAjaxpGetDataGridSolicitudes(data) {
 
         // Script para cargar archivos y convertir a base64
         $.each(data, function(index, loteData) {
-            debugger;
+            ;
             $(`#file_${index}`).change(function() {
-                debugger;
+                ;
                 var input = this;
                 if (input.files && input.files[0]) {
                     var reader = new FileReader();
@@ -483,7 +483,7 @@ function agregarMineral(index) {
 
 
 function eliminarMineral(index) {
-  debugger;
+  ;
     // Eliminar el panel de mineral correspondiente
     var mineralCount = $(`#lote_${1} .panelMineral`).length;
     if (mineralCount == 0) {
@@ -568,7 +568,7 @@ function calcularTms(element) {
 }
 
 function validarResultados(element) {
-    debugger;
+    ;
     var id = $(element).attr('id');
     var index = id.split('_')[1];
 
@@ -611,7 +611,7 @@ function validarResultados(element) {
 
 
 function calcularTotalMineral(element) {
-    debugger;
+    ;
     // Obtener el índice del lote desde el ID del elemento
     var id = $(element).attr('id');
     var index = id.split('_')[1];
@@ -657,7 +657,7 @@ function calcularTotalMineral(element) {
 
 function guardarLotes() {
     loaderShow();
-    debugger;
+    ;
     let allLotesData = [];
 
     // Recorre todos los lotes
@@ -667,7 +667,7 @@ function guardarLotes() {
         // Obtén el id del lote y el índice
         let panelId = panel.id;
         if (panelId && panelId.startsWith('lote_')) {
-            debugger;
+            ;
             let loteIndex = panelId.split('_')[1];
             console.log(`Procesando lote con índice ${loteIndex}`);
 
@@ -688,7 +688,7 @@ function guardarLotes() {
             let mineralesData = [];
 
             mineralPanels.forEach((mineralPanel, mineralIndex) => {
-                debugger;
+                ;
                 let mineralData = {
                     tipo_mineral2: mineralPanel.querySelector(`#cboTipoArchivo_${2}`)?.value || '',
                     tipo_mineral: mineralPanel.querySelector(`#cboTipoArchivo_${mineralIndex}`)?.value || '',
@@ -725,7 +725,7 @@ function guardarLotes() {
 
 
 // function guardarLotes(){
-//     debugger;
+//     ;
 //     var formData = $("form").serialize(); 
 //     ax.setAccion("deleteSolicitud");
 // }
@@ -787,7 +787,7 @@ function cargarListarPersonaCancelar() {
 }
 
 function buscarPersona(colapsa) {
-    debugger;
+    ;
     buscar = true;
     var cadena;
     cadena = obtenerDatosBusqueda();
@@ -803,7 +803,7 @@ function buscarPersona(colapsa) {
 var actualizandoBusquedaPersona = false;
 
 function colapsarBuscadorPersona() {
-    debugger;
+    ;
     if (actualizandoBusquedaPersona) {
         actualizandoBusquedaPersona = false;
         return;
@@ -819,7 +819,7 @@ function colapsarBuscadorPersona() {
     }
 }
 function obtenerDatosBusqueda() {
-    debugger;
+    ;
     var cadena = "";
     var nombres = $("#txtNombresBusqueda").val();
     var codigo = $("#txtCodigoBusqueda").val();
@@ -853,7 +853,7 @@ function obtenerDatosBusqueda() {
     return cadena;
 }
 function editarPersona(id) {
-    debugger;
+    ;
     loaderShow(null);
     commonVars.personaId = id;
     cargarDiv("#window", "vistas/com/solicitudRetiro/solicitud_retiro_form.php", "Editar Solicitud ");
@@ -978,7 +978,7 @@ function obtenerParametrosBusqueda() {
 }
 
 function llenarParametrosBusqueda(nombresTxt, codigoTxt, idTxt, clasePersonaTxt) {
-    debugger;
+    ;
     var clasePersonaIds = [];
     if (!isEmpty(clasePersonaTxt)) {
         clasePersonaIds.push(clasePersonaTxt);
@@ -1005,7 +1005,7 @@ function buscarCriteriosBusquedaSolicitud() {
 }
 
 function onResponseBuscarCriteriosBusquedaSolicitud(data) {
-    debugger;
+    ;
     var dataPersona = data.dataPersona;
     var dataPersonaClase = data.dataPersonaClase;
 

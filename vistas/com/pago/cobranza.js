@@ -1909,7 +1909,7 @@ function enviarDocumento() {
     //VALIDO QUE LA FECHA DE EMISION ESTE EN EL PERIODO SELECCIONADO
     var periodoFechaEm = obtenerPeriodoIdXFechaEmision();
     if (periodoId != periodoFechaEm) {
-        debugger;
+        ;
         //OCULTO EL MODAL
         $('#modalNuevoDocumentoPagoConDocumento').modal('hide');
 
@@ -1959,7 +1959,7 @@ function guardarDocumento() {
     periodoId = select2.obtenerValor('cboPeriodo');
     importeComprobante = document.getElementById("fTotal").innerHTML;
     importeComprobante = importeComprobante.replace("S/.","");
-    debugger;
+    ;
 
     let elementoConId1 = camposDinamicos.filter(function(elemento) {
         return elemento.tipo === 14;

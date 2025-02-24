@@ -76,7 +76,7 @@ function listarSolicitudesDocumentario() {
 }
 
 function onResponseAjaxpGetDataGridSolicitud(data) {
-    debugger;
+    ;
     $("#dataList").empty();
     var cuerpo_total = '';
     var cuerpo = '';
@@ -125,7 +125,7 @@ function onResponseAjaxpGetDataGridSolicitud(data) {
 }
 
 function generarCeldaArchivo(archivo, id, tipo) {
-    debugger;
+    ;
     var inputId = 'file_' + id + '_' + tipo;
     if (archivo) {
         var archivoRuta='/sgiLaVictoria/vistas/com/solicitudRetiro/documento/'+archivo;
@@ -151,7 +151,7 @@ function visualizarArchivo(archivo) {
 
 function eliminarArchivo(id, tipo,archivo) {
     loaderShow();
-    debugger;
+    ;
     ax.setAccion("eliminarArchivo");
     ax.addParamTmp("id", id);
     ax.addParamTmp("archivo", archivo);
@@ -162,7 +162,7 @@ function eliminarArchivo(id, tipo,archivo) {
 
 function subirArchivo(id, tipo, inputId) {
     loaderShow();
-    debugger;
+    ;
     var inputFile = document.getElementById(inputId);
     if (inputFile && inputFile.files.length > 0) {
         var file = inputFile.files[0]; // Obtener el archivo del input
@@ -189,7 +189,7 @@ function subirArchivo(id, tipo, inputId) {
 }
 
 function guardarSolicitud(base64String, id, tipo) {
-    debugger;
+    ;
     ax.setAccion("subirArchivo");
     ax.addParamTmp("id", id);
     ax.addParamTmp("file", base64String);

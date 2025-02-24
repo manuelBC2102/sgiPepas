@@ -118,7 +118,7 @@ function listarPersona() {
 }
 
 function ingresarRegistrarPesajes(id) {
-    debugger;
+    ;
     loaderShow(null);
     commonVars.personaId = id;
     cargarDiv("#window", "vistas/com/pesajePlanta/pesaje_planta_form.php", "Registrar Pesajes ");
@@ -282,7 +282,7 @@ function onResponseAjaxpGetDataGridSolicitudes(data) {
         "<th style='text-align:center;' width=100px>Acciones</th>" +
         "</tr>" +
         "</thead>";
-        debugger;
+        ;
         if (!isEmpty(data)) {
             let iconoEstado = [{estado_actualizar: 1, color: "#cb2a2a", icono: "ion-flash-off"}, {estado_actualizar: 0, color: "#5cb85c", icono: "ion-checkmark-circled"}];
         
@@ -377,7 +377,7 @@ function cargarListarPersonaCancelar() {
 }
 
 function buscarPersona(colapsa) {
-    debugger;
+    ;
     buscar = true;
     var cadena;
     cadena = obtenerDatosBusqueda();
@@ -393,7 +393,7 @@ function buscarPersona(colapsa) {
 var actualizandoBusquedaPersona = false;
 
 function colapsarBuscadorPersona() {
-    debugger;
+    ;
     if (actualizandoBusquedaPersona) {
         actualizandoBusquedaPersona = false;
         return;
@@ -409,7 +409,7 @@ function colapsarBuscadorPersona() {
     }
 }
 function obtenerDatosBusqueda() {
-    debugger;
+    ;
     var cadena = "";
     var nombres = $("#txtNombresBusqueda").val();
     var codigo = $("#txtCodigoBusqueda").val();
@@ -443,7 +443,7 @@ function obtenerDatosBusqueda() {
     return cadena;
 }
 function editarPersona(id) {
-    debugger;
+    ;
     loaderShow(null);
     commonVars.personaId = id;
     cargarDiv("#window", "vistas/com/solicitudRetiro/solicitud_retiro_form.php", "Editar Solicitud ");
@@ -568,7 +568,7 @@ function obtenerParametrosBusqueda() {
 }
 
 function llenarParametrosBusqueda(nombresTxt, codigoTxt, idTxt, clasePersonaTxt) {
-    debugger;
+    ;
     var clasePersonaIds = [];
     if (!isEmpty(clasePersonaTxt)) {
         clasePersonaIds.push(clasePersonaTxt);
@@ -595,7 +595,7 @@ function buscarCriteriosBusquedaSolicitud() {
 }
 
 function onResponseBuscarCriteriosBusquedaSolicitud(data) {
-    debugger;
+    ;
     var dataPersona = data.dataPersona;
     var dataPersonaClase = data.dataPersonaClase;
 

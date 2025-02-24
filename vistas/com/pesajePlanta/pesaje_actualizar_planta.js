@@ -60,7 +60,7 @@ function successPersona(response) {
                 cargarListarPersonaCancelar();
                 break;
             case 'guardarActaRetiro':
-                debugger;
+                ;
                 mostrarOk("Acta Retiro Registrada");
                 loaderClose();
                 cargarListarPersonaCancelar();
@@ -204,7 +204,7 @@ function getSelectedItems() {
 }
 
 function listarDataSolicitudes2(data) {
-    debugger;
+    ;
     $("#datatable2").empty();
     var cuerpo_total = '';
     var cuerpo = '';
@@ -306,7 +306,7 @@ function renderLotes(data) {
 }
 
 function saveLote() {
-    debugger;
+    ;
     var solicitudId = $('#saveLote').data('solicitudId');
     var ticket1 = $('#ticket1').val();
     var ticket2 = $('#ticket1').val();
@@ -359,7 +359,7 @@ function editLote(solicitudId, index) {
 }
 
 function deleteLote(id, archivo) {
-    debugger;
+    ;
     loaderShow();
     var solicitudId = $('#saveLote').data('solicitudId');
     ax.setAccion("eliminarLotes");
@@ -370,7 +370,7 @@ function deleteLote(id, archivo) {
 }
 
 function obtenerLote(solicitudId) {
-    debugger;
+    ;
     var solicitudId = $('#saveLote').data('solicitudId');
     console.log('Mostrando loader');
     loaderShow();
@@ -424,7 +424,7 @@ function modificarFormularioProveedorInternacional() {
 }
 
 function guardarSolicitud() {
-    debugger;
+    ;
     loaderShow();
     ax.setAccion("guardarPesajeSolicitudRetiro");
     ax.addParamTmp("solicitud_id", commonVars.personaId);

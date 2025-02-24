@@ -76,7 +76,7 @@ function listarSolicitudesDocumentario() {
 }
 
 function onResponseAjaxpGetDataGridSolicitud(data) {
-    debugger;
+    ;
     $("#dataList").empty();
     var cuerpo_total = '';
     var cuerpo = '';

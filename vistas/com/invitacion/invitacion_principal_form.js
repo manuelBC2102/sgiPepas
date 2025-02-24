@@ -2,7 +2,7 @@ var c = $('#env i').attr('class');
 var anchoComboSunat2;
 var dataPersonaGlobal;
 $(document).ready(function () {
-    debugger;
+    ;
     controlarDomXTipoPersona();
     select2.iniciar();
     anchoComboSunat2 = $("#divCboCodigoSunat2").width();
@@ -105,13 +105,13 @@ function successPersona(response) {
                 cargarListarPersonaCancelar();
                 break;
             case 'guardarInvitacionPrincipal':
-                debugger;
+                ;
                 mostrarOk("Invitación registrada");
                 loaderClose();
                 cargarListarPersonaCancelar();
                 break;
             case 'actualizarInvitacionPrincipal':
-                debugger;
+                ;
                 mostrarOk("Invitación actualizada");
                 loaderClose();
                 cargarListarPersonaCancelar();
@@ -194,7 +194,7 @@ var direccionTipoFiscal;
 var convenioSunatId0 = null;
 function onresponseConfiguracionesPersona(data)
 {
-debugger;
+;
 
     $('#txtrazon').val(data.invitacion[0].nombre);
     $('#txtDireccion').val(data.invitacion[0].direccion);
@@ -343,7 +343,7 @@ function onResponseValidarSimilitudes(data)
 
 //     if (validarSolicitud(fechaEntrega,capacidad,constancia,transportista,conductor,vehiculo,zona,planta)) {
 
-// debugger;
+// ;
 //         if (commonVars.invitacionId > 0) {
 //             actualizarPersona(commonVars.invitacionId,fechaEntrega,capacidad,constancia,transportista,conductor,vehiculo,zona,planta);
 //         } else {
@@ -436,7 +436,7 @@ function mostrarMensajeError(nombre)
 }
 function llenarFormularioEditar(data)
 {
-debugger;
+;
     //console.log(data);
     $("#txtFechaEntrega").val(data[0].fecha_entrega);
     $("#txtCapacidad").val(data[0].capacidad);
@@ -1096,7 +1096,7 @@ function getSelectedItems() {
 
 function guardarSolicitud() {
     
-    debugger;
+    ;
     var ruc = trim(document.getElementById('txtReinfo').value);
     // var fecha = trim(document.getElementById('txtFecha').value);
     var nombre = trim(document.getElementById('txtrazon').value);
@@ -1134,7 +1134,7 @@ function guardarSolicitud() {
 }
 
 function listarDataSolicitudes(data) {
-    debugger;
+    ;
     if(data==false){
         swal.fire({
             title: "Error",

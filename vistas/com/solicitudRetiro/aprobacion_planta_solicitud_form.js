@@ -187,7 +187,7 @@ function onresponseConfiguracionesPersona(data)
 {
 
 
-debugger;
+;
         select2.cargar("cboTransportista", data.transportistas, "id", ["codigo_identificacion", "nombre_completo"]);
         select2.cargar("cboConductor", data.conductores, "id", ["codigo_identificacion", "nombre_completo"]);
         select2.cargar("cboPlanta", data.plantas, "id", ["codigo_identificacion", "nombre_completo"]);
@@ -348,7 +348,7 @@ function onResponseValidarSimilitudes(data)
 
 
 function aprobarSolicitud() {
-debugger;
+;
    
     swal({
         title: "¿Está seguro de aprobar la Solicitud de retiro?",
@@ -579,7 +579,7 @@ function mostrarMensajeError(nombre)
 }
 function llenarFormularioEditar(data)
 {
-debugger;
+;
     //console.log(data);
     $("#txtFechaEntrega").val(data[0].fecha_entrega);
     $("#txtCapacidad").val(data[0].capacidad);

@@ -38,7 +38,7 @@ $('#cbo_tipo').keypress(function () {
 });
 
 function successVehiculoForm(response) {
-    debugger;
+    ;
     if (response['status'] === 'ok') {
         switch (response[PARAM_ACCION_NAME]) {
             case 'obterConfiguracionInicialForm':
@@ -46,7 +46,7 @@ function successVehiculoForm(response) {
                 loaderClose();
                 break;
             case 'validarPlacaEndPoint':
-                debugger;
+                ;
                 onresponseObtenerConsultaPlaca(response.data);
                 loaderClose();
                 break;
@@ -78,7 +78,7 @@ function buscarConsultaPlaca(){
 }
 
 function onresponseObtenerConsultaPlaca(data) {
-    debugger;
+    ;
     // dataImage= data[0]['captura'];
     //console.log(data);    
     $('#txt_capacidad').val('');
@@ -108,7 +108,7 @@ function obtenerConfiguracionInicial() {
     ax.consumir();
 }
 function onResponseObtenerConfiguracionInicial(data) {
-    debugger;
+    ;
     select2.iniciar();
 
   
@@ -136,7 +136,7 @@ function onResponseObtenerConfiguracionInicial(data) {
 }
 // guardar sin validacion !
 // function guardarVehiculo() {
-//     debugger;
+//     ;
 //     let espacio = /^\s+$/;
 //     id = $("#id").val();
 //     // si es nuevo vehiculo que lo valide los campos que ingrese pero para al actualizar no
@@ -213,7 +213,7 @@ function onResponseObtenerConfiguracionInicial(data) {
 
 
 function guardarVehiculo() {
-    debugger;
+    ;
     const espacio = /^\s+$/;
     const id = $("#id").val();
 

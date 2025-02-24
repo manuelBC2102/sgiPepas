@@ -108,7 +108,7 @@ function successPersona(response) {
                 cargarListarPersonaCancelar();
                 break;
             case 'guardarActaRetiro':
-                debugger;
+                ;
                 mostrarOk("Acta Retiro Registrada");
                 loaderClose();
                 cargarListarPersonaCancelar();
@@ -342,7 +342,7 @@ function renderLotes(data) {
 }
 
 function saveLote() {
-    debugger;
+    ;
     var solicitudId = $('#saveLote').data('solicitudId');
     var ticket1 = $('#ticket1').val();
     var ticket2 = $('#ticket1').val();
@@ -402,7 +402,7 @@ function loaderHide2() {
     document.getElementById('loader').style.display = 'none';
 }
 function deleteLote(id, archivo) {
-    debugger;
+    ;
     loaderShow2();
     var solicitudId = $('#saveLote').data('solicitudId');
     ax.setAccion("eliminarLotes");
@@ -413,7 +413,7 @@ function deleteLote(id, archivo) {
 }
 
 function obtenerLote(solicitudId) {
-    debugger;
+    ;
     var solicitudId = $('#saveLote').data('solicitudId');
     console.log('Mostrando loader');
     loaderShow2();
@@ -467,7 +467,7 @@ function modificarFormularioProveedorInternacional() {
 }
 
 function guardarSolicitud() {
-    debugger;
+    ;
     var selectedItems = getSelectedItems();
     loaderShow();
     ax.setAccion("guardarPesajesActaRetiro");

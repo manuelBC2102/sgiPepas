@@ -371,7 +371,7 @@ function cargarListarPersonaCancelar()
 
 function buscarPersona(colapsa)
 {   
-    debugger;
+    ;
     buscar = true;
     var cadena;
     cadena = obtenerDatosBusqueda();
@@ -440,7 +440,7 @@ function obtenerDatosBusqueda()
     return cadena;
 }
 function editarPersona(id, tipo) {
-    debugger;
+    ;
     loaderShow(null);
     commonVars.personaId = id;
     commonVars.personaTipoId = tipo;

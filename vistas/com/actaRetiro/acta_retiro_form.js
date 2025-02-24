@@ -32,7 +32,7 @@ function togglePesaje(show) {
 }
 
 function traerPesaje(variable) {
-    debugger;
+    ;
     loaderShow();
     ax.setAccion("obtenerPesajeSuminco");
     ax.addParamTmp("variable", variable);
@@ -126,7 +126,7 @@ function successPersona(response) {
                 cargarListarPersonaCancelar();
                 break;
             case 'guardarActaRetiro':
-                debugger;
+                ;
                 mostrarOk("Acta Retiro Registrada");
                 loaderClose();
                 cargarListarPersonaCancelar();
@@ -467,7 +467,7 @@ function guardarSolicitud() {
 
     if (validarSolicitud(fechaEntrega,capacidad,constancia,transportista,conductor,vehiculo,zona,planta)) {
 
-debugger;
+;
         if (commonVars.personaId > 0) {
             actualizarPersona(commonVars.personaId,fechaEntrega,capacidad,constancia,transportista,conductor,vehiculo,zona,planta);
         } else {
@@ -646,7 +646,7 @@ function mostrarMensajeError(nombre)
 }
 function llenarFormularioEditar(data)
 {
-debugger;
+;
     //console.log(data);
     $("#txtPlacaV").val(data[0].vehiculo);
     $("#fechaPesajeInicial").val(data[0].fecha_inicial);
@@ -1301,7 +1301,7 @@ function getSelectedItems() {
 }
 
 function guardarSolicitud() {
-    debugger;
+    ;
      var selectedItems = getSelectedItems();
     var file = $('#secretImg').val();
     var placaV = trim(document.getElementById('txtPlacaV').value);

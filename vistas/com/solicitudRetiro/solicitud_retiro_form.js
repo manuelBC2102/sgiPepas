@@ -126,12 +126,12 @@ function successPersona(response) {
                 loaderClose();
                 break;
             case 'obtenerValidacionConductor':
-                debugger;
+                ;
                     iconoConductor(response.data);
                     loaderClose();
                     break;
             case 'obtenerValidacionVehiculo':
-                debugger;
+                ;
                         iconoVehiculo(response.data);
                         loaderClose();
                         break;
@@ -162,17 +162,17 @@ function successPersona(response) {
                 habilitarBoton();
                 break;
             case 'obtenerValidacionTransportista':
-                debugger;
+                ;
                     mensajeAlertaTransportista(response.message);
                     loaderClose();
                     break;
             case 'obtenerValidacionConductor':
-                        debugger;
+                        ;
                             mensajeAlertaConductor(response.message);
                             loaderClose();
                             break;
                             case 'obtenerValidacionVehiculo':
-                                debugger;
+                                ;
                                     mensajeAlertaVehiculo(response.message);
                                     loaderClose();
                                     break;
@@ -189,7 +189,7 @@ function onresponseConfiguracionesPersona(data)
 {
 
 
-debugger;
+;
         select2.cargar("cboTransportista", data.transportistas, "id", ["codigo_identificacion", "nombre_completo"]);
         select2.cargar("cboConductor", data.conductores, "id", ["codigo_identificacion", "nombre_completo"]);
         select2.cargar("cboPlanta", data.plantas, "id", ["codigo_identificacion", "nombre_completo"]);
@@ -225,7 +225,7 @@ function iconoVehiculo(data){
 }
 
 function mensajeAlertaVehiculo(mensaje){
-    debugger;
+    ;
     const icono = document.getElementById("iconoVehiculo");
     icono.className = "fa fa-close"; // Icono de error
     icono.style.color = "red";
@@ -239,7 +239,7 @@ function mensajeAlertaVehiculo(mensaje){
 }
 
 function iconoConductor(data){
-    debugger;
+    ;
     var licencia=data[5][1];
     if(licencia!='VIGENTE'){
         mensajeAlertaConductor(licencia);
@@ -253,7 +253,7 @@ function iconoConductor(data){
 }
 
 function mensajeAlertaConductor(mensaje){
-    debugger;
+    ;
     const icono = document.getElementById("iconoConductor");
     icono.className = "fa fa-close"; // Icono de error
     icono.style.color = "red";
@@ -276,7 +276,7 @@ function iconoTransportista(){
 }
 
 function mensajeAlertaTransportista(mensaje){
-    debugger;
+    ;
     const icono = document.getElementById("iconoTransportista");
     icono.className = "fa fa-close"; // Icono de error
     icono.style.color = "red";
@@ -404,7 +404,7 @@ function guardarSolicitud() {
 
     if (validarSolicitud(fechaEntrega,capacidad,constancia,transportista,conductor,vehiculo,zona,planta,reinfo,lotes)) {
 
-debugger;
+;
         if (commonVars.personaId > 0) {
             actualizarPersona(commonVars.personaId,fechaEntrega,capacidad,constancia,transportista,conductor,vehiculo,zona,planta,reinfo,lotes);
         } else {
@@ -600,7 +600,7 @@ function mostrarMensajeError(nombre)
 }
 function llenarFormularioEditar(data)
 {
-debugger;
+;
     //console.log(data);
     $("#txtFechaEntrega").val(data[0].fecha_entrega);
     $("#txtCapacidad").val(data[0].capacidad);

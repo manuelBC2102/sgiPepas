@@ -50,7 +50,7 @@ function obtenerConfiguracionInicial() {
     ax.consumir();
 }
 function onResponseObtenerConfiguracionInicial(data) {
-    debugger;
+    ;
     select2.iniciar();
 
     limpiarImput();
@@ -67,7 +67,7 @@ function limpiarImput() {
 }
 function guardarzona() {
     
-    debugger;
+    ;
     id = $("#id").val();
     nombre = $("#txt_nombre").val();
     descripcion = $("#txt_descripcion").val();

@@ -244,7 +244,7 @@ function successUsuario(response) {
                         }
                     }
                 });
-                debugger;
+                ;
                 loaderClose();
                 break;
             case 'getComboColaborador':
@@ -272,7 +272,7 @@ function successUsuario(response) {
                 exitoInsert(response.data);
                 break;
             case 'getUsuario':
-                debugger;
+                ;
                 acciones.getUsuario = true;
                 dataPorId = response.data;
                 usuarioCargarData();
@@ -511,7 +511,7 @@ function insertUsuario(usu_nombre, id_colaborador, id_perfil, usu_creacion, esta
     if (validar_usuario_form()) {
         deshabilitarBoton();
         loaderShow();
-        debugger;
+        ;
         ax.setAccion("insertUsuario");
         ax.addParamTmp("usu_nombre", usu_nombre);
         ax.addParamTmp("id_colaborador", id_colaborador);
@@ -536,7 +536,7 @@ function updateUsuario(id, usu_nombre, id_colaborador, id_perfil,  estado, empre
 {
     if (validar_usuario_form()) {
         deshabilitarBoton();
-        debugger;
+        ;
         ax.setAccion("updateUsuario");
         ax.addParamTmp("id_usuario", id);
         ax.addParamTmp("usu_nombre", usu_nombre);
@@ -728,7 +728,7 @@ function cancelarCambiarContrasena()
 
 
 // function mostrarCampo(){
-//     debugger;
+//     ;
 //     var select = document.getElementById('cbo_perfil');
 //     var zona = document.getElementById("cboZonaUsuario");
 //     var opcionesSeleccionadas = Array.from(select.selectedOptions).map(option => option.value);

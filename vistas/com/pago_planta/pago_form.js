@@ -104,7 +104,7 @@ function listarSolicitudesDocumentario() {
 }
 
 function onResponseAjaxpGetDataGridSolicitud(data) {
-    debugger;
+    ;
     if(commonVars.personaTipoId==2){
     var titulo = document.getElementById('titulo');
 
@@ -139,7 +139,7 @@ function onResponseAjaxpGetDataGridSolicitud(data) {
         ];
 
         $.each(data, function (index, item) {
-            debugger;
+            ;
 
             // Declarar las variables fuera del bloque condicional
             let archivoRutaFinal = '';
@@ -194,7 +194,7 @@ function onResponseAjaxpGetDataGridSolicitud(data) {
 
 
 function abrirModalDirimencia(id,solicitud_retiro_detalle_id) {
-    debugger;
+    ;
     // Limpiar los campos select2
     $('#cboTipoDocumento').val(null).trigger('change');
     $('#cboUsuario').val(null).trigger('change');
@@ -216,7 +216,7 @@ function abrirModalDirimencia(id,solicitud_retiro_detalle_id) {
 }
 
 function guardarAprobador() {
-    debugger;
+    ;
     loaderShow();
     $('#registroModal').modal('hide');
     var file = $('#secretImg').val();
@@ -232,7 +232,7 @@ function guardarAprobador() {
 }
 
 $(document).on('change', '.loteCheckbox', function() {
-    debugger;
+    ;
     var checkboxesSeleccionados = $('.loteCheckbox:checked');
     
     // Verificar si al menos un checkbox está seleccionado y si todos pertenecen a la misma sociedad
@@ -289,7 +289,7 @@ function abrirModalSeleccionados() {
             return; // Salir de la función
         }
 
-        debugger;
+        ;
         // Añadir los datos de este lote al array de detalles
         detalles.push({
             id: loteId,
@@ -382,7 +382,7 @@ function guardarFactura() {
     const fileExtension = document.getElementById('fileExtension').value;
     
     $('.loteCheckbox:checked').each(function() {
-        debugger;
+        ;
         
         var loteId = $(this).data('id');
         lotesSeleccionados.push(loteId);

@@ -3,7 +3,7 @@ var anchoComboSunat2;
  
 var dataPersonaGlobal;
 $(document).ready(function () {
-    debugger;
+    ;
     controlarDomXTipoPersona();
     select2.iniciar();
     anchoComboSunat2 = $("#divCboCodigoSunat2").width();
@@ -34,7 +34,7 @@ $(document).ready(function () {
 });
 
 $("#cboClasePersona").on("change", function (e) {
-    debugger;
+    ;
     a = e.val;
     //console.log(e.val)
     var bandera_tabla_centro_costo = false;
@@ -1693,7 +1693,7 @@ function controlarVisibilidadDocumentos() {
 
 // ////////// SUBIR DOCUMENTOS ///////////////////////
 function insertDocumentoDetalle() {
-    debugger;
+    ;
     var personaId = commonVars.personaId;
     var personaTipoArchivo = select2.obtenerValor('cboTipoArchivo');   // arroja el id del tipo de archivo
     var inputFile = $('#secretImg2').val();
@@ -1812,7 +1812,7 @@ function MostrarGuardarDocumento() {
 }
 
 function validarYGuardar() {
-    debugger;
+    ;
     var nuevoDocumentoPLanta = $('#txtNombreDocumento').val();
   
     if (isEmpty(nuevoDocumentoPLanta) || nuevoDocumentoPLanta.trim() === '') {
@@ -1833,7 +1833,7 @@ function validarYGuardar() {
 }
 
 function nuevoTipoDocumento(){
-    debugger;
+    ;
     
     var nombreDocumento = $('#txtNombreDocumento').val();
     loaderShow();
@@ -1854,7 +1854,7 @@ function mostrarFormato() {
 }
 
 function insertDocumentoPersonaPlanta(){
-    debugger;
+    ;
     var tipoDocumentoPlanta = $('#cboTipoArchivo2').val();
     var personaId = commonVars.personaId;
 

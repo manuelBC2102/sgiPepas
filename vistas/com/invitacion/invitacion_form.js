@@ -101,13 +101,13 @@ function successPersona(response) {
                 cargarListarPersonaCancelar();
                 break;
             case 'guardarInvitacion':
-                debugger;
+                ;
                 mostrarOk("Invitación registrada");
                 loaderClose();
                 cargarListarPersonaCancelar();
                 break;
             case 'actualizarInvitacion':
-                debugger;
+                ;
                 mostrarOk("Invitación actualizada");
                 loaderClose();
                 cargarListarPersonaCancelar();
@@ -211,7 +211,7 @@ function onresponseConfiguracionesPersona(data)
     $('#txtDireccion').val(data.invitacion[0].direccion);
     $('#txtTelefono').val(data.invitacion[0].telefono);
     $('#txtCorreo').val(data.invitacion[0].email);
-    debugger;
+    ;
     ubigeoT=data.invitacion[0].ubigeo_id;
     loaderClose();
 }
@@ -222,7 +222,7 @@ function llenarcomboZonas() {
     ax.consumir();
 }
 function onResponsellenarcomboTipoArchivo(data) {
-    debugger;
+    ;
     
     arraycomboTipoArchivo= data.zona;
     $('#cboTipoArchivo').empty();
@@ -354,7 +354,7 @@ function onResponseValidarSimilitudes(data)
 
 //     if (validarSolicitud(fechaEntrega,capacidad,constancia,transportista,conductor,vehiculo,zona,planta)) {
 
-// debugger;
+// ;
 //         if (commonVars.invitacionId > 0) {
 //             actualizarPersona(commonVars.invitacionId,fechaEntrega,capacidad,constancia,transportista,conductor,vehiculo,zona,planta);
 //         } else {
@@ -446,7 +446,7 @@ function mostrarMensajeError(nombre)
 }
 function llenarFormularioEditar(data)
 {
-debugger;
+;
     //console.log(data);
     $("#txtFechaEntrega").val(data[0].fecha_entrega);
     $("#txtCapacidad").val(data[0].capacidad);
@@ -1153,7 +1153,7 @@ function getSelectedItems() {
 
 function guardarSolicitud() {
     
-    debugger;
+    ;
     var ruc = trim(document.getElementById('txtReinfo').value);
     var codigo = trim(document.getElementById('txtCodigoUnico').value);
     var nombre = trim(document.getElementById('txtNombre').value);
@@ -1211,7 +1211,7 @@ function guardarSolicitud() {
 }
 
 function listarDataSolicitudes(data) {
-    debugger;
+    ;
     if(data==false){
         swal.fire({
             title: "Error",
@@ -1277,7 +1277,7 @@ function listarDataSolicitudes(data) {
 }
 
 function listarDataSolicitudesDNI(data) {
-    debugger;
+    ;
     const adversoBase64 = data.anverso; // Base64 del adverso
     const reversoBase64 = data.reverso; 
     const foto = data.foto_base64;// Base64 del reverso

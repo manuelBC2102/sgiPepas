@@ -127,7 +127,7 @@ var clasePersona;
 var id;
 
 function listarPersona() {
-    debugger;
+    ;
 
     var planta = $("#cboPlantaF").val();
     var zona = $("#cboZonaF").val();
@@ -241,7 +241,7 @@ function listarPersona() {
 function generarPDF(id, imagen1_nombre, imagen2_nombre, imagen3_nombre) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-debugger;
+;
     // Función para construir la ruta completa a la imagen
     function obtenerRutaImagen(nombreImagen) {
         if (!nombreImagen) return ''; // Si no hay nombre de imagen, retornamos vacío
@@ -440,7 +440,7 @@ function cargarListarPersonaCancelar()
 }
 
 function buscarPersona(colapsa)
-{   debugger;
+{   ;
     buscar = true;
     var cadena;
     cadena = obtenerDatosBusqueda();
@@ -456,7 +456,7 @@ function buscarPersona(colapsa)
 var actualizandoBusquedaPersona = false;
 
 function colapsarBuscadorPersona() {
-    debugger;
+    ;
     if (actualizandoBusquedaPersona) {
         actualizandoBusquedaPersona = false;
         return;
@@ -473,7 +473,7 @@ function colapsarBuscadorPersona() {
 }
 function obtenerDatosBusqueda()
 {
-    debugger;
+    ;
     var cadena = "";
     var nombres = $("#txtNombresBusqueda").val();
     var codigo = $("#txtCodigoBusqueda").val();
@@ -511,7 +511,7 @@ function obtenerDatosBusqueda()
     return cadena;
 }
 function editarPersona(id) {
-    debugger;
+    ;
     loaderShow(null);
     commonVars.personaId = id;
     cargarDiv("#window", "vistas/com/solicitudRetiro/solicitud_retiro_form.php", "Editar Solicitud ");
@@ -658,7 +658,7 @@ function obtenerParametrosBusqueda(){
 }
 
 function llenarParametrosBusqueda(nombresTxt,codigoTxt,idTxt,clasePersonaTxt){         
-    debugger;
+    ;
     var clasePersonaIds=[];
     if(!isEmpty(clasePersonaTxt)){
         clasePersonaIds.push(clasePersonaTxt);
@@ -685,7 +685,7 @@ function buscarCriteriosBusquedaSolicitud(){
 }
 
 function onResponseBuscarCriteriosBusquedaSolicitud(data){
-    debugger;
+    ;
     var dataPersona=data.dataPersona;
     var dataPersonaClase=data.dataPersonaClase;  
     

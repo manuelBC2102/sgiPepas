@@ -817,7 +817,7 @@ function getDataTable() {
 
 function nuevoForm()
 {
-    debugger;
+    ;
     loaderShow();
     VALOR_ID_USUARIO = null;
 

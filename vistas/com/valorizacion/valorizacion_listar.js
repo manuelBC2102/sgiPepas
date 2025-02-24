@@ -24,7 +24,7 @@ function exportarReporteExcel(colapsa) {
 }
 
 function archivoGenerar(id,efact){    
-       debugger;
+       ;
     loaderShow();
     ax.setAccion("obtenerToken");
     ax.addParamTmp("efact", efact);
@@ -108,7 +108,7 @@ var id;
 
 
 function listarPersona() {
-    debugger;
+    ;
     var fecha = $("#txtNombresBusqueda").val();
     
 //    var clasePersona = $("#cboClasePersonaBusqueda").val();
@@ -339,7 +339,7 @@ function successPersonaListar(response) {
                 listarPersona();
                 break;
             case 'configuracionesInicialesPersonaListar':
-                debugger;
+                ;
                 onresponseConfiguraciones(response.data);
                 break;
                 case 'obtenerConfiguracionesFiltros':
@@ -382,7 +382,7 @@ function successPersonaListar(response) {
 
 function onResponseObtenerdatosInicialesModal2(data) {
     // Cargar los combos con los datos proporcionados
-    debugger;
+    ;
 
     select2.cargar("cboVehiculo", data.vehiculos, "id", "placa");
     select2.cargar("cboUsuario", data.usuario, "usuario_id", ["nombre", "usuario"]);
@@ -433,7 +433,7 @@ function cargarListarPersonaCancelar()
 }
 
 function buscarPersona(colapsa)
-{   debugger;
+{   ;
     buscar = true;
     var cadena;
     cadena = obtenerDatosBusqueda();
@@ -449,7 +449,7 @@ function buscarPersona(colapsa)
 var actualizandoBusquedaPersona = false;
 
 function colapsarBuscadorPersona() {
-    debugger;
+    ;
     if (actualizandoBusquedaPersona) {
         actualizandoBusquedaPersona = false;
         return;
@@ -466,7 +466,7 @@ function colapsarBuscadorPersona() {
 }
 function obtenerDatosBusqueda()
 {
-    debugger;
+    ;
     var cadena = "";
     var nombres = $("#txtNombresBusqueda").val();
     var codigo = $("#txtCodigoBusqueda").val();
@@ -504,7 +504,7 @@ function obtenerDatosBusqueda()
     return cadena;
 }
 function editarPersona(id) {
-    debugger;
+    ;
     loaderShow(null);
     commonVars.personaId = id;
     cargarDiv("#window", "vistas/com/solicitudRetiro/solicitud_retiro_form.php", "Editar Solicitud ");
@@ -635,7 +635,7 @@ function obtenerParametrosBusqueda(){
 }
 
 function llenarParametrosBusqueda(nombresTxt,codigoTxt,idTxt,clasePersonaTxt){         
-    debugger;
+    ;
     var clasePersonaIds=[];
     if(!isEmpty(clasePersonaTxt)){
         clasePersonaIds.push(clasePersonaTxt);
@@ -662,7 +662,7 @@ function buscarCriteriosBusquedaSolicitud(){
 }
 
 function onResponseBuscarCriteriosBusquedaSolicitud(data){
-    debugger;
+    ;
     var dataPersona=data.dataPersona;
     var dataPersonaClase=data.dataPersonaClase;  
     
