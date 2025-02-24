@@ -20,7 +20,7 @@
         </form>
 
         <script>
-            debugger;
+            ;
             var url;
             var lista = [];
             

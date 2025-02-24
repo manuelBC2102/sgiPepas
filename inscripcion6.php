@@ -116,7 +116,7 @@ include_once __DIR__ . '/vistas/com/template/TemplateWorkflow.php';
         var URL_BASE = "<?php echo $url_base; ?>";
     </script>
     <script type="text/javascript">
-          debugger;
+          ;
         var parametrosUrl = <?php echo json_encode($_POST["parametro"]); ?>;
     </script>
 
