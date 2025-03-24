@@ -34,3 +34,14 @@ var PARAM_FLAG_DATATABLE = "param_flag_datatable";
 
 //PARA NUBE 622
 var persona_sunat_id=622;
+
+  //Documento tipo ids
+  var COTIZACIONES = 104;
+  var SOLICITUD_REQUERIMIENTO = 280;
+  var GENERAR_COTIZACION = 281;
+  var ORDEN_COMPRA = 282; 
+  var REQUERIMIENTO_AREA = 283;
+  var ORDEN_SERVICIO = 284;
+  var COTIZACION_SERVICIO = 285;
+  var INGRESO_RESERVA_STOCK = 286;
+  var SALIDA_RESERVA_STOCK = 287;

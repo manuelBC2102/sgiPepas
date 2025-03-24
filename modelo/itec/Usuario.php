@@ -56,7 +56,7 @@ class Usuario extends ModeloBase {
 
 
     
-    public function insertCookie($codigo, $usuario_id, $fecha_inicio=null) {
+    public function insertCookie($usuario_id, $fecha_inicio=null) {
         $this->commandPrepare("sp_sesion_insertCookie");
         $this->commandAddParameter(":vin_usuario_id", $usuario_id);
         $this->commandAddParameter(":vin_fecha_inicio", $fecha_inicio);

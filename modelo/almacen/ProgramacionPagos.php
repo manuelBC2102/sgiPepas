@@ -134,4 +134,12 @@ class ProgramacionPagos extends ModeloBase
         $this->commandAddParameter(":vin_id", $id);
         return $this->commandGetData();
     }
+
+    public function subirAdjunto($programacionId, $nombreGenerado)
+    {
+        $this->commandPrepare("sp_ppagos_actualizarUrlPdf");
+        $this->commandAddParameter(":vin_ppago_id", $programacionId);
+        $this->commandAddParameter(":vin_url_archivo", $nombreGenerado);
+        return $this->commandGetData();
+    }
 }

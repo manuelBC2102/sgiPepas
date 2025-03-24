@@ -127,6 +127,20 @@ class Configuraciones
   const DIAS_VENCIMIENTO_DEFAULT = 0;
   const DIAS_VENCIMIENTO_PROXIMO = 7;
 
+
+  //Documento tipo ids
+  const COTIZACIONES = 104;
+  const SOLICITUD_REQUERIMIENTO = 280;
+  const GENERAR_COTIZACION = 281;
+  const ORDEN_COMPRA = 282; 
+  const REQUERIMIENTO_AREA = 283;
+  const ORDEN_SERVICIO = 284;
+  const COTIZACION_SERVICIO = 285;
+  const INGRESO_RESERVA_STOCK = 286;
+  const SALIDA_RESERVA_STOCK = 287;
+
+  const MOVIMIENTO_TIPO_SOLICITUD_REQUERIMIENTO= 144;
+
   // URL de facturacion electrónica
   // const EFACT_URL = 'http://www.apifact2.facturasunat.com/EfacturaWsBeta.asmx?WSDL';
   // const EFACT_URL = 'http://www.apifact2.facturasunat.com/EfacturaWs.asmx?WSDL';//ORIGINAL prd

@@ -3,6 +3,7 @@
 require_once __DIR__ . '/AlmacenIndexControlador.php';
 require_once __DIR__ . '/../../modeloNegocio/almacen/PersonaNegocio.php';
 require_once __DIR__ . '/../../modeloNegocio/almacen/EmpresaNegocio.php';
+require_once __DIR__ . '/../../modeloNegocio/almacen/CuentaNegocio.php';
 require_once __DIR__ . '/../../util/Configuraciones.php';
 require_once __DIR__ . '/../../util/ImportacionExcel.php';
 
@@ -369,9 +370,33 @@ class PersonaControlador extends AlmacenIndexControlador {
     }
     
 
+    public function getDataGridPersonaCuenta() {
+        $usuarioId = $this->getUsuarioId();
+        return PersonaNegocio::create()->obtenerCuentaPersonaXUsuarioId($usuarioId);
+    }
 
+    public function getAllBancos(){
+        return CuentaNegocio::create()->obtenerCuentasActivas();
+    }
 
+    public function insertPersonaCuenta() {
+        $numero = $this->getParametro("numero");
+        $cci = $this->getParametro("cci");
+        $bancoId = $this->getParametro("bancoId");
+        $tipo = $this->getParametro("tipo");
+        $tipo_cuenta = $this->getParametro("tipo_cuenta");
+        $usuarioCreacion = $this->getUsuarioId();
+        return PersonaNegocio::create()->insertPersonaCuenta($numero, $cci, $bancoId, $tipo, $tipo_cuenta, $usuarioCreacion);
+    }
 
-
+    public function updatePersonaCuenta() {
+        $id = $this->getParametro("id");
+        $numero = $this->getParametro("numero");
+        $cci = $this->getParametro("cci");
+        $bancoId = $this->getParametro("bancoId");
+        $tipo = $this->getParametro("tipo");
+        $tipo_cuenta = $this->getParametro("tipo_cuenta");
+        return PersonaNegocio::create()->updatePersonaCuenta($id, $numero, $cci, $bancoId, $tipo, $tipo_cuenta);
+    }
 
 }

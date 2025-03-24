@@ -44,4 +44,7 @@ class DocumentoDatoValorNegocio extends ModeloNegocioBase {
     public function editarLista($documentoId, $documentoTipoDatoId, $valor) {
         return DocumentoDatoValor::create()->editar($documentoId, $documentoTipoDatoId, null, null, null, $valor);
     }
+    public function obtenerXIdDocumentoXTipo($documentoId, $tipo) {
+        return DocumentoDatoValor::create()->obtenerXIdDocumentoXTipo($documentoId, $tipo);
+    }
 }

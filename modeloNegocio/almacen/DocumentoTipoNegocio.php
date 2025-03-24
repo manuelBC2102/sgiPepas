@@ -47,6 +47,13 @@ class DocumentoTipoNegocio extends ModeloNegocioBase
   const DATO_FLETE_SUNAT = 30;
   const DATO_ARCHIVO_ADJUNTO_MULTI = 31;
   const DATO_PRODUCTO_DUPLICADO = 32;
+  const DATO_TIPO_REQUERIMIENTO = 42;
+  const DATO_AREA = 43;
+  const DATO_GRUPO_PRODUCTO = 44;
+  const DATO_ENTREGA_EN_DESTINO = 45;
+  const DATO_UO = 46;
+  const DATO_CUENTA_PROVEEDOR = 47;
+  const DATO_REQUERIMIENTOS = 47;
 
   const DATO_FLETE_DOCUMENTO = 00;
   const DATO_SEGURO_DOCUMENTO = 33;
@@ -168,6 +175,7 @@ class DocumentoTipoNegocio extends ModeloNegocioBase
             $persona = $dtd[$index]["data"];
             break;
           case self::DATO_LISTA:
+          case self::DATO_TIPO_REQUERIMIENTO:
             $dtd[$index]["data"] = DocumentoTipoDatoListaNegocio::create()->obtenerXDocumentoTipoDato($itemDtd["id"]);
             break;
           case self::DATO_FECHA_EMISION:
@@ -219,6 +227,21 @@ class DocumentoTipoNegocio extends ModeloNegocioBase
             break;
           case self::DATO_NUM_LICENCIA_CONDUCIR:
             $dtd[$index]["data"] = PersonaNegocio::create()->obtenerPersonaConductor();
+            break;
+          case self::DATO_AREA:
+              $dtd[$index]["data"] = PersonaNegocio::create()->getAllArea();
+              $dtd[$index]["lista_defecto"] = PersonaNegocio::create()->getAllAreaXUsuarioId($usuarioId)[0]["id"];
+              break;
+          case self::DATO_GRUPO_PRODUCTO:
+            $dataBienTipo = BienTipo::create()->obtenerBienTipoXRequermientoXArea();
+            $dtd[$index]["data"] = $dataBienTipo;
+            $dtd[$index]["data"][count($dataBienTipo)] = array('id' => "0", 'codigo' => "", 'descripcion' => "Seleccionar Grupo de productos ", 'estado' => "1");
+            break;
+          case self::DATO_ENTREGA_EN_DESTINO:
+          case self::DATO_UO:
+            $movimientoTipo = MovimientoTipoNegocio::create()->obtenerXDocumentoTipoId($documentoTipoId);
+            $movimientoTipoId = $movimientoTipo[0]["movimiento_tipo_id"];
+            $dtd[$index]["data"] = OrganizadorNegocio::create()->obtenerXMovimientoTipo($movimientoTipoId);
             break;
         }
       }

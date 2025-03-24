@@ -37,8 +37,8 @@ class MovimientoControlador extends AlmacenIndexControlador
     $opcionId = $this->getOpcionId();
     $usuarioId = $this->getUsuarioId();
     $empresaId = $this->getParametro("empresaId");
-    $data = MovimientoNegocio::create()->obtenerDocumentoTipo($opcionId);
-    $data->personasMayorMovimientos = PersonaNegocio::create()->obtenerPersonasMayorMovimiento($opcionId);
+    $data = MovimientoNegocio::create()->obtenerDocumentoTipo($opcionId, $usuarioId);
+    $data->personasMayorMovimientos = PersonaNegocio::create()->obtenerPersonasMayorMovimiento($opcionId, $data->getarea);
     $data->moneda = MonedaNegocio::create()->obtenerComboMoneda();
     $data->columna = MovimientoNegocio::create()->obtenerMovimientoTipoColumnaLista($opcionId);
     $data->acciones = MovimientoNegocio::create()->obtenerMovimientoTipoAcciones($opcionId);
@@ -192,8 +192,9 @@ class MovimientoControlador extends AlmacenIndexControlador
     $datosExtras = $this->getParametro("datosExtras");
     $detalleDistribucion = $this->getParametro("detalleDistribucion");
     $distribucionObligatoria = $this->getParametro("distribucionObligatoria");
+    $dataStockReservaOk = $this->getParametro("dataStockReservaOk");
 
-    $respuestaGuardar = MovimientoNegocio::create()->validarGenerarDocumentoAdicional($opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $documentoARelacionar, $valorCheck, $comentario, $checkIgv, $monedaId, $accionEnvio, $tipoPago, $listaPagoProgramacion, $anticiposAAplicar, $periodoId, $percepcion, $origen_destino, $importeTotalInafectas, $datosExtras, $detalleDistribucion, $contOperacionTipoId, $distribucionObligatoria, $igv_porcentaje);
+    $respuestaGuardar = MovimientoNegocio::create()->validarGenerarDocumentoAdicional($opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $documentoARelacionar, $valorCheck, $comentario, $checkIgv, $monedaId, $accionEnvio, $tipoPago, $listaPagoProgramacion, $anticiposAAplicar, $periodoId, $percepcion, $origen_destino, $importeTotalInafectas, $datosExtras, $detalleDistribucion, $contOperacionTipoId, $distribucionObligatoria, $igv_porcentaje, $dataStockReservaOk);
     if (isset($respuestaGuardar->bandera_historial) && !ObjectUtil::isEmpty($respuestaGuardar->bandera_historial)) {
       if ($respuestaGuardar->bandera_historial == 1) {
         $valoresActualizados = $this->eliminarParametrosJSON($this->params);
@@ -581,8 +582,11 @@ class MovimientoControlador extends AlmacenIndexControlador
         }elseif ($responseAcciones[$j]['id'] == 19 && $data[$i]['documento_tipo_id'] == 273) {
           //
           $stringAcciones .= '';
+        } elseif ((($data[$i]['documento_estado_id'] == 3) && ($responseAcciones[$j]['id'] == 3))) {
+          //
+          $stringAcciones .= '';
         }else {
-          if ($responseAcciones[$j]['id'] == 1 || $responseAcciones[$j]['id'] == 22 || $responseAcciones[$j]['id'] == 28 || $responseAcciones[$j]['id'] == 29) {
+          if ($responseAcciones[$j]['id'] == 1 || $responseAcciones[$j]['id'] == 22 || $responseAcciones[$j]['id'] == 28 || $responseAcciones[$j]['id'] == 29 || $responseAcciones[$j]['id'] == 30) {
             $datoPivot = $data[$i]['documento_tipo_id'];
           } else {
             $datoPivot = $data[$i]['movimiento_id'];
@@ -603,6 +607,7 @@ class MovimientoControlador extends AlmacenIndexControlador
         }
       }
       $data[$i]['acciones'] = $stringAcciones;
+      $data[$i]['usuario_estado'] = DocumentoNegocio::create()->obtenerDocumentoDocumentoEstadoXdocumentoId($data[$i]['documento_id'], "1")[0]['nombre'];
     }
 
     return $this->obtenerRespuestaDataTable($data, $elemntosFiltrados, $elementosTotales);
@@ -715,6 +720,7 @@ class MovimientoControlador extends AlmacenIndexControlador
     $idNegocio = $documentoTipo[0]['identificador_negocio'];
     $documento = DocumentoNegocio::create()->obtenerXId($documentoId, $documentoTipo[0]['id']);
     $serie = $documento[0]['serie'];
+    $dataMovimientoDocumento = MovimientoBien::create()->obtenerMovimientoIdXDocumentoId($documentoId);
     if (
       $dataEmpresa[0]['efactura'] == 1 || $dataEmpresa[0]['efactura'] == 2 && (
         //  $idNegocio == DocumentoTipoNegocio::IN_BOLETA_VENTA ||
@@ -748,6 +754,23 @@ class MovimientoControlador extends AlmacenIndexControlador
         $accionId = MovimientoNegocio::HISTORICO_ACCION_ANULACION;
         MovimientoNegocio::create()->insertarDocumentoHistorico($documentoId, $accionId, json_encode($valoresActualizados, JSON_UNESCAPED_UNICODE), $usuarioId, $dataDocumentoTipo[0]['bandera_historial']);
       }
+      if($dataDocumentoTipo[0]['id'] == Configuraciones::REQUERIMIENTO_AREA){
+        $documentoDetalle = MovimientoBien::create()->obtenerXIdMovimiento($dataMovimientoDocumento[0]['movimiento_id']);
+        foreach($documentoDetalle as $item){
+          $documentoDetalle = MovimientoBien::create()->movimientoBienDetalleCambiarEstadoXId($item['movimiento_bien_id']);
+        }
+
+      }
+
+      if($dataDocumentoTipo[0]['id'] == Configuraciones::GENERAR_COTIZACION){
+        $dataRelacionada = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoId($documentoId);
+        foreach($dataRelacionada as $itemRelacion){
+          if($itemRelacion['documento_tipo_id'] == Configuraciones::COTIZACIONES || $itemRelacion['documento_tipo_id'] == Configuraciones::ORDEN_COMPRA){
+            $respuestaAnular = MovimientoNegocio::create()->anularDocumento($itemRelacion['documento_relacionado_id'], $documentoEstadoId, $usuarioId, $idNegocio, $serie);
+          }
+        }
+      }
+
       return $respuestaAnular;
     }
   }
@@ -1298,7 +1321,7 @@ class MovimientoControlador extends AlmacenIndexControlador
   public function eliminarPDF()
   {
     /** @var string */
-    $url = $this->getParametro("url");
+    $url = __DIR__. '/../../'.$this->getParametro("url");
     unlink($url);
     return 1;
   }
@@ -1881,5 +1904,54 @@ class MovimientoControlador extends AlmacenIndexControlador
     $documentoId = $this->getParametro("id");
     $usuarioId = $this->getUsuarioId();
     return MovimientoNegocio::create()->aprobarCotizacion($documentoId, $usuarioId);
+  }
+
+  public function obtenerDetalleXAreaId(){
+    $opcionId = $this->getOpcionId();
+    $empresaId = $this->getParametro("empresaId");
+    $areaId = $this->getParametro("areaId");
+    $documentoTipoId = $this->getParametro("documentoTipoId");
+    $tipoRequerimiento = $this->getParametro("tipoRequerimiento");
+    $urgencia = $this->getParametro("urgencia");
+    return MovimientoNegocio::create()->obtenerDetalleXAreaId($opcionId, $empresaId, $areaId, $documentoTipoId, $tipoRequerimiento, $urgencia);
+  }
+
+  public function obtenerDetalleXGrupoProductoId(){
+    $opcionId = $this->getOpcionId();
+    $empresaId = $this->getParametro("empresaId");    
+    $grupoProductoId = $this->getParametro("grupoProductoId");
+    $tipoRequerimiento = $this->getParametro("tipoRequerimiento");
+    $urgencia = $this->getParametro("urgencia");
+    return MovimientoNegocio::create()->obtenerDetalleXGrupoProductoId($opcionId, $empresaId, $grupoProductoId, $tipoRequerimiento, $urgencia);
+  }
+
+  public function obtenerCuentaPersona(){
+    $personaId = $this->getParametro("personaId");
+    return PersonaNegocio::create()->obtenerCuentaPersona($personaId);
+  }
+
+  public function obtenerDetalleBienRequerimiento(){
+    $movimientoBienId = $this->getParametro("movimientoBienId");
+    return MovimientoNegocio::create()->obtenerDetalleBienRequerimiento($movimientoBienId);
+  }
+
+  public function obtenerPdfOrdenCompra(){
+    $documentoId = $this->getParametro("documentoId");
+    $documentoTipoId = $this->getParametro("documento_tipo_id");
+
+    $usuarioId = $this->getUsuarioId();
+    $dataRelacionada = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoId($documentoId);
+    foreach($dataRelacionada as $itemRelacion){
+      if($itemRelacion['documento_tipo_id'] == Configuraciones::GENERAR_COTIZACION){
+          $dataRelacionada1 = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoId($itemRelacion['documento_relacionado_id']);
+          foreach($dataRelacionada1 as $itemRelacion1){
+            if($itemRelacion1['documento_tipo_id'] == Configuraciones::ORDEN_COMPRA){
+              return MovimientoNegocio::create()->imprimirExportarPDFDocumento($documentoTipoId, $itemRelacion1['documento_relacionado_id'], $usuarioId);
+  
+            }
+          }
+
+      }
+    }
   }
 }

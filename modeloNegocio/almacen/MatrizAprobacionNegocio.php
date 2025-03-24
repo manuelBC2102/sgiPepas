@@ -186,6 +186,9 @@ class MatrizAprobacionNegocio extends ModeloNegocioBase
 
   }
 
+  public function obtenerMatrizXDocumentoTipoXArea($documentoTipoId, $areaId = null){
+    return MatrizAprobacion::create()->obtenerMatrizXDocumentoTipoXArea($documentoTipoId, $areaId);
+  }
 
    
 }

@@ -34,7 +34,7 @@ if (isset($_POST['username']) && isset($_POST['password'])) {
 //
 //    $cup_clase = $fila['usuario'];
 //    $usu_clave = $fila['clave'];
-//    $usu_id = $fila['id'];
+   $usu_id = $response[0]['id'];
 //    $perfil_id = $fila['perfil_id'];
 //    $colaborador_id = $fila['id_colaborador'];
 ////    echo $cup_clase;
@@ -64,7 +64,6 @@ if (isset($_POST['username']) && isset($_POST['password'])) {
 
         $time = time();
         $fecha_inicio = date("y-m-d H:i:s", $time);
-        $usu_id=null;
         $response2 = Usuario::create()->insertCookie($usu_id, $fecha_inicio);
         
         //VARIABLES DE SESION AL INICIAR

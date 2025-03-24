@@ -281,4 +281,16 @@ class Pago extends ModeloBase {
         return $this->commandGetData();
     }
 
+    public function guardarDistribucionPagos($documentoId, $fechaPago, $importePago, $dias, $porcentaje, $glosa, $usuarioId) {
+        $this->commandPrepare("sp_distribucion_pago_guardar");
+        $this->commandAddParameter("vin_documento_id", $documentoId);
+        $this->commandAddParameter("vin_fecha_pago", $fechaPago);
+        $this->commandAddParameter("vin_importe_pago", $importePago);
+        $this->commandAddParameter("vin_dias", $dias);
+        $this->commandAddParameter("vin_porcentaje", $porcentaje);
+        $this->commandAddParameter("vin_glosa", $glosa);
+        $this->commandAddParameter("vin_usuario_creacion", $usuarioId);
+        return $this->commandGetData();
+    }
+
 }

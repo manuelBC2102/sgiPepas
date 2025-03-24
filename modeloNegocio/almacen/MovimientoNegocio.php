@@ -34,6 +34,7 @@ require_once __DIR__ . '/../../util/Configuraciones.php';
 require_once __DIR__ . '/../../modelo/almacen/Actividad.php';
 require_once __DIR__ . '/../../modelo/almacen/Pago.php';
 require_once __DIR__ . '/../../modelo/contabilidad/Tabla.php';
+require_once __DIR__ . '/MatrizAprobacionNegocio.php';
 
 $objPHPExcel = null;
 $objWorkSheet = null;
@@ -83,6 +84,20 @@ class MovimientoNegocio extends ModeloNegocioBase
     if (ObjectUtil::isEmpty($respuesta->documento_tipo)) {
       throw new WarningException("El movimiento no cuenta con tipos de documentos asociados");
     }
+
+    if($respuesta->documento_tipo[0]["id"] == 280){
+      //validar perfil
+      $mostrarAccNuevo = 0;
+      $dataPerfil = PerfilNegocio::create()->obtenerPerfilXUsuarioId($usuarioId);
+      foreach ($dataPerfil as $itemPerfil) {
+        if ($itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_TI_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_JEFE_LOGISTA || $itemPerfil['id'] == PerfilNegocio::PERFIL_SOLICITANTE_REQUERIMIENTO) {
+          $mostrarAccNuevo = 1;
+        }
+      }
+      if($mostrarAccNuevo != 1){
+        throw new WarningException("No tiene perfil necesario para realizar esta acción");
+      }
+    }
     // identificador_negocio
     $documentoTipoDefectoId = $respuesta->documento_tipo[0]["id"];
     if (!ObjectUtil::isEmpty($movimientoTipo[0]['documento_tipo_defecto_id'])) {
@@ -99,19 +114,22 @@ class MovimientoNegocio extends ModeloNegocioBase
 
     if (!ObjectUtil::isEmpty($respuesta->documento_tipo_conf)) {
       foreach ($respuesta->documento_tipo_conf as $index => $itemDtd) {
-         switch ($itemDtd["tipo"]) {
-           case 17:
-             $organizador_ids = $itemDtd['cadena_defecto'];
-             break;
-         }
-       }
-     }
+        switch ($itemDtd["tipo"]) {
+          case 17:
+            $organizador_ids = $itemDtd['cadena_defecto'];
+            break;
+        }
+      }
+    }
     // $respuesta->bien = BienNegocio::create()->obtenerActivos($empresaId);
-    $respuesta->bien = BienNegocio::create()->obtenerActivosXMovimientoTipoId($empresaId, $movimientoTipoId);
+    //$respuesta->bien = BienNegocio::create()->obtenerActivosXMovimientoTipoId($empresaId, $movimientoTipoId);
+    $respuesta->bien = [["id" => "", "text" => ""]];;
     if (!ObjectUtil::isEmpty($organizador_ids)) {
-       $respuesta->organizador = OrganizadorNegocio::create()->obtenerXMovimientoTipo2($movimientoTipoId, $organizador_ids, 1);
-     } else {
-       $respuesta->organizador = OrganizadorNegocio::create()->obtenerXMovimientoTipo($movimientoTipoId);
+      $respuesta->organizador = OrganizadorNegocio::create()->obtenerXMovimientoTipo2($movimientoTipoId, $organizador_ids, 1);
+    } else {
+      if ($movimientoTipoId != "146" && $movimientoTipoId != "68" && $movimientoTipoId != "148" && $movimientoTipoId != "149" && $movimientoTipoId != "145") {
+        $respuesta->organizador = OrganizadorNegocio::create()->obtenerXMovimientoTipo($movimientoTipoId);
+      }
     }
     $respuesta->dataAgencia = AgenciaNegocio::create()->listarAgenciaActiva($empresaId);
     $respuesta->dataAgrupador = Tabla::create()->obtenerXPadreId(88);
@@ -146,6 +164,15 @@ class MovimientoNegocio extends ModeloNegocioBase
       throw new WarningException("No existe periodo abierto.");
     }
 
+    $respuesta->dataTipoCambio = null;
+    if ($documentoTipoDefectoId == Configuraciones::GENERAR_COTIZACION) {
+      $respuesta->postores = PersonaNegocio::create()->obtenerComboPersonaXPersonaClaseId('-1');
+      $fechaActual = DateUtil::formatearCadenaACadenaBD(date("d/m/Y"));
+      $respuesta->dataTipoCambio = TipoCambioNegocio::create()->obtenerTipoCambioXfecha($fechaActual);
+      if (ObjectUtil::isEmpty($respuesta->dataTipoCambio)) {
+        throw new WarningException("No existe tipo de cambio para la fecha actual.");
+      }
+    }
     return $respuesta;
   }
 
@@ -158,7 +185,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     return $data;
   }
 
-  public function obtenerDocumentoTipo($opcionId)
+  public function obtenerDocumentoTipo($opcionId, $usuarioId = null)
   {
     // obtenemos el id del movimiento tipo que utiliza la opcion
     $contador = 0;
@@ -173,6 +200,29 @@ class MovimientoNegocio extends ModeloNegocioBase
     $respuesta->progreso = Movimiento::create()->obtenerProgresoXMovimientoTipo($movimientoTipoId);
     $respuesta->prioridad = Movimiento::create()->obtenerPrioridadxMovimientoTipo($movimientoTipoId);
     $respuesta->responsable = PersonaNegocio::create()->obtenerComboPersonaXPersonaClaseId(-2);
+
+    if ($movimientoTipoId == Configuraciones::MOVIMIENTO_TIPO_SOLICITUD_REQUERIMIENTO) {
+      $mostrarTodasAreas = 0;
+      $dataPerfil = PerfilNegocio::create()->obtenerPerfilXUsuarioId($usuarioId);
+      foreach ($dataPerfil as $itemPerfil) {
+        if ($itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_TI_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_JEFE_LOGISTA) {
+          $mostrarTodasAreas = 1;
+        }
+      }
+      if ($mostrarTodasAreas == 1) {
+        $respuesta->area = PersonaNegocio::create()->getAllArea();
+        $respuesta->getarea = null;
+      } else {
+        $respuesta->area = PersonaNegocio::create()->getAllAreaXUsuarioId($usuarioId);
+        if (ObjectUtil::isEmpty($respuesta->area)) {
+          throw new WarningException("No se encontró área para el usuario en sesión");
+        }
+        $respuesta->getarea = $respuesta->area[0]['id'];
+      }
+
+      $respuesta->tipo_requerimiento = Movimiento::create()->obtenerTipoRequerimientoXMovimientoTipo($movimientoTipoId);
+    }
+
 
     if (!ObjectUtil::isEmpty($respuesta->documento_tipo_dato)) {
       $tamanio = count($respuesta->documento_tipo_dato);
@@ -250,7 +300,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     }
   }
 
-  public function validarGenerarDocumentoAdicional($opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $documentoARelacionar, $valorCheck, $comentario = NULL, $checkIgv = 1, $monedaId = null, $accionEnvio, $tipoPago, $listaPagoProgramacion, $anticiposAAplicar = null, $periodoId = null, $percepcion = null, $origen_destino = null, $importeTotalInafectas = null, $datosExtras = null, $detalleDistribucion = null, $contOperacionTipoId = null, $distribucionObligatoria = null, $igv_porcentaje = null)
+  public function validarGenerarDocumentoAdicional($opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $documentoARelacionar, $valorCheck, $comentario = NULL, $checkIgv = 1, $monedaId = null, $accionEnvio, $tipoPago, $listaPagoProgramacion, $anticiposAAplicar = null, $periodoId = null, $percepcion = null, $origen_destino = null, $importeTotalInafectas = null, $datosExtras = null, $detalleDistribucion = null, $contOperacionTipoId = null, $distribucionObligatoria = null, $igv_porcentaje = null, $dataStockReservaOk = null)
   {
     // validacion en caso de bienes faltantes
     $documentoTipo = DocumentoTipoNegocio::create()->obtenerDocumentoTipoXId($documentoTipoId);
@@ -451,6 +501,21 @@ class MovimientoNegocio extends ModeloNegocioBase
       $respuestaValidarDistribucion = ContDistribucionContableNegocio::create()->validarDistribucionContable($respuesta->documentoId, $detalleDistribucion, $contOperacionTipoId);
     }
     // }
+    //Reservar stock
+    if (!ObjectUtil::isEmpty($dataStockReservaOk) && $documentoTipoId == Configuraciones::REQUERIMIENTO_AREA) {
+      //generar salida
+      $this->guardarDocumnentoReservaEntradaSalida($usuarioId, Configuraciones::INGRESO_RESERVA_STOCK,$dataStockReservaOk, $respuesta, $periodoId, 393, 64, 1);
+      //Generar ingreso a almacen Reserva
+      $this->guardarDocumnentoReservaEntradaSalida($usuarioId, Configuraciones::SALIDA_RESERVA_STOCK,$dataStockReservaOk, $respuesta, $periodoId, 394, 78, 2);
+
+    }
+
+    if ($documentoTipoId == Configuraciones::GENERAR_COTIZACION) {
+      $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::COTIZACIONES,$detalle, $respuesta, $periodoId, 160, 1);
+      //generamos OC
+      $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::ORDEN_COMPRA,$detalle, $respuesta, $periodoId, 385, 2, $listaPagoProgramacion);
+
+    }
 
     $this->guardarAnticipos($respuesta, $anticiposAAplicar, $usuarioId, $camposDinamicos, $monedaId);
 
@@ -501,7 +566,7 @@ class MovimientoNegocio extends ModeloNegocioBase
           $esDocElectronico = 1;
           break;
       }
-    }else if($dataEmpresa[0]['efactura'] == 2){
+    } else if ($dataEmpresa[0]['efactura'] == 2) {
       switch ($identificadorNegocio * 1) {
         case DocumentoTipoNegocio::IN_FACTURA_VENTA:
           $respDocElectronico = $this->generarFacturaElectronicaNubefact($documentoId, $soloPDF, $tipoUso);
@@ -554,35 +619,35 @@ class MovimientoNegocio extends ModeloNegocioBase
     $nombrePDF = '';
 
     switch (true) {
-        // EXCEPCIONES DE LA WS - EFAC
+      // EXCEPCIONES DE LA WS - EFAC
       case strpos($mensaje, '[Cod: IMAEX') !== false:
         $tipoMensaje = DocumentoTipoNegocio::EFACT_ERROR_DESCONOCIDO;
         $mensaje = "Resultado EFACT: " . $resultado;
         // throw new WarningException("Resultado EFACT: " . $resultado);
         break;
-        // REGISTRO EN LA WS - PENDIENTE DE ENVIO A SUNAT U OSE
+      // REGISTRO EN LA WS - PENDIENTE DE ENVIO A SUNAT U OSE
       case strpos($mensaje, '[Cod: IMA00]') !== false:
         $tipoMensaje = DocumentoTipoNegocio::EFACT_PENDIENTE_ENVIO;
         $mensaje = "Resultado EFACT: " . $resultado;
         break;
-        //REGISTRO CORRECTO
+      //REGISTRO CORRECTO
       case strpos($mensaje, '[Cod: IMA01]') !== false:
         $tipoMensaje = DocumentoTipoNegocio::EFACT_CORRECTO;
         $mensaje = "Resultado EFACT: " . $resultado;
         break;
-        //ERROR CONTROLADO QUE GENERA EXCEPCION
+      //ERROR CONTROLADO QUE GENERA EXCEPCION
       case strpos($mensaje, '[Cod: IMA02]') !== false:
         $tipoMensaje = DocumentoTipoNegocio::EFACT_ERROR_CONTROLADO;
         $mensaje = "Resultado EFACT (ERROR): " . $resultado;
         break;
-        //ERROR CONTROLADO QUE GENERA RECHAZO EN SUNAT
+      //ERROR CONTROLADO QUE GENERA RECHAZO EN SUNAT
       case strpos($mensaje, '[Cod: IMA03]') !== false:
         $tipoMensaje = DocumentoTipoNegocio::EFACT_ERROR_RECHAZADO;
         $mensaje = "Resultado EFACT (ERROR): " . $resultado;
         //CAMBIAR ESTADO ANULADO :
         $resDocEstado = DocumentoNegocio::create()->ActualizarDocumentoEstadoId($documentoId, 2, 1);
         break;
-        //ERROR DESCONOCIDO
+      //ERROR DESCONOCIDO
       case strpos($mensaje, '[Cod: IMA04]') !== false:
         $tipoMensaje = DocumentoTipoNegocio::EFACT_ERROR_DESCONOCIDO;
         $mensaje = "Se generó un error al registrar el documento electrónico. Resultado EFACT: " . $resultado;
@@ -1749,7 +1814,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     }
 
     // Guardar documento
-    $documentoId = $this->guardar($opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $documentoARelacionar, $valorCheck, $comentario, $checkIgv, $monedaId, $tipoPago, $periodoId, $datosExtras, $contOperacionTipoId, null,$igv_porcentaje);
+    $documentoId = $this->guardar($opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $documentoARelacionar, $valorCheck, $comentario, $checkIgv, $monedaId, $tipoPago, $periodoId, $datosExtras, $contOperacionTipoId, null, $igv_porcentaje);
 
     if (
       $documentoTipoId == ContDistribucionContableNegocio::DOCUMENTO_TIPO_ID_FACTURA_VENTA ||
@@ -1829,7 +1894,7 @@ class MovimientoNegocio extends ModeloNegocioBase
       }
     }
 
-    if (!ObjectUtil::isEmpty($listaPagoProgramacion)) {
+    if (!ObjectUtil::isEmpty($listaPagoProgramacion) && $documentoTipoId != Configuraciones::GENERAR_COTIZACION) {
       foreach ($listaPagoProgramacion as $ind => $item) {
         //listaPagoProgramacion.push([ fechaPago, importePago, dias, porcentaje,glosa,pagoProgramacionId]);
         $fechaPago = DateUtil::formatearCadenaACadenaBD($item[0]);
@@ -1966,6 +2031,7 @@ class MovimientoNegocio extends ModeloNegocioBase
       $data = MovimientoNegocio::create()->imprimir($documentoId, $documentoTipoId);
 
       $nombre = MovimientoNegocio::create()->generarDocumentoPDF($documentoId, '', 'F', $url, $data);
+      $url = Configuraciones::url_base() . 'vistas/com/movimiento/documentos/' . $pdf;
 
       $respuesta->url = $url;
       $respuesta->nombre = $nombre;
@@ -2027,9 +2093,9 @@ class MovimientoNegocio extends ModeloNegocioBase
     ) {
       $documento = DocumentoNegocio::create()->obtenerDocumentoFEXId($documentoId);
       $url = $documento[0]["identificador_negocio"]  != DocumentoTipoNegocio::IN_GUIA_REMISION ? Configuraciones::NUBEFACT_CONTENEDOR_PDF : Configuraciones::NUBEFACT_CONTENEDOR_PDF_GUIA;
-      if(!ObjectUtil::isEmpty($documento[0]['efact_pdf_nombre'])){
-        return $url . $documento[0]['efact_pdf_nombre'].($tipo == 1 ? ".xml": ".cdr");
-      }else{
+      if (!ObjectUtil::isEmpty($documento[0]['efact_pdf_nombre'])) {
+        return $url . $documento[0]['efact_pdf_nombre'] . ($tipo == 1 ? ".xml" : ".cdr");
+      } else {
         throw new WarningException("No hay registros para el documento.");
       }
     }
@@ -2047,9 +2113,9 @@ class MovimientoNegocio extends ModeloNegocioBase
         } else {
           $urlPDF = $url . $documento[0]['efact_pdf_nombre'];
         }
-      }else{
+      } else {
         $descargar = 1;
-        $urlPDF = $url . $documento[0]['efact_pdf_nombre'].".pdf";
+        $urlPDF = $url . $documento[0]['efact_pdf_nombre'] . ".pdf";
       }
     } else {
       $urlPDF = null;
@@ -2116,9 +2182,16 @@ class MovimientoNegocio extends ModeloNegocioBase
         if ($item["unidadMedidaId"] == NULL) {
           throw new WarningException("No se especificó un valor válido para Unidad Medida. ");
         }
-        if ($item["cantidad"] == NULL or $item["cantidad"] <= 0) {
-          throw new WarningException("No se especificó un valor válido para Cantidad. ");
+        if($documentoTipoId == Configuraciones::REQUERIMIENTO_AREA){//Si es requerimiento por área
+          if ($item["cantidad"] == NULL) {
+            throw new WarningException("No se especificó un valor válido para Cantidad. ");
+          }
+        }else{
+          if ($item["cantidad"] == NULL or $item["cantidad"] <= 0) {
+            throw new WarningException("No se especificó un valor válido para Cantidad. ");
+          }
         }
+
 
         //obtengo la fecha de emision
         $fechaEmision = null;
@@ -2195,13 +2268,13 @@ class MovimientoNegocio extends ModeloNegocioBase
         }
         $agrupadorDetalle = "";
         if ($documentoTipoId == 23 || $documentoTipoId == 133) {
-          if(!ObjectUtil::isEmpty($item["agrupadorId"])){
+          if (!ObjectUtil::isEmpty($item["agrupadorId"])) {
             $agrupadorDetalle = $item["agrupadorId"];
           }
         }
         $ticket = "";
         if ($documentoTipoId == 23) {
-          if(!ObjectUtil::isEmpty($item["ticket"])){
+          if (!ObjectUtil::isEmpty($item["ticket"])) {
             $ticket = $item["ticket"];
           }
         }
@@ -2217,10 +2290,34 @@ class MovimientoNegocio extends ModeloNegocioBase
           $itemPrecio = 0.0;
         }
 
-        $movimientoBien = MovimientoBien::create()->guardar($movimientoId, $item["organizadorId"], $item["bienId"], $item["unidadMedidaId"], $item["cantidad"], $itemPrecio, 1, $usuarioId, $item["precioTipoId"], $item["utilidad"], $item["utilidadPorcentaje"], $checkIgv, $item["adValorem"], $item["comentarioBien"], $item["agenciaId"], $agrupadorDetalle, $ticket);
+        if ($documentoTipoId == Configuraciones::GENERAR_COTIZACION) {
+          $postor_ganador_id = null;
+          if ($item["checked1"] == "true") {
+            $postor_ganador_id = 1;
+          }
+          if ($item["checked2"] == "true") {
+            $postor_ganador_id = 2;
+          }
+          if ($item["checked3"] == "true") {
+            $postor_ganador_id = 3;
+          }
+
+          $checked1Moneda = $item["checked1Moneda"] == "true"? 4: 2;
+          $checked2Moneda = $item["checked2Moneda"] == "true"? 4: 2;
+          $checked3Moneda = $item["checked3Moneda"] == "true"? 4: 2;
+
+        }
+        $movimientoBien = MovimientoBien::create()->guardar($movimientoId, $item["organizadorId"], $item["bienId"], $item["unidadMedidaId"], $item["cantidad"], $itemPrecio, 1, $usuarioId, $item["precioTipoId"], $item["utilidad"], $item["utilidadPorcentaje"], $checkIgv, $item["adValorem"], $item["comentarioBien"], $item["agenciaId"], $agrupadorDetalle, $ticket, $item["CeCoId"], ($item["precioPostor1"] == "" ? null : $item["precioPostor1"]), ($item["precioPostor2"] == "" ? null : $item["precioPostor2"]), ($item["precioPostor3"] == "" ? null : $item["precioPostor3"]), $item["esCompra"], $item["cantidadAceptada"], $postor_ganador_id, $checked1Moneda, $checked2Moneda, $checked3Moneda);
         $movimientoBienId = $this->validateResponse($movimientoBien);
         if (ObjectUtil::isEmpty($movimientoBienId) || $movimientoBienId < 1) {
           throw new WarningException("No se pudo guardar un detalle del movimiento");
+        }
+
+        if ($documentoTipoId == Configuraciones::GENERAR_COTIZACION || $documentoTipoId == Configuraciones::REQUERIMIENTO_AREA) {
+          $arrayIds = explode(',', $item["movimiento_bien_ids"]);
+          foreach ($arrayIds as $itemarrayIds) {
+            $resDetalle = MovimientoNegocio::create()->movimientoBienDetalleGuardarCadena($movimientoBienId, 35, $itemarrayIds, $usuarioId);
+          }
         }
 
         // guardar el detalle del detalle del movimiento en movimiento_bien_detalle
@@ -2234,6 +2331,23 @@ class MovimientoNegocio extends ModeloNegocioBase
               if ($valor['columnaCodigo'] == 18) {
                 $fechaVencimiento = DateUtil::formatearCadenaACadenaBD($valor['valorDet']);
                 $resDetalle = MovimientoNegocio::create()->movimientoBienDetalleGuardarFecha($movimientoBienId, $valor['columnaCodigo'], $fechaVencimiento, $usuarioId);
+              }
+              if ($valor['columnaCodigo'] == 36) {
+                $decode = Util::base64ToImage($valor['valorDet']);
+                $nombreArchivo = $valor['nombreArchivo'];
+                $pos = strripos($nombreArchivo, '.');
+                $ext = substr($nombreArchivo, $pos);
+    
+                $hoy = date("YmdHis").substr((string)microtime(), 2, 3);;
+                $nombreGenerado = $documentoId . $hoy . $usuarioId . $ext;
+                if($ext == ".pdf" || $ext == ".PDF"){
+                  $url = __DIR__ . '/../../util/uploads/documentoAdjunto/' . $nombreGenerado;
+                }else{
+                  $url = __DIR__ . '/../../util/uploads/imagenAdjunto/' . $nombreGenerado;
+                }
+    
+                file_put_contents($url, $decode);
+                $resDetalle = MovimientoNegocio::create()->movimientoBienDetalleGuardarCadena($movimientoBienId, $valor['columnaCodigo'], $nombreGenerado, $usuarioId);
               }
             }
           }
@@ -2282,7 +2396,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     //si el documento se a copiado guardamos las relaciones
     foreach ($documentoARelacionar as $documentoRelacion) {
       if (!ObjectUtil::isEmpty($documentoRelacion['documentoId'])) {
-        if(ObjectUtil::isEmpty($documentoRelacion['documentoPadreId'])){
+        if (ObjectUtil::isEmpty($documentoRelacion['documentoPadreId'])) {
           DocumentoNegocio::create()->guardarDocumentoRelacionado($documentoId, $documentoRelacion['documentoId'], $valorCheck, 1, $usuarioId);
         }
       }
@@ -2373,6 +2487,9 @@ class MovimientoNegocio extends ModeloNegocioBase
     $prioridad = $criterios[0]['prioridad'];
     $responsable = $criterios[0]['responsable'];
     $agencia = $criterios[0]['agencia'];
+    $area = $criterios[0]['area'];
+    $requerimiento_tipo = $criterios[0]['requerimiento_tipo'];
+    $estado_cotizacion = $criterios[0]['estado_cotizacion'];
     // for ($i = 0; count($documentoTipoArray) > $i; $i++) {
     //   $documentoTipoIds = $documentoTipoIds . '(' . $documentoTipoArray[$i] . '),';
     // }
@@ -2432,7 +2549,7 @@ class MovimientoNegocio extends ModeloNegocioBase
         }
       }
     }
-    return Movimiento::create()->obtenerDocumentosXCriterios($movimientoTipoId, $documentoTipoIds, $personaId, $codigo, $serie, $numero, $fechaEmisionDesde, $fechaEmisionHasta, $fechaVencimientoDesde, $fechaVencimientoHasta, $fechaTentativaDesde, $fechaTentativaHasta, $columnaOrdenar, $formaOrdenar, $elemntosFiltrados, $start, $monedaId, $estadoNegocioPago, $proyecto, $serieCompra, $numeroCompra, $progreso, $prioridad, $responsable, $agenciaIds);
+    return Movimiento::create()->obtenerDocumentosXCriterios($movimientoTipoId, $documentoTipoIds, $personaId, $codigo, $serie, $numero, $fechaEmisionDesde, $fechaEmisionHasta, $fechaVencimientoDesde, $fechaVencimientoHasta, $fechaTentativaDesde, $fechaTentativaHasta, $columnaOrdenar, $formaOrdenar, $elemntosFiltrados, $start, $monedaId, $estadoNegocioPago, $proyecto, $serieCompra, $numeroCompra, $progreso, $prioridad, $responsable, $agenciaIds, $area, $requerimiento_tipo, $estado_cotizacion);
   }
 
   public function obtenerDocumentosXCriteriosExcel($opcionId, $criterios)
@@ -2661,7 +2778,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     foreach ($documentoDetalle as $detalle) {
       $subTotal = $detalle['cantidad'] * $detalle['valor_monetario'];
       $descripcionEditada = $detalle['bien_descripcion_editada'];
-      array_push($arrayDetalle, $this->getDetalle("", $detalle['cantidad'], (!ObjectUtil::isEmpty($descripcionEditada)) ? $descripcionEditada : $detalle['bien_descripcion'], $detalle['valor_monetario'], $subTotal, $detalle['unidad_medida_descripcion'], $detalle['simbolo'], $detalle['bien_codigo'], $detalle['unidad_medida_id'], $detalle['bien_id'], $detalle['ad_valorem'], $detalle['movimiento_bien_comentario'], $detalle["bien_tipo_descripcion"], $detalle["codigo_contable"], $detalle["agencia_descripcion"], $detalle['ticket']));
+      array_push($arrayDetalle, $this->getDetalle("", $detalle['cantidad'], (!ObjectUtil::isEmpty($descripcionEditada)) ? $descripcionEditada : $detalle['bien_descripcion'], $detalle['valor_monetario'], $subTotal, $detalle['unidad_medida_descripcion'], $detalle['simbolo'], $detalle['bien_codigo'], $detalle['unidad_medida_id'], $detalle['bien_id'], $detalle['ad_valorem'], $detalle['movimiento_bien_comentario'], $detalle["bien_tipo_descripcion"], $detalle["codigo_contable"], $detalle["agencia_descripcion"], $detalle['ticket'], $detalle['centro_costo_descripcion'], $detalle['precio_postor1'], $detalle['precio_postor2'], $detalle['precio_postor3'], $detalle['postor_ganador_id'], $detalle['es_compra'], $detalle['cantidad_solicitada'], null, null, $detalle['moneda_postor1'], $detalle['moneda_postor2'], $detalle['moneda_postor3']));
       $total += $subTotal;
     }
 
@@ -2712,6 +2829,20 @@ class MovimientoNegocio extends ModeloNegocioBase
 
     if (!ObjectUtil::isEmpty($res)) {
       $res2 = MovimientoNegocio::create()->anular($res[0]['documento_relacionado_id'], $documentoEstadoId, $usuarioId, $idNegocio, $serie);
+    }
+
+    $documentoTipo = DocumentoTipoNegocio::create()->obtenerDocumentoTipoXDocumentoId($documentoId);
+    $detalle = MovimientoBien::create()->obtenerMovimientoBienXRelacionConsolidado($documentoId);
+    if ($documentoTipo[0]['id'] == Configuraciones::REQUERIMIENTO_AREA) {
+      $resReservaIngresoSalida = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXIngresoSalidaReserva($documentoId);
+      if (!ObjectUtil::isEmpty($resReservaIngresoSalida)) {
+        foreach ($resReservaIngresoSalida as $itemRS) {
+          $res2 = MovimientoNegocio::create()->anular($itemRS['documento_id'], 2, $usuarioId, $itemRS['identificador_negocio'], $itemRS['serie']);
+        }
+      }
+      foreach ($detalle as $item) {
+        MovimientoBien::create()->editarMovimientoBienConsolidadoRelacionadoxId($item['id'], null);
+      }
     }
 
     return MovimientoNegocio::create()->anular($documentoId, $documentoEstadoId, $usuarioId, $idNegocio, $serie);
@@ -2791,7 +2922,7 @@ class MovimientoNegocio extends ModeloNegocioBase
                 throw new WarningException("No se actualizó el estado del documento relación " . $itemRelacion['serie_numero']);
               }
             }
-            if($dataMovimientoTipo[0]['movimiento_tipo_id'] == "141" && $dataMovimientoTipo[0]['dtipo_identificador_negocio'] == DocumentoTipoNegocio::IN_LIQUIDACION_VENTA){
+            if ($dataMovimientoTipo[0]['movimiento_tipo_id'] == "141" && $dataMovimientoTipo[0]['dtipo_identificador_negocio'] == DocumentoTipoNegocio::IN_LIQUIDACION_VENTA) {
               MovimientoNegocio::create()->eliminarRelacionDocumento($documentoId, $itemRelacion['documento_relacionado_id'], $usuarioId);
             }
           }
@@ -3064,8 +3195,10 @@ class MovimientoNegocio extends ModeloNegocioBase
     if (!ObjectUtil::isEmpty($documentoDetalle)) {
       $total = 0.00;
       foreach ($documentoDetalle as $detalle) {
+        $resMovimientoBienDetalleReverva = MovimientoBien::create()->movimientoBienDetalleObtenerReservaRequerimientoXMovimientoBienId($detalle['movimiento_bien_id']);
+        $resMovimientoBienDetalle = MovimientoBien::create()->obtenerMovimientoBienDetalleXMovimientoBienId($detalle['movimiento_bien_id']);
         $subTotal = $detalle['cantidad'] * $detalle['valor_monetario']; // + $detalle['ad_valorem']
-        array_push($arrayDetalle, $this->getDetalle($detalle['organizador_descripcion'], $detalle['cantidad'], $detalle['bien_descripcion'], $detalle['valor_monetario'], $subTotal, $detalle['unidad_medida_descripcion'], $detalle['simbolo'], $detalle['bien_codigo'], $detalle['unidad_medida_id'], $detalle["bien_id"], $detalle["ad_valorem"], $detalle["movimiento_bien_comentario"]));
+        array_push($arrayDetalle, $this->getDetalle($detalle['organizador_descripcion'], $detalle['cantidad'], $detalle['bien_descripcion'], $detalle['valor_monetario'], $subTotal, $detalle['unidad_medida_descripcion'], $detalle['simbolo'], $detalle['bien_codigo'], $detalle['unidad_medida_id'], $detalle["bien_id"], $detalle["ad_valorem"], $detalle["movimiento_bien_comentario"], $detalle["bien_tipo_descripcion"], $detalle["codigo_contable"], $detalle["agencia_descripcion"], $detalle["ticket"], $detalle["centro_costo_descripcion"], $detalle["precio_postor1"], $detalle["precio_postor2"], $detalle["precio_postor3"], $detalle["postor_ganador_id"], $detalle["es_compra"], $detalle["cantidad_solicitada"], $resMovimientoBienDetalle, $resMovimientoBienDetalleReverva, $detalle["moneda_postor1"], $detalle["moneda_postor2"], $detalle["moneda_postor3"]));
         $total += $subTotal;
       }
     }
@@ -3074,7 +3207,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     return $respuesta;
   }
 
-  private function getDetalle($organizador, $cantidad, $descripcion, $precioUnitario, $importe, $unidadMedida, $simbolo, $bien_codigo, $unidadMedidaID, $bienId, $adValorem = 0, $movimientoBienComentario = '', $bienTipoDescripcion = '', $codigoContable = '', $agenciaDescripcion = '', $ticket = '')
+  private function getDetalle($organizador, $cantidad, $descripcion, $precioUnitario, $importe, $unidadMedida, $simbolo, $bien_codigo, $unidadMedidaID, $bienId, $adValorem = 0, $movimientoBienComentario = '', $bienTipoDescripcion = '', $codigoContable = '', $agenciaDescripcion = '', $ticket = '', $centro_costo_descripcion = '', $precio_postor1 = '', $precio_postor2 = '', $precio_postor3 = null, $postor_ganador_id = null, $es_compra = '', $cantidad_solicitada = '', $movimientoBienDetalle = null, $estadoReserva = null, $moneda_postor1 = null, $moneda_postor2 = null, $moneda_postor3 = null)
   {
     $detalle = new stdClass();
     $detalle->organizador = $organizador;
@@ -3093,7 +3226,18 @@ class MovimientoNegocio extends ModeloNegocioBase
     $detalle->codigoContable = $codigoContable;
     $detalle->agenciaDescripcion = $agenciaDescripcion;
     $detalle->ticket = $ticket;
-
+    $detalle->centro_costo_descripcion  = $centro_costo_descripcion;
+    $detalle->precio_postor1  = $precio_postor1;
+    $detalle->precio_postor2  = $precio_postor2;
+    $detalle->precio_postor3  = $precio_postor3;
+    $detalle->postor_ganador_id  = $postor_ganador_id;
+    $detalle->es_compra  = $es_compra;
+    $detalle->cantidad_solicitada  = $cantidad_solicitada;
+    $detalle->movimiento_bien_detalle = $movimientoBienDetalle;
+    $detalle->estadoReserva = $estadoReserva;
+    $detalle->moneda_postor1 = $moneda_postor1;
+    $detalle->moneda_postor2 = $moneda_postor2;
+    $detalle->moneda_postor3 = $moneda_postor3;
     return $detalle;
   }
 
@@ -3310,9 +3454,14 @@ class MovimientoNegocio extends ModeloNegocioBase
       //array detalles
       if ($bandera == false) {
         array_push($detalle, array(
-          'organizadorId' => $organizador_id, 'bienId' => $bien_id,
-          'cantidad' => $cantidad, 'unidadMedidaId' => $unidadMedida_id, 'precio' => $precioUnitario,
-          'organizadorDesc' => $organizador, 'bienDesc' => $bien, 'unidadMedidaDesc' => $unidadMedida,
+          'organizadorId' => $organizador_id,
+          'bienId' => $bien_id,
+          'cantidad' => $cantidad,
+          'unidadMedidaId' => $unidadMedida_id,
+          'precio' => $precioUnitario,
+          'organizadorDesc' => $organizador,
+          'bienDesc' => $bien,
+          'unidadMedidaDesc' => $unidadMedida,
           'subTotal' => $totalDetalle
         ));
       }
@@ -3332,9 +3481,14 @@ class MovimientoNegocio extends ModeloNegocioBase
           $detalle = array();
 
           array_push($detalle, array(
-            'organizadorId' => $organizador_id, 'bienId' => $bien_id,
-            'cantidad' => $cantidad, 'unidadMedidaId' => $unidadMedida_id, 'precio' => $precioUnitario,
-            'organizadorDesc' => $organizador, 'bienDesc' => $bien, 'unidadMedidaDesc' => $unidadMedida,
+            'organizadorId' => $organizador_id,
+            'bienId' => $bien_id,
+            'cantidad' => $cantidad,
+            'unidadMedidaId' => $unidadMedida_id,
+            'precio' => $precioUnitario,
+            'organizadorDesc' => $organizador,
+            'bienDesc' => $bien,
+            'unidadMedidaDesc' => $unidadMedida,
             'subTotal' => $totalDetalle
           ));
 
@@ -3374,9 +3528,14 @@ class MovimientoNegocio extends ModeloNegocioBase
           $detalle = array();
 
           array_push($detalle, array(
-            'organizadorId' => $organizador_id, 'bienId' => $bien_id,
-            'cantidad' => $cantidad, 'unidadMedidaId' => $unidadMedida_id, 'precio' => $precioUnitario,
-            'organizadorDesc' => $organizador, 'bienDesc' => $bien, 'unidadMedidaDesc' => $unidadMedida,
+            'organizadorId' => $organizador_id,
+            'bienId' => $bien_id,
+            'cantidad' => $cantidad,
+            'unidadMedidaId' => $unidadMedida_id,
+            'precio' => $precioUnitario,
+            'organizadorDesc' => $organizador,
+            'bienDesc' => $bien,
+            'unidadMedidaDesc' => $unidadMedida,
             'subTotal' => $totalDetalle
           ));
         }
@@ -3394,16 +3553,20 @@ class MovimientoNegocio extends ModeloNegocioBase
   function obtenerConfiguracionBuscadorDocumentoRelacion($opcionId, $empresaId)
   {
 
-    $tipoIds = '(0),(1),(4)';
+    // $tipoIds = '(0),(1),(4)';
+    $tipoIds = '';
     $respuesta = new ObjectUtil();
     $movimientoTipo = MovimientoTipoNegocio::create()->obtenerXOpcion($opcionId);
     $movimientoTipoId = $movimientoTipo[0]["id"];
+    if ($movimientoTipoId == 146) {
+      $tipoIds = "";
+    }
 
     //$respuesta->documento_tipo = DocumentoTipoNegocio::create()->obtenerDocumentoTipoXEmpresaXTipo($empresaId, $tipoIds);
     $respuesta->documento_tipo = DocumentoTipoNegocio::create()->obtenerDocumentoTipoXEmpresaXTipoXMovimientoTipo($movimientoTipoId, $empresaId, $tipoIds);
     $respuesta->persona = PersonaNegocio::create()->obtenerActivas();
     $respuesta->estado = DocumentoNegocio::create()->obtenerDocumentoEstadoLista(); // DocumentoNegocio::create->ob  ($movimientoTipoId);
-    if($opcionId == "325" && $movimientoTipoId == "141"){
+    if ($opcionId == "325" && $movimientoTipoId == "141") {
       $respuesta->segun = DocumentoTipoDatoListaNegocio::create()->obtenerXDocumentoTipoDato(2945);
     }
     return $respuesta;
@@ -3425,7 +3588,7 @@ class MovimientoNegocio extends ModeloNegocioBase
 
     $movimientoTipoId = $criterios['movimiento_tipo_id'];
     $segun_id = '';
-    if($movimientoTipoId == "141"){
+    if ($movimientoTipoId == "141") {
       $segun_id = Util::convertirArrayXCadena($criterios['segun_id']);
     }
 
@@ -3471,6 +3634,7 @@ class MovimientoNegocio extends ModeloNegocioBase
   {
 
     $respuesta = new ObjectUtil();
+    $arrayDataBien = array();
 
     $documentoACopiar = DocumentoNegocio::create()->obtenerDataDocumentoACopiar($documentoTipoDestinoId, $documentoTipoOrigenId, $documentoId);
 
@@ -3478,9 +3642,49 @@ class MovimientoNegocio extends ModeloNegocioBase
       throw new WarningException("No se encontró el documento");
     }
 
-    $respuesta->documentoACopiar = $documentoACopiar;
     $respuesta->dataDocumentoRelacionada = DocumentoNegocio::create()->obtenerDataDocumentoACopiarRelacionada($documentoTipoOrigenId, $documentoTipoDestinoId, $documentoId);
     $respuesta->detalleDocumento = $this->obtenerDocumentoRelacionDetalle($movimientoId, $documentoId, $opcionId, $documentoRelacionados);
+
+    $valorProveedor = null;
+    if($documentoTipoDestinoId == Configuraciones::COTIZACIONES || $documentoTipoDestinoId == Configuraciones::ORDEN_COMPRA){
+      $valores = DocumentoDatoValorNegocio::create()->obtenerXIdDocumentoXTipo($documentoId, 23);
+      switch($respuesta->detalleDocumento[0]['postor_ganador_id']){
+        case 1:
+          foreach($valores as $itemValores){
+            if(strpos($itemValores['descripcion'], "1")){
+              $valorProveedor = $itemValores['valor_codigo'];
+            }
+          }
+          break;
+        case 2:
+          foreach($valores as $itemValores){
+            if(strpos($itemValores, "1")){
+              $valorProveedor = $itemValores['valor_codigo'];
+            }
+          }          
+          break;
+        case 3:
+          foreach($valores as $itemValores){
+            if(strpos($itemValores, "1")){
+              $valorProveedor = $itemValores['valor_codigo'];
+            }
+          }
+          break;
+      }
+
+      $documentoACopiar [count($documentoACopiar)] = array(
+        "id" => "3131",
+        "tipo" => "23",
+        "documento_tipo_descripcion" => $documentoACopiar[0]['documento_tipo_descripcion'],
+        "moneda_id" => $documentoACopiar[0]['moneda_id'],
+        "valor" => $valorProveedor,
+        "otro_documento_id" => $documentoTipoDestinoId == Configuraciones::COTIZACIONES ? "933": "3131",
+        "incluye_igv" => $documentoACopiar[0]['moneda_id'],
+        "identificador_negocio" => $documentoACopiar[0]['moneda_id'],
+        "persona_usuario_id" => $documentoACopiar[0]['moneda_id']);
+    }
+
+    $respuesta->documentoACopiar = $documentoACopiar;
 
     if ($documentoTipoDestinoId != $documentoTipoOrigenId) {
       $respuesta->documentosRelacionados = DocumentoNegocio::create()->obtenerRelacionesDocumento($documentoId);
@@ -3506,11 +3710,15 @@ class MovimientoNegocio extends ModeloNegocioBase
 
       $data = MovimientoNegocio::create()->obtenerUnidadMedida($bienId, $unidadMedidaId, $precioTipoId, $monedaId, $fechaEmision);
       $documentoDetalle[$index]['dataUnidadMedida'] = $data;
+      $dataBien = BienNegocio::create()->obtenerActivosXMovimientoTipoIdBienId($empresaId, $movimientoTipo[0]["id"], $bienId);
+      foreach ($dataBien as $datos) {
+        array_push($arrayDataBien, $datos);
+      }
     }
     $respuesta->detalleDocumento = $documentoDetalle;
     //FIN OBTENER DATA UNIDAD MEDIDA
-    $respuesta->datosDocumento = ['documentoIdCopia' => $documentoId, 'movimientoIdCopia'=>$movimientoId];
-
+    $respuesta->datosDocumento = ['documentoIdCopia' => $documentoId, 'movimientoIdCopia' => $movimientoId];
+    $respuesta->dataBien = $arrayDataBien;
     return $respuesta;
   }
 
@@ -3669,7 +3877,12 @@ class MovimientoNegocio extends ModeloNegocioBase
             $detalle['agencia_descripcion'],
             $detalle['agrupador_id'],
             $detalle['agrupador_descripcion'],
-            $detalle['ticket']
+            $detalle['ticket'],
+            $detalle['centro_costo_id'],
+            $detalle['precio_postor1'],
+            $detalle['precio_postor2'],
+            $detalle['precio_postor3'],
+            $detalle['postor_ganador_id']
           ));
         }
         $banderaMerge = 0;
@@ -3689,7 +3902,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     //        return $respuesta;
   }
 
-  private function getDocumentoACopiarMerge($organizadorDescripcion, $organizadorId, $cantidad, $bienDescripcion, $bienId, $valorMonetario, $unidadMedidaId, $unidadMedidaDescripcion, $precioTipoId, $movimientoBienDetalle, $movimientoBienComentario, $codigoBien, $agenciaId, $agenciaDescripcion, $agrupadorId,$agrupadorDescripcion, $ticket)
+  private function getDocumentoACopiarMerge($organizadorDescripcion, $organizadorId, $cantidad, $bienDescripcion, $bienId, $valorMonetario, $unidadMedidaId, $unidadMedidaDescripcion, $precioTipoId, $movimientoBienDetalle, $movimientoBienComentario, $codigoBien, $agenciaId, $agenciaDescripcion, $agrupadorId, $agrupadorDescripcion, $ticket, $CeCoId, $precio_postor1, $precio_postor2, $precio_postor3, $postor_ganador_id)
   {
 
     $detalle = array(
@@ -3709,7 +3922,12 @@ class MovimientoNegocio extends ModeloNegocioBase
       "agencia_descripcion" => $agenciaDescripcion,
       "agrupador_id" => $agrupadorId,
       "agrupador_descripcion" => $agrupadorDescripcion,
-      "ticket" => $ticket
+      "ticket" => $ticket,
+      "CeCo_id" => $CeCoId,
+      "precio_postor1" => $precio_postor1,
+      "precio_postor2" => $precio_postor2,
+      "precio_postor3" => $precio_postor3,
+      "postor_ganador_id" => $postor_ganador_id,
     );
     return $detalle;
   }
@@ -3982,7 +4200,19 @@ class MovimientoNegocio extends ModeloNegocioBase
 
       case 23: //generar pdf Guia interna para transferencia
         return $this->generarDocumentoPDFGuiaInterna($documentoId, $comentario, $tipoSalidaPDF, $url, $data);
-
+      case 35: //generar pdf de Solicitud Requerimiento
+        return $this->generarDocumentoPDFSolicitudRequerimiento($documentoId, $comentario, $tipoSalidaPDF, $url, $data);
+        break;
+      case 37: //generar pdf de Order Compra y Servicio
+      case 39:
+        return $this->generarDocumentoPDFOrdenCompraServicio($documentoId, $comentario, $tipoSalidaPDF, $url, $data);
+        break;
+      case 38: //generar pdf Requerimiento por Área
+        return $this->generarDocumentoPDFRequerimiento($documentoId, $comentario, $tipoSalidaPDF, $url, $data);
+        break;
+      case 36:
+        return $this->generarDocumentoPDFGenerarCotizacion($documentoId, $comentario, $tipoSalidaPDF, $url, $data);
+        break;
       default:
         return $this->generarDocumentoPDFEstandar($documentoId, $comentario, $tipoSalidaPDF, $url, $data);
     }
@@ -4477,7 +4707,7 @@ class MovimientoNegocio extends ModeloNegocioBase
         $tabla = $tabla . '<tr>'
           . '<td style="text-align:rigth"  width="8%">' . $esp . round($item->cantidad, 2) . $esp . '</td>'
           . '<td style="text-align:left"  width="12%">' . $esp . $item->bien_codigo . $esp . '</td>'
-          . '<td style="text-align:left"  width="42%">' . $esp . $item->descripcion . " ".$comentario. $esp . '</td>'
+          . '<td style="text-align:left"  width="42%">' . $esp . $item->descripcion . " " . $comentario . $esp . '</td>'
           . '<td style="text-align:center"  width="13%">' . $esp . $item->unidadMedida . $esp . '</td>'
           . '<td style="text-align:rigth"  width="12%">' . $esp . number_format($item->precioUnitario, 2) . $esp . '</td>'
           . '<td style="text-align:rigth"  width="13%">' . $esp . number_format($item->importe, 2) . $esp . '</td>'
@@ -6433,7 +6663,7 @@ class MovimientoNegocio extends ModeloNegocioBase
           break;
         case 3042:
           $dtdAtencion = $valorItem;
-        break;
+          break;
       }
     };
 
@@ -6447,8 +6677,8 @@ class MovimientoNegocio extends ModeloNegocioBase
       $serieDocumento .= "-" . substr($dataUltimaVersion[0]['codigo_version'], 1);
     }*/
 
-    $titulo = "cotizacion1_".$serieDocumento."-".$dtdProyecto;
-    $titulo2 = strtoupper($dataDocumento[0]['documento_tipo_descripcion']) . " N° " .$serieDocumento;
+    $titulo = "cotizacion1_" . $serieDocumento . "-" . $dtdProyecto;
+    $titulo2 = strtoupper($dataDocumento[0]['documento_tipo_descripcion']) . " N° " . $serieDocumento;
 
     $dataPersona = DocumentoTipoDatoNegocio::create()->obtenerDocumentoTipoDatoXDocumentoIdXTipo($documentoId, 5);
     $descripcionPersona = $dataPersona[0]['descripcion'];
@@ -6658,7 +6888,7 @@ class MovimientoNegocio extends ModeloNegocioBase
 
         $bienDescripcion = htmlspecialchars($item->descripcion);
         if (!ObjectUtil::isEmpty($item->ticket)) {
-          $bienComentario .= "&nbsp;<b>Ticket</b>:&nbsp;&nbsp;" . $item->ticket."<br>";
+          $bienComentario .= "&nbsp;<b>Ticket</b>:&nbsp;&nbsp;" . $item->ticket . "<br>";
         }
         if (!ObjectUtil::isEmpty($item->agenciaDescripcion)) {
           $bienComentario .= "&nbsp;<b>Agencia</b>:&nbsp;&nbsp;" . $item->agenciaDescripcion;
@@ -6721,7 +6951,7 @@ class MovimientoNegocio extends ModeloNegocioBase
       //            $pdf->Ln(5);
       //        $borde=array('LTRB' => array('width' => 1, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0)));
       $pdf->Ln(10);
-      if (!ObjectUtil::isEmpty($data->dataDocumento[0]['comentario'])) {  
+      if (!ObjectUtil::isEmpty($data->dataDocumento[0]['comentario'])) {
         $pdf->writeHTMLCell(0, 6, '', '', "<h4>COMENTARIO</h4>", 0, 1, 0, true, 'L', true); //'TB'->borde:0
         $pdf->Cell(0, 0, $data->dataDocumento[0]['comentario'], 0, 1, 'L', 0, '', 0);
         $pdf->Ln(5);
@@ -6817,7 +7047,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     $y = $pdf->GetY() + 10;  // Obtén la posición actual de Y y agrega un espacio
     $width = 40;
     $height = 40;
-    $imageFile = Configuraciones::url_base().'vistas/images/'.'firma_jefe_servicios.png';
+    $imageFile = Configuraciones::url_base() . 'vistas/images/' . 'firma_jefe_servicios.png';
     $pdf->Image($imageFile, $x, $y, $width, $height);
     $pdf->Ln(45);
     $pdf->writeHTMLCell(0, 6, '', '', "<h4>Atentamente,</h4>", 0, 1, 0, true, 'L', true); //'TB'->borde:0
@@ -7801,6 +8031,7 @@ class MovimientoNegocio extends ModeloNegocioBase
   function obtenerDocumentoRelacionEdicion($documentoTipoOrigenId, $documentoTipoDestinoId, $movimientoId, $documentoId, $opcionId, $documentoRelacionados)
   {
     $respuesta = new ObjectUtil();
+    $arrayDataBien = array();
 
     $documentoACopiar = DocumentoNegocio::create()->obtenerDataDocumentoACopiarEdicion($documentoTipoDestinoId, $documentoTipoOrigenId, $documentoId);
 
@@ -7837,8 +8068,13 @@ class MovimientoNegocio extends ModeloNegocioBase
 
       $data = MovimientoNegocio::create()->obtenerUnidadMedida($bienId, $unidadMedidaId, $precioTipoId, $monedaId, $fechaEmision);
       $documentoDetalle[$index]['dataUnidadMedida'] = $data;
+      $dataBien = BienNegocio::create()->obtenerActivosXMovimientoTipoIdBienId($empresaId, $movimientoTipo[0]["id"], $bienId);
+      foreach ($dataBien as $datos) {
+        array_push($arrayDataBien, $datos);
+      }
     }
     $respuesta->detalleDocumento = $documentoDetalle;
+    $respuesta->dataBien = $arrayDataBien;
     // FIN OBTENER DATA UNIDAD MEDIDA
 
     return $respuesta;
@@ -7861,7 +8097,7 @@ class MovimientoNegocio extends ModeloNegocioBase
   }
 
   // TODO: Inicio Guardar Edicion
-  public function guardarXAccionEnvioEdicion($documentoId, $opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $listaDetalleEliminar, $documentoARelacionar, $valorCheck, $comentario, $checkIgv, $monedaId, $accionEnvio, $tipoPago, $listaPagoProgramacion, $anticiposAAplicar = null, $periodoId = null, $percepcion = null, $datosExtras = null, $detalleDistribucion = null, $contOperacionTipoId = null, $distribucionObligatoria = null, $igv_porcentaje = null)
+  public function guardarXAccionEnvioEdicion($documentoId, $opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $listaDetalleEliminar, $documentoARelacionar, $valorCheck, $comentario, $checkIgv, $monedaId, $accionEnvio, $tipoPago, $listaPagoProgramacion, $anticiposAAplicar = null, $periodoId = null, $percepcion = null, $datosExtras = null, $detalleDistribucion = null, $contOperacionTipoId = null, $distribucionObligatoria = null, $igv_porcentaje = null, $dataStockReservaOk = null)
   {
     $resEdicion = $this->guardarEdicion($documentoId, $opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $listaDetalleEliminar, $documentoARelacionar, $valorCheck, $comentario, $checkIgv, $monedaId, $tipoPago, $periodoId, $datosExtras, $detalleDistribucion, $contOperacionTipoId, $distribucionObligatoria, $igv_porcentaje);
 
@@ -7948,13 +8184,13 @@ class MovimientoNegocio extends ModeloNegocioBase
 
       $agrupadorDetalle = "";
       if ($documentoTipoId == 23 || $documentoTipoId == 133) {
-        if(!ObjectUtil::isEmpty($item["agrupadorId"])){
+        if (!ObjectUtil::isEmpty($item["agrupadorId"])) {
           $agrupadorDetalle = $item["agrupadorId"];
         }
       }
       $ticket = "";
       if ($documentoTipoId == 23) {
-        if(!ObjectUtil::isEmpty($item["ticket"])){
+        if (!ObjectUtil::isEmpty($item["ticket"])) {
           $ticket = $item["ticket"];
         }
       }
@@ -8062,7 +8298,7 @@ class MovimientoNegocio extends ModeloNegocioBase
         //ACTUALIZO TEMPORALMENTE EL MOVIMIENTO BIEN A INACTIVO
         $resEstInac = MovimientoBien::create()->actualizarEstadoXId($item["movimientoBienId"], 0);
 
-        if($dataDocumentoTipo[0]["id"] != "12"){
+        if ($dataDocumentoTipo[0]["id"] != "12") {
           MovimientoNegocio::create()->obtenerStockAControlar($opcionId, $item["bienId"], $item["organizadorId"], $item["unidadMedidaId"], $item["cantidad"], $fechaEmision, $item["detalle"], true);
         }
 
@@ -8246,11 +8482,11 @@ class MovimientoNegocio extends ModeloNegocioBase
         $comprobanteElectronico->docNroTicket = $ticket[0]['efact_ticket'];
         $comprobanteElectronico->usuarioSunatSOL = $empresa[0]['usuario_sunat_sol'];
         $comprobanteElectronico->claveSunatSOL = $empresa[0]['clave_sunat_sol'];
-  
+
         $comprobanteElectronico = (array) $comprobanteElectronico;
-  
+
         $client = new SoapClient(Configuraciones::EFACT_URL);
-  
+
         try {
           $resultado = $client->procesarConsultaTicket($comprobanteElectronico)->procesarConsultaTicketResult;
           return $resultado;
@@ -8260,10 +8496,9 @@ class MovimientoNegocio extends ModeloNegocioBase
       } else {
         return 'Este documento aun no ha sido procesado por el script por favor espere 30 minutos y vuelva a consultar.';
       }
-    }else if($dataEmpresa[0]['efactura'] == 2){
+    } else if ($dataEmpresa[0]['efactura'] == 2) {
       $this->consultarTicketNubefact($documentoId, "consultar_anulacion");
     }
-
   }
 
   function verificarAnulacionSunat()
@@ -8956,25 +9191,26 @@ class MovimientoNegocio extends ModeloNegocioBase
     }
   }
 
-  public function obtenerReporteDocumentosAsignaciones($documentoId)
-  {
-  }
+  public function obtenerReporteDocumentosAsignaciones($documentoId) {}
 
   //IMPLEMENTACIÓN NUBEFACT
-  public function envioNubefact($data_json){
-    try{
+  public function envioNubefact($data_json)
+  {
+    try {
       //Invocamos el servicio de NUBEFACT
       $ch = curl_init();
       curl_setopt($ch, CURLOPT_URL, Configuraciones::NUBEFACT_API);
       curl_setopt(
-        $ch, CURLOPT_HTTPHEADER, array(
-        'Authorization: Token token="'.Configuraciones::NUBEFACT_TOKEN.'"',
-        'Content-Type: application/json',
+        $ch,
+        CURLOPT_HTTPHEADER,
+        array(
+          'Authorization: Token token="' . Configuraciones::NUBEFACT_TOKEN . '"',
+          'Content-Type: application/json',
         )
       );
       curl_setopt($ch, CURLOPT_POST, 1);
       curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-      curl_setopt($ch, CURLOPT_POSTFIELDS,$data_json);
+      curl_setopt($ch, CURLOPT_POSTFIELDS, $data_json);
       curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
       $respuesta  = curl_exec($ch);
       curl_close($ch);
@@ -8983,8 +9219,9 @@ class MovimientoNegocio extends ModeloNegocioBase
       $resultado = $e->getMessage();
     }
   }
-  public function consultaNubefact($serie, $numero, $tipo_comprobante, $operacion){
-    try{
+  public function consultaNubefact($serie, $numero, $tipo_comprobante, $operacion)
+  {
+    try {
       $comprobanteElectronico = new stdClass();
       $comprobanteElectronico->operacion = $operacion;
       $comprobanteElectronico->tipo_de_comprobante = $tipo_comprobante;
@@ -9008,33 +9245,33 @@ class MovimientoNegocio extends ModeloNegocioBase
     $archivo_enlace = '';
     if (!ObjectUtil::isEmpty($resultado['errors'])) {
       $tipoMensaje = DocumentoTipoNegocio::EFACT_ERROR_DESCONOCIDO;
-      $mensaje = "Se generó un error al registrar el documento electrónico. Resultado : " . "código ".$resultado['codigo']." - ".$resultado['errors'];
-    }else{
-      if($resultado ['aceptada_por_sunat']){
+      $mensaje = "Se generó un error al registrar el documento electrónico. Resultado : " . "código " . $resultado['codigo'] . " - " . $resultado['errors'];
+    } else {
+      if ($resultado['aceptada_por_sunat']) {
         $tipoMensaje = DocumentoTipoNegocio::EFACT_CORRECTO;
         $mensaje = "Resultado : " . $resultado['sunat_description'];
-      }else{
-        if(!ObjectUtil::isEmpty($resultado['sunat_description']) && !ObjectUtil::isEmpty($resultado['enlace_del_pdf'])){
+      } else {
+        if (!ObjectUtil::isEmpty($resultado['sunat_description']) && !ObjectUtil::isEmpty($resultado['enlace_del_pdf'])) {
           $tipoMensaje = DocumentoTipoNegocio::EFACT_ERROR_RECHAZADO;
           $mensaje = "Resultado (ERROR): " . $resultado['sunat_description'];
           //CAMBIAR ESTADO ANULADO :
           $resDocEstado = DocumentoNegocio::create()->ActualizarDocumentoEstadoId($documentoId, 4, 1);
-        }else{
+        } else {
           $tipoMensaje = DocumentoTipoNegocio::EFACT_PENDIENTE_ENVIO;
           $mensaje = "Resultado : Documento pendiente de envio";
           $resDocEstado = DocumentoNegocio::create()->ActualizarDocumentoEstadoId($documentoId, 10, 1);
         }
       }
-
     }
     $descargar = 0;
     $resEstadoRegistro = DocumentoNegocio::create()->actualizarEfactEstadoRegistro($documentoId, $tipoMensaje, $mensaje);
     if (!ObjectUtil::isEmpty($resultado['enlace'])) {
       //$url = ObjectUtil::isEmpty($idNegocio) ? Configuraciones::NUBEFACT_CONTENEDOR_PDF : Configuraciones::NUBEFACT_CONTENEDOR_PDF_GUIA;
-      $url = $idNegocio != DocumentoTipoNegocio::IN_GUIA_REMISION ? Configuraciones::NUBEFACT_CONTENEDOR_PDF : Configuraciones::NUBEFACT_CONTENEDOR_PDF_GUIA;      $archivo_enlace = str_replace($url, '', $resultado['enlace']);
+      $url = $idNegocio != DocumentoTipoNegocio::IN_GUIA_REMISION ? Configuraciones::NUBEFACT_CONTENEDOR_PDF : Configuraciones::NUBEFACT_CONTENEDOR_PDF_GUIA;
+      $archivo_enlace = str_replace($url, '', $resultado['enlace']);
 
       if (!ObjectUtil::isEmpty($archivo_enlace)) {
-        $urlPDF = $url . $archivo_enlace.".pdf";
+        $urlPDF = $url . $archivo_enlace . ".pdf";
         $resActNombrePDF = DocumentoNegocio::create()->actualizarEfactPdfNombre($documentoId, $archivo_enlace);
         $descargar = 1;
       } else {
@@ -9059,12 +9296,12 @@ class MovimientoNegocio extends ModeloNegocioBase
   public function validarResultadoNubefact($resultado)
   {
     //"{"numero": 1001, "enlace": "https://imaginatec.pse.pe/anulacion/7e31531e-26e8-4ec0-a038-820857976231", "sunat_ticket_numero": "2024013001184238678", "aceptada_por_sunat": false, "sunat_description": null, "sunat_note": null, "sunat_responsecode": null, "sunat_soap_error": null, "pdf_zip_base64": null, "xml_zip_base64": null, "cdr_zip_base64": null, "enlace_del_pdf": "https://imaginatec.pse.pe/anulacion/7e31531e-26e8-4ec0-a038-820857976231.pdf", "enlace_del_xml": "https://imaginatec.pse.pe/anulacion/7e31531e-26e8-4ec0-a038-820857976231.xml", "enlace_del_cdr": "", "key": "7e31531e-26e8-4ec0-a038-820857976231"}"
-    
+
     if (!ObjectUtil::isEmpty($resultado['errors'])) {
-      throw new WarningException("Se generó un error al registrar el documento electrónico. "."código ".$resultado['codigo']." - ".$resultado['errors']);
-    }else if(!ObjectUtil::isEmpty($resultado['sunat_ticket_numero'])){
-      $this->setMensajeEmergente("Resultado: La Comunicación de Baja ha sido ACEPTADA, número de TICKET (SUNAT): ".$resultado['sunat_ticket_numero']);
-    }else {
+      throw new WarningException("Se generó un error al registrar el documento electrónico. " . "código " . $resultado['codigo'] . " - " . $resultado['errors']);
+    } else if (!ObjectUtil::isEmpty($resultado['sunat_ticket_numero'])) {
+      $this->setMensajeEmergente("Resultado: La Comunicación de Baja ha sido ACEPTADA, número de TICKET (SUNAT): " . $resultado['sunat_ticket_numero']);
+    } else {
       throw new WarningException("Se generó un error al registrar el documento electrónico.");
     }
   }
@@ -9075,9 +9312,9 @@ class MovimientoNegocio extends ModeloNegocioBase
     if (ObjectUtil::isEmpty($documento)) {
       throw new WarningException("No se encontró el documento");
     }
-    if($documento[0]["documento_estado"] == "10"){
-        $res = $this->consultaNubefact($documento[0]["serie"], $documento[0]["numero"], "1", "consultar_comprobante");
-        return $this->validarResultadoNubefactDocumento($res, $documentoId);
+    if ($documento[0]["documento_estado"] == "10") {
+      $res = $this->consultaNubefact($documento[0]["serie"], $documento[0]["numero"], "1", "consultar_comprobante");
+      return $this->validarResultadoNubefactDocumento($res, $documentoId);
     }
     $persona = PersonaNegocio::create()->obtenerPersonaXId($documento[0]["persona_id"]);
     if (ObjectUtil::isEmpty($persona)) {
@@ -9099,12 +9336,12 @@ class MovimientoNegocio extends ModeloNegocioBase
 
     $comprobanteElectronico->serie = $documento[0]["serie"];
     $comprobanteElectronico->numero = $documento[0]["numero"];
-    $comprobanteElectronico->sunat_transaction = $afectoDetraccionRetencion == 1 ? 30 : 1;//revisar
+    $comprobanteElectronico->sunat_transaction = $afectoDetraccionRetencion == 1 ? 30 : 1; //revisar
     //Datos de Cliente
     $comprobanteElectronico->cliente_tipo_de_documento = $persona[0]["sunat_tipo_documento"];
     $comprobanteElectronico->cliente_numero_de_documento = $persona[0]["codigo_identificacion"];
     $comprobanteElectronico->cliente_denominacion = $persona[0]["persona_nombre_completo"];
-    $comprobanteElectronico->cliente_direccion = $documento[0]["direccion"]." ".$ubigeo[0]["ubigeo_dist"]." ".$ubigeo[0]["ubigeo_prov"]." ".$ubigeo[0]["ubigeo_dep"];
+    $comprobanteElectronico->cliente_direccion = $documento[0]["direccion"] . " " . $ubigeo[0]["ubigeo_dist"] . " " . $ubigeo[0]["ubigeo_prov"] . " " . $ubigeo[0]["ubigeo_dep"];
     $correos = PersonaNegocio::create()->obtenerCorreosEFACT();
     $comprobanteElectronico->cliente_email = str_replace(';', '', $persona[0]["email"]);
     $comprobanteElectronico->cliente_email_1 = Configuraciones::EFACT_CORREO;
@@ -9114,11 +9351,11 @@ class MovimientoNegocio extends ModeloNegocioBase
     $comprobanteElectronico->fecha_de_vencimiento = substr($documento[0]['fecha_vencimiento'], 0, 10);
     $comprobanteElectronico->moneda = $documento[0]["sunat_moneda"] == 'PEN' ? 1 : 2;
     $dataTipoCambio = "";
-    if($documento[0]["sunat_moneda"] != 'PEN'){
+    if ($documento[0]["sunat_moneda"] != 'PEN') {
       $dataTipoCambio = TipoCambioNegocio::create()->obtenerTipoCambioXfecha($documento[0]['fecha_emision']);
     }
     $comprobanteElectronico->tipo_de_cambio = $dataTipoCambio;
-    $comprobanteElectronico->porcentaje_de_igv = "18.00";//revisar
+    $comprobanteElectronico->porcentaje_de_igv = "18.00"; //revisar
     $comprobanteElectronico->descuento_global = "";
     $comprobanteElectronico->total_descuento = "";
     $comprobanteElectronico->total_anticipo = "";
@@ -9134,16 +9371,16 @@ class MovimientoNegocio extends ModeloNegocioBase
     $comprobanteElectronico->total_percepcion = "";
     $comprobanteElectronico->total_incluido_percepcion = "";
 
-    if($afectoDetraccionRetencion == 2){
+    if ($afectoDetraccionRetencion == 2) {
       $porcentajeDetraccionRetencion = ($documento[0]["porcentaje_afecto"] * 1);
       $comprobanteElectronico->retencion_tipo = $porcentajeDetraccionRetencion == 3 ? 1 : 2;
-      $comprobanteElectronico->retencion_base_imponible = $comprobanteElectronico->docTotalVenta;//revisar
-      $comprobanteElectronico->total_retencion = ($documento[0]["monto_detraccion_retencion"] * 1);//revisar
+      $comprobanteElectronico->retencion_base_imponible = $comprobanteElectronico->docTotalVenta; //revisar
+      $comprobanteElectronico->total_retencion = ($documento[0]["monto_detraccion_retencion"] * 1); //revisar
     }
 
-    $comprobanteElectronico->total_impuestos_bolsas = "";//revisar
-    if($afectoDetraccionRetencion == 1){
-      $comprobanteElectronico->detraccion = $afectoDetraccionRetencion == 1 ? true : false;//revisar
+    $comprobanteElectronico->total_impuestos_bolsas = ""; //revisar
+    if ($afectoDetraccionRetencion == 1) {
+      $comprobanteElectronico->detraccion = $afectoDetraccionRetencion == 1 ? true : false; //revisar
       $comprobanteElectronico->detraccion_tipo = $documento[0]["detraccion_codigo_codigo_nubefact"];
       $comprobanteElectronico->detraccion_total = ($documento[0]["monto_detraccion_retencion"] * 1);
       $comprobanteElectronico->detraccion_porcentaje = ($documento[0]["porcentaje_afecto"] * 1);
@@ -9159,7 +9396,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     //$comprobanteElectronico->condiciones_de_pago = "";//revisar
     $tipoPago = ($documento[0]["tipo_pago"] * 1);
     if ($tipoPago == 2) {
-    $comprobanteElectronico->medio_de_pago = "credito";//revisar
+      $comprobanteElectronico->medio_de_pago = "credito"; //revisar
     }
     $orden = '';
     $docOrdenCompra = DocumentoNegocio::create()->obtenerDocumentoRelacionadoImpresion($documentoId);
@@ -9219,11 +9456,11 @@ class MovimientoNegocio extends ModeloNegocioBase
       $items['tipo_de_igv'] = $tipoAfectacion;
       $items['igv'] = $totalImpuesto; //Impuesto
       $items['total'] = ($totalItem + $totalImpuesto);
-      $items['anticipo_regularizacion'] = false;//revisar
-      $items['anticipo_documento_serie'] = "";//revisar
-      $items['anticipo_documento_numero'] = "";//revisar
-      
-      $new_items[] = $items ;
+      $items['anticipo_regularizacion'] = false; //revisar
+      $items['anticipo_documento_serie'] = ""; //revisar
+      $items['anticipo_documento_numero'] = ""; //revisar
+
+      $new_items[] = $items;
     }
     $comprobanteElectronico->items = $new_items;
 
@@ -9236,7 +9473,7 @@ class MovimientoNegocio extends ModeloNegocioBase
       }
 
       $arrayFechaVencimiento = array();
-      $dias = 0 ;
+      $dias = 0;
       foreach ($formaPagoDetalle as $indexFormaPago => $itemFormaPago) {
         $arrayFechaVencimiento[] = substr($itemFormaPago['fecha_pago'], 0, 10);
         $venta_al_credito['cuota'] = $indexFormaPago + 1;
@@ -9244,16 +9481,16 @@ class MovimientoNegocio extends ModeloNegocioBase
         $venta_al_credito['importe'] = $itemFormaPago['importe'] * 1.0;
         $dias = $dias + $itemFormaPago['dias'];
 
-        $new_venta_al_credito [] = $venta_al_credito;
+        $new_venta_al_credito[] = $venta_al_credito;
       }
-      $comprobanteElectronico->condiciones_de_pago = "CRÉDITO ".$dias." DÍAS";
+      $comprobanteElectronico->condiciones_de_pago = "CRÉDITO " . $dias . " DÍAS";
       $fechaMaximaCuota = date("Y-m-d", max(array_map('strtotime', $arrayFechaVencimiento)));
       if (substr($documento[0]['fecha_vencimiento'], 0, 10) != $fechaMaximaCuota) {
         throw new WarningException("La fecha de vencimiento de la factura (" . substr($documento[0]['fecha_vencimiento'], 0, 10) . ") debe ser igual a la última cuota de la programación de pagos ($fechaMaximaCuota)");
       }
     } /*elseif ($tipoPago == 1) {
       $formaPago[] = array("Contado", 0.0, "");
-    }*/ else if(ObjectUtil::isEmpty($tipoPago)){
+    }*/ else if (ObjectUtil::isEmpty($tipoPago)) {
       throw new WarningException("No se identifica la forma de pago para esta factura.");
     }
 
@@ -9280,7 +9517,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     if (ObjectUtil::isEmpty($documento)) {
       throw new WarningException("No se encontró el documento");
     }
-    if($documento[0]["documento_estado"] == "10"){
+    if ($documento[0]["documento_estado"] == "10") {
       $res = $this->consultaNubefact($documento[0]["serie"], $documento[0]["numero"], "1", "consultar_comprobante");
       return $this->validarResultadoNubefactDocumento($res, $documentoId);
     }
@@ -9304,12 +9541,12 @@ class MovimientoNegocio extends ModeloNegocioBase
 
     $comprobanteElectronico->serie = $documento[0]["serie"];
     $comprobanteElectronico->numero = $documento[0]["numero"];
-    $comprobanteElectronico->sunat_transaction = $afectoDetraccionRetencion == 1 ? 30 : 1;//revisar
+    $comprobanteElectronico->sunat_transaction = $afectoDetraccionRetencion == 1 ? 30 : 1; //revisar
     //Datos de Cliente
     $comprobanteElectronico->cliente_tipo_de_documento = $persona[0]["sunat_tipo_documento"];
     $comprobanteElectronico->cliente_numero_de_documento = $persona[0]["codigo_identificacion"];
     $comprobanteElectronico->cliente_denominacion = $persona[0]["persona_nombre_completo"];
-    $comprobanteElectronico->cliente_direccion = $documento[0]["direccion"]." ".$ubigeo[0]["ubigeo_dist"]." ".$ubigeo[0]["ubigeo_prov"]." ".$ubigeo[0]["ubigeo_dep"];
+    $comprobanteElectronico->cliente_direccion = $documento[0]["direccion"] . " " . $ubigeo[0]["ubigeo_dist"] . " " . $ubigeo[0]["ubigeo_prov"] . " " . $ubigeo[0]["ubigeo_dep"];
     $correos = PersonaNegocio::create()->obtenerCorreosEFACT();
     $comprobanteElectronico->cliente_email = str_replace(';', '', $persona[0]["email"]);
     $comprobanteElectronico->cliente_email_1 = Configuraciones::EFACT_CORREO;
@@ -9319,7 +9556,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     $comprobanteElectronico->fecha_de_vencimiento = substr($documento[0]['fecha_vencimiento'], 0, 10);
     $comprobanteElectronico->moneda = $documento[0]["sunat_moneda"] == 'PEN' ? 1 : 2;
     $dataTipoCambio = "";
-    if($documento[0]["sunat_moneda"] != 'PEN'){
+    if ($documento[0]["sunat_moneda"] != 'PEN') {
       $dataTipoCambio = TipoCambioNegocio::create()->obtenerTipoCambioXfecha($documento[0]['fecha_emision']);
     }
     $comprobanteElectronico->tipo_de_cambio = $dataTipoCambio;
@@ -9341,18 +9578,18 @@ class MovimientoNegocio extends ModeloNegocioBase
     $comprobanteElectronico->total_percepcion = "";
     $comprobanteElectronico->total_incluido_percepcion = "";
 
-    if($afectoDetraccionRetencion == 2){
+    if ($afectoDetraccionRetencion == 2) {
       $porcentajeDetraccionRetencion = ($documento[0]["porcentaje_afecto"] * 1);
       $comprobanteElectronico->retencion_tipo = $porcentajeDetraccionRetencion == 3 ? 1 : 2;
-      $comprobanteElectronico->retencion_base_imponible = $comprobanteElectronico->docTotalVenta;//revisar
-      $comprobanteElectronico->total_retencion = ($documento[0]["monto_detraccion_retencion"] * 1);//revisar
+      $comprobanteElectronico->retencion_base_imponible = $comprobanteElectronico->docTotalVenta; //revisar
+      $comprobanteElectronico->total_retencion = ($documento[0]["monto_detraccion_retencion"] * 1); //revisar
     }
     $codigoDetraccion = $documento[0]["detraccion_codigo"];
 
-    $comprobanteElectronico->total_impuestos_bolsas = "";//revisar
-    if($afectoDetraccionRetencion == 1){
-      $comprobanteElectronico->detraccion = $afectoDetraccionRetencion == 1 ? true : false;//revisar
-      $comprobanteElectronico->detraccion_tipo = $documento[0]["detraccion_codigo"] == '022' ? 20: 0;
+    $comprobanteElectronico->total_impuestos_bolsas = ""; //revisar
+    if ($afectoDetraccionRetencion == 1) {
+      $comprobanteElectronico->detraccion = $afectoDetraccionRetencion == 1 ? true : false; //revisar
+      $comprobanteElectronico->detraccion_tipo = $documento[0]["detraccion_codigo"] == '022' ? 20 : 0;
       $comprobanteElectronico->detraccion_total = ($documento[0]["monto_detraccion_retencion"] * 1);
       $comprobanteElectronico->detraccion_porcentaje = ($documento[0]["porcentaje_afecto"] * 1);
     }
@@ -9364,8 +9601,8 @@ class MovimientoNegocio extends ModeloNegocioBase
     $comprobanteElectronico->tipo_de_nota_de_debito = "";
     $comprobanteElectronico->enviar_automaticamente_a_la_sunat = true;
     $comprobanteElectronico->enviar_automaticamente_al_cliente = false;
-    $comprobanteElectronico->condiciones_de_pago = "";//revisar
-    $comprobanteElectronico->medio_de_pago = "";//revisar
+    $comprobanteElectronico->condiciones_de_pago = ""; //revisar
+    $comprobanteElectronico->medio_de_pago = ""; //revisar
     $orden = '';
     $docOrdenCompra = DocumentoNegocio::create()->obtenerDocumentoRelacionadoImpresion($documentoId);
     foreach ($docOrdenCompra as $index => $ordenCompra) {
@@ -9426,11 +9663,11 @@ class MovimientoNegocio extends ModeloNegocioBase
       $items['tipo_de_igv'] = $tipoAfectacion;
       $items['igv'] = $totalImpuesto; //Impuesto
       $items['total'] = ($totalItem + $totalImpuesto);
-      $items['anticipo_regularizacion'] = false;//revisar
-      $items['anticipo_documento_serie'] = "";//revisar
-      $items['anticipo_documento_numero'] = "";//revisar
-      
-      $new_items[] = $items ;
+      $items['anticipo_regularizacion'] = false; //revisar
+      $items['anticipo_documento_serie'] = ""; //revisar
+      $items['anticipo_documento_numero'] = ""; //revisar
+
+      $new_items[] = $items;
     }
     $comprobanteElectronico->items = $new_items;
 
@@ -9457,7 +9694,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     if (ObjectUtil::isEmpty($documento)) {
       throw new WarningException("No se encontró el documento");
     }
-    if($documento[0]["documento_estado"] == "10"){
+    if ($documento[0]["documento_estado"] == "10") {
       $res = $this->consultaNubefact($documento[0]["serie"], $documento[0]["numero"], "3", "consultar_comprobante");
       return $this->validarResultadoNubefactDocumento($res, $documentoId);
     }
@@ -9481,12 +9718,12 @@ class MovimientoNegocio extends ModeloNegocioBase
 
     $comprobanteElectronico->serie = $documento[0]["serie"];
     $comprobanteElectronico->numero = $documento[0]["numero"];
-    $comprobanteElectronico->sunat_transaction = $afectoDetraccionRetencion == 1 ? 30 : 1;//revisar
+    $comprobanteElectronico->sunat_transaction = $afectoDetraccionRetencion == 1 ? 30 : 1; //revisar
     //Datos de Cliente
     $comprobanteElectronico->cliente_tipo_de_documento = $persona[0]["sunat_tipo_documento"];
     $comprobanteElectronico->cliente_numero_de_documento = $persona[0]["codigo_identificacion"];
     $comprobanteElectronico->cliente_denominacion = $persona[0]["persona_nombre_completo"];
-    $comprobanteElectronico->cliente_direccion = $documento[0]["direccion"]." ".$ubigeo[0]["ubigeo_dist"]." ".$ubigeo[0]["ubigeo_prov"]." ".$ubigeo[0]["ubigeo_dep"];
+    $comprobanteElectronico->cliente_direccion = $documento[0]["direccion"] . " " . $ubigeo[0]["ubigeo_dist"] . " " . $ubigeo[0]["ubigeo_prov"] . " " . $ubigeo[0]["ubigeo_dep"];
     $correos = PersonaNegocio::create()->obtenerCorreosEFACT();
     $comprobanteElectronico->cliente_email = str_replace(';', '', $persona[0]["email"]);
     $comprobanteElectronico->cliente_email_1 = Configuraciones::EFACT_CORREO;
@@ -9497,11 +9734,11 @@ class MovimientoNegocio extends ModeloNegocioBase
     $comprobanteElectronico->fecha_de_vencimiento = "";
     $comprobanteElectronico->moneda = $documento[0]["sunat_moneda"] == 'PEN' ? 1 : 2;
     $dataTipoCambio = "";
-    if($documento[0]["sunat_moneda"] != 'PEN'){
+    if ($documento[0]["sunat_moneda"] != 'PEN') {
       $dataTipoCambio = TipoCambioNegocio::create()->obtenerTipoCambioXfecha($documento[0]['fecha_emision']);
     }
     $comprobanteElectronico->tipo_de_cambio = $dataTipoCambio;
-    $comprobanteElectronico->porcentaje_de_igv = "18.00";//revisar
+    $comprobanteElectronico->porcentaje_de_igv = "18.00"; //revisar
     $comprobanteElectronico->descuento_global = "";
     $comprobanteElectronico->total_descuento = "";
     $comprobanteElectronico->total_anticipo = "";
@@ -9549,8 +9786,8 @@ class MovimientoNegocio extends ModeloNegocioBase
     $comprobanteElectronico->tipo_de_nota_de_debito = "";
     $comprobanteElectronico->enviar_automaticamente_a_la_sunat = true;
     $comprobanteElectronico->enviar_automaticamente_al_cliente = false;
-    $comprobanteElectronico->condiciones_de_pago = "";//revisar
-    $comprobanteElectronico->medio_de_pago = "";//revisar
+    $comprobanteElectronico->condiciones_de_pago = ""; //revisar
+    $comprobanteElectronico->medio_de_pago = ""; //revisar
 
     // items
     $new_items = array();
@@ -9581,11 +9818,11 @@ class MovimientoNegocio extends ModeloNegocioBase
       $items['tipo_de_igv'] = 1;
       $items['igv'] = $impuestoItem; //Impuesto
       $items['total'] = ($subtotal + $impuestoItem);
-      $items['anticipo_regularizacion'] = false;//revisar
-      $items['anticipo_documento_serie'] = "";//revisar
-      $items['anticipo_documento_numero'] = "";//revisar
-      
-      $new_items[] = $items ;
+      $items['anticipo_regularizacion'] = false; //revisar
+      $items['anticipo_documento_serie'] = ""; //revisar
+      $items['anticipo_documento_numero'] = ""; //revisar
+
+      $new_items[] = $items;
     }
     $comprobanteElectronico->items = $new_items;
 
@@ -9605,7 +9842,7 @@ class MovimientoNegocio extends ModeloNegocioBase
         $venta_al_credito['fecha_de_pago'] = substr($itemFormaPago['fecha_pago'], 0, 10);
         $venta_al_credito['importe'] = $itemFormaPago['importe'] * 1.0;
 
-        $new_venta_al_credito [] = $venta_al_credito;
+        $new_venta_al_credito[] = $venta_al_credito;
       }
       $fechaMaximaCuota = date("Y-m-d", max(array_map('strtotime', $arrayFechaVencimiento)));
       if (substr($documento[0]['fecha_vencimiento'], 0, 10) != $fechaMaximaCuota) {
@@ -9613,7 +9850,7 @@ class MovimientoNegocio extends ModeloNegocioBase
       }
     } /*elseif ($tipoPago == 1) {
       $formaPago[] = array("Contado", 0.0, "");
-    }*/ else if(ObjectUtil::isEmpty($tipoPago)){
+    }*/ else if (ObjectUtil::isEmpty($tipoPago)) {
       throw new WarningException("No se identifica la forma de pago para esta factura.");
     }
 
@@ -9638,7 +9875,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     if (ObjectUtil::isEmpty($documento)) {
       throw new WarningException("No se encontró el documento");
     }
-    if($documento[0]["documento_estado"] == "10"){
+    if ($documento[0]["documento_estado"] == "10") {
       $res = $this->consultaNubefact($documento[0]["serie"], $documento[0]["numero"], "7", "consultar_guia");
       return $this->validarResultadoNubefactDocumento($res, $documentoId);
     }
@@ -9666,7 +9903,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     $comprobanteElectronico->cliente_tipo_de_documento = $persona[0]["sunat_tipo_documento"];
     $comprobanteElectronico->cliente_numero_de_documento = $persona[0]["codigo_identificacion"];
     $comprobanteElectronico->cliente_denominacion = $persona[0]["persona_nombre_completo"];
-    $comprobanteElectronico->cliente_direccion = $documento[0]["direccion"]." ".$ubigeo[0]["ubigeo_dist"]." ".$ubigeo[0]["ubigeo_prov"]." ".$ubigeo[0]["ubigeo_dep"];
+    $comprobanteElectronico->cliente_direccion = $documento[0]["direccion"] . " " . $ubigeo[0]["ubigeo_dist"] . " " . $ubigeo[0]["ubigeo_prov"] . " " . $ubigeo[0]["ubigeo_dep"];
     $correos = PersonaNegocio::create()->obtenerCorreosEFACT();
     $comprobanteElectronico->cliente_email = str_replace(';', '', $persona[0]["email"]);
     $comprobanteElectronico->cliente_email_1 = Configuraciones::EFACT_CORREO;
@@ -9688,11 +9925,11 @@ class MovimientoNegocio extends ModeloNegocioBase
           $transportista_placa_numero = $item['valor'];
           break;
         case 70:
-            $personaTransportista = PersonaNegocio::create()->obtenerPersonaXId($item['valor_codigo']);
-            break;
+          $personaTransportista = PersonaNegocio::create()->obtenerPersonaXId($item['valor_codigo']);
+          break;
         case 855:
-            $motivo_de_traslado = $item['valor_codigo'];
-            break;
+          $motivo_de_traslado = $item['valor_codigo'];
+          break;
         case 856:
           $motivo_de_traslado_otros_descripcion = $item['valor'];
           break;
@@ -9718,7 +9955,7 @@ class MovimientoNegocio extends ModeloNegocioBase
       if (ObjectUtil::isEmpty($transportista_placa_numero)) {
         throw new WarningException("Si la modalidad de traslado es PRIVADO se debe indicar la unidad de transporte.");
       }
-    }else{// 01 Si tipo de transporte es público
+    } else { // 01 Si tipo de transporte es público
       if (ObjectUtil::isEmpty($personaTransportista)) {
         throw new WarningException("Si la modalidad de traslado es PÚBLICO se debe seleccionar un transportista.");
       }
@@ -9741,7 +9978,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     $comprobanteElectronico->conductor_documento_tipo = $conductor[0]["sunat_tipo_documento"];
     $comprobanteElectronico->conductor_documento_numero = $conductor[0]["codigo_identificacion"];
     if ($tipo_de_transporte == "02") { //Si tipo de transporte es privado
-      $comprobanteElectronico->conductor_denominacion = $conductor[0]["conductor_nombre"] ." ".$conductor[0]["conductor_apellido"];
+      $comprobanteElectronico->conductor_denominacion = $conductor[0]["conductor_nombre"] . " " . $conductor[0]["conductor_apellido"];
     }
     $comprobanteElectronico->conductor_nombre = $conductor[0]["conductor_nombre"];
     $comprobanteElectronico->conductor_apellidos = $conductor[0]["conductor_apellido"];
@@ -9766,7 +10003,7 @@ class MovimientoNegocio extends ModeloNegocioBase
       $items['codigo'] = $fila['bien_codigo'];
       $items['descripcion'] = (!ObjectUtil::isEmpty($fila['bien_descripcion_editada'])) ? $fila['bien_descripcion_editada'] : $fila['bien_descripcion'];
       $items['cantidad'] = $fila['cantidad'] * 1;
-      $new_items[] = $items ;
+      $new_items[] = $items;
     }
     $comprobanteElectronico->items = $new_items;
 
@@ -9788,10 +10025,10 @@ class MovimientoNegocio extends ModeloNegocioBase
         } else if ($itemRel['identificador_negocio_relacion'] == DocumentoTipoNegocio::IN_FACTURA_VENTA && $itemRel["serie_relacion"][0] != 'F') {
           throw new WarningException("La serie de la factura relacionada debe empezar con F");
         }
-        $documento_relacionados ['tipo'] = $itemRel['sunat_tipo_doc_rel'];
-        $documento_relacionados ['serie'] = $itemRel["serie_relacion"];
-        $documento_relacionados ['numero'] = $itemRel["numero_relacion"];
-        $documento_relacionado[] = $documento_relacionados ;
+        $documento_relacionados['tipo'] = $itemRel['sunat_tipo_doc_rel'];
+        $documento_relacionados['serie'] = $itemRel["serie_relacion"];
+        $documento_relacionados['numero'] = $itemRel["numero_relacion"];
+        $documento_relacionado[] = $documento_relacionados;
       }
     }
     $comprobanteElectronico->documento_relacionado = $documento_relacionado;
@@ -9808,17 +10045,17 @@ class MovimientoNegocio extends ModeloNegocioBase
       //$res = $this->consultaNubefact($comprobanteElectronico->serie, $comprobanteElectronico->numero);
       if (!ObjectUtil::isEmpty($resultado['errors'])) {
         return $this->validarResultadoNubefactDocumento($resultado, $documentoId);
-      }else{
+      } else {
         return $this->consultarTicketNubefact($documentoId, "consultar_guia");
       }
 
-      
+
       //return $resEfact;
     } catch (Exception $e) {
       $resultado = $e->getMessage();
     }
   }
-  
+
   public function anularFacturaElectronicaNubefact($documentoId)
   {
     $comprobanteElectronico = new stdClass();
@@ -9882,7 +10119,7 @@ class MovimientoNegocio extends ModeloNegocioBase
       //$this->validarResultadoEfactura($resultado);
       if (!ObjectUtil::isEmpty($resultado['codigo']) || $resultado['codigo'] == 21) {
         $this->consultarTicketNubefact($documentoId, "consultar_anulacion");
-      }else{
+      } else {
         $this->validarResultadoNubefact($resultado);
       }
       //"{"numero": 1001, "enlace": "https://imaginatec.pse.pe/anulacion/7e31531e-26e8-4ec0-a038-820857976231", "sunat_ticket_numero": "2024013001184238678", "aceptada_por_sunat": false, "sunat_description": null, "sunat_note": null, "sunat_responsecode": null, "sunat_soap_error": null, "pdf_zip_base64": null, "xml_zip_base64": null, "cdr_zip_base64": null, "enlace_del_pdf": "https://imaginatec.pse.pe/anulacion/7e31531e-26e8-4ec0-a038-820857976231.pdf", "enlace_del_xml": "https://imaginatec.pse.pe/anulacion/7e31531e-26e8-4ec0-a038-820857976231.xml", "enlace_del_cdr": "", "key": "7e31531e-26e8-4ec0-a038-820857976231"}"
@@ -9928,7 +10165,7 @@ class MovimientoNegocio extends ModeloNegocioBase
       $resultado = json_decode($respuesta, true);
       // VALIDAR EL RESULTADO
       //$this->validarResultadoEfactura($resultado);
-      if($idNegocio != 6){
+      if ($idNegocio != 6) {
         $this->validarResultadoNubefact($resultado);
         $ticket = '';
         if (!ObjectUtil::isEmpty($resultado['sunat_ticket_numero'])) {
@@ -9936,11 +10173,1950 @@ class MovimientoNegocio extends ModeloNegocioBase
         }
         // SI TODO ESTA BIEN ACTUALIZAMOS EL NUMERO SECUENCIAL DE BAJA Y EL TICKET QUE SE GENERÓ
         DocumentoNegocio::create()->actualizarNroSecuencialBajaXDocumentoId($documentoId, $documento[0]['nro_secuencial_baja'], $ticket);
-      }else{
+      } else {
         $resEfact = $this->validarResultadoNubefactDocumento($resultado, $documentoId, $idNegocio);
         return $resEfact;
       }
+    }
+  }
+
+  public function generarDocumentoPDFSolicitudRequerimiento($documentoId, $comentario, $tipoSalidaPDF, $url, $data)
+  {
+    //$tipoSalidaPDF: F-> guarda local
+    //obtenemos la data
+    $dataDocumentoTipo = DocumentoTipoNegocio::create()->obtenerDocumentoTipoXDocumentoId($documentoId);
+    $documentoTipoId = $dataDocumentoTipo[0]['id'];
+
+    $dataDocumento = $data->dataDocumento;
+    $documentoDatoValor = $data->documentoDatoValor;
+    $detalle = $data->detalle;
+    $dataEmpresa = $data->dataEmpresa;
+    $dataMovimientoTipoColumna = $data->movimientoTipoColumna;
+    $dataDocumentoRelacion = $data->documentoRelacionado;
+
+    $unidad_minera = null;
+    $otros = null;
+    $tipo = null;
+    $clase = null;
+    $tipo_requerimiento = null;
+    $area = null;
+    $areaId = null;
+    $urgencia = null;
+
+    foreach ($documentoDatoValor as $index => $item) {
+      switch ($item['tipo'] * 1) {
+        case 2:
+          if ($item['descripcion'] == "Otros") {
+            $otros = $item['valor'];
+          }
+          break;
+        case 4:
+          if ($item['descripcion'] == "Clase") {
+            $clase = $item['valor_codigo'];
+          } else if ($item['descripcion'] == "Tipo") {
+            $tipo = $item['valor_codigo'];
+          } else if ($item['descripcion'] == "Unidad Minera") {
+            $unidad_minera = $item['valor'];
+          } else if ($item['descripcion'] == "Urgencia") {
+            $urgencia = $item['valor_codigo'];
+          }
+          break;
+        case 42:
+          $tipo_requerimiento = $item['valor'];
+          break;
+        case 43:
+          $area = $item['valor'];
+          $areaId = $item['valor_codigo'];
+          break;
+      }
+    }
+    $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+
+    // set document information
+    $pdf->SetCreator('Soluciones Mineras S.A.C.');
+    $pdf->SetAuthor('Soluciones Mineras S.A.C.');
+    $pdf->SetTitle(strtoupper($dataDocumentoTipo[0]['descripcion']));
+
+    //        $pdf->SetHeaderData('logo.PNG', PDF_HEADER_LOGO_WIDTH,strtoupper($dataDocumentoTipo[0]['descripcion']),$dataEmpresa[0]['razon_social']."\n".$dataEmpresa[0]['direccion'], array(0,0,0), array(0,0,0));
+
+    $pdf->setFooterData(array(0, 0, 0), array(0, 0, 0)); // 0,0,0
+    // set header and footer fonts
+    $PDF_FONT_SIZE_MAIN = 9;
+    $pdf->setHeaderFont(array(PDF_FONT_NAME_MAIN, '', $PDF_FONT_SIZE_MAIN));
+    $pdf->setFooterFont(array(PDF_FONT_NAME_DATA, '', PDF_FONT_SIZE_DATA));
+
+    // set default monospaced font
+    $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
+
+    // set margins
+    $pdf->SetMargins(PDF_MARGIN_LEFT, PDF_MARGIN_TOP, PDF_MARGIN_RIGHT);
+    $pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
+    $pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
+
+    // set auto page breaks
+    $pdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
+
+    // set image scale factor
+    $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
+
+    // --------------GENERAR PDF-------------------------------------------
+    $pdf->SetFont('helvetica', 'B', 6);
+    $pdf->SetPrintHeader(false);
+    $pdf->SetPrintFooter(false);
+    $pdf->AddPage();
+
+    $serieDocumento = '';
+    if (!ObjectUtil::isEmpty($dataDocumento[0]['serie'])) {
+      $serieDocumento = $dataDocumento[0]['serie'] . " - ";
+    }
+
+    $titulo = strtoupper($dataDocumento[0]['documento_tipo_descripcion']) . " " . $serieDocumento . $dataDocumento[0]['numero'];
+
+    $pdf->SetFillColor(255, 255, 255);
+    $pdf->Image(__DIR__ . '/../../vistas/images/logo_pepas_de_oro.png', 15, 10, 45, 20, '', '', '', false, 300, '', false, false, 1);
+    $pdf->MultiCell(90, 5, 'FORMATO', 1, 'C', 1, 0, 60, 10, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(90, 5, 'SOLICITUD DE REQUERIMIENTO DE BIENES Y SERVICIOS', 1, 'C', 1, 0, 60, 15, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(45, 5, 'CODIGO: F-COR-LOG-ALM-01', 1, 'L', 1, 0, 60, 20, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(45, 5, 'VERSION: 01', 1, 'L', 1, 0, 105, 20, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(45, 5, 'AREA: LOGISTICA', 1, 'L', 1, 0, 60, 25, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(45, 5, 'PAGINA: 01 de 01', 1, 'L', 1, 0, 105, 25, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(45, 20, 'CORPORATIVO', 1, 'C', 1, 0, 150, 10, true, 0, false, true, 20, 'M');
+
+
+    $pdf->SetFillColor(254, 191, 0);
+    $pdf->MultiCell(30, 5, 'AREA', 1, 'C', 1, 0, '', 35, true, 0, false, true, 5, 'M');
+    $pdf->SetFillColor(255, 255, 255);
+    $pdf->MultiCell(50, 5, $area, 1, 'C', 1, 0, 45, 35, true, 0, false, true, 5, 'M');
+
+    $pdf->SetFillColor(254, 191, 0);
+    $pdf->MultiCell(30, 5, 'Nº SOL. REQUERIMIENTO', 1, 'C', 1, 0, 115, 35, true, 0, false, true, 5, 'M');
+    $pdf->SetFillColor(255, 255, 255);
+    $pdf->MultiCell(50, 5, $dataDocumento[0]['serie'] . " - " . $dataDocumento[0]['numero'], 1, 'C', 1, 0, 145, 35, true, 0, false, true, 5, 'M');
+
+    //
+
+    $pdf->SetFillColor(254, 191, 0);
+    $pdf->MultiCell(30, 5, 'SOLICITANTE', 1, 'C', 1, 0, '', 42, true, 0, false, true, 5, 'M');
+    $pdf->SetFillColor(255, 255, 255);
+    $pdf->MultiCell(50, 5, $dataDocumento[0]['nombre'], 1, 'C', 1, 0, 45, 42, true, 0, false, true, 5, 'M');
+
+    $pdf->SetFillColor(254, 191, 0);
+    $pdf->MultiCell(30, 5, 'FECHA', 1, 'C', 1, 0, 115, 42, true, 0, false, true, 5, 'M');
+    $pdf->SetFillColor(255, 255, 255);
+    $pdf->MultiCell(50, 5, date_format((date_create($dataDocumento[0]['fecha_emision'])), 'd/m/Y'), 1, 'C', 1, 0, 145, 42, true, 0, false, true, 5, 'M');
+
+    //
+
+    $pdf->SetFillColor(254, 191, 0);
+    $pdf->MultiCell(30, 5, 'PUESTO', 1, 'C', 1, 0, '', 49, true, 0, false, true, 5, 'M');
+    $pdf->SetFillColor(255, 255, 255);
+    $pdf->MultiCell(50, 5, $dataDocumento[0]['puesto'], 1, 'C', 1, 0, 45, 49, true, 0, false, true, 5, 'M');
+
+    $pdf->SetFillColor(254, 191, 0);
+    $pdf->MultiCell(30, 5, 'UNIDAD MINERA', 1, 'C', 1, 0, 115, 49, true, 0, false, true, 5, 'M');
+    $pdf->SetFillColor(255, 255, 255);
+    $pdf->MultiCell(50, 5, $unidad_minera, 1, 'C', 1, 0, 145, 49, true, 0, false, true, 5, 'M');
+
+    //
+
+    $pdf->SetFillColor(254, 191, 0);
+    $pdf->MultiCell(180, 5, 'TIPO DE REQUERIMIENTO', 1, 'C', 1, 0, '', 59, true, 0, false, true, 5, 'M');
+    $pdf->SetFillColor(217, 217, 217);
+    $pdf->MultiCell(90, 5, 'COMPRA', 1, 'C', 1, 0, '', 64, true, 0, false, true, 5, 'M');
+    $pdf->SetFillColor(255, 255, 255);
+    $compra_x = $tipo_requerimiento == "Compra" ? "X" : "";
+    $pdf->MultiCell(9, 3, $compra_x, 1, 'C', 1, 0, 80, 65, true, 0, false, true, 3, 'M'); //VALIDAR
+    $pdf->SetFillColor(217, 217, 217);
+    $pdf->MultiCell(90, 5, 'SERVICIO', 1, 'C', 1, 0, 105, 64, true, 0, false, true, 5, 'M');
+    $pdf->SetFillColor(255, 255, 255);
+    $servicio_x = $tipo_requerimiento == "Servicio" ? "X" : "";
+    $pdf->MultiCell(9, 3, $servicio_x, 1, 'C', 1, 0, 160, 65, true, 0, false, true, 3, 'M'); //VALIDAR
+    $pdf->SetFillColor(217, 217, 217);
+
+
+    $pdf->SetFillColor(217, 217, 217);
+    $pdf->MultiCell(30, 20, 'CLASE', 1, 'C', 1, 0, '', 69, true, 0, false, true, 20, 'M');
+    $pdf->SetFillColor(255, 255, 255);
+
+    $clase_x1 = "";
+    $clase_x2 = "";
+    $clase_x3 = "";
+    $clase_x4 = "";
+    switch ($clase * 1) {
+      case 1:
+        $clase_x1 = "X";
+        break;
+      case 2:
+        $clase_x2 = "X";
+        break;
+      case 3:
+        $clase_x3 = "X";
+        break;
+      case 4:
+        $clase_x4 = "X";
+        break;
+    }
+
+    $pdf->SetFont('helvetica', '', 6);
+    $pdf->MultiCell(60, 5, 'Reposición de stock en Almacén', 0, 'L', '', 0, 55, 69, true, 0, false, true, 5, 'M');
+    $pdf->SetFont('helvetica', 'B', 6);
+    $pdf->MultiCell(60, 5, 'Regular: ', 1, 'L', 1, 0, 45, 69, true, 0, false, true, 5, 'M');
+
+    $pdf->MultiCell(7, 3, $clase_x1, 1, 'C', 1, 0, 95, 70, true, 0, false, true, 3, 'M'); //VALIDAR
+    $pdf->SetFont('helvetica', '', 6);
+
+    $pdf->MultiCell(60, 5, 'Compra dentro de 15 días a más', 0, 'L', 1, 0, 55, 74, true, 0, false, true, 5, 'M');
+    $pdf->SetFont('helvetica', 'B', 6);
+    $pdf->MultiCell(60, 5, 'Irregular: ', 1, 'L', 1, 0, 45, 74, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(7, 3, $clase_x2, 1, 'C', 1, 0, 95, 75, true, 0, false, true, 3, 'M'); //VALIDAR
+    $pdf->SetFont('helvetica', '', 6);
+
+    $pdf->MultiCell(60, 5, 'Compra dentro de 5 a 10 dias', 1, 'L', 1, 0, 55, 79, true, 0, false, true, 5, 'M');
+    $pdf->SetFont('helvetica', 'B', 6);
+    $pdf->MultiCell(60, 5, 'Crítico: ', 1, 'L', 1, 0, 45, 79, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(7, 3, $clase_x3, 1, 'C', 1, 0, 95, 80, true, 0, false, true, 3, 'M'); //VALIDAR
+    $pdf->SetFont('helvetica', '', 6);
+
+    $pdf->MultiCell(60, 5, 'Compra dentro de 20 días a más', 1, 'L', 1, 0, 55, 84, true, 0, false, true, 5, 'M');
+    $pdf->SetFont('helvetica', 'B', 6);
+    $pdf->MultiCell(60, 5, 'Activo: ', 1, 'L', 1, 0, 45, 84, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(7, 3, $clase_x4, 1, 'C', 1, 0, 95, 85, true, 0, false, true, 3, 'M'); //VALIDAR
+    $pdf->SetFont('helvetica', '', 6);
+
+    $pdf->SetFillColor(217, 217, 217);
+    $pdf->MultiCell(15, 20, 'TIPO', 1, 'C', 1, 0, 105, 69, true, 0, false, true, 20, 'M');
+    $pdf->SetFillColor(255, 255, 255);
+
+    $tipo_x1 = "";
+    $tipo_x2 = "";
+    $tipo_x3 = "";
+    $tipo_x4 = "";
+    switch ($tipo * 1) {
+      case 1:
+        $tipo_x1 = "X";
+        break;
+      case 2:
+        $tipo_x2 = "X";
+        break;
+      case 3:
+        $tipo_x3 = "X";
+        break;
+      case 4:
+        $tipo_x4 = "X";
+        break;
+    }
+    $pdf->MultiCell(75, 5, 'Alquiler', 1, 'L', 1, 0, 120, 69, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(7, 3, $tipo_x1, 1, 'C', 1, 0, 140, 70, true, 0, false, true, 3, 'M'); //VALIDAR
+    $pdf->MultiCell(75, 5, 'Mantenimiento', 1, 'L', 1, 0, 120, 74, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(7, 3, $tipo_x2, 1, 'C', 1, 0, 140, 75, true, 0, false, true, 3, 'M'); //VALIDAR
+    $pdf->MultiCell(75, 5, 'Monitoreo', 1, 'L', 1, 0, 120, 79, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(7, 3, $tipo_x3, 1, 'C', 1, 0, 140, 80, true, 0, false, true, 3, 'M'); //VALIDAR
+    $pdf->MultiCell(75, 5, 'Otros (Detallar)', 1, 'L', 1, 0, 120, 84, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(7, 3, $tipo_x4, 1, 'C', 1, 0, 140, 85, true, 0, false, true, 3, 'M'); //VALIDAR
+    $pdf->MultiCell(7, 3, $otros, 1, 'L', 1, 0, 150, 85, true, 0, false, true, 3, 'M'); //VALIDAR
+
+
+    //detalle
+    // $pdf->SetFillColor(254, 191, 0);
+    // $pdf->MultiCell(10, 5, 'N°', 1, 'C', 1, 0, '', 59, true, 0, false, true, 5, 'M');
+    // $pdf->MultiCell(10, 5, 'TIPO DE REQUERIMIENTO', 1, 'C', 1, 0, '', 59, true, 0, false, true, 5, 'M');
+    $cont = 0;
+
+    $pdf->Ln(10);
+    $tabla = '<table cellspacing="0" cellpadding="1" border="1">
+        <tr style="background-color:rgb(254, 191, 0);">
+            <th style="text-align:center;vertical-align:middle;" width="3%"><b>N°</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="12%"><b>CODIGO</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="30%"><b>DESCRIPCION</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="8%"><b>MARCA</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="10%"><b>MODELO</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="8%"><b>CANTIDAD</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="8%"><b>UNIDAD DE MEDIDA</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="10%"><b>CENTRO DE COSTOS</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="11%"><b>INFORMACION ADICIONAL</b></th>
+        </tr>
+    ';
+    if (!ObjectUtil::isEmpty($detalle)) {
+      foreach ($detalle as $index => $item) {
+        $tabla = $tabla . '<tr>'
+          . '<td style="text-align:center"  width="3%">' . ($index + 1) . '</td>'
+          . '<td align="center" width="12%">' . $item->bien_codigo . '</td>'
+          . '<td style="text-align:left; vertical-align:middle; display: table-cell;" width="30%">' . $item->descripcion . '</td>'
+          . '<td style="text-align:center"  width="8%"></td>'
+          . '<td style="text-align:center"  width="10%"></td>'
+          . '<td style="text-align:center"  width="8%">' . number_format($item->cantidad, 2) . '</td>'
+          . '<td style="text-align:center"  width="8%">' . $item->simbolo . '</td>'
+          . '<td style="text-align:center"  width="10%">' . $item->centro_costo_descripcion . '</td>'
+          . '<td style="text-align:center"  width="11%">' . $item->movimientoBienComentario . '</td>'
+          . '</tr>';
+      }
+    }
+
+    for ($i = count($detalle); $i < 20; $i++) {
+      $tabla = $tabla . '<tr>'
+        . '<td style="text-align:center"  width="3%">' . ($i + 1) . '</td>'
+        . '<td style="text-align:left"  width="12%"></td>'
+        . '<td style="text-align:left"  width="30%"></td>'
+        . '<td style="text-align:center"  width="8%"></td>'
+        . '<td style="text-align:center"  width="10%"></td>'
+        . '<td style="text-align:center"  width="8%"></td>'
+        . '<td style="text-align:center"  width="8%"></td>'
+        . '<td style="text-align:center"  width="10%"></td>'
+        . '<td style="text-align:center"  width="11%"></td>'
+        . '</tr>';
+    }
+
+
+    $tabla = $tabla . '</table>';
+    $pdf->writeHTML($tabla, true, false, true, false, '');
+
+    
+    $tablaHeight = $pdf->GetY(); 
+    $espacio = 0;  // Inicializar el espacio
+    $paginaAltura = $pdf->getPageHeight();  // Altura total de la página
+    $alturaDisponible = $paginaAltura - $tablaHeight - 20; 
+    // Ahora puedes ajustar el valor de $espacio basado en el espacio disponible
+    if ($alturaDisponible > 50) {
+      // Si hay mucho espacio, usa ese espacio
+      $espacio = $tablaHeight + 10;  // Ajusta un pequeño margen después de la tabla
+    } else {
+      // Si el espacio es limitado, podrías agregar una nueva página
+      $pdf->AddPage();
+      $espacio = 15;  // Nuevo espacio al inicio de la nueva página
+    }
+    // Establecer la marca de agua de texto
+    // $pdf->SetAlpha(0.3); // Opcional: Ajusta la opacidad (0 es totalmente transparente, 1 es opaco)
+    // $pdf->SetFont('helvetica', 'B', 50); // Fuente, estilo y tamaño
+    // $pdf->SetTextColor(150, 150, 150); // Color de la marca de agua (gris claro)
+    // $pdf->Rotate(45, 105, 150); // Rotar el texto para la marca de agua (45 grados)
+    // $pdf->SetDrawColor(255, 255, 255); // Establecer el color de dibujo (blanco, para evitar cualquier borde)
+    // $pdf->SetLineWidth(0); // Establecer el grosor del borde a 0
+    // $pdf->Text(50, 120, 'Sin aprobar', false, false, true, ''); // Especifica la posición del texto
+
+    $matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXDocumentoTipoXArea(Configuraciones::SOLICITUD_REQUERIMIENTO, $areaId);
+    $usuario_estado = DocumentoNegocio::create()->obtenerDocumentoDocumentoEstadoXdocumentoId($documentoId, "0,1");
+
+    $resultadoMatriz = [];
+
+    foreach ($matrizUsuario as $key => $value) {
+      if ($usuario_estado[$key]["estado_descripcion"] == "Registrado") {
+        $persona = Persona::create()->obtenerPersonaXUsuarioId($usuario_estado[$key]["usuario_creacion"]);
+        $resultadoMatriz[$key] = array("usuario_id" => $usuario_estado[$key]["usuario_creacion"], "firma_digital" => $persona[0]['firma_digital'], "nombre" => $usuario_estado[$key]["persona_nombre"], "fecha" => $usuario_estado[$key]["fecha_creacion"]);
+      } else {
+        switch ($value["nivel"]) {
+          case "1":
+            foreach ($usuario_estado as $val) {
+              if ($value["usuario_aprobador_id"] == $val["usuario_creacion"] && $val["estado_descripcion"] != "Registrado") {
+                $persona = Persona::create()->obtenerPersonaXUsuarioId($usuario_estado[$key]["usuario_creacion"]);
+                $resultadoMatriz[$key] = array("usuario_id" => $usuario_estado[$key]["usuario_creacion"], "firma_digital" => $persona[0]['firma_digital'], "nombre" =>  $usuario_estado[$key]["persona_nombre"], "fecha" => $usuario_estado[$key]["fecha_creacion"]);
+              }
+            }
+            break;
+          case "2":
+            foreach ($usuario_estado as $val) {
+              if ($value["usuario_aprobador_id"] == $val["usuario_creacion"] && $val["estado_descripcion"] != "Registrado") {
+                $persona = Persona::create()->obtenerPersonaXUsuarioId($usuario_estado[$key]["usuario_creacion"]);
+                $resultadoMatriz[$key] = array("usuario_id" => $usuario_estado[$key]["usuario_creacion"], "firma_digital" => $persona[0]['firma_digital'], "nombre" =>  $usuario_estado[$key]["persona_nombre"], "fecha" => $usuario_estado[$key]["fecha_creacion"]);
+              }
+            }
+            break;
+          case "3":
+            foreach ($usuario_estado as $val) {
+              if ($value["usuario_aprobador_id"] == $val["usuario_creacion"] && $val["estado_descripcion"] != "Registrado") {
+                $persona = Persona::create()->obtenerPersonaXUsuarioId($usuario_estado[$key]["usuario_creacion"]);
+                $resultadoMatriz[$key] = array("usuario_id" => $usuario_estado[$key]["usuario_creacion"], "firma_digital" => $persona[0]['firma_digital'], "nombre" =>  $usuario_estado[$key]["persona_nombre"], "fecha" => $usuario_estado[$key]["fecha_creacion"]);
+              }
+            }
+            break;
+        }
+      }
+    }
+
+    $personaFirma0 = __DIR__ . "/../../vistas/com/persona/firmas/" . $resultadoMatriz[0]['firma_digital'] . "png";
+    $personaFirma1 = __DIR__ . "/../../vistas/com/persona/firmas/" . $resultadoMatriz[1]['firma_digital'] . "png";
+    $personaFirma2 = __DIR__ . "/../../vistas/com/persona/firmas/" . $resultadoMatriz[2]['firma_digital'] . "png";
+    $personaFirma3 = __DIR__ . "/../../vistas/com/persona/firmas/" . $resultadoMatriz[3]['firma_digital'] . "png";
+
+
+    if ($urgencia == 1) {
+      $pdf->SetFont('helvetica', 'B', 6);
+      $pdf->MultiCell(50, 5, 'Solicitado por', 1, 'C', 1, 0, 35, $espacio, true, 0, false, true, 5, 'M');
+      $pdf->MultiCell(50, 30, $dataDocumento[0]['nombre'], 1, 'C', 1, 0, 35, $espacio, true, 0, false, true, 30, 'B');
+      $pdf->MultiCell(50, 5, 'Aprobado por', 1, 'C', 1, 0, 85, $espacio, true, 0, false, true, 5, 'M');
+      $pdf->MultiCell(50, 30, $resultadoMatriz[1]['nombre'], 1, 'C', 1, 0, 85, $espacio, true, 0, false, true, 30, 'B');
+      $pdf->MultiCell(50, 5, 'Recibido por', 1, 'C', 1, 0, 135, $espacio, true, 0, false, true, 5, 'M');
+      $pdf->MultiCell(50, 30, $resultadoMatriz[2]['nombre'], 1, 'C', 1, 0, 135, $espacio, true, 0, false, true, 30, 'B');
+      $pdf->Image($personaFirma0, 35, $espacio + 5, 50, 20, '', '', '', false, 300, '', false, false, 1);
+      $pdf->MultiCell(50, 30, 'Jefe de Area', 1, 'C', 1, 0, 35, $espacio + 5, true, 0, false, true, 30, 'B');
+      $pdf->Image($personaFirma1, 85, $espacio + 5, 50, 20, '', '', '', false, 300, '', false, false, 1);
+      $pdf->MultiCell(50, 30, 'Gerente General', 1, 'C', 1, 0, 85, $espacio + 5, true, 0, false, true, 30, 'B');
+      $pdf->Image($personaFirma2, 135, $espacio + 5, 50, 20, '', '', '', false, 300, '', false, false, 1);
+      $pdf->MultiCell(50, 30, 'Jefe de Logistica', 1, 'C', 1, 0, 135, $espacio + 5, true, 0, false, true, 30, 'B');
+      $pdf->MultiCell(60, 5, 'Fecha:', 1, 'L', 1, 0, 35, $espacio + 30, true, 0, false, true, 5, 'M');
+      $pdf->SetFont('helvetica', '', 6);
+      $pdf->MultiCell(50, 5, date_format((date_create($dataDocumento[0]['fecha_emision'])), 'd/m/Y'), 1, 'L', 1, 0, 45, $espacio + 30, true, 0, false, true, 5, 'M');
+      $pdf->SetFont('helvetica', 'B', 6);
+      $pdf->MultiCell(50, 5, 'Fecha:', 1, 'L', 1, 0, 85, $espacio + 35, true, 0, false, true, 5, 'M');
+      $pdf->SetFont('helvetica', '', 6);
+      $pdf->SetFont('helvetica', 'B', 6);
+      $pdf->MultiCell(40, 5, date_format((date_create($dataDocumento[1]['fecha_emision'])), 'd/m/Y'), 1, 'L', 1, 0, 95, $espacio + 35, true, 0, false, true, 5, 'M');
+      $pdf->SetFont('helvetica', 'B', 6);
+      $pdf->MultiCell(50, 5, 'Fecha:', 1, 'L', 1, 0, 135, $espacio + 35, true, 0, false, true, 5, 'M');
+      $pdf->SetFont('helvetica', '', 6);
+      $pdf->MultiCell(40, 5, date_format((date_create($dataDocumento[2]['fecha_emision'])), 'd/m/Y'), 1, 'L', 1, 0, 145, $espacio + 35, true, 0, false, true, 5, 'M');
+    } else {
+      $pdf->SetFont('helvetica', 'B', 6);
+      $pdf->MultiCell(60, 5, 'Solicitado por', 1, 'C', 1, 0, 45, $espacio, true, 0, false, true, 5, 'M');
+      $pdf->MultiCell(60, 30, $dataDocumento[0]['nombre'], 1, 'C', 1, 0, 45, $espacio, true, 0, false, true, 30, 'B');
+      $pdf->MultiCell(60, 5, 'Aprobado por', 1, 'C', 1, 0, 105, $espacio, true, 0, false, true, 5, 'M');
+      $pdf->MultiCell(60, 30, $resultadoMatriz[1]['nombre'], 1, 'C', 1, 0, 105, $espacio, true, 0, false, true, 30, 'B');
+      $pdf->Image($personaFirma0, 45, $espacio + 5, 60, 20, '', '', '', false, 300, '', false, false, 1);
+      $pdf->MultiCell(60, 30, 'Usuario', 1, 'C', 1, 0, 45, $espacio + 5, true, 0, false, true, 30, 'B');
+      $pdf->Image($personaFirma1, 105, $espacio + 5, 50, 20, '', '', '', false, 300, '', false, false, 1);
+      $pdf->MultiCell(60, 30, 'Jefe de Area', 1, 'C', 1, 0, 105, $espacio + 5, true, 0, false, true, 30, 'B');
+      $pdf->MultiCell(60, 5, 'Fecha:', 1, 'L', 1, 0, 45, $espacio + 35, true, 0, false, true, 5, 'M');
+      $pdf->SetFont('helvetica', '', 6);
+      $pdf->MultiCell(60, 5, date_format((date_create($dataDocumento[0]['fecha_emision'])), 'd/m/Y'), 1, 'L', 1, 0, 55, $espacio + 35, true, 0, false, true, 5, 'M');
+      $pdf->SetFont('helvetica', 'B', 6);
+      $pdf->MultiCell(60, 5, 'Fecha:', 1, 'L', 1, 0, 105, $espacio + 35, true, 0, false, true, 5, 'M');
+      $pdf->SetFont('helvetica', '', 6);
+      $pdf->MultiCell(50, 5, date_format((date_create($resultadoMatriz[1]['fecha_emision'])), 'd/m/Y'), 1, 'L', 1, 0, 115, $espacio + 35, true, 0, false, true, 5, 'M');
+    }
+    $pdf->SetFont('helvetica', '', 6);
+    $pdf->writeHTMLCell(180, 5, '', $espacio + 41, 'El usuario es responsable de asegurar el uso de los documentos vigentes disponibles en la <strong>plataforma documentaria</strong> o en consulta con el <strong>Coordinador SGI o Analista SGI</strong>', 0, 1, 1, true, 'C', true);
+
+    ob_clean();
+
+    if ($tipoSalidaPDF == 'F') {
+      $pdf->Output($url, $tipoSalidaPDF);
+    }
+
+    return $titulo;
+  }
+
+  public function generarDocumentoPDFRequerimiento($documentoId, $comentario, $tipoSalidaPDF, $url, $data)
+  {
+    //$tipoSalidaPDF: F-> guarda local
+    //obtenemos la data
+    $dataDocumentoTipo = DocumentoTipoNegocio::create()->obtenerDocumentoTipoXDocumentoId($documentoId);
+    $documentoTipoId = $dataDocumentoTipo[0]['id'];
+
+    $dataDocumento = $data->dataDocumento;
+    $documentoDatoValor = $data->documentoDatoValor;
+    $detalle = $data->detalle;
+    $dataEmpresa = $data->dataEmpresa;
+    $dataMovimientoTipoColumna = $data->movimientoTipoColumna;
+    $dataDocumentoRelacion = $data->documentoRelacionado;
+
+    $tipo_requerimiento = null;
+    $area = null;
+    $areaId = null;
+    $urgencia = null;
+
+    foreach ($documentoDatoValor as $index => $item) {
+      switch ($item['tipo'] * 1) {
+        case 4:
+          if ($item['descripcion'] == "Urgencia") {
+            $urgencia = $item['valor_codigo'];
+          }
+          break;
+        case 42:
+          $tipo_requerimiento = $item['valor'];
+          break;
+        case 43:
+          $area = $item['valor'];
+          $areaId = $item['valor_codigo'];
+          break;
+      }
+    }
+    $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+
+    // set document information
+    $pdf->SetCreator('Soluciones Mineras S.A.C.');
+    $pdf->SetAuthor('Soluciones Mineras S.A.C.');
+    $pdf->SetTitle(strtoupper($dataDocumentoTipo[0]['descripcion']));
+
+    //        $pdf->SetHeaderData('logo.PNG', PDF_HEADER_LOGO_WIDTH,strtoupper($dataDocumentoTipo[0]['descripcion']),$dataEmpresa[0]['razon_social']."\n".$dataEmpresa[0]['direccion'], array(0,0,0), array(0,0,0));
+
+    $pdf->setFooterData(array(0, 0, 0), array(0, 0, 0)); // 0,0,0
+    // set header and footer fonts
+    $PDF_FONT_SIZE_MAIN = 9;
+    $pdf->setHeaderFont(array(PDF_FONT_NAME_MAIN, '', $PDF_FONT_SIZE_MAIN));
+    $pdf->setFooterFont(array(PDF_FONT_NAME_DATA, '', PDF_FONT_SIZE_DATA));
+
+    // set default monospaced font
+    $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
+
+    // set margins
+    $pdf->SetMargins(PDF_MARGIN_LEFT, PDF_MARGIN_TOP, PDF_MARGIN_RIGHT);
+    $pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
+    $pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
+
+    // set auto page breaks
+    $pdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
+
+    // set image scale factor
+    $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
+
+    // --------------GENERAR PDF-------------------------------------------
+    $pdf->SetFont('helvetica', 'B', 6);
+    $pdf->SetPrintHeader(false);
+    $pdf->SetPrintFooter(false);
+    $pdf->AddPage();
+
+    $serieDocumento = '';
+    if (!ObjectUtil::isEmpty($dataDocumento[0]['serie'])) {
+      $serieDocumento = $dataDocumento[0]['serie'] . " - ";
+    }
+
+    $titulo = strtoupper($dataDocumento[0]['documento_tipo_descripcion']) . " " . $serieDocumento . $dataDocumento[0]['numero'];
+
+    $pdf->SetFillColor(255, 255, 255);
+    $pdf->Image(__DIR__ . '/../../vistas/images/logo_pepas_de_oro.png', 15, 10, 45, 20, '', '', '', false, 300, '', false, false, 1);
+    $pdf->MultiCell(90, 5, 'FORMATO', 1, 'C', 1, 0, 60, 10, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(90, 5, 'REQUERIMIENTO DE BIENES Y SERVICIOS', 1, 'C', 1, 0, 60, 15, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(45, 5, 'CODIGO: F-COR-LOG-ALM-01', 1, 'L', 1, 0, 60, 20, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(45, 5, 'VERSION: 01', 1, 'L', 1, 0, 105, 20, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(45, 5, 'AREA: LOGISTICA', 1, 'L', 1, 0, 60, 25, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(45, 5, 'PAGINA: 01 de 01', 1, 'L', 1, 0, 105, 25, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(45, 20, 'CORPORATIVO', 1, 'C', 1, 0, 150, 10, true, 0, false, true, 20, 'M');
+
+
+    $pdf->SetFillColor(254, 191, 0);
+    $pdf->MultiCell(30, 5, 'AREA', 1, 'C', 1, 0, '', 35, true, 0, false, true, 5, 'M');
+    $pdf->SetFillColor(255, 255, 255);
+    $pdf->MultiCell(50, 5, $area, 1, 'C', 1, 0, 45, 35, true, 0, false, true, 5, 'M');
+
+    $pdf->SetFillColor(254, 191, 0);
+    $pdf->MultiCell(30, 5, 'Nº REQUERIMIENTO', 1, 'C', 1, 0, 115, 35, true, 0, false, true, 5, 'M');
+    $pdf->SetFillColor(255, 255, 255);
+    $pdf->MultiCell(50, 5, $dataDocumento[0]['serie'] . " - " . $dataDocumento[0]['numero'], 1, 'C', 1, 0, 145, 35, true, 0, false, true, 5, 'M');
+
+    //
+
+    $pdf->SetFillColor(254, 191, 0);
+    $pdf->MultiCell(30, 5, 'SOLICITANTE', 1, 'C', 1, 0, '', 42, true, 0, false, true, 5, 'M');
+    $pdf->SetFillColor(255, 255, 255);
+    $pdf->MultiCell(50, 5, $dataDocumento[0]['nombre'], 1, 'C', 1, 0, 45, 42, true, 0, false, true, 5, 'M');
+
+    $pdf->SetFillColor(254, 191, 0);
+    $pdf->MultiCell(30, 5, 'FECHA', 1, 'C', 1, 0, 115, 42, true, 0, false, true, 5, 'M');
+    $pdf->SetFillColor(255, 255, 255);
+    $pdf->MultiCell(50, 5, date_format((date_create($dataDocumento[0]['fecha_emision'])), 'd/m/Y'), 1, 'C', 1, 0, 145, 42, true, 0, false, true, 5, 'M');
+
+    //
+
+    $pdf->SetFillColor(254, 191, 0);
+    $pdf->MultiCell(30, 5, 'PUESTO', 1, 'C', 1, 0, '', 49, true, 0, false, true, 5, 'M');
+    $pdf->SetFillColor(255, 255, 255);
+    $pdf->MultiCell(50, 5, $dataDocumento[0]['puesto'], 1, 'C', 1, 0, 45, 49, true, 0, false, true, 5, 'M');
+
+    //
+
+    $pdf->SetFillColor(254, 191, 0);
+    $pdf->MultiCell(180, 5, 'TIPO DE REQUERIMIENTO', 1, 'C', 1, 0, '', 59, true, 0, false, true, 5, 'M');
+    $pdf->SetFillColor(217, 217, 217);
+    $pdf->MultiCell(90, 5, 'COMPRA', 1, 'C', 1, 0, '', 64, true, 0, false, true, 5, 'M');
+    $pdf->SetFillColor(255, 255, 255);
+    $compra_x = $tipo_requerimiento == "Compra" ? "X" : "";
+    $pdf->MultiCell(9, 3, $compra_x, 1, 'C', 1, 0, 80, 65, true, 0, false, true, 3, 'M'); //VALIDAR
+    $pdf->SetFillColor(217, 217, 217);
+    $pdf->MultiCell(90, 5, 'SERVICIO', 1, 'C', 1, 0, 105, 64, true, 0, false, true, 5, 'M');
+    $pdf->SetFillColor(255, 255, 255);
+    $servicio_x = $tipo_requerimiento == "Servicio" ? "X" : "";
+    $pdf->MultiCell(9, 3, $servicio_x, 1, 'C', 1, 0, 160, 65, true, 0, false, true, 3, 'M'); //VALIDAR
+
+
+    //detalle
+    // $pdf->SetFillColor(254, 191, 0);
+    // $pdf->MultiCell(10, 5, 'N°', 1, 'C', 1, 0, '', 59, true, 0, false, true, 5, 'M');
+    // $pdf->MultiCell(10, 5, 'TIPO DE REQUERIMIENTO', 1, 'C', 1, 0, '', 59, true, 0, false, true, 5, 'M');
+    $cont = 0;
+
+    $pdf->Ln(10);
+    $tabla = '<table cellspacing="0" cellpadding="1" border="1">
+        <tr style="background-color:rgb(254, 191, 0);">
+            <th style="text-align:center;vertical-align:middle;" width="3%"><b>N°</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="12%"><b>CODIGO</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="35%"><b>DESCRIPCION</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="8%"><b>MARCA</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="10%"><b>MODELO</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="8%"><b>CANTIDAD</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="8%"><b>UNIDAD DE MEDIDA</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="16%"><b>INFORMACION ADICIONAL</b></th>
+        </tr>
+    ';
+    if (!ObjectUtil::isEmpty($detalle)) {
+      foreach ($detalle as $index => $item) {
+        $cont++;
+        // if (strlen($item->descripcion) > 39) {
+        //   $cont++;
+        // }
+
+        $tabla = $tabla . '<tr>'
+          . '<td style="text-align:center"  width="3%">' . ($index + 1) . '</td>'
+          . '<td align="center" width="12%">' . $item->bien_codigo . '</td>'
+          . '<td style="text-align:left; vertical-align:middle; display: table-cell;" width="35%">' . $item->descripcion . '</td>'
+          . '<td style="text-align:center"  width="8%"></td>'
+          . '<td style="text-align:center"  width="10%"></td>'
+          . '<td style="text-align:center"  width="8%">' . number_format($item->cantidad, 2) . '</td>'
+          . '<td style="text-align:center"  width="8%">' . $item->simbolo . '</td>'
+          . '<td style="text-align:center"  width="16%">' . $item->movimientoBienComentario . '</td>'
+          . '</tr>';
+      }
+    }
+
+    for ($i = count($detalle); $i < 20; $i++) {
+      $tabla = $tabla . '<tr>'
+        . '<td style="text-align:center"  width="3%">' . ($i + 1) . '</td>'
+        . '<td style="text-align:left"  width="12%"></td>'
+        . '<td style="text-align:left"  width="35%"></td>'
+        . '<td style="text-align:center"  width="8%"></td>'
+        . '<td style="text-align:center"  width="10%"></td>'
+        . '<td style="text-align:center"  width="8%"></td>'
+        . '<td style="text-align:center"  width="8%"></td>'
+        . '<td style="text-align:center"  width="16%"></td>'
+        . '</tr>';
+    }
+
+
+    $tabla = $tabla . '</table>';
+    $pdf->writeHTML($tabla, true, false, true, false, '');
+
+
+    $tablaHeight = $pdf->GetY(); 
+    $espacio = 0;  // Inicializar el espacio
+    $paginaAltura = $pdf->getPageHeight();  // Altura total de la página
+    $alturaDisponible = $paginaAltura - $tablaHeight - 20; 
+    // Ahora puedes ajustar el valor de $espacio basado en el espacio disponible
+    if ($alturaDisponible > 50) {
+      // Si hay mucho espacio, usa ese espacio
+      $espacio = $tablaHeight + 10;  // Ajusta un pequeño margen después de la tabla
+    } else {
+      // Si el espacio es limitado, podrías agregar una nueva página
+      $pdf->AddPage();
+      $espacio = 15;  // Nuevo espacio al inicio de la nueva página
+    }
+    // Establecer la marca de agua de texto
+    // $pdf->SetAlpha(0.3); // Opcional: Ajusta la opacidad (0 es totalmente transparente, 1 es opaco)
+    // $pdf->SetFont('helvetica', 'B', 50); // Fuente, estilo y tamaño
+    // $pdf->SetTextColor(150, 150, 150); // Color de la marca de agua (gris claro)
+    // $pdf->Rotate(45, 105, 150); // Rotar el texto para la marca de agua (45 grados)
+    // $pdf->SetDrawColor(255, 255, 255); // Establecer el color de dibujo (blanco, para evitar cualquier borde)
+    // $pdf->SetLineWidth(0); // Establecer el grosor del borde a 0
+    // $pdf->Text(50, 120, 'Sin aprobar', false, false, true, ''); // Especifica la posición del texto
+
+    $matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXDocumentoTipoXArea(Configuraciones::SOLICITUD_REQUERIMIENTO, $areaId);
+    $usuario_estado = DocumentoNegocio::create()->obtenerDocumentoDocumentoEstadoXdocumentoId($documentoId, "0,1");
+
+    $resultadoMatriz = [];
+
+    foreach ($matrizUsuario as $key => $value) {
+      if ($usuario_estado[$key]["estado_descripcion"] == "Registrado") {
+        $persona = Persona::create()->obtenerPersonaXUsuarioId($usuario_estado[$key]["usuario_creacion"]);
+        $resultadoMatriz[$key] = array("usuario_id" => $usuario_estado[$key]["usuario_creacion"], "firma_digital" => $persona[0]['firma_digital'], "nombre" => $usuario_estado[$key]["nombre"], "fecha" => $usuario_estado[$key]["usuario_creacion"]);
+      } else {
+        switch ($value["nivel"]) {
+          case "1":
+            foreach ($usuario_estado as $val) {
+              if ($value["usuario_aprobador_id"] == $val["usuario_creacion"] && $val["estado_descripcion"] != "Registrado") {
+                $persona = Persona::create()->obtenerPersonaXUsuarioId($usuario_estado[$key]["usuario_creacion"]);
+                $resultadoMatriz[$key] = array("usuario_id" => $usuario_estado[$key]["usuario_creacion"], "firma_digital" => $persona[0]['firma_digital'], "nombre" =>  $usuario_estado[$key]["persona_nombre"]);
+              }
+            }
+            break;
+          case "2":
+            foreach ($usuario_estado as $val) {
+              if ($value["usuario_aprobador_id"] == $val["usuario_creacion"] && $val["estado_descripcion"] != "Registrado") {
+                $persona = Persona::create()->obtenerPersonaXUsuarioId($usuario_estado[$key]["usuario_creacion"]);
+                $resultadoMatriz[$key] = array("usuario_id" => $usuario_estado[$key]["usuario_creacion"], "firma_digital" => $persona[0]['firma_digital'], "nombre" =>  $usuario_estado[$key]["persona_nombre"]);
+              }
+            }
+            break;
+          case "3":
+            foreach ($usuario_estado as $val) {
+              if ($value["usuario_aprobador_id"] == $val["usuario_creacion"] && $val["estado_descripcion"] != "Registrado") {
+                $persona = Persona::create()->obtenerPersonaXUsuarioId($usuario_estado[$key]["usuario_creacion"]);
+                $resultadoMatriz[$key] = array("usuario_id" => $usuario_estado[$key]["usuario_creacion"], "firma_digital" => $persona[0]['firma_digital'], "nombre" =>  $usuario_estado[$key]["persona_nombre"]);
+              }
+            }
+            break;
+        }
+      }
+    }
+
+    $personaFirma0 = __DIR__ . "/../../vistas/com/persona/firmas/" . $resultadoMatriz[0]['firma_digital'] . "png";
+    $personaFirma1 = __DIR__ . "/../../vistas/com/persona/firmas/" . $resultadoMatriz[1]['firma_digital'] . "png";
+    $personaFirma2 = __DIR__ . "/../../vistas/com/persona/firmas/" . $resultadoMatriz[2]['firma_digital'] . "png";
+    $personaFirma3 = __DIR__ . "/../../vistas/com/persona/firmas/" . $resultadoMatriz[3]['firma_digital'] . "png";
+
+
+    if ($urgencia == 1) {
+      $pdf->SetFont('helvetica', 'B', 6);
+      $pdf->MultiCell(50, 5, 'Solicitado por', 1, 'C', 1, 0, 35, $espacio, true, 0, false, true, 5, 'M');
+      $pdf->MultiCell(50, 30, $dataDocumento[0]['nombre'], 1, 'C', 1, 0, 35, $espacio, true, 0, false, true, 30, 'B');
+      $pdf->MultiCell(50, 5, 'Aprobado por', 1, 'C', 1, 0, 85, $espacio, true, 0, false, true, 5, 'M');
+      $pdf->MultiCell(50, 30, $resultadoMatriz[1]['nombre'], 1, 'C', 1, 0, 85, $espacio, true, 0, false, true, 30, 'B');
+      $pdf->MultiCell(50, 5, 'Recibido por', 1, 'C', 1, 0, 135, $espacio, true, 0, false, true, 5, 'M');
+      $pdf->MultiCell(50, 30, $resultadoMatriz[2]['nombre'], 1, 'C', 1, 0, 135, $espacio, true, 0, false, true, 30, 'B');
+      $pdf->Image($personaFirma0, 35, $espacio + 5, 50, 20, '', '', '', false, 300, '', false, false, 1);
+      $pdf->MultiCell(50, 30, 'Jefe de Area', 1, 'C', 1, 0, 35, $espacio + 5, true, 0, false, true, 30, 'B');
+      $pdf->Image($personaFirma1, 85, $espacio + 5, 50, 20, '', '', '', false, 300, '', false, false, 1);
+      $pdf->MultiCell(50, 30, 'Gerente General', 1, 'C', 1, 0, 85, $espacio + 5, true, 0, false, true, 30, 'B');
+      $pdf->Image($personaFirma2, 135, $espacio + 5, 50, 20, '', '', '', false, 300, '', false, false, 1);
+      $pdf->MultiCell(50, 30, 'Jefe de Logistica', 1, 'C', 1, 0, 135, $espacio + 5, true, 0, false, true, 30, 'B');
+      $pdf->MultiCell(50, 5, 'Fecha:', 1, 'L', 1, 0, 35, $espacio + 35, true, 0, false, true, 5, 'M');
+      $pdf->SetFont('helvetica', '', 6);
+      $pdf->MultiCell(50, 5, date_format((date_create($dataDocumento[0]['fecha_emision'])), 'd/m/Y'), 1, 'L', 1, 0, 45, $espacio + 30, true, 0, false, true, 5, 'M');
+      $pdf->SetFont('helvetica', 'B', 6);
+      $pdf->MultiCell(50, 5, 'Fecha:', 1, 'L', 1, 0, 85, $espacio + 35, true, 0, false, true, 5, 'M');
+      $pdf->SetFont('helvetica', '', 6);
+      $pdf->SetFont('helvetica', 'B', 6);
+      $pdf->MultiCell(40, 5, date_format((date_create($dataDocumento[1]['fecha_emision'])), 'd/m/Y'), 1, 'L', 1, 0, 95, $espacio + 35, true, 0, false, true, 5, 'M');
+      $pdf->SetFont('helvetica', 'B', 6);
+      $pdf->MultiCell(50, 5, 'Fecha:', 1, 'L', 1, 0, 135, $espacio + 35, true, 0, false, true, 5, 'M');
+      $pdf->SetFont('helvetica', '', 6);
+      $pdf->MultiCell(40, 5, date_format((date_create($dataDocumento[2]['fecha_emision'])), 'd/m/Y'), 1, 'L', 1, 0, 145, $espacio + 35, true, 0, false, true, 5, 'M');
+    } else {
+      $pdf->SetFont('helvetica', 'B', 6);
+      $pdf->MultiCell(60, 5, 'Solicitado por', 1, 'C', 1, 0, 45, $espacio, true, 0, false, true, 5, 'M');
+      $pdf->MultiCell(60, 30, $dataDocumento[0]['nombre'], 1, 'C', 1, 0, 45, $espacio, true, 0, false, true, 30, 'B');
+      $pdf->MultiCell(60, 5, 'Aprobado por', 1, 'C', 1, 0, 105, $espacio, true, 0, false, true, 5, 'M');
+      $pdf->MultiCell(60, 30, $resultadoMatriz[1]['nombre'], 1, 'C', 1, 0, 105, $espacio, true, 0, false, true, 30, 'B');
+      $pdf->Image($personaFirma0, 45, $espacio + 5, 60, 20, '', '', '', false, 300, '', false, false, 1);
+      $pdf->MultiCell(60, 30, 'Usuario', 1, 'C', 1, 0, 45, $espacio + 5, true, 0, false, true, 30, 'B');
+      $pdf->Image($personaFirma1, 105, $espacio + 5, 50, 20, '', '', '', false, 300, '', false, false, 1);
+      $pdf->MultiCell(60, 30, 'Gerente General', 1, 'C', 1, 0, 105, $espacio + 5, true, 0, false, true, 30, 'B');
+      $pdf->MultiCell(60, 5, 'Fecha:', 1, 'L', 1, 0, 45, $espacio + 35, true, 0, false, true, 5, 'M');
+      $pdf->SetFont('helvetica', '', 6);
+      $pdf->MultiCell(60, 5, date_format((date_create($dataDocumento[0]['fecha_emision'])), 'd/m/Y'), 1, 'L', 1, 0, 55, $espacio + 35, true, 0, false, true, 5, 'M');
+      $pdf->SetFont('helvetica', 'B', 6);
+      $pdf->MultiCell(60, 5, 'Fecha:', 1, 'L', 1, 0, 105, $espacio + 35, true, 0, false, true, 5, 'M');
+    }
+    $pdf->SetFont('helvetica', '', 6);
+    $pdf->writeHTMLCell(180, 5, '', $espacio + 41, 'El usuario es responsable de asegurar el uso de los documentos vigentes disponibles en la <strong>plataforma documentaria</strong> o en consulta con el <strong>Coordinador SGI o Analista SGI</strong>', 0, 1, 1, true, 'C', true);
+
+    ob_clean();
+
+    if ($tipoSalidaPDF == 'F') {
+      $pdf->Output($url, $tipoSalidaPDF);
+    }
+
+    return $titulo;
+  }
+
+  // public function obtenerDocumentosXAreaId($areaId, $tipoRequerimiento, $urgencia)
+  // {
+  //   $data = DocumentoNegocio::create()->obtenerDocumentosXAreaId($areaId, $tipoRequerimiento, $urgencia);
+  //   return $data;
+  // }
+  public function obtenerDetalleXAreaId($opcionId, $empresaId, $areaId, $documentoTipoId, $tipoRequerimiento, $urgencia)
+  {
+    $respuesta = new stdClass();
+    $arrayDataBien = array();
+
+    $movimientoTipo = MovimientoTipoNegocio::create()->obtenerXOpcion($opcionId);
+    $detalleRequerimientos = MovimientoBien::create()->obtenerMovimientoBienXRequerimientoXAreaId($areaId, $tipoRequerimiento, $urgencia);
+    //OBTENER DATA DE UNIDAD DE MEDIDA
+    foreach ($detalleRequerimientos as $index => $item) {
+      $bienId = $item['bien_id'];
+      $unidadMedidaId = $item['unidad_medida_id'];
+      $precioTipoId = $item['precio_tipo_id'];
+      $monedaId = $respuesta->movimientoTipo[0]['moneda_id'];
+      $fechaEmision = date("d/m/Y");
+      foreach ($respuesta->documento_tipo_conf as $itemDato) {
+        if ($itemDato['tipo'] == 9) {
+          $fechaEmision = date_format((date_create($itemDato['valor'])), 'd/m/Y');
+        }
+      }
+
+      $data = MovimientoNegocio::create()->obtenerUnidadMedida($bienId, $unidadMedidaId, $precioTipoId, $monedaId, $fechaEmision);
+      $detalleRequerimientos[$index]['dataUnidadMedida'] = $data;
+      $dataBien = BienNegocio::create()->obtenerActivosXMovimientoTipoIdBienId($empresaId, $movimientoTipo[0]["id"], $bienId);
+      foreach ($dataBien as $datos) {
+        array_push($arrayDataBien, $datos);
+      }
+
+      $arrayIds = explode(',', $item["movimiento_bien_ids"]);
+      foreach ($arrayIds as $itemarrayIds) {
+        $resMovimientoBienDetalle = MovimientoBien::create()->obtenerMovimientoBienDetalleXMovimientoBienId($itemarrayIds);
+      }
+    }
+
+    $respuesta->detalleRequerimientos = $detalleRequerimientos;
+    $respuesta->count_detalleRequerimientos = count($detalleRequerimientos);
+    $DocumentoId = explode(",",$detalleRequerimientos[0]['documento_id']);
+    $respuesta->dataDocumentoRelacionada = DocumentoNegocio::create()->obtenerDataDocumentoACopiarRelacionada(Configuraciones::SOLICITUD_REQUERIMIENTO, $documentoTipoId, ($DocumentoId[0] == ""? $detalleRequerimientos[0]['documento_id'] : $DocumentoId[0]));
+    $respuesta->dataBien = $arrayDataBien;
+
+    return $respuesta;
+  }
+
+  public function obtenerDetalleXGrupoProductoId($opcionId, $empresaId, $grupoProductoId, $tipoRequerimiento, $urgencia)
+  {
+    $respuesta = new stdClass();
+    $arrayDataBien = array();
+
+    $movimientoTipo = MovimientoTipoNegocio::create()->obtenerXOpcion($opcionId);
+    $detalleRequerimientos = MovimientoBien::create()->obtenerMovimientoBienXRequerimientoXGrupoProductoxId($grupoProductoId, $tipoRequerimiento, $urgencia);
+    //OBTENER DATA DE UNIDAD DE MEDIDA
+    foreach ($detalleRequerimientos as $index => $item) {
+      $bienId = $item['bien_id'];
+      $unidadMedidaId = $item['unidad_medida_id'];
+      $precioTipoId = $item['precio_tipo_id'];
+      $monedaId = $respuesta->movimientoTipo[0]['moneda_id'];
+      $fechaEmision = date("d/m/Y");
+      foreach ($respuesta->documento_tipo_conf as $itemDato) {
+        if ($itemDato['tipo'] == 9) {
+          $fechaEmision = date_format((date_create($itemDato['valor'])), 'd/m/Y');
+        }
+      }
+
+      $data = MovimientoNegocio::create()->obtenerUnidadMedida($bienId, $unidadMedidaId, $precioTipoId, $monedaId, $fechaEmision);
+      $detalleRequerimientos[$index]['dataUnidadMedida'] = $data;
+      $dataBien = BienNegocio::create()->obtenerActivosXMovimientoTipoIdBienId($empresaId, $movimientoTipo[0]["id"], $bienId);
+      foreach ($dataBien as $datos) {
+        array_push($arrayDataBien, $datos);
+      }
+    }
+    $respuesta->detalleRequerimientos = $detalleRequerimientos;
+    $respuesta->count_detalleRequerimientos = count($detalleRequerimientos);
+    $respuesta->dataBien = $arrayDataBien;
+
+    return $respuesta;
+  }
+
+  public function generarDocumentoPDFOrdenCompraServicio($documentoId, $comentario, $tipoSalidaPDF, $url, $data)
+  {
+    //$tipoSalidaPDF: F-> guarda local
+    //obtenemos la data
+    $dataDocumentoTipo = DocumentoTipoNegocio::create()->obtenerDocumentoTipoXDocumentoId($documentoId);
+    $documentoTipoId = $dataDocumentoTipo[0]['id'];
+
+    $dataDocumento = $data->dataDocumento;
+    $documentoDatoValor = $data->documentoDatoValor;
+    $detalle = $data->detalle;
+    $dataEmpresa = $data->dataEmpresa;
+    $dataMovimientoTipoColumna = $data->movimientoTipoColumna;
+    $dataDocumentoRelacion = $data->documentoRelacionado;
+
+    $ubigeoProveedor = PersonaNegocio::create()->obtenerUbigeoXId($dataDocumento[0]["ubigeo_id"]);
+
+    $referencia = null;
+    $requerimiento = null;
+    $cotizacion = null;
+    $terminos_de_pago = null;
+    $entrega_en_destino = null;
+    $entrega_en_destino_id = null;
+    $U_O = null;
+    $cuenta = null;
+
+    foreach ($documentoDatoValor as $index => $item) {
+      switch ($item['tipo'] * 1) {
+        case 2:
+          if ($item['descripcion'] == "Referencia") {
+            $referencia = $item['valor'];
+          } else if ($item['descripcion'] == "Requerimiento") {
+            $requerimiento = $item['valor'];
+          } else if ($item['descripcion'] == "Cotización") {
+            $cotizacion = $item['valor'];
+          }
+          break;
+        case 4:
+          $terminos_de_pago = $item['valor'];
+          break;
+        case 45:
+          $entrega_en_destino = $item['valor'];
+          $entrega_en_destino_id = $item["valor_codigo"];
+          break;
+        case 46:
+          $U_O = $item['valor'];
+          break;
+        case 47:
+          $cuenta = $item['valor'];
+          break;
+      }
+    }
+
+    $organizador_entrega =  OrganizadorNegocio::create()->getOrganizador($entrega_en_destino_id);
+    $ubigeoProveedor_entrega = PersonaNegocio::create()->obtenerUbigeoXId($dataDocumento[0]["ubigeo_id"]);
+
+
+    $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+
+    // set document information
+    $pdf->SetCreator('Soluciones Mineras S.A.C.');
+    $pdf->SetAuthor('Soluciones Mineras S.A.C.');
+    $pdf->SetTitle(strtoupper($dataDocumentoTipo[0]['descripcion']));
+
+    //        $pdf->SetHeaderData('logo.PNG', PDF_HEADER_LOGO_WIDTH,strtoupper($dataDocumentoTipo[0]['descripcion']),$dataEmpresa[0]['razon_social']."\n".$dataEmpresa[0]['direccion'], array(0,0,0), array(0,0,0));
+
+    $pdf->setFooterData(array(0, 0, 0), array(0, 0, 0)); // 0,0,0
+    // set header and footer fonts
+    $PDF_FONT_SIZE_MAIN = 9;
+    $pdf->setHeaderFont(array(PDF_FONT_NAME_MAIN, '', $PDF_FONT_SIZE_MAIN));
+    $pdf->setFooterFont(array(PDF_FONT_NAME_DATA, '', PDF_FONT_SIZE_DATA));
+
+    // set default monospaced font
+    $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
+
+    // set margins
+    $pdf->SetMargins(PDF_MARGIN_LEFT, PDF_MARGIN_TOP, PDF_MARGIN_RIGHT);
+    $pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
+    $pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
+
+    // set auto page breaks
+    $pdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
+
+    // set image scale factor
+    $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
+
+    // --------------GENERAR PDF-------------------------------------------
+    $pdf->SetFont('helvetica', 'B', 10);
+    $pdf->SetPrintHeader(false);
+    $pdf->SetPrintFooter(false);
+    $pdf->AddPage();
+
+    $serieDocumento = '';
+    if (!ObjectUtil::isEmpty($dataDocumento[0]['serie'])) {
+      $serieDocumento = $dataDocumento[0]['serie'] . " - ";
+    }
+
+    $titulo = strtoupper($dataDocumento[0]['documento_tipo_descripcion']) . " " . $serieDocumento . $dataDocumento[0]['numero'];
+
+    $pdf->SetFillColor(255, 255, 255);
+    $pdf->MultiCell(150, 40, 'ASOCIACION DE MINEROS ARTESANALES PEPAS DE ORO DE', 0, 'C', 1, 0, '', 10, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(150, 40, 'PAMPAMARCA', 0, 'C', 1, 0, '', 15, true, 0, false, true, 5, 'M');
+
+    $pdf->Image('C:\wamp64\www\minaApp\vistas\images\logo_pepas_de_oro.png', 150, 10, 45, 20, '', '', '', false, 300, '', false, false, 1);
+
+    $pdf->SetFont('helvetica', '', 6);
+    $pdf->MultiCell(120, 5, 'PZA.PLAZA DE ARMAS PAMPAMARCA NRO. S/N ANX. PAMPAMARCA', 0, 'L', 1, 0, '', 30, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(120, 5, '(COMUNIDAD DE PAMPAMARCA) APURIMAC - AYMARAES - COTARUSE', 0, 'L', 1, 0, '', 33, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(120, 5, '(051) 950398232', 0, 'L', 1, 0, '', 36, true, 0, false, true, 5, 'M');
+
+
+    $pdf->SetFont('helvetica', 'B', 10);
+    $pdf->MultiCell(30, 5, 'Fecha', 0, 'C', 1, 0, 115, 34, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(50, 5, date_format((date_create($dataDocumento[0]['fecha_emision'])), 'd/m/Y'), 0, 'C', 1, 0, 145, 34, true, 0, false, true, 5, 'M');
+
+    $pdf->MultiCell(30, 5, 'No.', 0, 'C', 1, 0, 115, 38, true, 0, false, true, 5, 'M');
+    $pdf->SetFillColor(255, 255, 255);
+    $pdf->MultiCell(50, 5, $dataDocumento[0]['serie'] . " - " . $dataDocumento[0]['numero'], 0, 'C', 1, 0, 145, 38, true, 0, false, true, 5, 'M');
+
+    //
+    $pdf->SetFont('helvetica', 'B', 10);
+    $pdf->MultiCell(30, 5, 'Proveedor', 0, 'L', 1, 0, '', 45, true, 0, false, true, 5, 'M');
+    $pdf->SetFont('helvetica', '', 7);
+    $pdf->MultiCell(90, 4, $dataDocumento[0]['nombre'], 0, 'L', 1, 0, '', 50, true, 0, false, true, 4, 'M');
+    $pdf->MultiCell(90, 4, $dataDocumento[0]['codigo_identificacion'], 0, 'L', 1, 0, '', 54, true, 0, false, true, 4, 'M');
+    $pdf->MultiCell(90, 4, $dataDocumento[0]['direccion'], 0, 'L', 1, 0, '', 58, true, 0, false, true, 4, 'M');
+    $pdf->MultiCell(90, 4, $ubigeoProveedor[0]['ubigeo_dist'], 0, 'L', 1, 0, '', 62, true, 0, false, true, 4, 'M');
+    $pdf->MultiCell(90, 4, $ubigeoProveedor[0]['ubigeo_dep'], 0, 'L', 1, 0, '', 66, true, 0, false, true, 4, 'M');
+
+    $pdf->SetFont('helvetica', 'B', 10);
+    $pdf->MultiCell(50, 5, 'Dirección de entrega', 0, 'L', 1, 0, 115, 45, true, 0, false, true, 5, 'M');
+    $pdf->SetFont('helvetica', '', 7);
+    $pdf->MultiCell(90, 4, 'ASOCIACION DE MINEROS ARTESANALES PEPAS DE ORO DE PAMPAMARCA', 0, 'L', 1, 0, 115, 50, true, 0, false, true, 4, 'M');
+    $pdf->MultiCell(90, 4, '20490115804', 0, 'L', 1, 0, 115, 54, true, 0, false, true, 4, 'M');
+    $pdf->MultiCell(90, 4, $organizador_entrega[0]["direccion"], 0, 'L', 1, 0, 115, 58, true, 0, false, true, 4, 'M');
+    $pdf->MultiCell(90, 4, $ubigeoProveedor_entrega[0]['ubigeo_dist'], 0, 'L', 1, 0, 115, 62, true, 0, false, true, 4, 'M');
+    $pdf->MultiCell(90, 4, $ubigeoProveedor_entrega[0]['ubigeo_dep'], 0, 'L', 1, 0, 115, 66, true, 0, false, true, 4, 'M');
+
+
+    $pdf->SetFillColor(217, 217, 217);
+    $pdf->SetFont('helvetica', 'B', 8);
+    $pdf->MultiCell(45, 5, 'Entrega en destino', 1, 'C', 1, 0, '', 74, true, 0, false, true, 5, 'M');
+    $pdf->SetFillColor(255, 255, 255);
+    $pdf->SetFont('helvetica', '', 7);
+    $pdf->MultiCell(45, 10, $entrega_en_destino, 1, 'C', 1, 0, '', 79, true, 0, false, true, 10, 'M'); //verificar
+
+    $pdf->SetFillColor(217, 217, 217);
+    $pdf->SetFont('helvetica', 'B', 8);
+    $pdf->MultiCell(45, 5, 'Términos de pago', 1, 'C', 1, 0, 60, 74, true, 0, false, true, 5, 'M');
+    $pdf->SetFillColor(255, 255, 255);
+    $pdf->SetFont('helvetica', '', 7);
+    $pdf->MultiCell(45, 10, $terminos_de_pago, 1, 'C', 1, 0, 60, 79, true, 0, false, true, 10, 'M'); //verificar
+
+
+    $pdf->SetFillColor(217, 217, 217);
+    $pdf->SetFont('helvetica', 'B', 8);
+    $pdf->MultiCell(45, 5, 'Solicitado por', 1, 'C', 1, 0, 105, 74, true, 0, false, true, 5, 'M');
+    $pdf->SetFillColor(255, 255, 255);
+    $pdf->SetFont('helvetica', '', 7);
+    $pdf->MultiCell(45, 10, '', 1, 'C', 1, 0, 105, 79, true, 0, false, true, 10, 'M'); //verificar
+
+
+    $pdf->SetFont('helvetica', 'B', 8);
+    $pdf->MultiCell(45, 5, 'REQUERIMIENTO:', 1, 'L', 1, 0, '', 89, true, 0, false, true, 5, 'M');
+    $pdf->SetFont('helvetica', '', 7);
+    $pdf->MultiCell(90, 5, $requerimiento, 1, 'L', 1, 0, 60, 89, true, 0, false, true, 5, 'M');
+    $pdf->SetFont('helvetica', 'B', 8);
+    $pdf->MultiCell(45, 5, 'U.O:', 1, 'L', 1, 0, '', 94, true, 0, false, true, 5, 'M');
+    $pdf->SetFont('helvetica', '', 7);
+    $pdf->MultiCell(90, 5, $U_O, 1, 'L', 1, 0, 60, 94, true, 0, false, true, 5, 'M');
+    $pdf->SetFont('helvetica', 'B', 8);
+    $pdf->MultiCell(45, 5, 'REFERENCIA :', 1, 'L', 1, 0, '', 99, true, 0, false, true, 5, 'M');
+    $pdf->SetFont('helvetica', '', 7);
+    $pdf->MultiCell(90, 5, $referencia, 1, 'L', 1, 0, 60, 99, true, 0, false, true, 5, 'M');
+    $pdf->SetFont('helvetica', 'B', 8);
+    $pdf->MultiCell(45, 5, 'GENERADO POR:', 1, 'L', 1, 0, '', 104, true, 0, false, true, 5, 'M');
+    $pdf->SetFont('helvetica', '', 7);
+    $pdf->MultiCell(90, 5, $dataDocumento[0]['usuario'], 1, 'L', 1, 0, 60, 104, true, 0, false, true, 5, 'M'); //verificar
+    $pdf->SetFont('helvetica', 'B', 8);
+    $pdf->MultiCell(45, 5, 'COTIZACION:', 1, 'L', 1, 0, '', 109, true, 0, false, true, 5, 'M');
+    $pdf->SetFont('helvetica', '', 7);
+    $pdf->MultiCell(90, 5, $cotizacion, 1, 'L', 1, 0, 60, 109, true, 0, false, true, 5, 'M');
+    $pdf->SetFont('helvetica', 'B', 8);
+    $pdf->MultiCell(45, 5, 'CUENTA:', 1, 'L', 1, 0, '', 114, true, 0, false, true, 5, 'M');
+    $pdf->SetFont('helvetica', '', 7);
+    $pdf->MultiCell(90, 5, $cuenta, 1, 'L', 1, 0, 60, 114, true, 0, false, true, 5, 'M');
+
+
+
+    $cont = 0;
+    $pdf->Ln(8);
+    $pdf->SetFont('helvetica', '', 7);
+    $tabla = '<table cellspacing="0" cellpadding="1" border="1">
+        <tr style="background-color:rgb(254, 191, 0);">
+            <th style="text-align:center;vertical-align:middle;" width="5%"><b>Item</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="10%"><b>Codigo</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="45%"><b>Descripcion</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="10%"><b>Cantidad</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="6%"><b>U.m</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="12%"><b>Valor Unitario</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="12%"><b>Totales</b></th>
+        </tr>
+    ';
+    if (!ObjectUtil::isEmpty($detalle)) {
+      foreach ($detalle as $index => $item) {
+        $cont++;
+        // if (strlen($item->descripcion) > 39) {
+        //   $cont++;
+        // }
+
+        $tabla = $tabla . '<tr>'
+          . '<td style="text-align:center"  width="5%">' . ($index + 1) . '</td>'
+          . '<td align="center" width="10%">' . $item->bien_codigo . '</td>'
+          . '<td style="text-align:left; vertical-align:middle; display: table-cell;" width="45%">' . $item->descripcion . '</td>'
+          . '<td style="text-align:center"  width="10%">' . number_format($item->cantidad, 2) . '</td>'
+          . '<td style="text-align:center"  width="6%">' . $item->simbolo . '</td>'
+          . '<td style="text-align:center"  width="12%">' . number_format($item->precioUnitario, 2) . '</td>'
+          . '<td style="text-align:center"  width="12%">' . number_format($item->importe, 2) . '</td>'
+          . '</tr>';
+      }
+    }
+
+    for ($i = count($detalle); $i < 20; $i++) {
+      $tabla = $tabla . '<tr>'
+        . '<td style="text-align:center"  width="5%">' . ($i + 1) . '</td>'
+        . '<td style="text-align:left"  width="10%"></td>'
+        . '<td style="text-align:left"  width="45%"></td>'
+        . '<td style="text-align:center"  width="10%"></td>'
+        . '<td style="text-align:center"  width="6%"></td>'
+        . '<td style="text-align:center"  width="12%"></td>'
+        . '<td style="text-align:center"  width="12%"></td>'
+        . '</tr>';
+    }
+
+
+    $tabla = $tabla . '</table>';
+
+    $pdf->writeHTML($tabla, true, false, true, false, '');
+    // Establecer la marca de agua de texto
+    // $pdf->SetAlpha(0.3); // Opcional: Ajusta la opacidad (0 es totalmente transparente, 1 es opaco)
+    // $pdf->SetFont('helvetica', 'B', 50); // Fuente, estilo y tamaño
+    // $pdf->SetTextColor(150, 150, 150); // Color de la marca de agua (gris claro)
+    // $pdf->Rotate(45, 105, 150); // Rotar el texto para la marca de agua (45 grados)
+    // $pdf->SetDrawColor(255, 255, 255); // Establecer el color de dibujo (blanco, para evitar cualquier borde)
+    // $pdf->SetLineWidth(0); // Establecer el grosor del borde a 0
+    // $pdf->Text(50, 120, 'Sin aprobar', false, false, true, ''); // Especifica la posición del texto
+
+    $pdf->SetFont('helvetica', 'B', 6);
+    $pdf->MultiCell(18, 5, 'MONEDA:', 0, 'L', 1, 0, 105, 200, true, 0, false, true, 5, 'M');
+    $pdf->SetFont('helvetica', '', 6);
+    $pdf->MultiCell(11, 5, $dataDocumento[0]["moneda_descripcion"], 0, 'L', 1, 0, 123, 200, true, 0, false, true, 5, 'M'); //revisar
+
+    $pdf->SetFont('helvetica', 'B', 6);
+    $pdf->MultiCell(21, 5, 'SUBTOTAL', 1, 'L', 1, 0, 134, 205, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(21, 5, 'IGV 18%', 1, 'L', 1, 0, 134, 210, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(21, 5, 'TOTAL', 1, 'L', 1, 0, 134, 215, true, 0, false, true, 5, 'M');
+
+    $pdf->MultiCell(22, 5, number_format($dataDocumento[0]['subtotal'], 2), 1, 'R', 1, 0, 155, 205, true, 0, false, true, 5, 'M'); //Revisar
+    $pdf->MultiCell(22, 5, number_format($dataDocumento[0]['igv'], 2), 1, 'R', 1, 0, 155, 210, true, 0, false, true, 5, 'M'); //Revisar
+    $pdf->MultiCell(22, 5, number_format($dataDocumento[0]['total'], 2), 1, 'R', 1, 0, 155, 215, true, 0, false, true, 5, 'M'); //Revisar
+
+
+
+    $pdf->MultiCell(90, 5, 'Intrucciones', 1, 'L', 1, 0, '', 200, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(90, 5, '* Entrega del bien con GR,OC/OS  y  FACTURA, sino no se recepcionará.', 1, 'L', 1, 0, '', 205, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(90, 5, '* En la guia de remision mencionar el numero de orden de compra', 1, 'L', 1, 0, '', 210, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(90, 5, '* incluye IGV', 1, 'L', 1, 0, '', 215, true, 0, false, true, 5, 'M');
+
+
+    $pdf->SetFont('helvetica', '', 4);
+    $pdf->MultiCell(70, 3, '*El lugar de entrega se coordinará con el Comprador.', 0, 'L', 1, 0, '', 226, true, 0, false, true, 3, 'M');
+    $pdf->MultiCell(70, 3, '*Para aclaraciones contactar con el comprador :', 0, 'L', 1, 0, '', 229, true, 0, false, true, 3, 'M');
+    $pdf->SetFont('helvetica', 'B', 4);
+    $pdf->MultiCell(70, 3, 'Procedimiento para presentación de facturas y comprobantes de pago', 0, 'L', 1, 0, '', 232, true, 0, false, true, 3, 'M');
+    $pdf->SetFont('helvetica', '', 4);
+    $pdf->MultiCell(70, 3, '• Validación SUNAT para Comprobantes electrónicos.', 10, 'L', 1, 0, '', 235, true, 0, false, true, 3, 'M');
+    $pdf->MultiCell(70, 3, '• Validación de emisor electrónicos para Comprobantes físicos.', 0, 'L', 1, 0, '', 238, true, 0, false, true, 3, 'M');
+    $pdf->MultiCell(70, 3, '• En el caso de facturas electrónicas deben remitir el archivo en pdf y xml.', 0, 'L', 1, 0, '', 241, true, 0, false, true, 3, 'M');
+    $pdf->MultiCell(70, 3, '• Copia de la Orden de Compra.', 0, 'L', 1, 0, '', 244, true, 0, false, true, 3, 'M');
+    $pdf->MultiCell(70, 3, '• Acta de conformidad y/o Liquidación en el caso de ser un servicio.', 0, 'L', 1, 0, '', 247, true, 0, false, true, 3, 'M');
+    $pdf->MultiCell(70, 3, '• Guía de remisión con sello de recepción o conformidad.', 0, 'L', 1, 0, '', 250, true, 0, false, true, 3, 'M');
+
+
+    //
+    $matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXDocumentoTipoXArea($documentoTipoId, null);
+    $usuario_estado = DocumentoNegocio::create()->obtenerDocumentoDocumentoEstadoXdocumentoId($documentoId, "0,1");
+
+    $resultadoMatriz = [];
+
+    foreach ($matrizUsuario as $key => $value) {
+      if ($usuario_estado[$key]["estado_descripcion"] == "Registrado") {
+        $persona = Persona::create()->obtenerPersonaXUsuarioId($usuario_estado[$key]["usuario_creacion"]);
+        $resultadoMatriz[$key] = array("usuario_id" => $usuario_estado[$key]["usuario_creacion"], "firma_digital" => $persona[0]['firma_digital'], "nombre" => $usuario_estado[$key]["nombre"], "fecha" => $usuario_estado[$key]["usuario_creacion"]);
+      } else {
+        switch ($value["nivel"]) {
+          case "1":
+            foreach ($usuario_estado as $val) {
+              if ($value["usuario_aprobador_id"] == $val["usuario_creacion"] && $val["estado_descripcion"] != "Registrado") {
+                $persona = Persona::create()->obtenerPersonaXUsuarioId($usuario_estado[$key]["usuario_creacion"]);
+                $resultadoMatriz[$key] = array("usuario_id" => $usuario_estado[$key]["usuario_creacion"], "firma_digital" => $persona[0]['firma_digital'], "nombre" =>  $usuario_estado[$key]["persona_nombre"]);
+              }
+            }
+            break;
+          case "2":
+            foreach ($usuario_estado as $val) {
+              if ($value["usuario_aprobador_id"] == $val["usuario_creacion"] && $val["estado_descripcion"] != "Registrado") {
+                $persona = Persona::create()->obtenerPersonaXUsuarioId($usuario_estado[$key]["usuario_creacion"]);
+                $resultadoMatriz[$key] = array("usuario_id" => $usuario_estado[$key]["usuario_creacion"], "firma_digital" => $persona[0]['firma_digital'], "nombre" =>  $usuario_estado[$key]["persona_nombre"]);
+              }
+            }
+            break;
+          case "3":
+            foreach ($usuario_estado as $val) {
+              if ($value["usuario_aprobador_id"] == $val["usuario_creacion"] && $val["estado_descripcion"] != "Registrado") {
+                $persona = Persona::create()->obtenerPersonaXUsuarioId($usuario_estado[$key]["usuario_creacion"]);
+                $resultadoMatriz[$key] = array("usuario_id" => $usuario_estado[$key]["usuario_creacion"], "firma_digital" => $persona[0]['firma_digital'], "nombre" =>  $usuario_estado[$key]["persona_nombre"]);
+              }
+            }
+            break;
+        }
+      }
+    }
+
+    $personaFirma0 = __DIR__ . "/../../vistas/com/persona/firmas/" . $resultadoMatriz[0]['firma_digital'] . "png";
+    $personaFirma1 = __DIR__ . "/../../vistas/com/persona/firmas/" . $resultadoMatriz[1]['firma_digital'] . "png";
+    $personaFirma2 = __DIR__ . "/../../vistas/com/persona/firmas/" . $resultadoMatriz[2]['firma_digital'] . "png";
+    $personaFirma3 = __DIR__ . "/../../vistas/com/persona/firmas/" . $resultadoMatriz[3]['firma_digital'] . "png";
+
+    $pdf->SetFont('helvetica', 'B', 6);
+    $pdf->MultiCell(39, 5, 'Autorizado por.', 0, 'C', 1, 0, 90, 225, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(47, 8, '', 1, 'C', 1, 0, 130, 225, true, 0, false, true, 8, 'M'); //Revisar
+    $pdf->Image($personaFirma1, 47, 130, 225, 20, '', '', '', false, 300, '', false, false, 1);
+    $pdf->SetFont('helvetica', '', 6);
+    $pdf->MultiCell(39, 3, 'JEFE DE LOGISTICA', 0, 'C', 1, 0, 90, 230, true, 0, false, true, 3, 'M');
+
+    $pdf->SetFont('helvetica', 'B', 6);
+    $pdf->MultiCell(39, 5, 'Autorizado por.', 0, 'C', 1, 0, 90, 235, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(47, 8, '', 1, 'C', 0, 0, 130, 235, true, 0, false, true, 8, 'M'); //Revisar
+    $pdf->SetFont('helvetica', '', 6);
+    $pdf->MultiCell(39, 3, 'COMPRADOR', 0, 'C', 1, 0, 90, 240, true, 0, false, true, 3, 'M');
+
+    $pdf->SetFont('helvetica', 'B', 6);
+    $pdf->MultiCell(39, 5, 'Autorizado por.', 0, 'C', 1, 0, 90, 245, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(47, 8, '', 1, 'C', 0, 0, 130, 245, true, 0, false, true, 8, 'M'); //Revisar
+    $pdf->SetFont('helvetica', '', 6);
+    $pdf->MultiCell(39, 3, 'GERENTE GENERAL', 0, 'C', 1, 0, 90, 250, true, 0, false, true, 3, 'M');
+
+    $pdf->SetFont('helvetica', '', 4);
+    $pdf->MultiCell(150, 2, 'El horario de recepción es de lunes a viernes de 8:00 am a 1:00 pm; los documentos que envíen después de este horario o los días sábados, domingos y feriados serán considerados como recibidos a partir', 0, 'L', 1, 0, '', 260, true, 0, false, true, 2, 'M');
+    $pdf->MultiCell(150, 2, 'del siguiente día hábil y deberán ser remitidos a la siguiente dirección de correo electrónico ', 0, 'L', 1, 0, '', 262, true, 0, false, true, 2, 'M');
+    $pdf->MultiCell(150, 2, 'El pago es semanal todos los jueves, se programarán todos los comprobantes que cumplan con el procedimiento solicitado y hayan sido emitidos y registrados hasta el martes previo.', 0, 'L', 1, 0, '', 264, true, 0, false, true, 2, 'M');
+
+
+    $html1 = '<strong>1. Generalidades y Objeto</strong> <br>
+    1.1. Las presentes Condiciones Generales de Compra (en adelante "Condiciones Generales") tienen por objeto regular las relaciones entre la Persona Jurídica (en adelante, el "COMPRADOR") que ordena la compra de bienes (los "Bienes") objeto de la Orden de Compra (la "OC") a la cual se adjunta las presentes Condiciones Generales   y quien aparece en la OC (en adelante el "PROVEEDOR") a cargo de proveer los Bienes requeridos por el COMPRADOR. <br>
+    1.2. La OC emitida por el COMPRADOR constituye una oferta para la compra de los Bienes y la prestación de los Servicios de acuerdo a los términos y condiciones, allí indicados. El PROVEEDOR debe expresar su aceptación a la oferta mediante la firma por el representante legal y envío de la OC al COMPRADOR dentro del plazo máximo de 10 (diez) días de recibida la OC. El Contrato queda perfeccionado en el momento y lugar que la aceptación es conocida por el COMPRADOR. En cualquier caso, el Contrato queda concluido en el momento y lugar en que se inicia la ejecución de la prestación a cargo del PROVEEDOR. <br>
+    1.3. La OC podrá ser revocada hasta que se perfeccione el Contrato si la revocación llega al destinatario antes que éste haya enviado la aceptación. <br>
+    1.4. La aceptación de la OC no surtirá efectos si no llega al COMPRADOR dentro del plazo señalado en la cláusula 1.2. La aceptación tardía surtirá, sin embargo, efecto como aceptación si el oferente, sin demora, informa verbalmente de ello al destinatario o le envía una comunicación en tal sentido. <br>
+    1.5. La respuesta a una oferta que pretenda ser una aceptación y que contenga adiciones, limitaciones u otras modificaciones se considerará como rechazo de la oferta y constituirá una contraoferta. <br>
+    1.6. Ninguno de los términos, condiciones, excepciones o aclaraciones indicados por el PROVEEDOR en su cotización, propuesta o aceptación de la OC, serán vinculantes a menos que sean incorporados expresamente y por escrito en el Contrato por el COMPRADOR. <br><br>';
+
+    $html2 = '<strong>2. Ejecución del Contrato</strong> <br>
+    2.1. Bienes. - <br>
+    2.1.1. El PROVEEDOR deberá entregar Bienes cuya cantidad, calidad y tipo correspondan a los señalados en la OC y que estén envasados o embalados en la forma fijada por la OC. <br>
+    2.1.2. Salvo que la OC haya señalado otra cosa, los Bienes no serán conformes a la OC a menos: <br>
+    a) Que sean aptos para los usos a que ordinariamente se destinen Bienes del mismo tipo; <br>			
+    b) que sean aptos para cualquier uso especial que expresa o tácitamente se haya hecho saber al PROVEEDOR al solicitarle una cotización o en la OC; <br>
+    c) que posean las cualidades de la muestra o modelo que el PROVEEDOR haya presentado al COMPRADOR; <br>
+    d) que estén envasados o embalados en la forma habitual para tales Bienes o, si no existe tal forma, de una forma adecuada para conservarlos y protegerlos. <br>
+    2.2. Información Suficiente. - El PROVEEDOR declara que ha tomado conocimiento de todos los hechos y circunstancias relevantes para la ejecución de sus obligaciones contractuales. En ningún, caso el PROVEEDOR tendrá derecho a beneficio alguno debido a la falta de información con relación a las condiciones para la ejecución de las cuales podría haber obtenido los detalles necesarios o aclaraciones previo requerimiento hecho en su debida oportunidad. <br>
+    2.3. Responsabilidad por la Ejecución del Contrato. - El PROVEEDOR será responsable por la interpretación que haga de la documentación e información relacionada con la OC. Cualquier participación del COMPRADOR en la selección del algún proveedor con relación a los Bienes, cualquier documento, información, materiales o software o revisión o aprobación de los mismos por el COMPRADOR no liberará al PROVEEDOR de su obligación de entregar los Bienes conforme lo requerido en la OC. <br>
+    2.4. Autorizaciones, Licencias y Permisos. - El PROVEEDOR deberá obtener a su cuenta, costo y riesgo todas las autorizaciones, licencias y permisos necesarios para la ejecución del Contrato. <br>
+    2.5. La recepción de los Bienes por el COMPRADOR no supone la conformidad de los mismos. En todo caso, el COMPRADOR perderá el derecho a invocar la falta de conformidad de los Bienes si no lo comunica al PROVEEDOR en un plazo máximo de dos (2) años contados desde la fecha en que los Bienes se pusieron efectivamente en poder del COMPRADOR, a menos que ese plazo sea incompatible con un período de garantía contractual. <br><br>';
+
+    $html3 = '<strong>3. Variaciones</strong> <br>
+    El COMPRADOR tendrá derecho en todo momento a requerir cambios o variaciones de los Bienes, mediante el envío de una notificación escrita al PROVEEDOR. En la medida que los cambios o variaciones requeridos por el COMPRADOR razonablemente justifiquen un ajuste del precio, una modificación del cronograma de entrega o una modificación de las presentes Condiciones Generales y si el PROVEEDOR solicita dentro de los 10 (diez) días siguientes a la notificación del COMPRADOR que se efectúe el ajuste respectivo, entonces el COMPRADOR realizará el ajuste razonable que corresponda. El COMPRADOR podrá requerir que el PROVEEDOR comience a ejecutar los cambios o variaciones antes que se termine de realizar cualquier ajuste al Contrato. <br><br>';
+
+    $html4 = '<strong>4. Inspecciones y Control de Calidad</strong> <br>
+    4.1. El PROVEEDOR implementará un adecuado y reconocido programa de control de calidad para garantizar que los Bienes cumplan con los requerimientos de la OC y entregar al COMPRADOR todos los certificados de pruebas y otra documentación que sea requerida en virtud del Contrato o que el COMPRADOR razonablemente requiera. El PROVEEDOR informará al COMPRADOR con la debida anticipación de todas las pruebas a realizarse y el COMPRADOR o cualquier tercero autorizado por el COMPRADOR tendrá derecho a participar en dichas pruebas. <br>
+    4.2. El COMPRADOR o cualquier tercero autorizado por el COMPRADOR tendrá derecho a realizar inspecciones y pruebas en cualquier momento que sea razonable y el PROVEEDOR les facilitará completo y libre acceso a los respectivos locales del PROVEEDOR, sus subcontratistas o proveedores. Al momento de recepción de los Bienes, el COMPRADOR podrá, según lo considere, inspeccionarlos en dicho momento o en cualquier momento posterior. Si el Contrato incluye la realización de pruebas a los Bienes, entonces la ejecución del Contrato no se considerará completa hasta que dichas pruebas hayan sido superadas a entera satisfacción del COMPRADOR. <br>
+    4.3. Ni la aprobación por parte del COMPRADOR de cualquier prueba, ni cualquier inspección o prueba realizada por el COMPRADOR, ni la no realización u omisión de las mismas, liberará al PROVEEDOR de su responsabilidad de cumplir con el Contrato ni implicará la conformidad por parte del COMPRADOR de los Bienes. <br><br>';
+
+    $html5 = '<strong>5. Documentación</strong> <br>
+    El PROVEEDOR entregará todos los manuales de operación y mantenimiento, planos, dibujos, cálculos, documentación técnica, diagramas lógicos, reportes de avance, certificados de calidad, cartas de porte, cartas de embarque, certificados de origen, autorizaciones de exportación y licencias, y cualquier otro documento requerido por la OC o por estas Condiciones Generales o la normativa aplicable. En caso que el COMPRADOR lo requiera, el PROVEEDOR deberá entregar cualquiera de dichos documentos al COMPRADOR para su revisión y aprobación. La ejecución del Contrato no se considerará completa hasta que se haya entregado toda la documentación requerida de acuerdo con la OC o con las presentes Condiciones Generales. <br><br>';
+
+    $html6 = '<strong>6. Transporte</strong> <br>
+    6.1. El PROVEEDOR, si estuviere obligado a disponer el transporte de los Bienes, deberá concertar los contratos necesarios para que éste se efectúe hasta el lugar señalado por los medios de transporte adecuados a las circunstancias y en las condiciones usuales para tal transporte. <br>
+    6.2. Independientemente de quien esté a cargo del transporte, el PROVEEDOR deberá cumplir con las instrucciones de embarque, embalaje y marcas y manejo de materiales provisto por el COMPRADOR, sin perjuicio del cumplimiento de los requerimientos establecidos por la normatividad que resulten aplicables al respectivo tipo de transporte. El PROVEEDOR deberá entregar al COMPRADOR en la debida oportunidad documentación de transporte detallada y exacta en la medida que lo requiera el COMPRADOR. <br><br>';
+
+    $html7 = '<strong>7. Transferencia del Riesgo y Propiedad</strong> <br>
+    La transferencia del riesgo de pérdida o daños con relación a los Bienes se transferirá al momento de la entrega de los mismos al COMPRADOR. La propiedad de los Bienes pasará al COMPRADOR al momento de su entrega. <br><br>';
+
+    $html8 = '<strong>8. Cronograma y Demoras</strong> <br>
+    8.1. El PROVEEDOR garantiza que ejecutará el Contrato de manera oportuna de conformidad con la OC. El PROVEEDOR deberá comunicar inmediatamente y por escrito al COMPRADOR tan pronto tome conocimiento de algún evento o circunstancia que demore o pueda demorar el cumplimiento de sus obligaciones contractuales más allá de la fecha determinada en la OC. Dicha notificación deberá incluir una propuesta con medidas para acelerar la ejecución contractual para cumplir en la fecha acordada; incluyendo, si se hace necesario, horas de trabajo adicional, trabajo durante fines de semana y feriados, envío por medios más rápidos (vía aérea, etc.). El costo de dichas medidas será asumido por el PROVEEDOR, salvo que dichas demoras sean responsabilidad únicamente del COMPRADOR. <br>
+    8.2. En caso que la entrega de los Bienes en el lugar de destino (incluyendo toda la documentación respectiva) se demore más allá de la fecha acordada, el PROVEEDOR deberá pagar, a menos que se acuerde algo distinto por escrito, una penalidad por retraso. <br>
+    La penalidad se aplicará al PROVEEDOR hasta por un monto máximo equivalente al diez por ciento (10%) del monto contractual. Cuando se llegue a cubrir el monto máximo de la penalidad, el COMPRADOR podrá resolver el Contrato por incumplimiento. <br>
+    El pago de la penalidad es sin perjuicio del derecho del COMPRADOR a la debida compensación por cualquier daño ulterior. <br>
+    8.3. En caso que el PROVEEDOR se retrase significativamente en el cumplimiento de sus obligaciones, el COMPRADOR podrá enviarle una comunicación requiriendo que cumpla sus obligaciones retrasadas en el periodo de tiempo máximo que indique el COMPRADOR y, si no indicara plazo, en un periodo máximo de quince (15) días. Si el PROVEEDOR incumple con subsanar dicho incumplimiento o si en cualquier caso el máximo de penalidades por demora es alcanzado el COMPRADOR tendrá el derecho de, previa notificación por escrito al PROVEEDOR a resolver el Contrato en todo o en parte de conformidad con la Cláusula 18.1.1. <br><br>';
+
+    $html9 = '<strong>9. Precio y Pagos</strong> <br>
+    9.1. Los precios indicados en la cotización del PROVEEDOR y que se recogen en la OC son firmes y fijos y representan la única contraprestación a la que tiene derecho el PROVEEDOR por la ejecución del Contrato. Dichos precios incluyen: el envío de los Bienes de acuerdo con la OC; todos los tributos, derechos, aranceles y similares aplicables a la ejecución del Contrato; todos los costos y gastos relacionados con la ejecución del Contrato, incluyendo, gastos de viaje, contribuciones o pagos a cualquier organización, prima de seguro y, de manera general, cualquier riesgo, costo, gasto y contingencia del PROVEEDOR. <br>
+    9.2. Las facturas presentadas por el PROVEEDOR reunirán todos los requisitos establecidos por la legislación vigente sobre la materia, siendo el PROVEEDOR el único responsable por el cumplimiento de tal obligación y de no cumplir con tales requisitos, el COMPRADOR podrá retener el pago respectivo. <br>
+    9.3. El COMPRADOR podrá realizar el pago del precio empleando cualquier medio de pago permitido por la normatividad aplicable. En caso el COMPRADOR vaya a realizar el pago mediante depósito en cuenta, el PROVEEDOR deberá indicar la institución financiera y el número de cuenta cuando le sea requerido por el COMPRADOR. La demora del PROVEEDOR en proporcionar dichos datos se considera causa no imputable al COMPRADOR en el retardo del pago respectivo. <br>
+    9.4. Cuando el pago se efectúe mediante cheque, dicha entrega tendrá efecto cancelatorio. <br>
+    9.5. A menos que se indique algo distinto en la OC, el PROVEEDOR tendrá derecho a facturar por el pago por los Bienes sólo cuando hayan sido entregados en su totalidad. Los pagos que deba efectuar el COMPRADOR serán realizados en el plazo determinado en la OC, luego de la recepción de la factura del PROVEEDOR adjuntando la documentación relevante en el domicilio del COMPRADOR. El COMPRADOR no estará obligado a efectuar ningún pago al PROVEEDOR si éste se encuentra en incumplimiento del Contrato y por tanto tiempo como dure dicho incumplimiento. El pago del COMPRADOR no será considerado como una conformidad de los Bienes. Si el COMPRADOR se demorase en el pago de cualquier suma vencida y exigible, el PROVEEDOR, como única compensación, tendrá derecho a cobrar intereses sobre el monto impago desde la fecha de vencimiento de la factura respectiva hasta la fecha de pago, aplicando para tales fines la tasa de interés legal establecida por el Banco Central de Reserva (BCR) y publicada por la Superintendencia de Banca y Seguros (SBS) para operaciones ajenas al Sistema Financiero aplicable a la fecha de vencimiento de la factura. <br>
+    9.6. El PROVEEDOR no tendrá derecho a compensar ninguno de los montos que adeude al COMPRADOR contra reclamos que pudiera tener contra el COMPRADOR a no ser que dichos reclamos hayan sido consentidos expresamente y por escrito por el COMPRADOR o hayan sido resueltos totalmente a favor del PROVEEDOR, conforme a lo dispuesto en la Cláusula 22 (Resolución de Conflictos). <br>
+    9.7. Una vez emitido el comprobante de pago respectivo, el PROVEEDOR tendrá un plazo de quince (15) días calendarios para revisar, aprobar o, de ser el caso, observar de manera sustentada dichos montos. Vencido dicho plazo sin observación formal y por escrito del PROVEEDOR, se tendrán por aceptados todos los montos, facturas y descuentos, sin admitir prueba en contrario, y, en consecuencia, el PROVEEDOR no tendrá derecho a reclamo posterior alguno al COMPRADOR en relación a los mismos. <br><br>';
+
+    $html10 = '<strong>10. Garantía de Calidad</strong> <br>
+    10.1. Adicionalmente y sin perjuicio de todas las demás garantías otorgadas por el PROVEEDOR en el Contrato, el PROVEEDOR garantiza que los Bienes: (a) estarán libres de defectos o falta de conformidad con relación al diseño, mano de obra o materiales y que se encontrarán en estricta conformidad con todos los requerimientos de la OC, (b) serán entregados (y de ser necesario , instalados) de manera segura y profesional por personal calificado y eficiente y que serán de la más alta calidad profesional, para lo cual el PROVEEDOR posee la experiencia y conocimientos necesarios, instalaciones y equipos requeridos para ejecutar sus obligaciones de acuerdo con el Contrato, y (c) estarán libres de reclamos y contingencias de cualquier naturaleza, incluyendo reclamos relacionados con su propiedad. <br>
+    10.2. Salvo indicación distinta en la OC, el período de garantía será de treinta y seis (36) meses computados desde la recepción de los Bienes por el COMPRADOR en el lugar indicado en la OC. Los Bienes reemplazados o reparados estarán sujetos a un nuevo período de garantía de veinticuatro (24) meses computados desde la fecha en que los Bienes reemplazados o reparados sean aceptados y recibidos en la Unidad de Producción a satisfacción del COMPRADOR. <br>
+    10.3. Si durante el período de garantía se identifica que alguna parte de los Bienes es defectuosa o no cumple con lo requerido en la OC, el COMPRADOR podrá a su elección, requerir que el PROVEEDOR: (i) remedie los Bienes defectuosos a la cuenta, costo y riesgo del PROVEEDOR; (ii) exigir la entrega de otros Bienes en sustitución de los defectuosos; u (iii) optar por aceptar los Bienes defectuosos sujeto a una reducción equitativa del precio del Contrato. Si el PROVEEDOR no cumple con remediar el defecto con la debida diligencia y dentro del tiempo indicado por el COMPRADOR (o en caso no se haya indicado, dentro de un período razonable luego del requerimiento del COMPRADOR) o si las circunstancias lo justifican razonablemente, el COMPRADOR podrá remediar los defectos por sí mismo o a través de un tercero a cuenta, costo y riesgo del PROVEEDOR. En caso que el defecto sea de tal envergadura que los Bienes no puedan ser usados para el fin para el cual pretendían ser destinados o dicho uso se encuentra significativamente afectado o en caso de un defecto recurrente, el COMPRADOR podrá rechazar los Bienes y requerir el reembolso de cualquier suma pagada, más intereses. Los remedios indicados en esta Cláusula no excluyen otros derechos y remedios que estén a disposición del COMPRADOR, incluyendo el derecho a resolver el Contrato conforme lo establecido en la Cláusula 18.1.1. <br>
+    10.4. El COMPRADOR podrá notificar sobre los defectos descubiertos durante el período de garantía, en cualquier momento, en la medida que lo haga hasta treinta (30) días después del vencimiento del período de garantía. Cualquier reclamo o remedios relacionados con defectos que se notifiquen de acuerdo a lo indicado en este párrafo podrán ser hechos valer por el COMPRADOR durante un período de cinco (5) años posteriores a la fecha en que el COMPRADOR notificó sobre el defecto. <br><br>';
+
+    $html11 = '<strong>11. Caso Fortuito o Fuerza Mayor</strong> <br>
+    11.1. Si la ejecución del Contrato, en todo o en parte, es impedida temporalmente debido a un caso fortuito o evento de fuerza mayor, entonces el tiempo para la ejecución de las obligaciones de la Parte afectada será modificado consecuentemente, siempre y cuando la Parte afectada informe a la brevedad posible (pero en ningún caso luego de más de tres (3) días) a la otra Parte sobre el evento y tome todas las medidas razonables que estén a su alcance para reducir la demora respectiva. En todos los casos, la Parte afectada deberá esforzarse al máximo para continuar llevando a cabo sus obligaciones de acuerdo con el Contrato hasta donde sea razonablemente posible. <br>
+    11.2. Cualquier extensión de plazo que corresponda en virtud a lo indicado en el numeral 11.1 anterior no podrá ser mayor al plazo que duró el caso fortuito o evento de fuerza mayor. <br>
+    11.3. Cualquier costo o gasto adicional en que deba incurrir la Parte afectada como resultado del caso fortuito o evento de fuerza mayor será asumido por ésta. <br>
+    11.4. Si por caso fortuito o fuerza mayor, lo cual incluye el cese de operaciones por parte del COMPRADOR, tuviera que paralizarse la ejecución de las prestaciones a cargo de las Partes derivadas del Contrato, por un período igual o mayor a sesenta (60) días calendarios, el COMPRADOR o el PROVEEDOR podrán dar por resuelto el Contrato. El COMPRADOR sólo estará obligado a pagar por los Bienes recibidos hasta la fecha de la referida paralización. <br><br>';
+
+    $html12 = '<strong>12. Confidencialidad</strong> <br>
+    12.1. Cada una de las Partes deberá mantener y garantizar que sus trabajadores, subcontratistas, proveedores, asesores y representantes, y cada uno de sus respectivos sucesores y derechohabientes mantengan la confidencialidad de este Contrato y de todos los documentos y demás información técnica de carácter confidencial que le haya sido entregada por o en nombre de la otra Parte en relación con este Contrato y (salvo que lo exija la normatividad aplicable o las normas bursátiles o salvo en el caso de divulgación a agencias de tasación o de créditos a la exportación, entidades crediticias presentes o futuras, aseguradoras o ajustadoras o asesores personales de las Partes o de cualquiera de los terceros mencionados o salvo hasta el punto necesario para resolver una disputa) no lo publicará ni revelará en forma alguna ni lo utilizará para sus propios fines, excepto para cumplir las obligaciones especificadas en este Contrato. <br>
+    12.2. Las disposiciones del numeral 12.1 no se aplicarán a: (a) la información que sea de dominio público obtenida de otra forma que no sea mediante el incumplimiento de este Contrato; (b) la información que esté en posesión de la Parte receptora y haya sido obtenida de la otra Parte sin obligación de confidencialidad; y (c) la información que esté en posesión de la Parte receptora y haya sido obtenida de terceros sin obligación de confidencialidad para estos terceros y sin incumplir este Contrato. <br>
+    12.3. Las obligaciones de esta Cláusula 12 continuarán en vigor por un período de 5 (cinco) años a partir de la fecha de terminación del último período de garantía de calidad. <br>
+    12.4. Excepto cuando se disponga algo diferente en la OC, el PROVEEDOR deberá devolver o destruir, según le indique el COMPRADOR, toda la información confidencial del COMPRADOR que tuviera en su poder. <br><br>';
+
+
+    $html_total = '<div style="text-align: center;"> <h3>CONDICIONES GENERALES DE COMPRA</h3></div> <div style="text-align: justify;">' . $html1 . $html2 . $html3 . $html4 . $html5 . $html6 . $html7 . $html8 . $html9 . $html10 . $html11 . $html12 . '</div>';
+    $pdf->AddPage();
+    $pdf->writeHTML($html_total, true, 0, true, 0);
+
+    $html13 = '<strong>13. Derechos de Propiedad Intelectual</strong> <br>
+    13.1. Los diseños, dibujos, especificaciones, instrucciones, manuales y otros documentos creados, producidos o encargados por el COMPRADOR que el PROVEEDOR necesite para la ejecución del Contrato (colectivamente, los "Documentos del COMPRADOR"), así como los derechos de autor sobre los mismos y todos los demás derechos sobre la propiedad industrial e intelectual relacionados con los mismos, son y serán propiedad del COMPRADOR. Los Documentos    del    COMPRADOR no serán utilizados por el PROVEEDOR para otros fines sin la autorización previa y por escrito del COMPRADOR. Sin embargo, podrán ser utilizados para cualquier propósito relacionado con el Contrato.	serán utilizados por el PROVEEDOR para otros fines sin la autorización previa y por escrito del COMPRADOR. Sin embargo, podrán ser utilizados para cualquier propósito relacionado con el Contrato. <br>
+    13.2. Los diseños, dibujos, especificaciones, instrucciones, manuales y otros documentos creados, producidos o encargados por o en nombre del PROVEEDOR en relación con el Contrato (colectivamente, los "Documentos del Contrato"), así como los derechos de autor sobre los mismos, y todos los derechos sobre la propiedad industrial e intelectual relacionados con los mismos pasarán a ser propiedad del COMPRADOR. El PROVEEDOR deberá poner a disposición del COMPRADOR, sin costo alguno, (i) todos los libros, registros e inventarios creados, producidos o encargados por o en nombre del PROVEEDOR en los que se identifiquen los Bienes, y (ii) todas las especificaciones relacionadas con los Bienes. <br>
+    13.3. El PROVEEDOR deberá en todo momento eximir de responsabilidad e indemnizar al COMPRADOR frente a todas y cada una de las acciones, reclamaciones, demandas, costos, cargos y gastos incurridos o derivados de la infracción o presunta infracción de patentes, diseños registrados, propiedad industrial e intelectual, marca comercial o nombre comercial o cualquier otro derecho similar protegido en el Perú o en otro lugar por el uso o posesión de cualesquiera materiales, suministros, equipos, software, u otros provistos por el PROVEEDOR. <br>
+    13.4. Sin perjuicio de lo anterior, si cualquier Bien o pieza de material, equipo o software o su uso constituye una infracción según lo descrito en el numeral 13.2 y su utilización fuera prohibida, el PROVEEDOR deberá a su cuenta, costo y riesgo y tras consultarlo con el COMPRADOR, bien procurar al COMPRADOR el derecho de continuar utilizando o seguir en posesión o de continuar con el uso o posesión del citado Bien, pieza de material, equipo o software o sustituir la misma con un Bien, pieza de material, equipo o software de equivalente o mejor calidad, que no infrinja los derechos o modificarla de forma que no infrinja los derechos. <br>
+    13.5. El COMPRADOR tendrá el derecho irrevocable, libre del pago de regalías o derechos e ilimitado a nivel mundial para usar (incluyendo el derecho de transferir tal derecho de uso a terceros) todos los sistemas, programas, documentos, know-how u otros derechos de propiedad intelectual o industrial relacionados con los Bienes. <br><br>';
+
+    $html14 = '<strong>14. Responsabilidades Laborales en caso de prestación de servicios</strong> <br>
+    14.1. EL PROVEEDOR prestará los servicios en forma independiente a través de su propia organización de medios y de personas, siendo responsable de la gestión y control de los mismos. <br>
+    14.2. EL PROVEEDOR en su condición de empleador, es el único y directo responsable del pago de los honorarios, remuneraciones y beneficios sociales del personal a su cargo, así como de la0s aportaciones y contribuciones laborales a las que está obligado a cumplir. <br>
+    14.3. El incumplimiento de cualquiera de las obligaciones señaladas en el punto 14.2 dará derecho a EL COMPRADOR a la retención del pago de cualquier monto que adeude al PROVEEDOR, hasta que solucione el incumplimiento. <br>
+    14.4. EL PROVEEDOR, cuando así sea requerido, nombrará a uno o más Residentes o Supervisores, ya sean, profesionales, técnicos o especialistas, debidamente capacitados, quienes deberán permanecer el tiempo que se requiera para la conformidad de la entrega del bien o servicio correspondiente, respetando la jornada laboral máxima permitida que deberá emplear en el área de las labores en las Unidades de Producción. <br>
+    14.5. EL PROVEEDOR, cuando desplace personal a las Unidades de Producción, deberá verificar que dicho personal cuente, por lo menos, con el Seguro Complementario de Trabajo de Riesgo (SCTR) <br><br>';
+
+    $html15 = '<strong>15. Medio Ambiente, Salud, Higiene, Seguridad y Ética</strong> <br>
+    15.1. El PROVEEDOR declara y garantiza que: (a) los Bienes (incluyendo su empaque) provistos al COMPRADOR y todas sus Partes y componentes, no incluyen arsénico, asbestos, plomo, o cualquier otra sustancia peligrosa o contaminante prohibida por la regulación del lugar de origen o cualquier destino temporal o final de dichos Bienes o por las buenas prácticas de la industria; (b) el PROVEEDOR no deberá permitir o causar que cualquier trabajador del COMPRADOR, sus representantes o terceros se vean expuestos a sustancias peligrosas o contaminantes; (c) los Bienes y Servicios deberán ser entregados junto con todas sus instrucciones, advertencias y cualquier otra información necesaria para que sean operados de una manera segura y apropiada; (d) los Bienes, sus Partes y componentes se encontrarán en estricto cumplimiento con todas las normas de medio ambiente, salud, higiene y seguridad aplicables del lugar de origen o cualquier destino temporal o final de dichos Bienes. En caso de conflicto entre las distintas normas sobre medio ambiente, salud, higiene y seguridad aplicarán aquellas que sean más estrictas. <br>
+    15.2. El PROVEEDOR también declara que los Bienes, sus partes y componentes se encuentran, en estricto cumplimiento, con toda la normativa aplicable y la regulación del lugar de origen o cualquier destino temporal o final de dichos Bienes, así como las buenas prácticas de la industria y los códigos y estándares que sean aplicables. <br>
+    15.3. El PROVEDOR declara y garantiza que no ha pagado directa o indirectamente cualquier comisión, monto u otorgado descuento a terceras personas, trabajadores del COMPRADOR o clientes del COMPRADOR o efectuados regalos, invitaciones o cualquier otra forma no monetaria de favores o arreglos para hacer negocios con el COMPRADOR o sus empresas vinculadas. <br>
+    15.4. Ambas Partes acuerdan que las obligaciones contenidas en la presente	Cláusula constituyen	obligaciones		esenciales.	El PROVEEDOR indemnizará y mantendrá indemne al COMPRADR y sus afiliadas, trabajadores, directores y agentes de cualquier responsabilidad, reclamos, gastos, pérdidas o daños que puedan surgir como resultado o con relación del incumplimiento del PROVEEDOR de sus obligaciones o declaraciones bajo la presente Cláusula. <br>
+    15.5. El PROVEEDOR declara conocer las disposiciones contenidas en el Reglamento de Seguridad y Salud Ocupacional, aprobado mediante el Decreto Supremo N° 055-2010-EM o las normas que son aplicables a su rubro comercial, sus normas reglamentarias y modificatorias y asegura su adaptabilidad y capacidad para cumplirlas y hacerlas cumplir de manera integral y sostenida. Cuando corresponda, pasará los exámenes médicos necesarios o requeridos, programas de inducción, entrenamiento y re-entrenamiento para el personal que destaque y contar con la asesoría profesional necesaria. Si es requerido, deberá someter a su personal al programa de inducción de seguridad que proveerá el COMPRADOR. El PROVEEDOR deberá conocer, cumplir, hacer conocer y hacer cumplir a su personal todas y cada una de las especificaciones técnicas y de seguridad impartidas y hacerle conocer el Reglamento Interno de Seguridad y de Trabajo del COMPRADOR, el Reglamento y Políticas de Seguridad y Salud Ocupacional en Minería y el Reglamento y Políticas sobre Protección al Medio Ambiente "Sistema de Gestión Ambiental ISO 14001" implementados por el COMPRADOR, así como aquellas normas que son de obligatorio cumplimiento dispuestas por las Autoridades competentes, como el Ministerio de Energía y Minas, el Ministerio de Transportes y Comunicaciones, el Ministerio del Ambiente o cualquier otra Autoridad, sea nacional, regional o local, a través de la legislación vigente. <br><br>';
+
+    $html16 = '<strong>16. Reclamos de Terceros y Sanciones</strong> <br>
+    El PROVEEDOR indemnizará, mantendrá indemne y defenderá al COMPRADOR, sus agentes, directores, trabajadores y empresas vinculadas frente a cualquier reclamo, responsabilidades, sanciones, gastos (incluyendo gastos legales) que surjan de o en relación con la ejecución o inejecución del Contrato incluyendo aquellos relacionados con daños corporales, muerte, daños o destrucción de la propiedad de terceros e infracciones a la normativa aplicable en material de seguridad, salud, higiene o medio ambiente. <br><br>';
+
+    $html17 = '<strong>17. Suspensión</strong> <br>
+    En cualquier momento el COMPRADOR podrá ordenar al PROVEEDOR la suspensión de todo o parte de la ejecución del Contrato mediante notificación al PROVEEDOR. El PROVEEDOR deberá tomar todas las medidas que sean necesarias para minimizar los costos, gastos y demoras relacionados con dicha suspensión. En caso que y en la medida que la suspensión supere los 3 (tres) meses continuos el COMPRADOR reembolsará al PROVEEDOR los costos directos (excluyendo cualquier elemento de lucro o margen) atribuible a dicha suspensión, siempre y cuando los mismos sean razonables y se encuentren debidamente documentados. El PROVEEDOR no suspenderá la ejecución del Contrato bajo ninguna razón, excepto con el consentimiento expreso y por escrito del COMPRADOR. <br><br>';
+
+    $html18 = '<strong>18. Resolución de Contrato</strong> <br>
+    18.1. Causales de Resolución <br>						
+    18.1.1. Sin perjuicio de cualesquiera otros derechos y remedios del COMPRADOR, el COMPRADOR podrá, sin que ello implique responsabilidad alguna para él, terminar todo o parte del Contrato mediante notificación escrita al PROVEEDOR si: (i) el PROVEEDOR se encuentra en incumplimiento de sus obligaciones e incumple con remediarlo dentro de los quince (15) días siguientes a la fecha en que hubiera sido notificado por el COMPRADOR; (ii) el PROVEEDOR se encontrase significativamente retrasado y el COMPRADOR le haya notificado su intención de resolver el Contrato conforme a la Cláusula 8.3 o el monto máximo de penalidades por demora debidas por el PROVEEDOR es alcanzado o es probable que sea alcanzado; (iii) se inicia al PROVEEDOR un procedimiento concursal ordinario,preventivo o cualquier otro de naturaleza concursal; o si el PROVEEDOR es declarado en quiebra; o si el PROVEEDOR entra en liquidación judicial o extrajudicial; o acuerda disolverse; o si se produjera cualquier situación análoga. <br>
+    18.1.2. El COMPRADOR tendrá derecho a, en cualquier momento resolver el Contrato, total o parcialmente, por su conveniencia y sin expresión de causa, mediante el envío al PROVEEDOR de una notificación con cinco (5) días de anticipación. La resolución a que se refiere el presente numeral, no da lugar al pago de indemnización alguna a favor del PROVEEDOR, salvo lo indicado en el numeral 18.2.3. <br>
+    18.1.3. Si y dentro de un plazo razonable después de la resolución, el COMPRADOR procede a una compra de reemplazo, el COMPRADOR podrá obtener la diferencia entre el precio del contrato y el precio estipulado en la operación de reemplazo, así como cualesquiera otros daños y perjuicios que el incumplimiento del PROVEEDOR le haya ocasionado. <br>
+    18.2. Consecuencias de la Resolución <br>
+    18.2.1. Tan pronto como el COMPRADOR lo requiera (y en la media que lo requiera), el PROVEEDOR deberá entregar al COMPRADOR los Bienes (terminados o en proceso de fabricación o adquisición), todos los documentos relacionados, información y derechos relacionados con los Bienes que requiera el COMPRADOR para alcanzar la finalidad original del Contrato, directamente o a través de terceros; y hacer y conseguir todo lo que sea necesario para que el COMPRADOR reciba y pueda mantener la propiedad de los Bienes. El PROVEEDOR tendrá derecho a que el COMPRADOR le pague la parte del precio que sea equivalente a los Bienes entregados conforme el Contrato, en la medida en que dicho pago se encontrase pendiente. <br>
+    18.2.2. En caso de terminación por incumplimiento del PROVEEDOR el COMPRADOR podrá, a su elección, rechazar todo o parte de los Bienes o completar los Bienes en todo o en parte directamente o a través de terceros por cuenta, costo y riesgo del PROVEEDOR, sin perjuicio del derecho del COMPRADOR de efectuar las compensaciones a que hubiera lugar por los daños y perjuicios que hubiere sufrido como resultado de la terminación del Contrato. <br>
+    18.2.3. En caso de resolución por conveniencia (y en la medida en que no hubiera sido cubierto por lo indicado en el numeral 18.2.1) el PROVEEDOR tendrá derecho a que el COMPRADOR le pague un monto proporcional a los costos directos que fueran inevitables en que hubiera incurrido con anterioridad a la terminación, siempre y cuando dichos montos se encuentren claramente definidos, sustentados y no excedan, en su conjunto, el precio del Contrato. En cualquier caso, el PROVEEDOR procurará minimizar los costos y gastos que se generen como consecuencia de la terminación. Salvo por los pagos indicados en este párrafo, el PROVEEDOR no tendrá derecho a recibir compensación adicional del COMPRADOR. <br><br>';
+
+    $html19 = '<strong>19. Reclamos del PROVEEDOR</strong> <br>
+    El PROVEEDOR solo tendrá derecho a efectuar reclamos en aquellos casos expresamente indicados en el Contrato. El PROVEEDOR no tendrá derecho a ejercer ninguna carga, gravamen, o medida cautelar sobre los bienes del COMPRADOR. Como condición precedente para cualquier reclamo, el PROVEEDOR deberá notificar al COMPRADOR de las circunstancias que en opinión del PROVEEDOR podrían dar lugar a un reclamo dentro de los dos (2) días siguientes a su ocurrencia y deberá remitir sin demoras indebidas en un plazo máximo de cinco (5) días calendarios cualquier reclamo por escrito al COMPRADOR incluyendo toda la sustentación y pruebas que sean razonablemente necesarias o pedir una prórroga del plazo. <br><br>';
+
+    $html20 = '<strong>20. Varios</strong> <br>
+    20.1. Modificaciones. - Salvo en los casos en que se indica lo contrario en el Contrato, todas las modificaciones, alteraciones y variaciones a este Contrato serán vinculantes sólo si constan por escrito y están firmadas por los correspondientes representantes autorizados de las Partes. <br>
+    20.2. Cesiones. - El COMPRADOR podrá ceder libremente total o parcialmente el Contrato a cualquiera de sus empresas vinculadas sin necesidad de autorización previa del PROVEEDOR. El PROVEEDOR no podrá ceder el presente Contrato, ya sea la posición contractual o los derechos, ni total ni parcialmente, sin la previa autorización por escrito del COMPRADOR. <br>
+    20.3. Acuerdo Integral. - El Contrato constituye e incorpora el acuerdo y entendimiento total entre las Partes en relación con los asuntos que contiene y sustituye a cualesquier otro acuerdo y declaración anterior, sea verbal o escrita y con independencia de que se hubiera hecho de forma negligente o de buena fe (excluidas expresamente las declaraciones fraudulentas) y que no se hayan incorporado expresamente en los términos del Contrato. <br>
+    20.4. Renuncia. - Ninguna renuncia a las acciones legales de cualquiera de las Partes por cualquier falta cometida por la otra en el cumplimiento de las disposiciones del Contrato: (a) se aplicará o se interpretará como una renuncia a las acciones que correspondan por cualquier otra falta distinta o adicional tanto similar como de diferente naturaleza; o (b) entrará en vigor salvo que la haya ejecutado debidamente por escrito un representante autorizado por la Parte respectiva. El hecho que alguna de las Partes no insista en alguna ocasión en el cumplimiento de los términos, condiciones y estipulaciones de este Contrato o el tiempo o cualquier otra indulgencia concedida por una Parte a la otra, no se considerará como una renuncia a las acciones correspondientes por el incumplimiento o como aceptación de cualquier variación al Contrato o como renuncia a alguno de los derechos aquí estipulados, los cuales permanecerán en plena vigencia. <br>
+    20.5. Relación entre las Partes. - No se deberá interpretar que este Contrato crea una asociación, empresa conjunta o sociedad entre las Partes ni que impone ningún tipo de obligación o responsabilidad de asociación sobre ninguna de las Partes. Ninguna de las Partes tendrá derecho, poder ni autoridad para firmar o comprometerse mediante cualquier tipo de contrato, ni para actuar en nombre de, ni como agente o representante ni obligar de cualquier otro modo a otra Parte. <br>
+    20.6. Notificaciones. - Toda comunicación relacionada con el día a día entre las Partes puede realizarse por correo electrónico. Cualquier notificación que deba ser entregada durante el período de vigencia del presente Contrato será realizada mediante la entrega de la misma en mano, por mensajero, por correo o por fax en las respectivas direcciones designadas a este fin en la OC, con constancia de cargo recibida. <br><br>';
+
+    $html21 = '<strong>21. Legislación Aplicable e Idioma del Contrato</strong> <br>									
+    El presente Contrato se regirá e interpretará de acuerdo con la legislación peruana vigente y el idioma será el castellano. <br><br>';
+
+    $html22 = '<strong>22. Resolución de Conflictos</strong> <br>
+    22.1. "Todo litigio, controversia, desavenencia o reclamación resultante, relacionada o derivada de este Contrato o que guarde relación con el mismo, incluidas las relativas a su validez, eficacia o terminación incluso las de este convenio arbitral, serán resueltas mediante arbitraje de derecho, cuyo laudo será definitivo e inapelable. El arbitraje será conducido de conformidad con el Reglamento de Arbitraje del Centro de Arbitraje de la Cámara de Comercio de Lima, a cuyas normas, administración y decisión se someten las Partes en forma incondicional, declarando conocerlas y aceptarlas en su integridad. <br>
+    El Tribunal Arbitral estará integrado por 1 (un) árbitro. El arbitraje tendrá lugar en la ciudad de Lima y será conducido en el idioma castellano. El procedimiento de ejecución del laudo arbitral también será de competencia del tribunal arbitral."	 <br>
+    22.2. Asimismo, para cualquier intervención de los jueces y tribunales ordinarios dentro de la mecánica arbitral, las Partes se someten expresamente a la competencia de los jueces y tribunales de la ciudad de Lima-Cercado, renunciando al fuero de sus domicilios. <br>
+    22.3. Si el asunto en controversia sometido por las Partes a arbitraje no implicara la suspensión o terminación del presente Contrato, las Partes deberán seguir cumpliendo los derechos y obligaciones estipulados en el Contrato durante el arbitraje. <br><br>';
+
+    $html23 = '<strong>23. Corrupción de funcionarios, prevención de lavado de activos y financiamiento del terrorismo</strong>  <br>
+    23.1. Las Partes certifican con carácter de Declaración Jurada que sus recursos no provienen ni se destinan al ejercicio de ninguna actividad ilícita, minería ilegal, minería informal o de otras actividades de lavado de dinero provenientes de éstas o de actividades relacionadas con la financiación del terrorismo.  <br>
+    23.3. Las Partes declaran cumplir con todas las normas relacionadas a temas de prevención de lavado de activos y financiamiento del terrorismo y se obligan a realizar todas las actividades encaminadas a asegurar que todos sus socios, administradores, clientes, proveedores, empleados y los recursos de éstos no se encuentren relacionados o provengan de actividades ilícitas, particularmente de lavado de activos o financiación del terrorismo.  <br>
+    23.4. Si durante el plazo de vigencia del Contrato, cualquiera de las Partes o alguno de sus administradores o socios llegaran a resultar involucrados en una investigación de cualquier tipo penal o administrativa relacionada con actividades ilícitas, corrupción de funcionarios, lavado de dinero o financiamiento del terrorismo; o fuesen incluidos en listas de control como las de la ONU, OFAC o cualquier otra que pueda existir en el futuro del mismo carácter que las anteriores, cualquiera de las Partes tiene el derecho de resolver unilateralmente y de manera inmediata los Contratos, mediante notificación enviada a la otra Parte con treinta (30) días de anticipación, quedando ambas Partes liberadas de indemnizar a la otra Parte afectada por cualquier daño o perjuicio que se pudiera alegar. <br><br>';
+
+    $html_total_ = '<div style="text-align: center;"> <div style="text-align: justify;">' . $html13 . $html14 . $html15 . $html16 . $html17 . $html18 . $html19 . $html20 . $html21 . $html22 . $html23 . '</div>';
+
+    $pdf->AddPage();
+
+    $pdf->writeHTML($html_total_, true, 0, true, 0);
+
+    ob_clean();
+
+    if ($tipoSalidaPDF == 'F') {
+      $pdf->Output($url, $tipoSalidaPDF);
+    }
+
+    return $titulo;
+  }
+
+  public function guardarDocumnentoReservaEntradaSalida($usuarioId, $documentoTipoId, $dataStockReservaOk, $respuesta, $periodoId, $opcionId, $organizadorId, $banderaIngresoSalida)
+  {
+    //generar salida
+    $configuraciones = DocumentoTipoNegocio::create()->obtenerDocumentoTipoDato($documentoTipoId, $usuarioId);
+    $camposDinamicosSalida = [];
+    foreach ($configuraciones as $item) {
+      switch ($item['tipo']) {
+        case 7:
+          $camposDinamicos[] = array(
+            "id" => $item['id'],
+            "tipo" => "7",
+            "opcional" => "0",
+            "descripcion" => $item['descripcion'],
+            "codigo" => "",
+            "valor" => $item['cadena_defecto']
+          );
+          break;
+        case 8:
+          $camposDinamicosSalida[] = array(
+            "id" => $item['id'],
+            "tipo" => "8",
+            "opcional" => "0",
+            "descripcion" => $item['descripcion'],
+            "codigo" => "",
+            "valor" => $item['data']
+          );
+          break;
+        case 9:
+          $camposDinamicosSalida[] = array(
+            "id" => $item['id'],
+            "tipo" => "9",
+            "opcional" => "0",
+            "descripcion" => $item['descripcion'],
+            "codigo" => "",
+            "valor" => $item['data']
+          );
+          break;
+        case 45:
+          $camposDinamicosSalida[] = array(
+            "id" => $item['id'],
+            "tipo" => "45",
+            "opcional" => "0",
+            "descripcion" => $item['descripcion'],
+            "codigo" => "",
+            "valor" => $organizadorId
+          );
+          break;
+      }
+    }
+
+    $detalleSalida = [];
+    foreach ($dataStockReservaOk as $i => $itemReserva) {
+      $arrayItem = array(
+        "bienId" => $itemReserva['bien_id'],
+        "bienDesc" => $itemReserva['bien_descripcion'],
+        "movimiento_bien_ids" => "",
+        "cantidadAceptada" => null,
+        "cantidad" => $itemReserva['reserva'],
+        "unidadMedidaId" => $itemReserva['unidad_medida_id'],
+        "unidadMedidaDesc" => "",
+        "esCompra" => null,
+        "compraDesc" => "",
+        "stockBien" => "150",
+        "bienTramoId" => "",
+        "subTotal" => "",
+        "index" => $i,
+        "precioCompra" => "",
+        "organizadorId" => $banderaIngresoSalida == 1 ? $itemReserva['organizador_id']: $organizadorId
+      );
+      $detalleSalida[] = $arrayItem;
+    }
+    $documentoARelacionarSalida [] = array(
+      "documentoId" => $respuesta->documentoId,
+      "movimientoId" => $respuesta->movimientoId,
+      "tipo" => "1",
+      "documentoPadreId" => ""
+    );
+
+    $documentoId = $this->guardar($opcionId, $usuarioId, $documentoTipoId, $camposDinamicosSalida, $detalleSalida, $documentoARelacionarSalida, 1, "Movimiento para reservar stock", 1, 2, null, $periodoId, null, null, null, null);
+  
+  }
+
+  public function guardarDocumentoCotizacion($camposDinamicosConsolidado,$usuarioId, $documentoTipoId, $detalle, $respuesta, $periodoId, $opcionId, $banderaCotizacon, $listaPagoProgramacion = null)
+  {
+    //generar cotizacion
+    $checkedOC = ($detalle[0]['checked1'] == "true") ? "1" : 
+    (($detalle[0]['checked2'] == "true") ? "2" : 
+    (($detalle[0]['checked3'] == "true") ? "3" : null));
+
+    $checked1Moneda = $detalle[0]['checked1Moneda'];
+    $checked2Moneda = $detalle[0]['checked2Moneda'];
+    $checked3Moneda = $detalle[0]['checked3Moneda'];
+
+    $checkeMoneda1 = $checked1Moneda == "true"? 4: 2;
+    $checkeMoneda2 = $checked2Moneda == "true"? 4: 2;
+    $checkeMoneda3 = $checked3Moneda == "true"? 4: 2;
+
+    if($banderaCotizacon == 1){
+      $filtradosTipo23 = array_filter($camposDinamicosConsolidado, function($item) {
+        return $item['tipo'] === "23" && !empty($item['valor']);
+      });
+    }else{
+      $filtradosTipo23 = array_filter($camposDinamicosConsolidado, function($item) use ($checkedOC){
+        return $item['tipo'] === "23" && !empty($item['valor']) && stripos($item['descripcion'], $checkedOC) == true;
+      });
+    }
+
+    $filtradosTipo10 = array_filter($camposDinamicosConsolidado, function($item) {
+      return $item['tipo'] === "10";
+    });
+    $filtradosTipo10 = array_values($filtradosTipo10);
+
+    $filtradosTipo46 = array_filter($camposDinamicosConsolidado, function($item) {
+      return $item['tipo'] === "46";
+    });
+    $filtradosTipo46 = array_values($filtradosTipo46);
+
+    $filtradosTipo4 = array_filter($camposDinamicosConsolidado, function($item) {
+      return $item['tipo'] === "4" && $item['codigo'] === "05";
+    });
+    $filtradosTipo4 = array_values($filtradosTipo4);
+
+    $filtradosTipo47 = array_filter($camposDinamicosConsolidado, function($item) {
+      return $item['tipo'] === "47";
+    });
+    $filtradosTipo47 = array_values($filtradosTipo47);    
+    
+    $sumaMontosprecioPostor1  = array_reduce($detalle, function ($acumulador, $seleccion) {
+      return $acumulador + ($seleccion['precioPostor1'] * $seleccion['cantidad']);
+    }, 0);
+    $subTotalPostor1 = $sumaMontosprecioPostor1 / 1.18;
+    $igvPostor1 = $sumaMontosprecioPostor1 - $subTotalPostor1;
+    $sumaMontosprecioPostor2  = array_reduce($detalle, function ($acumulador, $seleccion) {
+      return $acumulador + ($seleccion['precioPostor2'] * $seleccion['cantidad']);
+    }, 0);
+    $subTotalPostor2 = $sumaMontosprecioPostor2 / 1.18;
+    $igvPostor2 = $sumaMontosprecioPostor2 - $subTotalPostor2;
+    $sumaMontosprecioPostor3  = array_reduce($detalle, function ($acumulador, $seleccion) {
+      return $acumulador + ($seleccion['precioPostor3'] * $seleccion['cantidad']);
+    }, 0);
+    $subTotalPostor3 = $sumaMontosprecioPostor3 / 1.18;
+    $igvPostor3 = $sumaMontosprecioPostor3 - $subTotalPostor3;
+
+
+    $documentosIdCotizaciones = []; //revisar
+    foreach ($filtradosTipo23 as $itemTipo23) {
+      $configuraciones = DocumentoTipoNegocio::create()->obtenerDocumentoTipoDato($documentoTipoId, $usuarioId);
+      $camposDinamicosCotizacion = [];
+      $documentoARelacionarSalida = [];
+
+      $importeTotal = 0;
+      $igv = 0;
+      $subTotal = 0;
+      $monedaId = 2;
+      $texto1 = stripos($itemTipo23['descripcion'], "1");
+      $texto2 = stripos($itemTipo23['descripcion'], "2");
+      $texto3 = stripos($itemTipo23['descripcion'], "3");
+      if($texto1 == true){
+        $importeTotal = $sumaMontosprecioPostor1;
+        $igv = $igvPostor1;
+        $monedaId = $checkeMoneda1;
+        $subTotal = $subTotalPostor1;
+      }else if($texto2 == true){
+        $importeTotal = $sumaMontosprecioPostor2;
+        $subTotal = $subTotalPostor2;
+        $igv = $igvPostor2;
+        $monedaId = $checkeMoneda2;
+      }else if($texto3 == true){
+        $importeTotal = $sumaMontosprecioPostor3;
+        $igv = $igvPostor3;
+        $subTotal = $subTotalPostor3;
+        $monedaId = $checkeMoneda3;
+      }
+
+      foreach ($configuraciones as $item) {
+        switch ($item['tipo']) {
+          case 4:
+            
+            break;
+          case 4:
+            if($item['descripcion'] == "Condición de pago"){
+              $valor = null;
+              if($documentoTipoId == Configuraciones::COTIZACIONES && $filtradosTipo4[0]['valor'] == 503){//credito
+                $valor = 472;
+              }else if($documentoTipoId == Configuraciones::COTIZACIONES && $filtradosTipo4[0]['valor'] == 502){//contado
+                $valor = 471;
+              }
+              if($documentoTipoId == Configuraciones::ORDEN_COMPRA && $filtradosTipo4[0]['valor'] == 503){//credito
+                $valor = 468;
+              }else if($documentoTipoId == Configuraciones::ORDEN_COMPRA && $filtradosTipo4[0]['valor'] == 502){//contado
+                $valor = 467;
+              }
+              $camposDinamicosCotizacion[] = array(
+                "id" => $item['id'],
+                "tipo" => $item['tipo'],
+                "opcional" => "0",
+                "descripcion" => $filtradosTipo4[0]['descripcion'],
+                "codigo" => $filtradosTipo4[0]['codigo'],
+                "valor" => $valor
+              );
+            }
+            break;
+          case 5:
+            $camposDinamicosCotizacion[] = array(
+              "id" => $item['id'],
+              "tipo" => $item['tipo'],
+              "opcional" => "0",
+              "descripcion" => $itemTipo23['descripcion'],
+              "codigo" => $itemTipo23['codigo'],
+              "valor" => $itemTipo23['valor']
+            );
+            break;
+          case 7:
+            $camposDinamicosCotizacion[] = array(
+              "id" => $item['id'],
+              "tipo" => $item['tipo'],
+              "opcional" => "0",
+              "descripcion" => $item['descripcion'],
+              "codigo" => "",
+              "valor" => $item['cadena_defecto']
+            );
+            break;
+          case 8:
+            $camposDinamicosCotizacion[] = array(
+              "id" => $item['id'],
+              "tipo" => $item['tipo'],
+              "opcional" => "0",
+              "descripcion" => $item['descripcion'],
+              "codigo" => "",
+              "valor" => $item['data']
+            );
+            break;
+          case 9:
+            $camposDinamicosCotizacion[] = array(
+              "id" => $item['id'],
+              "tipo" => $item['tipo'],
+              "opcional" => "0",
+              "descripcion" => $item['descripcion'],
+              "codigo" => "",
+              "valor" => $item['data']
+            );
+            break;
+          case 10:
+            $camposDinamicosCotizacion[] = array(
+              "id" => $item['id'],
+              "tipo" => $item['tipo'],
+              "opcional" => "0",
+              "descripcion" => $item['descripcion'],
+              "codigo" => "",
+              "valor" => $filtradosTipo10['valor']
+            );
+            break;
+          case 14://Importe total
+            $camposDinamicosCotizacion[] = array(
+              "id" => $item['id'],
+              "tipo" => $item['tipo'],
+              "opcional" => "0",
+              "descripcion" => $item['descripcion'],
+              "codigo" => "",
+              "valor" => $importeTotal
+            );
+            break;
+          case 15: //IGV
+            $camposDinamicosCotizacion[] = array(
+              "id" => $item['id'],
+              "tipo" => $item['tipo'],
+              "opcional" => "0",
+              "descripcion" => $item['descripcion'],
+              "codigo" => "",
+              "valor" => $igv
+            );
+            break;
+          case 16: //Sub total
+            $camposDinamicosCotizacion[] = array(
+              "id" => $item['id'],
+              "tipo" => $item['tipo'],
+              "opcional" => "0",
+              "descripcion" => $item['descripcion'],
+              "codigo" => "",
+              "valor" => $subTotal
+            );
+            break;                              
+          case 23:
+            $camposDinamicosCotizacion[] = array(
+              "id" => $item['id'],
+              "tipo" => $item['tipo'],
+              "opcional" => "0",
+              "descripcion" => $itemTipo23['descripcion'],
+              "codigo" => $itemTipo23['codigo'],
+              "valor" => $itemTipo23['valor']
+            );
+          case 46:
+            $camposDinamicosCotizacion[] = array(
+              "id" => $item['id'],
+              "tipo" => $item['tipo'],
+              "opcional" => "0",
+              "descripcion" => $filtradosTipo46[0]['descripcion'],
+              "codigo" => $filtradosTipo46[0]['codigo'],
+              "valor" => $filtradosTipo46[0]['valor']
+            );
+            break; 
+          case 47:
+            $camposDinamicosCotizacion[] = array(
+              "id" => $item['id'],
+              "tipo" => $item['tipo'],
+              "opcional" => "0",
+              "descripcion" => $filtradosTipo47[0]['descripcion'],
+              "codigo" => $filtradosTipo47[0]['codigo'],
+              "valor" => $filtradosTipo47[0]['valor']
+            );
+            break;            
+        }
+      }
+
+
+      $detalleCotizacion = [];
+      foreach ($detalle as $i => $itemDetalle) {
+        $precioItem = 0;
+        $texto1 = stripos($itemTipo23['descripcion'], "1");
+        $texto2 = stripos($itemTipo23['descripcion'], "2");
+        $texto3 = stripos($itemTipo23['descripcion'], "3");
+        if($texto1 == true){
+          $precioItem = $itemDetalle['precioPostor1'];
+        }else if($texto2 == true){
+          $precioItem = $itemDetalle['precioPostor2'];
+        }else if($texto3 == true){
+          $precioItem = $itemDetalle['precioPostor3'];
+        }
+
+        $arrayItem = array(
+          "bienId" => $itemDetalle['bienId'],
+          "bienDesc" => $itemDetalle['bienDesc'],
+          "movimiento_bien_ids" => "",
+          "cantidadAceptada" => null,
+          "cantidad" => $itemDetalle['cantidad'],
+          "unidadMedidaId" => $itemDetalle['unidadMedidaId'],
+          "unidadMedidaDesc" => "",
+          "esCompra" => null,
+          "compraDesc" => "",
+          "stockBien" => $itemDetalle['stockBien'],
+          "bienTramoId" => "",
+          "subTotal" => "",
+          "index" => $i,
+          "precioCompra" => "",
+          "organizadorId" => null,
+          "precioTipoId" => 1,
+          "precio" => $precioItem
+        );
+        $detalleCotizacion[] = $arrayItem;
+      }
+      $documentoARelacionarSalida [] = array(
+        "documentoId" => $respuesta->documentoId,
+        "movimientoId" => $respuesta->movimientoId,
+        "tipo" => "1",
+        "documentoPadreId" => ""
+      );
+
+      $documentoId = $this->guardar($opcionId, $usuarioId, $documentoTipoId, $camposDinamicosCotizacion, $detalleCotizacion, $documentoARelacionarSalida, 1, "", 1, $monedaId, null, $periodoId, null, null, null, null);
+    
+      if($banderaCotizacon == 1){
+        $checkedOC = ($detalle[0]['checked1'] == "true") ? "1" : 
+        (($detalle[0]['checked2'] == "true") ? "2" : 
+        (($detalle[0]['checked3'] == "true") ? "3" : null));
+      }
+      $filtradosTipo23 = array_filter($camposDinamicosCotizacion, function($item) use ($checkedOC){
+        return $item['tipo'] === "23" && !empty($item['valor']) && stripos($item['descripcion'], $checkedOC) == true;
+      });
+
+      if(!ObjectUtil::isEmpty($filtradosTipo23)){
+        $respuestaActualizarDocumentoEstado = DocumentoNegocio::create()->ActualizarDocumentoEstadoId($documentoId, 16, $usuarioId);
+      }
+      $documentosIdCotizaciones [] = $documentoId;
+    }
+  
+    if($documentoTipoId == Configuraciones::ORDEN_COMPRA){
+      if (!ObjectUtil::isEmpty($listaPagoProgramacion)) {
+        foreach ($listaPagoProgramacion as $ind => $item) {
+          $fechaPago = DateUtil::formatearCadenaACadenaBD($item[0]);
+          $importePago = $item[1];
+          $dias = $item[2];
+          $porcentaje = $item[3];
+          $glosa = $item[4];
+  
+          $res = Pago::create()->guardarDistribucionPagos($documentoId, $fechaPago, $importePago, $dias, $porcentaje, $glosa, $usuarioId);
+        }
+      }
 
     }
+  }
+
+  public function obtenerDetalleBienRequerimiento($movimientoBienId){
+    return MovimientoBien::create()->movimientoBienDetalleobtenerDetalleXRequerimientoId($movimientoBienId);
+  }
+
+  public function generarDocumentoPDFGenerarCotizacion($documentoId, $comentario, $tipoSalidaPDF, $url, $data){
+    //obtenemos la data
+    $dataDocumentoTipo = DocumentoTipoNegocio::create()->obtenerDocumentoTipoXDocumentoId($documentoId);
+    $documentoTipoId = $dataDocumentoTipo[0]['id'];
+
+    $dataDocumento = $data->dataDocumento;
+    $documentoDatoValor = $data->documentoDatoValor;
+    $detalle = $data->detalle;
+    $dataEmpresa = $data->dataEmpresa;
+    $dataMovimientoTipoColumna = $data->movimientoTipoColumna;
+    $dataDocumentoRelacion = $data->documentoRelacionado;
+
+    $dataTipoCambio = TipoCambioNegocio::create()->obtenerTipoCambioXfecha(substr($dataDocumento[0]["fecha_emision"], 0, 10))[0]['equivalencia_venta'];
+
+    $pdf = new TCPDF('L', PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+
+    // set document information
+    $pdf->SetCreator('Soluciones Mineras S.A.C.');
+    $pdf->SetAuthor('Soluciones Mineras S.A.C.');
+    $pdf->SetTitle(strtoupper($dataDocumentoTipo[0]['descripcion']));
+
+    //        $pdf->SetHeaderData('logo.PNG', PDF_HEADER_LOGO_WIDTH,strtoupper($dataDocumentoTipo[0]['descripcion']),$dataEmpresa[0]['razon_social']."\n".$dataEmpresa[0]['direccion'], array(0,0,0), array(0,0,0));
+
+    $pdf->setFooterData(array(0, 0, 0), array(0, 0, 0)); // 0,0,0
+    // set header and footer fonts
+    $PDF_FONT_SIZE_MAIN = 9;
+    $pdf->setHeaderFont(array(PDF_FONT_NAME_MAIN, '', $PDF_FONT_SIZE_MAIN));
+    $pdf->setFooterFont(array(PDF_FONT_NAME_DATA, '', PDF_FONT_SIZE_DATA));
+
+    // set default monospaced font
+    $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
+
+    // set margins
+    $pdf->SetMargins(PDF_MARGIN_LEFT, PDF_MARGIN_TOP, PDF_MARGIN_RIGHT);
+    $pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
+    $pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
+
+    // set auto page breaks
+    $pdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
+
+    // set image scale factor
+    $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
+
+    // --------------GENERAR PDF-------------------------------------------
+    $pdf->SetFont('helvetica', 'B', 11);
+    $pdf->SetPrintHeader(false);
+    $pdf->SetPrintFooter(false);
+    $pdf->AddPage();
+
+    $serieDocumento = '';
+    if (!ObjectUtil::isEmpty($dataDocumento[0]['serie'])) {
+      $serieDocumento = $dataDocumento[0]['serie'] . " - ";
+    }
+
+    $titulo = strtoupper($dataDocumento[0]['documento_tipo_descripcion']) . " " . $serieDocumento . $dataDocumento[0]['numero'];
+
+    $pdf->SetFillColor(255, 255, 255);
+    $pdf->Image(__DIR__ . '/../../vistas/images/logo_pepas_de_oro.png', 15, 10, 45, 20, '', '', '', false, 300, '', false, false, 1);
+
+    $pdf->MultiCell(180, 40, 'ASOCIACION DE MINEROS ARTESANALES PEPAS DE ORO DE PAMPAMARCA', 0, 'C', 1, 0, 80, 10, true, 0, false, true, 5, 'M');
+
+    $pdf->MultiCell(150, 40, 'LOGISTICA', 0, 'C', 1, 0, 90, 20, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(150, 40, 'CUADRO COMPARATIVO', 0, 'C', 1, 0, 90, 25, true, 0, false, true, 5, 'M');
+
+
+    $pdf->SetFont('helvetica', 'B', 8);
+    $pdf->SetFillColor(254, 191, 0);
+    $pdf->MultiCell(30, 5, 'Nro', 1, 'C', 1, 0, 190, 35, true, 0, false, true, 5, 'M');
+    $pdf->SetFillColor(255, 255, 255);
+    $pdf->MultiCell(50, 5, $dataDocumento[0]['serie'] . " - " . $dataDocumento[0]['numero'], 1, 'C', 1, 0, 220, 35, true, 0, false, true, 5, 'M');
+
+    //
+    $pdf->SetFillColor(254, 191, 0);
+    $pdf->MultiCell(30, 5, 'FECHA', 1, 'C', 1, 0, 190, 42, true, 0, false, true, 5, 'M');
+    $pdf->SetFillColor(255, 255, 255);
+    $pdf->MultiCell(50, 5, date_format((date_create($dataDocumento[0]['fecha_emision'])), 'd/m/Y'), 1, 'C', 1, 0, 220, 42, true, 0, false, true, 5, 'M');
+
+    //
+
+    //detalle
+    // $pdf->SetFillColor(254, 191, 0);
+    // $pdf->MultiCell(10, 5, 'N°', 1, 'C', 1, 0, '', 59, true, 0, false, true, 5, 'M');
+    // $pdf->MultiCell(10, 5, 'TIPO DE REQUERIMIENTO', 1, 'C', 1, 0, '', 59, true, 0, false, true, 5, 'M');
+
+    $color_ganador1 = "";
+    $color_ganador2 = "";
+    $color_ganador3 = "";
+    if($detalle[0]->postor_ganador_id == 1){
+      $color_ganador1 = "background-color:rgb(0, 254, 127);";
+    }else if($detalle[0]->postor_ganador_id == 2){
+      $color_ganador2 = "background-color:rgb(0, 254, 127);";
+    }else if($detalle[0]->postor_ganador_id == 3){
+      $color_ganador3 = "background-color:rgb(0, 254, 127);";
+    }
+
+    $monedaPostor1 = $detalle[0]->moneda_postor1 == "2"? "S/":"$";
+    $monedaPostor2 = $detalle[0]->moneda_postor2 == "2"? "S/":"$";
+    $monedaPostor3 = $detalle[0]->moneda_postor3 == "2"? "S/":"$";
+
+
+    $cont = 0;
+
+    $pdf->Ln(10);
+    $tabla = '<table cellspacing="0" cellpadding="1" border="1">
+        <tr style="background-color:rgb(254, 191, 0);">
+            <th style="text-align:center;vertical-align:middle;" width="3%" rowspan="2"><b>N°</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="35%" rowspan="2"><b>DESCRIPCION</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="8%" rowspan="2"><b>CANTIDAD</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="8%" rowspan="2"><b>UNIDAD DE MEDIDA</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="45%" colspan="3"><b>COTIZACION DE PROVEEDORES</b></th>
+        </tr>
+        <tr style="background-color:rgb(254, 191, 0);">
+            <th style="text-align:center;vertical-align:middle;" width="15%" colspan="3"><b>POSTOR N° 1 <br>'. $monedaPostor1 .'</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="15%" colspan="3"><b>POSTOR N° 2 <br>'. $monedaPostor2 .'</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="15%" colspan="3"><b>POSTOR N° 3 <br>'. $monedaPostor3 .'</b></th>
+        </tr>        
+    ';
+
+    $subtotal1 = 0;
+    $subtotal2 = 0;
+    $subtotal3 = 0;
+    if (!ObjectUtil::isEmpty($detalle)) {
+      foreach ($detalle as $index => $item) {
+        $cont++;
+        // if (strlen($item->descripcion) > 39) {
+        //   $cont++;
+        // }
+
+
+        $subtotal1 = $subtotal1 + number_format(($item->cantidad * $item->precio_postor1), 2);
+        $subtotal2 = $subtotal2 + number_format(($item->cantidad * $item->precio_postor2), 2);
+        $subtotal3 = $subtotal3 + number_format(($item->cantidad * $item->precio_postor3), 2);
+
+        $tabla = $tabla . '<tr>'
+          . '<td style="text-align:center"  width="3%">' . ($index + 1) . '</td>'
+          . '<td style="text-align:left; vertical-align:middle; display: table-cell;" width="35%">' .  $item->bien_codigo .' | '. $item->descripcion . '</td>'
+          . '<td style="text-align:center"  width="8%">' . number_format($item->cantidad, 2) . '</td>'
+          . '<td style="text-align:center"  width="8%">' . $item->simbolo . '</td>'
+          . '<td style="text-align:center;'. $color_ganador1 .'"  width="7.5%">' . number_format($item->precio_postor1, 2) . '</td>'
+          . '<td style="text-align:center;'. $color_ganador1 .'"  width="7.5%">' . number_format(($item->cantidad * $item->precio_postor1), 2) . '</td>'
+          . '<td style="text-align:center;'. $color_ganador2 .'"  width="7.5%">' . number_format($item->precio_postor2, 2) . '</td>'
+          . '<td style="text-align:center;'. $color_ganador2 .'"  width="7.5%">' . number_format(($item->cantidad * $item->precio_postor2), 2) . '</td>'    
+          . '<td style="text-align:center;'. $color_ganador3 .'"  width="7.5%">' . number_format($item->precio_postor3, 2) . '</td>'
+          . '<td style="text-align:center;'. $color_ganador3 .'"  width="7.5%">' . number_format(($item->cantidad * $item->precio_postor3), 2) . '</td>'
+          . '</tr>';
+      }
+    }
+
+    for ($i = count($detalle); $i < 20; $i++) {
+      $tabla = $tabla . '<tr>'
+        . '<td style="text-align:center"  width="3%">' . ($i + 1) . '</td>'
+        . '<td style="text-align:left"  width="35%"></td>'
+        . '<td style="text-align:center"  width="8%"></td>'
+        . '<td style="text-align:center"  width="8%"></td>'
+        . '<td style="text-align:center;'. $color_ganador1 .'"  width="7.5%"></td>'
+        . '<td style="text-align:center;'. $color_ganador1 .'"  width="7.5%"></td>'
+        . '<td style="text-align:center;'. $color_ganador2 .'"  width="7.5%"></td>'
+        . '<td style="text-align:center;'. $color_ganador2 .'"  width="7.5%"></td>'
+        . '<td style="text-align:center;'. $color_ganador3 .'"  width="7.5%"></td>'    
+        . '<td style="text-align:center;'. $color_ganador3 .'"  width="7.5%"></td>'
+        . '</tr>';
+    }
+
+    $moneda_tipo1 = $detalle[0]->moneda_postor1;
+    $moneda_tipo2 = $detalle[0]->moneda_postor2;
+    $moneda_tipo3 = $detalle[0]->moneda_postor3;
+
+    if($moneda_tipo1 == 4){
+      $subtotal1 = $subtotal1 * $dataTipoCambio;
+    }
+    if($moneda_tipo2 == 4){
+      $subtotal2 = $subtotal2 * $dataTipoCambio;
+    }
+    if($moneda_tipo3 == 4){
+      $subtotal2 = $subtotal3 * $dataTipoCambio;
+    }
+
+    $tabla .= '<tfoot>
+              <tr>
+                  <th colspan="4" style="text-align:right">Totales:</th>
+                  <th style="text-align:right" colspan="2" >'. number_format($subtotal1, 2) .'</th>
+                  <th style="text-align:right" colspan="2" >'. number_format($subtotal2, 2) .'</th>
+                  <th style="text-align:right" colspan="2" >'. number_format($subtotal3, 2) .'</th>
+              </tr>
+          </tfoot>';
+
+    $tabla = $tabla . '</table>';
+
+    $pdf->writeHTML($tabla, true, false, true, false, '');
+
+    $tablaHeight = $pdf->GetY(); 
+    $espacio = 0;  // Inicializar el espacio
+    $paginaAltura = $pdf->getPageHeight();  // Altura total de la página
+    $alturaDisponible = $paginaAltura - $tablaHeight - 20; 
+    // Ahora puedes ajustar el valor de $espacio basado en el espacio disponible
+    if ($alturaDisponible > 40) {
+      // Si hay mucho espacio, usa ese espacio
+      $espacio = $tablaHeight;  // Ajusta un pequeño margen después de la tabla
+    } else {
+      // Si el espacio es limitado, podrías agregar una nueva página
+      $pdf->AddPage();
+      $espacio = 15;  // Nuevo espacio al inicio de la nueva página
+    }
+    // Establecer la marca de agua de texto
+    // $pdf->SetAlpha(0.3); // Opcional: Ajusta la opacidad (0 es totalmente transparente, 1 es opaco)
+    // $pdf->SetFont('helvetica', 'B', 50); // Fuente, estilo y tamaño
+    // $pdf->SetTextColor(150, 150, 150); // Color de la marca de agua (gris claro)
+    // $pdf->Rotate(45, 105, 150); // Rotar el texto para la marca de agua (45 grados)
+    // $pdf->SetDrawColor(255, 255, 255); // Establecer el color de dibujo (blanco, para evitar cualquier borde)
+    // $pdf->SetLineWidth(0); // Establecer el grosor del borde a 0
+    // $pdf->Text(50, 120, 'Sin aprobar', false, false, true, ''); // Especifica la posición del texto
+
+    $persona = Persona::create()->obtenerPersonaXUsuarioId($dataDocumento[0]["usuario_creacion"]);
+
+    $personaFirma0 = __DIR__ . "/../../vistas/com/persona/firmas/" . $persona[0]['firma_digital'] . "png";
+
+    $pdf->SetFont('helvetica', 'B', 6);
+    $pdf->MultiCell(50, 5, 'Solicitado por', 1, 'C', 1, 0, 35, $espacio, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(50, 30, $dataDocumento[0]['nombre'], 1, 'C', 1, 0, 35, $espacio, true, 0, false, true, 30, 'B');
+   
+    $pdf->MultiCell(50, 5, 'Fecha:', 1, 'L', 1, 0, 35, $espacio + 30, true, 0, false, true, 5, 'M');
+    $pdf->SetFont('helvetica', '', 6);
+    $pdf->MultiCell(40, 5, date_format((date_create($dataDocumento[0]['fecha_emision'])), 'd/m/Y'), 1, 'L', 1, 0, 45, $espacio + 30, true, 0, false, true, 5, 'M');
+
+    ob_clean();
+
+    if ($tipoSalidaPDF == 'F') {
+      $pdf->Output($url, $tipoSalidaPDF);
+    }
+
+    return $titulo;
   }
 }

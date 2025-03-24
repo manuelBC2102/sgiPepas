@@ -726,6 +726,7 @@ function onResponseObtenerConfiguracionesIniciales(data) {
         $("#contenedorSwitchCotizacionTottus").hide();
 
         obtenerDocumentoTipoDato(e.val);
+        doc_TipoId = e.val;
       });
 
     select2.cargar("cboMoneda", data.moneda, "id", ["descripcion", "simbolo"]);
@@ -807,11 +808,13 @@ function onResponseObtenerConfiguracionesIniciales(data) {
 
     if (isEmpty(data.movimientoTipo[0].documento_tipo_defecto_id)) {
       select2.asignarValor("cboDocumentoTipo", data.documento_tipo[0].id);
+      doc_TipoId = data.documento_tipo[0].id;
     } else {
       select2.asignarValor(
         "cboDocumentoTipo",
         data.movimientoTipo[0].documento_tipo_defecto_id
       );
+      doc_TipoId = data.movimientoTipo[0].documento_tipo_defecto_id;
     }
 
     if (data.documento_tipo.length === 1) {
@@ -961,6 +964,151 @@ function onResponseObtenerConfiguracionesIniciales(data) {
   if (dataCofiguracionInicial.documento_tipo[0]["identificador_negocio"] == 1) {
     distribucionObligatoria = 0;
   }
+
+      //280 = Solicitud requerimiento, oculta o edita descripcion de formulario
+      if(doc_TipoId == 280){
+        $("#cargarBuscadorDocumentoACopiar").hide();
+        var dtdTipoClase = obtenerDocumentoTipoDatoXTipoXCodigo(4, "01");
+        var dtdTipoTipo = obtenerDocumentoTipoDatoXTipoXCodigo(4, "02");
+        var dtdTipoOtros = obtenerDocumentoTipoDatoIdXTipo(2);
+        var dtdTipoTipoRequerimiento = obtenerDocumentoTipoDatoIdXTipo(42);
+
+
+        if(!isEmpty(dtdTipoClase)){
+            $("#id_"+dtdTipoClase.id +" label").html("Clase *");
+        }
+        $("#id_"+dtdTipoOtros).hide();
+
+        if(!isEmpty(dtdTipoClase)){
+            $("#cboTipoRequerimiento_"+dtdTipoTipoRequerimiento).select2({
+                width: "100%"
+            }).on("change", function (e) {
+                if(doc_TipoId == 280){
+                    tipoRequerimientoGlobalText = select2.obtenerText("cboTipoRequerimiento_"+dtdTipoTipoRequerimiento);
+                    if (e.val == 455) {
+                        loaderShow();
+                        detalle = [];
+                        indiceLista = [];
+                        banderaCopiaDocumento = 0;
+                        indexDetalle = 0;
+                        nroFilasInicial = parseInt(dataDocumentoTipo[0]['cantidad_detalle']);
+                        limpiarDetalle();
+                        loaderClose();
+
+                        $("#id_"+ dtdTipoTipo.id).show();
+                        $("#id_"+ dtdTipoTipo.id +" label").html("Tipo *");
+                        $("#id_" + dtdTipoClase.id).hide();
+                        select2.asignarValor("cbo_" + dtdTipoClase.id, "");
+                    } else {
+                        loaderShow();
+                        detalle = [];
+                        indiceLista = [];
+                        banderaCopiaDocumento = 0;
+                        indexDetalle = 0;
+                        nroFilasInicial = parseInt(dataDocumentoTipo[0]['cantidad_detalle']);
+                        limpiarDetalle();
+                        loaderClose();
+
+                        $("#id_"+ dtdTipoClase.id).show();
+                        $("#id_"+ dtdTipoClase.id +" label").html("Clase *");
+                        $("#id_"+ dtdTipoTipo.id).hide();
+                        select2.asignarValor("cbo_" + dtdTipoTipo.id, "");
+                        $("#id_"+dtdTipoOtros).hide();
+                    }
+                }
+            });
+        }
+
+        if(!isEmpty(dtdTipoTipo)){
+            $("#cbo_" + dtdTipoTipo.id).select2({
+                width: "100%"
+            }).on("change", function (e) {
+                if(doc_TipoId == 280){
+                    if (e.val == 459) {
+                        $("#id_"+dtdTipoOtros).show();
+                    } else {
+                        $("#id_"+dtdTipoOtros).hide();
+                    }
+                }
+            });
+        }
+
+        //Adjuntar imagen de producto para solicitud de requerimiento
+        $("#fileInputAdjunto").change(function () {
+            debugger;
+            var fileType=this.files[0].type
+            $("#text_archivoAdjunto").html($("#fileInputAdjunto").val().slice(12));
+            if (this.files && this.files[0]) {
+                var validImageTypes = ["image/jpeg", "image/png", "image/gif", "image/bmp", "image/webp"];
+                // Verificar si el archivo es una imagen válida
+                if (validImageTypes.includes(this.files[0].type)) {
+                    var reader = new FileReader();
+                    reader.onload = function (e) {
+                        var img = new Image();
+                        img.src = e.target.result;
+                        img.onload = function () {
+                            // Redimensionar la imagen si es necesario
+                            var canvas = document.createElement("canvas");
+                            var ctx = canvas.getContext("2d");
+                            // Establecer un tamaño máximo (por ejemplo, 800px de ancho)
+                            var maxWidth = 800;
+                            var maxHeight = 800;
+                            var width = img.width;
+                            var height = img.height;
+
+                            // Calcular las nuevas dimensiones manteniendo la relación de aspecto
+                            if (width > height) {
+                                if (width > maxWidth) {
+                                    height = Math.round((height *= maxWidth / width));
+                                    width = maxWidth;
+                                }
+                            } else {
+                                if (height > maxHeight) {
+                                    width = Math.round((width *= maxHeight / height));
+                                    height = maxHeight;
+                                }
+                            }
+
+                            // Establecer las dimensiones del canvas y dibujar la imagen redimensionada
+                            canvas.width = width;
+                            canvas.height = height;
+                            ctx.drawImage(img, 0, 0, width, height);
+                            // Convertir la imagen redimensionada a un formato de imagen (base64)
+                            var resizedImage = canvas.toDataURL(fileType);
+
+                            var indice = $('#indiceImagenAdjuntaBien').val();
+                            var indexTemporal = -1;
+                            $.each(detalle, function (i, item) {
+                                if (parseInt(item.index) === parseInt(indice)) {
+                                    indexTemporal = i;
+                                    return false;
+                                }
+                            });
+                        
+                            if (indexTemporal != -1)
+                            {
+                                detalle[indexTemporal].imagenAdjuntaBien = resizedImage;
+                            }
+                            // Establecer la imagen redimensionada en el elemento de vista previa
+                            $("#text_archivoAdjunto").val(e.target.result);
+                            $("#error").hide();
+                        };                         
+                    };
+                    reader.readAsDataURL(this.files[0]); // Leer el archivo seleccionado
+                } else if(this.files[0].type == "application/pdf") {
+                    var reader = new FileReader();
+                    reader.onload = function (e) {
+                        $("#text_archivoAdjunto").val(e.target.result);
+                    }
+                    reader.readAsDataURL(this.files[0]);
+                }else{ 
+                    // Si no es una imagen válida, mostrar un mensaje de error y ocultar la vista previa
+                    $("#error").show();
+                }
+
+            }
+        });
+    }
 }
 
 function habilitarComboTipoPago() {
@@ -1287,6 +1435,30 @@ function llenarCabeceraDetalle() {
           fila += "<th style='text-align:center; width: " + item.ancho + "px;'>" + item.descripcion + "</th>";
           anchoDinamicoTabla += parseInt(item.ancho);
           break;
+        case 26://CeCo
+          fila += "<th style='text-align:center; width: " + item.ancho + "px;'>" + item.descripcion + "</th>";
+          anchoDinamicoTabla += parseInt(item.ancho);
+          break;
+        case 27://Postor N° 1
+          fila += "<th style='text-align:center; width: " + item.ancho + "px;' id='tb_postor_"+ item.id +"' "+ colspan +">" + item.descripcion +" &nbsp;<input type='checkbox' id='selectPostor1' class='grupocheckbox'></th>";
+          anchoDinamicoTabla += parseInt(item.ancho);
+          break;
+        case 28://Postor N° 2
+          fila += "<th style='text-align:center; width: " + item.ancho + "px;' id='tb_postor_"+ item.id +"' "+ colspan +">" + item.descripcion +" &nbsp;<input type='checkbox' id='selectPostor2' class='grupocheckbox'></th>";
+          anchoDinamicoTabla += parseInt(item.ancho);
+          break;
+        case 29://Postor N° 3
+          fila += "<th style='text-align:center; width: " + item.ancho + "px;' id='tb_postor_"+ item.id +"' "+ colspan +">" + item.descripcion +" &nbsp;<input type='checkbox' id='selectPostor3' class='grupocheckbox'></th>";
+          anchoDinamicoTabla += parseInt(item.ancho);
+          break;
+        case 33://Compras
+          fila += "<th style='text-align:center; width: " + item.ancho + "px;' "+ rowspan +">" + item.descripcion + "</th>";
+          anchoDinamicoTabla += parseInt(item.ancho);
+          break;
+        case 34://Cantidad aceptada
+          fila += "<th style='text-align:center; width: " + item.ancho + "px;' id='tb_cantidad_aceptada_"+ item.id +"' "+ rowspan +">" + item.descripcion + "</th>";
+          anchoDinamicoTabla += parseInt(item.ancho);
+          break;              
       }
     });
   }
@@ -1316,6 +1488,8 @@ var nroFilasReducida;
 var alturaBienTD;
 var anchoUnidadMedidaTD;
 var anchoTipoPrecioTD;
+var anchoCeCoTD;
+var anchoCompraTD;
 function llenarTablaDetalle(data) {
   var nroFilas = nroFilasReducida;
   //NUEVO
@@ -1342,7 +1516,13 @@ function llenarTablaDetalle(data) {
   //    if (existeColumnaCodigo(23)) {
   //        anchoAgenciaTD = $("#tdAgencia_" + (nroFilas - 1)).width();
   //    }
+  if (existeColumnaCodigo(26)) {
+    anchoCeCoTD = $("#tdCeCo_" + (nroFilas - 1)).width();
+  }
 
+  if (existeColumnaCodigo(33)) {
+      anchoCompraTD = $("#tdCompra_" + (nroFilas - 1)).width();
+}
   //LLENAR COMBOS
   for (var i = 0; i < nroFilas; i++) {
     cargarOrganizadorDetalleCombo(data.organizador, i);
@@ -1351,6 +1531,9 @@ function llenarTablaDetalle(data) {
     cargarPrecioTipoDetalleCombo(data.precioTipo, i);
     cargarAgenciaDetalleCombo(data.dataAgencia, i);
     inicializarFechaVencimiento(i);
+    cargarCeCoDetalleCombo(data.centroCosto, i);
+    var compras = [{"id":1, "descripcion": "Si"},{"id":2, "descripcion": "No"}];
+    cargarComprasDetalleCombo(compras, i);
   }
 
   if (existeColumnaCodigo(24)) {
@@ -1555,49 +1738,63 @@ function cargarBienDetalleCombo(data, indice, valorInicial) {
         placeholder: "Buscar producto",
         allowClear: true,
         //            minimumInputLength: 1,
-        data: dataCofiguracionInicial.bien,
+        data: dataCofiguracionInicial.bien || [],
         width: alturaBienTD + "px",
         initSelection: function (element, callback) {
-          var initialData = {
-            id: valorInicial.id,
-            text: valorInicial.text,
-          };
-          callback(initialData);
+            var initialData = {
+                id: valorInicial.id,
+                text: valorInicial.text
+            };
+            callback(initialData);
         },
-
-        // NOT NEEDED: These are just css for the demo data
-        dropdownCssClass: "capitalize",
-        containerCssClass: "capitalize",
-        // configure as multiple select
-        multiple: false,
-        // NOT NEEDED: text for loading more results
-        formatLoadMore: "Cargando más...",
-        // query with pagination
-        query: function (q) {
-          var pageSize, results;
-          pageSize = 20; // or whatever pagesize
-          results = [];
-          if (q.term && q.term !== "") {
-            // HEADS UP; for the _.filter function i use underscore (actually lo-dash) here
-            results = data.filter(
-              (itemProducto) =>
-                itemProducto.text.toUpperCase().indexOf(q.term.toUpperCase()) >=
-                0
-            );
-
-            //                        _.filter(this.data, function (e) {
-            //                    return (e.text.toUpperCase().indexOf(q.term.toUpperCase()) >= 0);
-            //                });
-          } else if (q.term === "") {
-            results = this.data;
-          }
-          q.callback({
-            results: results.slice((q.page - 1) * pageSize, q.page * pageSize),
-            more: results.length >= q.page * pageSize,
-          });
+        ajax: {
+            url: URL_BASE + "script/almacen/buscarProducto.php",
+            dataType: "json",
+            delay: 250,
+            data: function (params) {
+                return {
+                    q: params,
+                    movimiento_tipo_id: dataCofiguracionInicial.movimientoTipo[0].id,
+                    empresa: commonVars.empresa,
+                    tipoRequerimiento: tipoRequerimientoGlobal,
+                    tipoRequerimientoText: tipoRequerimientoGlobalText
+                };
+            },
+            results: function (data) {
+                dataBienBusquedaOnchange = data || [];
+                if (!isEmpty(data)) {
+                    return {
+                        results: $.map(data, function (obj) {
+                            return {
+                                id: obj.id,
+                                text: obj.text
+                            };
+                        }),
+                    };
+                }
+                return { results: [] };
+            },
+            cache: true,
         },
       })
       .on("change", function (e) {
+        if (!isEmpty(e) && !isEmpty(e.val) && !isEmpty(dataBienBusquedaOnchange)) {
+          var bienFiltradas = dataBienBusquedaOnchange.filter(function (bien) {
+              return bien && bien.id === e.val;
+          });
+
+          if (!isEmpty(bienFiltradas) && bienFiltradas.length > 0) {
+              dataCofiguracionInicial.bien.push(bienFiltradas[0]);
+
+              if (existeColumnaCodigo(16)) {
+                  $("#txtProductoDescripcion_" + indice).val(bienFiltradas[0].descripcion);
+                  $("#txtdescripcion_" + indice).val(bienFiltradas[0].descripcion);
+                  if (descripcionesModificadas[indice]) {
+                      delete descripcionesModificadas[indice];
+                  }
+              }
+          }
+        }        
         indiceBien = indice;
         banderaCopiaDocumento = 0;
         bienTramoId = null;
@@ -1616,6 +1813,12 @@ function cargarBienDetalleCombo(data, indice, valorInicial) {
             width: anchoTipoPrecioTD + "px",
           });
         }
+        
+        if (existeColumnaCodigo(26)) {
+          select2.asignarValor("cboCeCo_" + indice, "");
+          $("#cboCeCo_" + indice).select2({width: anchoCeCoTD + 'px'});
+        }
+
         obtenerUnidadMedida(e.val, indice);
         setearDescripcionProducto(indice);
         //obtenerStockActual(indice);
@@ -1960,6 +2163,33 @@ function llenarFilaDetalleTabla(indice) {
         case 25://Agrupador
           fila += "<td style='border:0; width: " + item.ancho + "px; vertical-align: middle; padding: " + KPADINGTD + "px;' id=\"tdTicket_" + indice + "\">" + agregarTicketTabla(indice, item.longitud) + "</td>";
           break;
+        case 26://CeCo
+          fila += "<td style='border:0; width: " + item.ancho + "px; vertical-align: middle; padding: " + KPADINGTD + "px;' id=\"tdCeCo_" + indice + "\">" + agregarCeCoDetalleTabla(indice) + "</td>";
+          break;
+        case 27://Postor N° 1
+            fila += "<td style='border:0; width: " + item.ancho + "px; vertical-align: middle; padding: " + KPADINGTD + "px;' id=\"tdPostor1_" + indice + "\">" + agregarPrecioUnitarioPDetalleTabla(indice, 1) + "</td>";
+            break;
+        case 28://Postor N° 2
+            fila += "<td class='dtdetalle_postor2' style='border:0; width: " + item.ancho + "px; vertical-align: middle; padding: " + KPADINGTD + "px;' id=\"tdPostor2_" + indice + "\">" + agregarPrecioUnitarioPDetalleTabla(indice, 2) + "</td>";
+            break;
+        case 29://Postor N° 3
+            fila += "<td class='dtdetalle_postor3' style='border:0; width: " + item.ancho + "px; vertical-align: middle; padding: " + KPADINGTD + "px;' id=\"tdPostor3_" + indice + "\">" + agregarPrecioUnitarioPDetalleTabla(indice, 3) + "</td>";
+            break;
+        case 30://Sub total Postor N° 1
+            fila += "<td class='dtdetalle_postor_cantidad1' style='border:0; width: " + item.ancho + "px; vertical-align: middle; padding: " + KPADINGTD + "px;' id=\"tdPostor_cantidad1_" + indice + "\">" + agregarSubTotalPDetalleTabla(indice, 1) + "</td>";
+            break;
+        case 31://Sub total Postor N° 2
+            fila += "<td class='dtdetalle_postor_cantidad2' style='border:0; width: " + item.ancho + "px; vertical-align: middle; padding: " + KPADINGTD + "px;' id=\"tdPostor_cantidad2_" + indice + "\">" + agregarSubTotalPDetalleTabla(indice, 2) + "</td>";
+            break;
+        case 32://Sub total Postor N° 3
+            fila += "<td class='dtdetalle_postor_cantidad3' style='border:0; width: " + item.ancho + "px; vertical-align: middle; padding: " + KPADINGTD + "px;' id=\"tdPostor_cantidad3_" + indice + "\">" + agregarSubTotalPDetalleTabla(indice, 3) + "</td>";
+            break;
+        case 33://Compras
+            fila += "<td style='border:0; width: " + item.ancho + "px; vertical-align: middle; padding: " + KPADINGTD + "px;' id=\"tdCompra_" + indice + "\">" + agregarCompra(indice) + "</td>";
+            break;  
+        case 34://Cantidad aceptada
+            fila += "<td class='dtdetalle_cantidad_aceptada' style='border:0; width: " + item.ancho + "px; vertical-align: middle; padding: " + KPADINGTD + "px;'>" + agregarCantidadAprobadaDetalleTabla(indice) + "</td>";
+            break;           
       }
     });
   }
@@ -2143,6 +2373,36 @@ function agregarAgenciaDetalleTabla(i) {
     i +
     '" class="select2">' +
     "</select></div></div>";
+
+  return $html;
+}
+
+function agregarCeCoDetalleTabla(i) {
+  var $html = "<div id=\"contenedorCeCo_" + i + "\">" +
+          "<div class=\"input-group col-lg-12 col-md-12 col-sm-12 col-xs-12\">" +
+          "<select name=\"cboCeCo_" + i + "\" id=\"cboCeCo_" + i + "\" class=\"select2\">" +
+          "</select></div></div>";
+
+  return $html;
+}
+
+function agregarPrecioUnitarioPDetalleTabla(i,  numero) {
+  var $html = "<div class=\"input-group col-lg-12 col-md-12 col-sm-12 col-xs-12\">" +
+          "<input type=\"number\" id=\"txtPrecioP"+ numero +"_" + i + "\" name=\"txtPrecioP"+ numero +"_" + i + "\" class=\"form-control\" required=\"\" aria-required=\"true\" value=\"\" style=\"text-align: right;\" onchange=\"hallarSubTotalPostorDetalle(" + i + ", "+ numero +")\" onkeyup =\"hallarSubTotalPostorDetalle(" + i + ", "+ numero +")\"/></div>";
+
+  return $html;
+}
+
+function agregarSubTotalPDetalleTabla(i,  numero) {
+  var $html = "<div class=\"input-group col-lg-12 col-md-12 col-sm-12 col-xs-12\">" +
+          "<input type=\"number\" id=\"txtSubtotalP"+ numero +"_" + i + "\" name=\"txtSubtotalP"+ numero +"_" + i + "\" class=\"form-control\" required=\"\" aria-required=\"true\" value=\"\" style=\"text-align: right;\" disabled/></div>";
+
+  return $html;
+}
+
+function agregarCantidadAprobadaDetalleTabla(i) {
+  var $html = "<div class=\"input-group col-lg-12 col-md-12 col-sm-12 col-xs-12\">" +
+          "<input type=\"number\" id=\"txtCantidadAprobada_" + i + "\" name=\"txtCantidadAprobada_" + i + "\" class=\"form-control\" required=\"\" aria-required=\"true\" value=\"1\" style=\"text-align: right;\" onchange=\"hallarSubTotalDetalle(" + i + ");hallarStockSaldo(" + i + ");\" onkeyup =\"hallarSubTotalDetalle(" + i + ");hallarStockSaldo(" + i + ");\" /></div><input type=\"hidden\" id=\"txtmovimiento_bien_ids_" + i + "\" name=\"txtmovimiento_bien_ids_" + i + "\" />";
 
   return $html;
 }
@@ -2443,6 +2703,45 @@ function validarFormularioDetalleTablas(indice) {
           valor = document.getElementById("txtTicket_" + indice).value;
           objDetalle.ticket = valor;
           break;
+        case 26://CeCo
+          valor = select2.obtenerValor("cboCeCo_" + indice);
+          objDetalle.CeCoId = valor;
+          break;
+        case 27://Postor N° 1
+          valor = $("#txtPrecioP1_" + indice).val();
+          objDetalle.precioPostor1 = valor;
+          objDetalle.checked1 = $('#selectPostor1').is(":checked");
+          break;
+        case 28://Postor N° 2
+          varlor = 0;
+          if(validar_postor){
+              valor = $("#txtPrecioP2_" + indice).val();
+          }
+          objDetalle.precioPostor2 = valor;
+          objDetalle.checked2 = $('#selectPostor2').is(":checked");
+          break;
+        case 29://Postor N° 3
+          varlor = 0;
+          if(validar_postor){
+              valor = $("#txtPrecioP3_" + indice).val();
+          }
+          objDetalle.precioPostor3 = valor;
+          objDetalle.checked3 = $('#selectPostor3').is(":checked");
+          break;
+        case 33://Compra
+          valor = select2.obtenerValor("cboCompra_" + indice);
+          objDetalle.esCompra = valor;
+          objDetalle.compraDesc = select2.obtenerText("cboCompra_" + indice);
+          break;
+        case 34:// CANTIDAD ACEPTADA
+          valor = document.getElementById("txtCantidadAprobada_" + indice).value;
+          objDetalle.cantidad = valor;
+          break;
+        case 36:
+          valor = $('#imagenPdfAdjunto_' + indice).val();
+          var nombreArchivo = $("#nombreimagenPdfAdjunto_" + indice).val();
+          detDetalle.push({columnaCodigo: 36, valorDet: valor, nombreArchivo: nombreArchivo});
+          break;            
       }
 
       //validar los valores del detalle
@@ -2621,6 +2920,13 @@ function limpiarFilaDetalleFormulario(indice) {
             width: anchoUnidadMedidaTD + "px",
           });
           break;
+        case 26:
+            select2.asignarValor('cboCeCo_' + indice, '');
+            $("#cboCeCo_" + indice).select2({width: anchoCeCoTD + 'px'});
+            break;
+        case 34:
+            document.getElementById("txtCantidadAprobada_" + indice).value = '1';
+            break;             
       }
     });
   }
@@ -2664,6 +2970,14 @@ function agregarPrecioTipoTabla(i) {
   return $html;
 }
 
+function agregarCompra(i) {
+  var $html = "<div class=\"input-group col-lg-12 col-md-12 col-sm-12 col-xs-12\">" +
+          "<select name=\"cboCompra_" + i + "\" id=\"cboCompra_" + i + "\" class=\"select2\" onchange=\"\">" +
+          "</select></div>";
+
+  return $html;
+}
+
 function agregarBienDetalleTabla(i) {
   var $html =
     '<div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">' +
@@ -2690,6 +3004,10 @@ function agregarBienDetalleTabla(i) {
   if(existeColumnaCodigo(24)){
     $html += "<button type='button' class='btn_agrupador btn btn-effect-ripple btn-default hidden' title='Ingresar agrupador'" +
             "style='padding-bottom: 7px;' onclick='insertarAgrupadorBien(" + i + ")'><i class='fa fa-users' style='color: #33BEFF;'></i></button>";
+  }
+  if (existeColumnaCodigo(36)) {
+    $html += "<button type='button' class='btn btn-effect-ripple btn-default' title='Adjuntar archivo'" +
+            "style='padding-bottom: 7px;' onclick='adjuntarImagenPdfBien(" + i + ")'><i class='fa fa-cloud-upload' style='color: #33BEFF;'></i></button><input type='hidden' id='imagenPdfAdjunto_" + i + "' name='imagenPdfAdjunto_" + i + "' /><input type='hidden' id='nombreimagenPdfAdjunto_" + i + "' name='nombreimagenPdfAdjunto_" + i + "' />";
   }
   $html += "</span>" + "</div>";
 
@@ -2748,6 +3066,7 @@ function onResponseObtenerDocumentoTipoDato(data) {
         case 34:
         case 35:
         case 39:
+        case 42:
           contadorEspeciales += 1;
           escribirItem = false;
           break;
@@ -2756,8 +3075,14 @@ function onResponseObtenerDocumentoTipoDato(data) {
             appendForm('<div class="row">');
           }
           contador++;
+          var hidden_4 = "";
+          if(doc_TipoId == 280){
+            if(item.descripcion == "Tipo" || item.descripcion == "Otros"){
+                hidden_4 = "hidden";
+            }
+          }
 
-          var html = '<div class="form-group col-md-4" id="id_'+item.id+'">';
+          var html = '<div class="form-group col-md-4" id="id_'+item.id+'" '+hidden_4+'>';
           if (item.tipo != 31) {
             html +=
               "<label>" +
@@ -3492,6 +3817,34 @@ function onResponseObtenerDocumentoTipoDato(data) {
                 item.id +
                 '" class="select2"></select>';
             break;
+            case 42:
+              $("#contenedorCboTipoRequerimiento").empty();
+              $("#contenedorCboTipoRequerimiento").show();
+              $("#contenedorCboTipoRequerimiento").append("<h4 class='text-dark text-uppercase'>"+
+                                      "<select id='cboTipoRequerimiento_"+item.id+"' name='cboTipoRequerimiento_"+item.id+"' class='select2' disabled></select>"+
+                                  "</h4>");
+              var dtdTipoTipo = obtenerDocumentoTipoDatoXTipoXCodigo(4, "02");
+              if (!isEmpty(item.data)) {
+                  select2.cargar("cboTipoRequerimiento_"+item.id, item.data, "id", "descripcion");
+                  select2.asignarValor("cboTipoRequerimiento_"+item.id, item.lista_defecto);
+                  tipoRequerimientoGlobal = item.lista_defecto;
+                  tipoRequerimientoGlobalText = select2.obtenerText("cboTipoRequerimiento_"+item.id);
+                  if (item.lista_defecto == 454) {
+                      $("#id_"+ dtdTipoTipo.id).hide();
+                  }
+                  if(doc_TipoId == 281 || doc_TipoId == 283){
+                      $("#cboTipoRequerimiento_" + item.id).attr('disabled', 'disabled');
+                  }
+              }
+              break;
+            case 43:
+                if(doc_TipoId == 283){
+                    html += '<select name="cbo_' + item.id + '" id="cbo_' + item.id + '" class="select2"></select>';
+                }else{
+                    html += '<select name="cbo_' + item.id + '" id="cbo_' + item.id + '" class="select2" disabled></select>';
+                }
+              break;              
+                      
       }
       if (escribirItem) {
         html += "</div></div>";
@@ -3631,6 +3984,23 @@ function onResponseObtenerDocumentoTipoDato(data) {
               width: "100%",
           });
         break;
+        case 43:
+          select2.cargar("cbo_" + item.id, item.data, "id", "descripcion");
+          $("#cbo_" + item.id).select2({
+              width: '100%'
+          });
+          select2.asignarValor("cbo_" + item.id, 0);
+          if(doc_TipoId != 283){
+              if (!isEmpty(item.lista_defecto)) {
+                  if(item.lista_defecto == 3){
+                      $("#cbo_" + item.id).prop("disabled", false);
+                  }else{
+                      var id = parseInt(item.lista_defecto);
+                      select2.asignarValor("cbo_" + item.id, id);
+                  }
+              }
+          }
+          break;        
       }
     });
     $("#id_3044").hide();
@@ -3883,6 +4253,17 @@ function asignarValoresDetalleFormulario() {
           //$('#txtTicket_' + indexDetalle).removeAttr("readonly");
           $('#txtTicket_' + indexDetalle).val(valoresFormularioDetalle.ticket);
           break;
+        case 26://CeCo
+          select2.asignarValor("cboCeCo_" + indexDetalle, valoresFormularioDetalle.CeCoId);
+          $("#cboCeCo_" + indexDetalle).select2({
+              width: anchoCeCoTD + "px"
+          });
+          break;
+        case 33:
+          $("#cboCompra_" + indexDetalle).select2({
+              width: anchoCompraTD + "px"
+          });
+          break;          
         default:
           //DATOS DE MOVIMIENTO_BIEN_DETALLE
           if (!isEmpty(valoresFormularioDetalle.detalle)) {
@@ -3976,6 +4357,8 @@ function eliminarDetalleFormularioTabla(indice) {
     dataCofiguracionInicial.dataAgencia,
     nroFilasReducida
   );
+  cargarCeCoDetalleCombo(dataCofiguracionInicial.centroCosto, nroFilasReducida);
+  cargarComprasDetalleCombo(dataCofiguracionInicial.centroCosto, nroFilasReducida);
   inicializarFechaVencimiento(nroFilasReducida);
 
   nroFilasInicial++;
@@ -5966,6 +6349,7 @@ function onResponseObtenerDocumentoRelacion(data) {
   reinicializarDataTableDetalle();
 
   detalleDocumentoRelacion = data.detalleDocumento;
+  dataCofiguracionInicial.bien = data.dataBien;
   cargarDataDocumentoACopiar(
     data.documentoACopiar,
     data.dataDocumentoRelacionada,
@@ -6243,6 +6627,12 @@ function cargarDataDocumentoACopiar(
               }
             }
             break;
+          case 43:
+            select2.asignarValor("cbo_" + item.otro_documento_id, item.valor);
+            break;            
+          case 42:
+            select2.asignarValor("cboTipoRequerimiento_" + item.otro_documento_id, item.valor);
+            break;
         }
       });
       bandera.mostrarDivDocumentoRelacion = true;
@@ -6301,7 +6691,13 @@ function cargarDetalleDocumentoRelacion(data) {
           item.movimiento_bien_id,
           item.agrupador_id,
           item.agrupador_descripcion,
-          item.ticket
+          item.ticket,
+          item.centro_costo_id,
+          null, 
+          item.precio_postor1, 
+          item.precio_postor2, 
+          item.precio_postor3,
+          item.postor_ganador_id
         )
       );
     });
@@ -6600,7 +6996,13 @@ function cargarFormularioDetalleACopiar(
   movimientoBienId,
   agrupadorBien,
   agrupadorBienDescripcion,
-  ticket
+  ticket,
+  CeCoId,
+  movimiento_bien_ids, 
+  precio_postor1, 
+  precio_postor2, 
+  precio_postor3, 
+  postor_ganador_id
 ) {
   //agregar logica de columnas dinamicas...
   //obtener los datos del detalle dinamico
@@ -6614,7 +7016,23 @@ function cargarFormularioDetalleACopiar(
       switch (parseInt(item.codigo)) {
         //numeros
         case 5: // PRECIO UNITARIO
-          objDetalle.precio = precio;
+          if(doc_TipoId == 104){
+            var precioPostor = 0;
+            switch (parseInt(postor_ganador_id)) {
+                case 1:
+                    precioPostor = precio_postor1;
+                    break;
+                case 2:
+                    precioPostor = precio_postor2;
+                    break;
+                case 3:
+                    precioPostor = precio_postor3;                                
+                    break;
+            }
+            objDetalle.precio = precioPostor;
+          }else{
+              objDetalle.precio = precio;
+          }          
           break;
         case 12: // CANTIDAD
           objDetalle.cantidad = cantidad;
@@ -6666,6 +7084,24 @@ function cargarFormularioDetalleACopiar(
         case 25: // Ticket
           objDetalle.ticket = ticket;
 
+          break;
+        case 26: // CeCo
+          objDetalle.CeCoId = CeCoId;
+          break;
+        case 27://Postor N° 1
+          objDetalle.precioPostor1 = 0;
+          break;
+        case 28://Postor N° 2
+          objDetalle.precioPostor2 = 0;
+          break;
+        case 29://Postor N° 3
+          objDetalle.precioPostor3 = 0;
+          break;
+        case 33://Compra
+          objDetalle.esCompra = 0;
+          break;
+        case 34://Cantidad aceptada
+          objDetalle.cantidadAceptada = 0;
           break;
         default:
           //DATOS DE MOVIMIENTO_BIEN_DETALLE
@@ -11200,4 +11636,129 @@ function validarDistribucion() {
   }
 
   return true;
+}
+
+function cargarCeCoDetalleCombo(data, indice) {
+  if (existeColumnaCodigo(26)) {
+      $("#cboCeCo_" + indice).select2({
+          width: anchoCeCoTD + "px"
+      }).on("change", function (e) {
+          actualizarTotalesGenerales(indice);
+      });
+
+      if (!isEmpty(data)) {
+          select2.cargar("cboCeCo_" + indice, data, "id", ["codigo", "descripcion"]);
+          select2.asignarValor("cboCeCo_" + indice, "");
+      }
+      $("#cboCeCo_" + indice).select2({width: anchoCeCoTD + "px"});
+  }
+}
+
+function cargarComprasDetalleCombo(data, indice) {
+  if (existeColumnaCodigo(33)) {
+      $("#cboCompra_" + indice).select2({
+          width: anchoCompraTD + "px"
+      }).on("change", function (e) {
+          var bienId = select2.obtenerValor("cboBien_" + indice);
+          var stockBien = 0;
+          $.each(detalle, function (index, item) {
+              if (item.bienId == bienId) {
+                  stockBien = item.stockBien;
+                  return false;
+              }
+          });
+
+          if(e.val == "1"){
+              if(stockBien == 0){
+                  $("#txtCantidadAprobada_"+ indice).val($("#txtCantidad_"+ indice).val());
+              }
+          }else if(e.val == "2"){
+              if(stockBien < $("#txtCantidad_"+ indice).val()){
+                  select2.asignarValor("cboCompra_" + indice, "");
+                  $("#cboCompra_" + indice).select2({width: anchoCompraTD + "px"});
+                  mostrarAdvertencia("El stock es menor para poder reservar stock, en la fila "+ (indice + 1));
+                  return false;
+              }
+              $("#txtCantidadAprobada_"+ indice).val($("#txtCantidad_"+ indice).val());
+          }
+          actualizarTotalesGenerales(indice);
+      });
+
+      if (!isEmpty(data)) {
+          select2.cargar("cboCompra_" + indice, data, "id", "descripcion");
+          select2.asignarValor("cboCompra_" + indice, "");
+      }
+      $("#cboCompra_" + indice).select2({width: anchoCompraTD + "px"});
+  }
+}
+
+function adjuntarImagenPdfBien(index) {
+  $('#indiceImagenAdjuntaBien').val(index);
+  //SETEAR VALOR COMENTARIO
+  var indexTemporal = -1;
+  $.each(detalle, function (i, item) {
+      if (parseInt(item.index) === parseInt(index)) {
+          indexTemporal = i;
+          return false;
+      }
+  });
+  var bienId = select2.obtenerValor("cboBien_" + indexTemporal);
+  if (indexTemporal != -1 && !isEmpty(bienId)) {
+      if (!isEmpty(detalle[indexTemporal].detalle)) {
+          $("#text_archivoAdjunto").html($("#nombreimagenPdfAdjunto_" + indexTemporal).val());
+          $("#nombrearchivoAdjunto").val($("#nombreimagenPdfAdjunto_" + indexTemporal).val());
+          $("#base64archivoAdjunto").val($("#imagenPdfAdjunto_" + indexTemporal).val());
+      }else{
+          $("#comentarioBien").val("");
+      }
+      $('#modalImagenPdfAdjuntaBien').modal('show');
+
+  } else {
+      mostrarAdvertencia('Seleccione un producto');
+      return;
+  }
+}
+
+function verImagenPdf(){
+  var filePath = $("#base64archivoAdjunto").val();
+  var nombreAdjunto = $("#nombrearchivoAdjunto").val();
+  var partesnombreAdjunto = nombreAdjunto.split(".");
+
+  var newWindow = window.open();
+
+  if(partesnombreAdjunto[1] == "pdf"){
+      newWindow.document.write('<html><body>');
+      newWindow.document.write('<embed width="100%" height="100%" src="' + filePath + '" type="application/pdf">');
+      newWindow.document.write('</body></html>');
+      newWindow.document.close();
+  }else{
+      newWindow.document.write('<html><body>');
+      newWindow.document.write('<img src="' + filePath + '">'); 
+      newWindow.document.write('</body></html>');
+      newWindow.document.close();
+  }
+}
+
+function registrarImagenPdfBien() {
+  var indice = $('#indiceImagenAdjuntaBien').val();
+  var indexTemporal = -1;
+  $.each(detalle, function (i, item) {
+      if (parseInt(item.index) === parseInt(indice)) {
+          indexTemporal = i;
+          return false;
+      }
+  });
+
+  if (indexTemporal != -1)
+  {
+      $('#modalImagenPdfAdjuntaBien').modal('hide');
+      $("#imagenPdfAdjunto_"+indice).val($("#base64archivoAdjunto").val());
+      $("#nombreimagenPdfAdjunto_"+indice).val($("#fileInputAdjunto").val().slice(12));
+      
+      $("#fileInputAdjunto").val();
+  } else {
+      mostrarAdvertencia('Seleccione un producto');
+      return;
+  }
+
 }

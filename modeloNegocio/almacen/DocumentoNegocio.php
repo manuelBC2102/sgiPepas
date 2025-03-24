@@ -53,6 +53,7 @@ class DocumentoNegocio extends ModeloNegocioBase
     $archivoAdjuntoMulti = null;
     $banderaProductoDuplicado = 0;
     $detraccionId = null;
+    $es_rq = null;
 
     $numeros = array();
     $cadenas = array();
@@ -172,7 +173,7 @@ class DocumentoNegocio extends ModeloNegocioBase
               case DocumentoTipoNegocio::DATO_LISTA:
                 array_push($listas, $valorDtd);
                 //Nota de credito tipo13
-                $idValor = $valorDtd['valor'];
+                $idValor = $valorDtd['valor'] == ""? null:$valorDtd['valor'];
                 $resDTDL = DocumentoTipoDatoLista::create()->obtenerPorId($idValor);
                 if ($resDTDL[0]['valor'] == 13) {
                   $notaCreditoTipo13 = true;
@@ -200,6 +201,9 @@ class DocumentoNegocio extends ModeloNegocioBase
                 break;
               case DocumentoTipoNegocio::DATO_OTRA_PERSONA:
                 array_push($listas, $valorDtd);
+                if($documentoTipoId == Configuraciones::COTIZACIONES){
+                  $personaId = $valor;
+                }
                 break;
               case DocumentoTipoNegocio::DATO_CAMBIO_PERSONALIZADO:
                 $cambioPersonalizado = $valor;
@@ -228,6 +232,27 @@ class DocumentoNegocio extends ModeloNegocioBase
                 break;
               case DocumentoTipoNegocio::DATO_NUM_LICENCIA_CONDUCIR: //Conductor
                 array_push($cadenas, $valorDtd);
+                break;
+              case DocumentoTipoNegocio::DATO_TIPO_REQUERIMIENTO: //Tipo requerimiento
+                if($documentoTipoId == 280 || $documentoTipoId == 284 || $documentoTipoId == 283){
+                  $es_rq = $valor;
+                  array_push($listas, $valorDtd);
+                }
+                break;
+              case DocumentoTipoNegocio::DATO_AREA: //Area
+                  array_push($cadenas, $valorDtd);
+                break;
+              case DocumentoTipoNegocio::DATO_GRUPO_PRODUCTO: //Area
+                  array_push($cadenas, $valorDtd);
+                break;
+              case DocumentoTipoNegocio::DATO_ENTREGA_EN_DESTINO: //
+                  array_push($cadenas, $valorDtd);
+                break;
+              case DocumentoTipoNegocio::DATO_UO:
+                  array_push($cadenas, $valorDtd);
+                break;
+              case DocumentoTipoNegocio::DATO_CUENTA_PROVEEDOR: //
+                  array_push($cadenas, $valorDtd);
                 break;
               default:
             }
@@ -325,7 +350,11 @@ class DocumentoNegocio extends ModeloNegocioBase
       $importeSubTotal = 0.0;
     }
 
-    $documento = Documento::create()->guardar($documentoTipoId, $movimientoId, $personaId, $direccionId, $organizadorId, $adjuntoId, $codigo, $serie, $numero, $fechaEmision, $fechaVencimiento, $fechaTentativa, $descripcion, $comentarioDoc, $importeTotal, $importeIgv, $importeSubTotal, $estado, $monedaId, $usuarioCreacionId, $cuentaId, $actividadId, $retencionDetraccionId, $utilidadTotal, $utilidadPorcentajeTotal, $cambioPersonalizado, $tipoPago, $importeNoAfecto, $periodoId, $banderaProductoDuplicado, $detraccionId, $datosExtras['afecto_detraccion_retencion'], $datosExtras['porcentaje_afecto'], $datosExtras['monto_detraccion_retencion'], $contOperacionTipoId, $esEar, $importeOtros, $importeExoneracion, $importeIcbp, $datosExtras['afecto_impuesto'], $percepcion, $igv_porcentaje);
+    if($documentoTipoId == 280 || $documentoTipoId == 281 || $documentoTipoId == 283){
+      $personaId = PersonaNegocio::create()->obtenerPersonaXUsuarioId($usuarioCreacionId)[0]['id'];
+    }
+    
+    $documento = Documento::create()->guardar($documentoTipoId, $movimientoId, $personaId, $direccionId, $organizadorId, $adjuntoId, $codigo, $serie, $numero, $fechaEmision, $fechaVencimiento, $fechaTentativa, $descripcion, $comentarioDoc, $importeTotal, $importeIgv, $importeSubTotal, $estado, $monedaId, $usuarioCreacionId, $cuentaId, $actividadId, $retencionDetraccionId, $utilidadTotal, $utilidadPorcentajeTotal, $cambioPersonalizado, $tipoPago, $importeNoAfecto, $periodoId, $banderaProductoDuplicado, $detraccionId, $datosExtras['afecto_detraccion_retencion'], $datosExtras['porcentaje_afecto'], $datosExtras['monto_detraccion_retencion'], $contOperacionTipoId, $esEar, $importeOtros, $importeExoneracion, $importeIcbp, $datosExtras['afecto_impuesto'], $percepcion, $igv_porcentaje, $es_rq);
 
     $documentoId = $this->validateResponse($documento);
     if (ObjectUtil::isEmpty($documentoId)) {
@@ -400,9 +429,11 @@ class DocumentoNegocio extends ModeloNegocioBase
       //Eliminando archivos
       foreach ($lstDocEliminado as $d) {
         //Dando de baja en documento_adjunto
-        $resAdjunto = Documento::create()->insertarActualizarDocumentoAdjunto($d[0]['id'], null, null, null, null, 0);
-        if ($resAdjunto[0]['vout_exito'] != 1) {
-          throw new WarningException($resAdjunto[0]['vout_mensaje']);
+        if (!strpos($d[0]['id'], 't')) {
+          $resAdjunto = Documento::create()->insertarActualizarDocumentoAdjunto($d[0]['id'], null, null, null, null, 0);
+          if ($resAdjunto[0]['vout_exito'] != 1) {
+            throw new WarningException($resAdjunto[0]['vout_mensaje']);
+          }
         }
       }
       //Insertando documento_adjunto
@@ -419,13 +450,15 @@ class DocumentoNegocio extends ModeloNegocioBase
             $pos = strripos($nombreArchivo, '.');
             $ext = substr($nombreArchivo, $pos);
 
-            $hoy = date("YmdHis");
+            $hoy = date("YmdHis").substr((string)microtime(), 2, 3);;
             $nombreGenerado = $documentoId . $hoy . $usuCreacion . $ext;
             $url = __DIR__ . '/../../util/uploads/documentoAdjunto/' . $nombreGenerado;
 
             file_put_contents($url, $decode);
+            $tipo_archivoId = $d["tipo_archivoId"];
 
-            $resAdjunto = Documento::create()->insertarActualizarDocumentoAdjunto(null, $documentoId, $nombreArchivo, $nombreGenerado, $usuCreacion);
+            $contenido_archivo = $d["contenido_archivo"];
+            $resAdjunto = Documento::create()->insertarActualizarDocumentoAdjunto(null, $documentoId, $nombreArchivo, $nombreGenerado, $usuCreacion, null,$tipo_archivoId, $contenido_archivo);
             if ($resAdjunto[0]['vout_exito'] != 1) {
               throw new WarningException($resAdjunto[0]['vout_mensaje']);
             }
@@ -508,9 +541,9 @@ class DocumentoNegocio extends ModeloNegocioBase
     return Documento::create()->guardarDocumentoRelacionado($documentoId, $documentoRelacionadoId, $valorCheck, $estado, $usuarioCreacion, $relacionEar);
   }
 
-  function insertarDocumentoDocumentoEstado($documentoId, $documento_estado, $usuarioId)
+  function insertarDocumentoDocumentoEstado($documentoId, $documento_estado, $usuarioId,  $comentario = NULL)
   {
-    return Documento::create()->insertarDocumentoDocumentoEstado($documentoId, $documento_estado, $usuarioId);
+    return Documento::create()->insertarDocumentoDocumentoEstado($documentoId, $documento_estado, $usuarioId,  $comentario);
   }
 
   function ActualizarDocumentoEstadoId($documentoId, $documentoEstadoId, $usuarioId, $accion = NULL, $comentario = NULL)
@@ -1415,5 +1448,20 @@ class DocumentoNegocio extends ModeloNegocioBase
 
   function obtenerDocumentoPagoImportacionXInvoiceComercialXTipoDocumentoSUNAT($documentoId, $documentoTipoSunat) {
     return Documento::create()->obtenerDocumentoPagoImportacionXInvoiceComercialXTipoDocumentoSUNAT($documentoId, $documentoTipoSunat);
-}
+  }
+
+  public function obtenerDocumentoDocumentoEstadoXdocumentoId($documentoId, $estado){
+    return Documento::create()->obtenerDocumentoDocumentoEstadoXdocumentoId($documentoId, $estado);
+
+  }
+  
+  // public function obtenerDocumentosXAreaId($areaId, $tipoRequerimiento, $urgencia)
+  // {
+  //   return Documento::create()->obtenerDocumentosXAreaId($areaId, $tipoRequerimiento, $urgencia);
+  // }
+
+  function obtenerDocumentosRelacionadosXIngresoSalidaReserva($documentoId)
+  {
+    return Documento::create()->obtenerDocumentosRelacionadosXIngresoSalidaReserva($documentoId);
+  }  
 }

@@ -17,7 +17,7 @@ class MovimientoBien extends ModeloBase {
         return parent::create();
     }
 
-    public function guardar($movimientoId, $organizadorId, $bienId, $unidadMedidaId, $cantidad, $valorMonetario, $estado, $usuarioCreacionId,$precioTipoId=null,$utilidad=null,$utilidadPorcentaje=null,$checkIgv=1,$adValorem=0,$comentarioDetalle=null,$agenciaId=null, $agrupadorDetalle = null, $ticket = null) {
+    public function guardar($movimientoId, $organizadorId, $bienId, $unidadMedidaId, $cantidad, $valorMonetario, $estado, $usuarioCreacionId,$precioTipoId=null,$utilidad=null,$utilidadPorcentaje=null,$checkIgv=1,$adValorem=0,$comentarioDetalle=null,$agenciaId=null, $agrupadorDetalle = null, $ticket = null, $CeCoId = null, $precioPostor1 = null, $precioPostor2 = null, $precioPostor3 = null, $esCompra = null, $cantidad_solicitada = null, $postor_ganador_id = null, $checked1Moneda = null, $checked2Moneda = null, $checked3Moneda = null) {
         $this->commandPrepare("sp_movimiento_bien_guardar");
         $this->commandAddParameter(":vin_movimiento_id", $movimientoId);
         $this->commandAddParameter(":vin_organizador_id", $organizadorId);
@@ -34,8 +34,18 @@ class MovimientoBien extends ModeloBase {
         $this->commandAddParameter(":vin_ad_valorem", $adValorem);
         $this->commandAddParameter(":vin_comentario_detalle", $comentarioDetalle);
         $this->commandAddParameter(":vin_agencia_id", $agenciaId);
-        $this->commandAddParameter(":vin_agrupador_id", $agrupadorDetalle);
+        $this->commandAddParameter(":vin_agrupador_id", $agrupadorDetalle == ""?null:$agrupadorDetalle);
         $this->commandAddParameter(":vin_ticket", $ticket);
+        $this->commandAddParameter(":vin_centro_costo_id", $CeCoId);
+        $this->commandAddParameter(":vin_precio_postor1", $precioPostor1);
+        $this->commandAddParameter(":vin_precio_postor2", $precioPostor2);
+        $this->commandAddParameter(":vin_precio_postor3", $precioPostor3);
+        $this->commandAddParameter(":vin_es_compra", $esCompra);
+        $this->commandAddParameter(":vin_cantidad_solicitada", $cantidad_solicitada);
+        $this->commandAddParameter(":vin_postor_ganador_id", $postor_ganador_id);
+        $this->commandAddParameter(":vin_moneda_postor1", $checked1Moneda);
+        $this->commandAddParameter(":vin_moneda_postor2", $checked2Moneda);
+        $this->commandAddParameter(":vin_moneda_postor3", $checked3Moneda);
         return $this->commandGetData();
     }
     
@@ -149,5 +159,59 @@ class MovimientoBien extends ModeloBase {
         $this->commandAddParameter(":vin_agrupador_id", $agrupadorDetalle);
         $this->commandAddParameter(":vin_ticket", $ticket);
         return $this->commandGetData();
+    }
+
+    public function obtenerMovimientoBienXRequerimientoXAreaId($areaId, $tipoRequerimiento, $urgencia){
+        $this->commandPrepare("sp_movimiento_bien_obtenerXRQRegistradoXAreaxId");
+        $this->commandAddParameter(":vin_area_id", $areaId);
+        $this->commandAddParameter(":vin_tipo_requerimiento", $tipoRequerimiento);
+        $this->commandAddParameter(":vin_urgencia", $urgencia);
+        return $this->commandGetData();                         
+    }
+
+    public function obtenerMovimientoBienXRequerimientoXGrupoProductoxId($grupoProductoId, $tipoRequerimiento, $urgencia){
+        $this->commandPrepare("sp_movimiento_bien_obtenerXRQRegistradoXGrupoProductoxId");
+        $this->commandAddParameter(":vin_bien_tipo_id", $grupoProductoId);
+        $this->commandAddParameter(":vin_tipo_requerimiento", $tipoRequerimiento);
+        $this->commandAddParameter(":vin_urgencia", $urgencia);
+        return $this->commandGetData();                         
+    }
+
+    public function editarMovimientoBienConsolidadoRelacionadoxId($movimientoBienIds, $movimientoBienId){
+        $this->commandPrepare("sp_movimiento_bien_editarConsolidadoRelacionadoXId");
+        $this->commandAddParameter(":vin_movimiento_bien_ids", $movimientoBienIds);
+        $this->commandAddParameter(":vin_movimiento_bien_id", $movimientoBienId);
+        return $this->commandGetData(); 
+    }
+
+    public function editarMovimientoBienPostorGanadorXId($movimientoBienId, $postor_ganador_id){
+        $this->commandPrepare("sp_movimiento_bien_editarPostorGanadorXId");
+        $this->commandAddParameter(":vin_movimiento_bien_id", $movimientoBienId);
+        $this->commandAddParameter(":vin_postor_ganador_id", $postor_ganador_id);
+        return $this->commandGetData(); 
+    }
+
+    public function obtenerMovimientoBienXRelacionConsolidado($documentoId){
+        $this->commandPrepare("sp_movimiento_bienXRelacionConsolidado");
+        $this->commandAddParameter(":vin_documento_id", $documentoId);
+        return $this->commandGetData();                         
+    }
+
+    public function movimientoBienDetalleCambiarEstadoXId($movimientoBienId){
+        $this->commandPrepare("sp_movimiento_bien_detalle_cambiarEstadoXId");
+        $this->commandAddParameter(":vin_movimiento_bien_id", $movimientoBienId);
+        return $this->commandGetData();        
+    }
+
+    public function movimientoBienDetalleObtenerReservaRequerimientoXMovimientoBienId($movimientoBienId){
+        $this->commandPrepare("sp_movimiento_bien_ObtenerReservaRequerimientoXMovimientoBienId");
+        $this->commandAddParameter(":vin_movimiento_bien_id", $movimientoBienId);
+        return $this->commandGetData();        
+    }
+
+    public function movimientoBienDetalleobtenerDetalleXRequerimientoId($movimientoBienId){
+        $this->commandPrepare("sp_movimiento_bien_detalle_obtenerDetalleXRequerimientoId");
+        $this->commandAddParameter(":vin_movimiento_bien_id", $movimientoBienId);
+        return $this->commandGetData();        
     }
 }

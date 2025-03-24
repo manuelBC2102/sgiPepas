@@ -19,7 +19,7 @@ class Documento extends ModeloBase {
     }
 
   // TODO: Inicio Guardar Documento - Percepcion
-  public function guardar($documentoTipoId, $movimientoId, $personaId, $direccionId, $organizadorId, $adjuntoId, $codigo, $serie, $numero, $fechaEmision, $fechaVencimiento, $fechaTentativa, $descripcion, $comentario, $importeTotal, $importeIgv, $importeSubTotal, $estado, $monedaId, $usuarioCreacionId, $cuentaId = null, $actividadId = null, $retencionDetraccionId = null, $utilidadTotal = null, $utilidadPorcentajeTotal = null, $cambioPersonalizado = null, $tipoPago = null, $importeNoAfecto = null, $periodoId = null, $banderaProductoDuplicado = 0, $detraccionId = null, $afectoDetraccionRetencion = null, $porcentajeDetraccionRetencion = null, $montoDetraidoRetencion = null, $contOperacionTipoId = null, $esEar = 0, $importeOtros = 0, $importeExoneracion = 0, $importeIcbp = 0,$afectoAImpuesto = null,$percepcion = null, $igv_porcentaje = null) {
+  public function guardar($documentoTipoId, $movimientoId, $personaId, $direccionId, $organizadorId, $adjuntoId, $codigo, $serie, $numero, $fechaEmision, $fechaVencimiento, $fechaTentativa, $descripcion, $comentario, $importeTotal, $importeIgv, $importeSubTotal, $estado, $monedaId, $usuarioCreacionId, $cuentaId = null, $actividadId = null, $retencionDetraccionId = null, $utilidadTotal = null, $utilidadPorcentajeTotal = null, $cambioPersonalizado = null, $tipoPago = null, $importeNoAfecto = null, $periodoId = null, $banderaProductoDuplicado = 0, $detraccionId = null, $afectoDetraccionRetencion = null, $porcentajeDetraccionRetencion = null, $montoDetraidoRetencion = null, $contOperacionTipoId = null, $esEar = 0, $importeOtros = 0, $importeExoneracion = 0, $importeIcbp = 0,$afectoAImpuesto = null,$percepcion = null, $igv_porcentaje = null, $es_rq = null) {
     $this->commandPrepare("sp_documento_guardar");
     $this->commandAddParameter(":vin_documento_tipo_id", $documentoTipoId);
     $this->commandAddParameter(":vin_movimiento_id", $movimientoId);
@@ -52,7 +52,7 @@ class Documento extends ModeloBase {
     $this->commandAddParameter(":vin_periodo_id", $periodoId);
     $this->commandAddParameter(":vin_bandera_producto_duplicado", $banderaProductoDuplicado);
     $this->commandAddParameter(":vin_detraccion_id", $detraccionId);
-    $this->commandAddParameter(":vin_afecto_detraccion_retencion", $afectoDetraccionRetencion);
+    $this->commandAddParameter(":vin_afecto_detraccion_retencion", $afectoDetraccionRetencion == ""? null : $afectoDetraccionRetencion);
     $this->commandAddParameter(":vin_porcentaje_afecto", $porcentajeDetraccionRetencion);
     $this->commandAddParameter(":vin_monto_detraccion_retencion", $montoDetraidoRetencion);
     $this->commandAddParameter(":vin_cont_operacion_tipo_id", $contOperacionTipoId);
@@ -63,6 +63,7 @@ class Documento extends ModeloBase {
     $this->commandAddParameter(":vin_afecto_impuesto", $afectoAImpuesto);
     $this->commandAddParameter(":vin_percepcion", $percepcion);
     $this->commandAddParameter(":vin_igv_porcentaje", $igv_porcentaje);
+    $this->commandAddParameter(":vin_es_rq", $es_rq);
     return $this->commandGetData();
   }
 
@@ -167,11 +168,12 @@ class Documento extends ModeloBase {
         return $this->commandGetData();
     }
 
-    function insertarDocumentoDocumentoEstado($documentoId, $documento_estado, $usuarioId) {
+    function insertarDocumentoDocumentoEstado($documentoId, $documento_estado, $usuarioId, $comentario = NULL) {
         $this->commandPrepare("sp_documento_documento_estado_insertar");
         $this->commandAddParameter(":vin_documento_id", $documentoId);
         $this->commandAddParameter(":vin_documento_estado_id", $documento_estado);
         $this->commandAddParameter(":vin_usuario_id", $usuarioId);
+        $this->commandAddParameter(":vin_comentario", $comentario);
         return $this->commandGetData();
     }
 
@@ -423,7 +425,7 @@ class Documento extends ModeloBase {
         return $this->commandGetData();
     }
 
-    function insertarActualizarDocumentoAdjunto($archivoAdjuntoId, $documentoId, $nombreArchivo, $nombreGenerado, $usuarioCreacionId, $estado = null) {
+    function insertarActualizarDocumentoAdjunto($archivoAdjuntoId, $documentoId, $nombreArchivo, $nombreGenerado, $usuarioCreacionId, $estado = null, $tipo_archivoId  = null, $contenido_archivo = null) {
         $this->commandPrepare("sp_documento_adjunto_insertarActualizar");
         $this->commandAddParameter(":vin_id", $archivoAdjuntoId);
         $this->commandAddParameter(":vin_documento_id", $documentoId);
@@ -431,6 +433,8 @@ class Documento extends ModeloBase {
         $this->commandAddParameter(":vin_nombre", $nombreGenerado);
         $this->commandAddParameter(":vin_usuario_creacion", $usuarioCreacionId);
         $this->commandAddParameter(":vin_estado", $estado);
+        $this->commandAddParameter(":vin_tipo_archivoId", $tipo_archivoId);
+        $this->commandAddParameter(":vin_contenido_archivo", $contenido_archivo);
         return $this->commandGetData();
     }
 
@@ -781,6 +785,27 @@ class Documento extends ModeloBase {
 
     function obtenerTiposDocumentoXMatriz() {
         $this->commandPrepare("sp_documento_obtenerTiposDocumentoXMatriz");
+        return $this->commandGetData();
+    }
+
+    function obtenerDocumentoDocumentoEstadoXdocumentoId($documentoId, $estado) {
+        $this->commandPrepare("sp_documento_documento_estadoXDocumentoId");
+        $this->commandAddParameter(":vin_documento_id", $documentoId);
+        $this->commandAddParameter(":vin_estado", $estado);
+        return $this->commandGetData();
+    }
+
+    function obtenerDocumentosXAreaId($areaId, $tipoRequerimiento, $urgencia) {
+        $this->commandPrepare("sp_documentoXAreaId");
+        $this->commandAddParameter(":vin_area_id", $areaId);
+        $this->commandAddParameter(":vin_tipo_requerimiento", $tipoRequerimiento);
+        $this->commandAddParameter(":vin_urgencia", $urgencia);
+        return $this->commandGetData();
+    }
+
+    function obtenerDocumentosRelacionadosXIngresoSalidaReserva($documentoId) {
+        $this->commandPrepare("sp_documento_relacionado_obtenerXIngresoSalidaReserva");
+        $this->commandAddParameter(":vin_documento_id", $documentoId);
         return $this->commandGetData();
     }
 }

@@ -108,14 +108,14 @@ class Bien extends ModeloBase {
         $this->commandAddParameter(":vin_maquinaria_id", $maquinariaId);
         $this->commandAddParameter(":vin_sunat_tabla_detalle_id", $codigoSunatId);
         $this->commandAddParameter(":vin_plan_contable_id", $cuentaContableId);
-        $this->commandAddParameter(":vin_costo_inical", $costoInical);
+        $this->commandAddParameter(":vin_costo_inical", $costoInical == ""?null:$costoInical);
         $this->commandAddParameter(":vin_codigo_contable", $codigoCuenta);
         $this->commandAddParameter(":vin_codigo_internacional", $codigoInternacional);
         $this->commandAddParameter(":vin_modelo", $modelo);
         $this->commandAddParameter(":vin_serie_numero", $serieNumero);
-        $this->commandAddParameter(":vin_depreciacion_metodo", $depreacionMetodo);
-        $this->commandAddParameter(":vin_depreciacion_id", $depreciacionPorcentaje);
-        $this->commandAddParameter(":vin_fecha_adquisicion", $fechaAdquisicion);
+        $this->commandAddParameter(":vin_depreciacion_metodo", $depreacionMetodo=""?null:$depreacionMetodo);
+        $this->commandAddParameter(":vin_depreciacion_id", $depreciacionPorcentaje=""?NULL:$depreciacionPorcentaje);
+        $this->commandAddParameter(":vin_fecha_adquisicion", $fechaAdquisicion=""?NULL:$fechaAdquisicion);
         $this->commandAddParameter(":vin_fecha_inicio_uso", $fechaInicioUso);
         $this->commandAddParameter(":vin_plan_contable_gasto", $cuentaContableGasto);
         $this->commandAddParameter(":vin_plan_contable_depreciacion", $cuentaContableDepreciacion);
@@ -584,4 +584,22 @@ class Bien extends ModeloBase {
         return $this->commandGetData();
     }
 
+    public function  obtenerBienXTexto($texto1, $texto2, $empresa, $movimiento_tipoId, $bien_tipo = null){
+        $this->commandPrepare("sp_bien_obtenerActivosXMovimientoTipoId_buscarXTexto");
+        $this->commandAddParameter(":vin_texto1", $texto1);
+        $this->commandAddParameter(":vin_texto2", $texto2);
+        $this->commandAddParameter(":vin_empresa_id", $empresa);
+        $this->commandAddParameter(":vin_movimiento_tipo_id", $movimiento_tipoId);
+        $this->commandAddParameter(":vin_bien_tipo", $bien_tipo);
+        return $this->commandGetData();
+    }
+
+    public function obtenerActivosXMovimientoTipoIdBienId($empresaId, $movimientoTipoId, $bienId)
+    {
+      $this->commandPrepare("sp_bien_obtenerActivosXMovimientoTipoIdBienId");
+      $this->commandAddParameter(":vin_empresa_id", $empresaId);
+      $this->commandAddParameter(":vin_movimiento_tipo_id", $movimientoTipoId);
+      $this->commandAddParameter(":vin_bien_id", $bienId);
+      return $this->commandGetData();
+    }
 }

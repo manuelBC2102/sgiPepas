@@ -32,7 +32,9 @@
                                         <h4 class="text-dark text-uppercase">                                   
                                             <select id="cboOperacionTipo" name="cboOperacionTipo" class="select2"></select>                                  
                                         </h4>                             
-                                    </div>  
+                                    </div>
+                                    <div id="contenedorCboTipoRequerimiento" class="col-lg-4 col-md-4 col-sm-12 col-xs-12" style="margin-top: 0px;" hidden>
+                                    </div>
                                     <div class="col-lg-2 col-md-2 col-sm-4 col-xs-4"> 
                                         <div id="contenedorSerieDiv" hidden="true">                
                                             <h4 id="contenedorSerie"></h4>                      
@@ -89,7 +91,7 @@
                             <div class="col-md-2" style="margin-left: 32px;" > 
                                 <div class="col-lg-10 col-md-10 col-sm-6 col-xs-6" style="margin-top: -12px;">      
                                     <h4>                                   
-                                        <select id="cboPeriodo" name="cboPeriodo" class="select2"  onchange="onChangePeriodo()" style="width: 100%">         
+                                        <select id="cboPeriodo" name="cboPeriodo" class="select2"  onchange="onChangePeriodo()" style="width: 100%" disabled>         
                                         </select>                                  
                                     </h4>                             
                                 </div>
@@ -611,7 +613,6 @@
                             <table id="dtDocumentoRelacion" class="table table-striped table-bordered" style="width: 100%">                     
                                 <thead>                        
                                     <tr>
-                                        <th style='text-align:center;'><input type="checkbox" id="selectAll"></th>
                                         <th style='text-align:center;'>F. creación</th>                
                                         <th style='text-align:center;'>F. emisión</th>             
                                         <th style='text-align:center;'>Tipo documento</th>           
@@ -637,7 +638,7 @@
                                 </p>                    
                             </div>                  
                             <div class="col-md-6">          
-                                <button type="button" class="btn btn-primary" id="btn_agregar"><i class="fa fa-level-down"></i> Copiar selección</button>       
+                                <!-- <button type="button" class="btn btn-primary" id="btn_agregar"><i class="fa fa-level-down"></i> Copiar selección</button>        -->
                                 <button type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-close"></i> Cerrar</button>       
                             </div>             
                         </div>             
@@ -1013,7 +1014,7 @@
                 <div class="modal-content">        
                     <div class="modal-header">          
                         <button type="button" class="close" aria-hidden="true" onclick="cancelarProgramacion()">×</button>   
-                        <h4 class="modal-title"><b>Programación de pagos</b><label id="labelTotalDocumento" style="float: right; padding-right: 20px;"></label></h4>      
+                        <h4 class="modal-title"><b>Distribución de condición de pagos</b><label id="labelTotalDocumento" style="float: right; padding-right: 20px;"></label></h4>      
                     </div>            
                     <div class="modal-body">        
                         <input type="hidden" id="idPagoProgramacion" value="" />         
@@ -1029,7 +1030,7 @@
                                             </label>                             
                                         </div>                                 
                                         <!--<div class="input-group" style="float: right">-->         
-                                        <input type="text" style="float: right;width: 124.156px;" class="form-control fecha" placeholder="dd/mm/yyyy" id="fechaPago" disabled>
+                                        <input type="text" style="float: right;width: 124.156px;" class="form-control fecha" placeholder="dd/mm/yyyy" id="fechaPago">
                                         <!--    
                                         <span class="input-group-addon">                       
                                         <i class="glyphicon glyphicon-calendar"></i>           
@@ -1044,7 +1045,7 @@
                                                 Importe                                       
                                             </label>                                  
                                         </div>                                
-                                        <input  style="float: right;width: inherit;text-align: right;" type="number" id="txtImportePago" name="txtImportePago" class="form-control" required="" aria-required="true" value="0"   onkeyup="actualizarPorcentajePago()" onchange="actualizarPorcentajePago()" disabled/>       
+                                        <input  style="float: right;width: inherit;text-align: right;" type="number" id="txtImportePago" name="txtImportePago" class="form-control" required="" aria-required="true" value="0"   onkeyup="actualizarPorcentajePago()" onchange="actualizarPorcentajePago()" />       
                                     </div>                           
                                 </div>                
                             </div>                  
@@ -1304,7 +1305,98 @@
             </div>     
         </div>
 
+        <div id="modalReservaStockBien"  class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;"
+             data-backdrop="static" data-keyboard="false">       
+            <div class="modal-dialog">            
+                <div class="modal-content">               
+                    <div class="modal-header">                      
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>    
+                        <h4 class="modal-title">Verificación de stock</h4>         
+                    </div>                     
+                    <div class="modal-body">                 
+                        <div class="table">                      
+                            <table id="datatableReservaStock" class="table table-striped table-bordered">     
+                                <thead>                              
+                                    <tr>                                      
+                                        <th style='text-align:center;'>Organizador</th>                      
+                                        <th style='text-align:center;'>Unidad de medida</th>         
+                                        <th style='text-align:center;'>Stock</th>      
+                                        <th style='text-align:center;'>Reservar</th>                       
+                                    </tr>                             
+                                </thead>                         
+                            </table>                   
+                        </div>                    
+                        <div id="div_resumenStock">   
+                        </div>                 
+                    </div>                   
+                    <div class="modal-footer">       
+                        <button type="button" class="btn btn-danger" id="id" style="border-radius: 0px;" data-dismiss="modal">
+                            <i class="fa fa-close"></i>&ensp;Cerrar
+                        </button> 
+                        <button id="btn_reserva" type="button" href="#bg-info" onclick="generarReserva()" class="btn btn-purple"> <i class="fa fa-floppy-o"></i>&ensp;Guardar</button>
+                    </div>         
+                </div>         
+            </div>     
+        </div>
+        <div id="modalImagenPdfAdjuntaBien"  class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;"> 
+            <div class="modal-dialog">       
+                <div class="modal-content">      
+                    <input type="hidden" id="indiceImagenAdjuntaBien" value="0">     
+                    <div class="modal-header">                   
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>         
+                        <h4 class="modal-title">Adjuntar Archivo (Max. 3MB)</h4>          
+                    </div>                    
+                    <div class="modal-body">     
+                        <div class="row">
+                            <div id="divContenedorAdjunto" class="form-group col-md-2">
+                                &nbsp;<a href='#' onclick="$('#fileInputAdjunto').click();" class="fileUpload btn btn-purple" style="border-radius: 0px;"><i class="fa fa-cloud-upload" title="Adjuntar cotización"></i> Cargar archivo</a>
+                                <input type="file" id="fileInputAdjunto" style="display:none;">
+                                <br><br>
+                                &nbsp;<a id="text_archivoAdjunto" onclick="verImagenPdf()"></a>
+                                &nbsp;<input type ='hidden' id="nombrearchivoAdjunto"  />
+                                &nbsp;<input type ='hidden' id="base64archivoAdjunto"  />
+                            </div>                                         
+                            <div class="col-sm-12" id="divImagenAdjuntaBien" style="display: flex; justify-content: center; align-items: center;">
+                                <div id="error" style="color: red; display: none;">El archivo no es válido, tiene que ser una imagen o pdf</div>
+                            </div>
+                        </div>  <!--!--End row--> 
+                    </div>  
 
+                    <div class="modal-footer">  
+                        <a class="btn btn-danger" id="id" data-dismiss="modal"><i class="fa fa-close"></i>&ensp;Cancelar</a>           
+                        <a class="btn btn-success"  onclick="registrarImagenPdfBien()"  ><i class="fa fa-send-o"></i> Guardar</a>        
+                    </div>           
+                </div>         
+            </div>    
+        </div>
+        <div id="modalDetalleRequerimiento"  class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;"> 
+            <div class="modal-dialog">       
+                <div class="modal-content">      
+                    <div class="modal-header">                   
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>         
+                        <h4 class="modal-title">Detalle de requerimiento</h4>          
+                    </div>                    
+                    <div class="modal-body">     
+                        <div class="row">
+                            <table id="datatableDetalleReserva" class="table table-striped table-bordered">     
+                                <thead>                              
+                                    <tr>                                      
+                                        <th style='text-align:center;'>Producto</th>                      
+                                        <th style='text-align:center;'>Datos adicionales</th>         
+                                        <th style='text-align:center;'>Archivo adjunto</th>      
+                                    </tr>                             
+                                </thead>                         
+                            </table> 
+                        </div>  <!--!--End row--> 
+                    </div>  
+
+                    <div class="modal-footer">  
+                        <a class="btn btn-danger" id="id" data-dismiss="modal"><i class="fa fa-close"></i>&ensp;Cancelar</a>           
+                        <a class="btn btn-success"  onclick="registrarImagenPdfBien()"  ><i class="fa fa-send-o"></i> Guardar</a>        
+                    </div>           
+                </div>         
+            </div>    
+        </div>       
         <div id="datosImpresion" hidden="true"></div> 
         <script src="vistas/libs/imagina/js/jquery.btnswitch.js"></script>  
         <script src="vistas/com/movimiento/movimiento_form_tablas.js"></script>

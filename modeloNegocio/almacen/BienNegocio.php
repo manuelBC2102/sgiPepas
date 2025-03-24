@@ -1,6 +1,8 @@
 <?php
 
-session_start();
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
 require_once __DIR__ . '/../../modelo/almacen/Bien.php';
 require_once __DIR__ . '/../../modelo/almacen/BienTipo.php';
 require_once __DIR__ . '/../../modelo/almacen/UnidadMedida.php';
@@ -1124,4 +1126,13 @@ class BienNegocio extends ModeloNegocioBase {
         return Bien::create()->actualizarEstadoDepreciado($bienId);
     }
 
+    public function obtenerBienXTexto($texto1, $texto2, $empresa, $movimiento_tipoId, $bien_tipo = null){
+        $response = Bien::create()->obtenerBienXTexto($texto1, $texto2, $empresa, $movimiento_tipoId, $bien_tipo);
+        return $response;
+    }
+    
+    public function obtenerActivosXMovimientoTipoIdBienId($empresaId = NULL, $movimientoTipoId, $bienId)
+    {
+      return Bien::create()->obtenerActivosXMovimientoTipoIdBienId($empresaId, $movimientoTipoId, $bienId);
+    }
 }

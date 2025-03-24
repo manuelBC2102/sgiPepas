@@ -39,6 +39,8 @@
                                             <select id="cboOperacionTipo" name="cboOperacionTipo" class="select2"></select>                                  
                                         </h4>                             
                                     </div>  
+                                    <div id="contenedorCboTipoRequerimiento" class="col-lg-4 col-md-4 col-sm-12 col-xs-12" style="margin-top: 0px;" hidden>
+                                    </div>
                                     <div class="col-lg-2 col-md-2 col-sm-4 col-xs-4"> 
                                         <div id="contenedorSerieDiv" hidden="true">                
                                             <h4 id="contenedorSerie"></h4>                      
@@ -1301,7 +1303,36 @@
                 </div>         
             </div>     
         </div>
+        <div id="modalImagenPdfAdjuntaBien"  class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;"> 
+            <div class="modal-dialog">       
+                <div class="modal-content">      
+                    <input type="hidden" id="indiceImagenAdjuntaBien" value="0">     
+                    <div class="modal-header">                   
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>         
+                        <h4 class="modal-title">Adjuntar Imagen</h4>          
+                    </div>                    
+                    <div class="modal-body">     
+                        <div class="row">
+                            <div id="divContenedorAdjunto" class="form-group col-md-2">
+                                &nbsp;<a href='#' onclick="$('#fileInputAdjunto').click();" class="fileUpload btn btn-purple" style="border-radius: 0px;"><i class="fa fa-cloud-upload" title="Adjuntar cotización"></i> Cargar archivo</a>
+                                <input type="file" id="fileInputAdjunto" style="display:none;">
+                                <br><br>
+                                &nbsp;<a id="text_archivoAdjunto" onclick="verImagenPdf()"></a>
+                                &nbsp;<input type ='hidden' id="nombrearchivoAdjunto"  />
+                            </div>                                         
+                            <div class="col-sm-12" id="divImagenAdjuntaBien" style="display: flex; justify-content: center; align-items: center;">
+                                <div id="error" style="color: red; display: none;">El archivo no es válido, tiene que ser una imagen o pdf</div>
+                            </div>
+                        </div>  <!--!--End row--> 
+                    </div>  
 
+                    <div class="modal-footer">  
+                        <a class="btn btn-danger" id="id" data-dismiss="modal"><i class="fa fa-close"></i>&ensp;Cancelar</a>           
+                        <a class="btn btn-success"  onclick="registrarImagenPdfBien()"  ><i class="fa fa-send-o"></i> Guardar</a>        
+                    </div>           
+                </div>         
+            </div>    
+        </div>
         <div id="datosImpresion" hidden="true"></div> 
         <script src="vistas/libs/imagina/js/jquery.btnswitch.js"></script>  
         <script src="vistas/com/movimiento/movimiento_form_tablas_edit.js"></script> 

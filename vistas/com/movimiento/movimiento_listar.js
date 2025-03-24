@@ -66,7 +66,7 @@ $(document).ready(function () {
     iniciarDataPicker();
     cambiarAnchoBusquedaDesplegable();
 
-    if (commonVars.titulo == "Recepción") {
+    if (commonVars.titulo == "Recepción" || commonVars.titulo == "Cotizaciones") {
         $("#btnNuevo").hide();
     }
 });
@@ -87,10 +87,9 @@ function onResponseMovimientoListar(response) {
                 if (response.data.documento_tipo[0]['id'] === '190') {
                     $('#liNumeroOrdenCompra').show();
                 }
-                ;
-                onResponseObtenerMovimientoTipoColumnaLista(response.data.columna);
-                buscar(1);
                 onResponseObtenerDocumentoTipoDesplegable(response.data);
+                onResponseObtenerMovimientoTipoColumnaLista(response.data.columna);
+                buscarDesplegable();
                 dibujarLeyendaAcciones(response.data.acciones);
                 loaderClose();
                 break;
@@ -318,6 +317,16 @@ function onResponseMovimientoListar(response) {
             case 'aprobarCotizacion':
                 onResponseAprobarCotizacion(response.data);
                 loaderClose();
+                break;
+            case 'obtenerPdfOrdenCompra':
+                loaderClose();
+                if (!isEmpty(response.data.dataDocumento)) {
+                    cargarDatosImprimir(response.data);
+                } else if (!isEmpty(response.data.iReport)) {
+                    abrirDocumentoPDF(response.data, URL_BASE + '/reporteJasper/documentos/');
+                } else {
+                    abrirDocumentoPDF(response.data, 'vistas/com/movimiento/documentos/');
+                }
                 break;
         }
     } else {
@@ -956,6 +965,8 @@ function onResponseObtenerDocumentoRelacionVisualizar(data, banderaDesactivarAcc
     cargarDataDocumento(data.dataDocumento, data.configuracionEditable, data.dataDocumentoAdjunto);
     cargarDataComentarioDocumento(data.comentarioDocumento);
     datalistaComprobacion = data.listaComprobacion;
+    $("#liDataArchivoAdjuntos").hide();
+    cargarDataArchivoAdjuntos(data.dataDocumentoAdjunto);
 
     if (!isEmpty(data.detalleDocumento)) {
         cargarDetalleDocumento(data.detalleDocumento, data.dataMovimientoTipoColumna);
@@ -1038,91 +1049,91 @@ function onResponseObtenerDocumentoRelacionVisualizar(data, banderaDesactivarAcc
     }
 
     //#region Partidas
-    $("#liDataPartida").hide();
-    let contenidoArchivoJson = null;
-    if (!isEmpty(data.dataDocumentoAdjunto)) {
-        $.each(data.dataDocumentoAdjunto, function (index, item) {
-            if (!isEmpty(item.contenido_archivo)) {
-                contenidoArchivoJson = item.contenido_archivo;
-            }
-        });
-    }
+     $("#liDataPartida").hide();
+    // let contenidoArchivoJson = null;
+    // if (!isEmpty(data.dataDocumentoAdjunto)) {
+    //     $.each(data.dataDocumentoAdjunto, function (index, item) {
+    //         if (!isEmpty(item.contenido_archivo)) {
+    //             contenidoArchivoJson = item.contenido_archivo;
+    //         }
+    //     });
+    // }
 
-    let contenidoArchivo = JSON.parse(contenidoArchivoJson);
-    if (!isEmpty(contenidoArchivo)) {
-        $("#liDataPartida").show();
-        $("#divPresupuestoIdModal").html("<b>Presupuesto :&nbsp;&nbsp;</b>" + contenidoArchivo.presupuesto.codigo + " | " + contenidoArchivo.presupuesto.descripcion);
-        $("#divSubPresupuestoIdModal").html("<b>Subpresupuesto :&nbsp;&nbsp;</b>" + contenidoArchivo.subpresupuesto.codigo + " | " + contenidoArchivo.subpresupuesto.descripcion);
-        $("#divClienteIdModal").html("<b>Cliente :&nbsp;&nbsp;</b>" + contenidoArchivo.cliente);
-        $("#divFechaIdModal").html("<b>Costo al :&nbsp;&nbsp;</b>" + contenidoArchivo.fecha_costo);
-        $("#divLugarIdModal").html("<b>Lugar :&nbsp;&nbsp;</b>" + contenidoArchivo.lugar);
-        let dataPartidas = contenidoArchivo.partidas;
-        if (!isEmpty(dataPartidas)) {
-            let tablaBodyHtml = "";
-            $.each(dataPartidas, function (index, item) {
-                let labelBInicio = "<b>";
-                let labelBFin = "</b>";
-                if (item.es_padre != 1) {
-                    labelBInicio = "";
-                    labelBFin = "";
-                }
-                let metrado = (!isEmpty(item.metrado) ? formatearNumeroPorCantidadDecimales(item.metrado, 2) : "");
-                let precio = (!isEmpty(item.precio) ? formatearNumeroPorCantidadDecimales(item.precio, 2) : "");
-                let parcial = (!isEmpty(item.parcial) ? formatearNumeroPorCantidadDecimales(item.parcial, 2) : "");
+    // let contenidoArchivo = JSON.parse(contenidoArchivoJson);
+    // if (!isEmpty(contenidoArchivo)) {
+    //     $("#liDataPartida").show();
+    //     $("#divPresupuestoIdModal").html("<b>Presupuesto :&nbsp;&nbsp;</b>" + contenidoArchivo.presupuesto.codigo + " | " + contenidoArchivo.presupuesto.descripcion);
+    //     $("#divSubPresupuestoIdModal").html("<b>Subpresupuesto :&nbsp;&nbsp;</b>" + contenidoArchivo.subpresupuesto.codigo + " | " + contenidoArchivo.subpresupuesto.descripcion);
+    //     $("#divClienteIdModal").html("<b>Cliente :&nbsp;&nbsp;</b>" + contenidoArchivo.cliente);
+    //     $("#divFechaIdModal").html("<b>Costo al :&nbsp;&nbsp;</b>" + contenidoArchivo.fecha_costo);
+    //     $("#divLugarIdModal").html("<b>Lugar :&nbsp;&nbsp;</b>" + contenidoArchivo.lugar);
+    //     let dataPartidas = contenidoArchivo.partidas;
+    //     if (!isEmpty(dataPartidas)) {
+    //         let tablaBodyHtml = "";
+    //         $.each(dataPartidas, function (index, item) {
+    //             let labelBInicio = "<b>";
+    //             let labelBFin = "</b>";
+    //             if (item.es_padre != 1) {
+    //                 labelBInicio = "";
+    //                 labelBFin = "";
+    //             }
+    //             let metrado = (!isEmpty(item.metrado) ? formatearNumeroPorCantidadDecimales(item.metrado, 2) : "");
+    //             let precio = (!isEmpty(item.precio) ? formatearNumeroPorCantidadDecimales(item.precio, 2) : "");
+    //             let parcial = (!isEmpty(item.parcial) ? formatearNumeroPorCantidadDecimales(item.parcial, 2) : "");
 
-                tablaBodyHtml += "<tr>"
-                        + "<td style='text-align:left;'>" + labelBInicio + item.codigo + labelBFin + "</td>"
-                        + "<td style='text-align:left;'>" + labelBInicio + item.descripcion + labelBFin + "</td>"
-                        + "<td style='text-align:center;'>" + item.unidad_medida + "</td>"
-                        + "<td style='text-align:right;'>" + metrado + "</td>"
-                        + "<td style='text-align:right;'>" + precio + "</td>"
-                        + "<td style='text-align:right;'>" + parcial + "</td>"
-                        + "<tr>";
-            });
-            $("#dataTablePartidasModal tbody").html(tablaBodyHtml);
-        }
-        let dataTotalizados = contenidoArchivo.totalizados;
-        if (!isEmpty(dataTotalizados)) {
-            let tablaFootHtml = '';
-            if (!isEmpty(dataTotalizados.costo_directo)) {
-                tablaFootHtml += "<tr>"
-                        + "<td style='text-align:right;' colspan='5'><b>" + dataTotalizados.costo_directo.nombre + "</b></td>"
-                        + "<td style='text-align:right;'><b>" + formatearNumeroPorCantidadDecimales(dataTotalizados.costo_directo.monto, 2) + "</b></td>"
-                        + "<tr>";
-            }
+    //             tablaBodyHtml += "<tr>"
+    //                     + "<td style='text-align:left;'>" + labelBInicio + item.codigo + labelBFin + "</td>"
+    //                     + "<td style='text-align:left;'>" + labelBInicio + item.descripcion + labelBFin + "</td>"
+    //                     + "<td style='text-align:center;'>" + item.unidad_medida + "</td>"
+    //                     + "<td style='text-align:right;'>" + metrado + "</td>"
+    //                     + "<td style='text-align:right;'>" + precio + "</td>"
+    //                     + "<td style='text-align:right;'>" + parcial + "</td>"
+    //                     + "<tr>";
+    //         });
+    //         $("#dataTablePartidasModal tbody").html(tablaBodyHtml);
+    //     }
+    //     let dataTotalizados = contenidoArchivo.totalizados;
+    //     if (!isEmpty(dataTotalizados)) {
+    //         let tablaFootHtml = '';
+    //         if (!isEmpty(dataTotalizados.costo_directo)) {
+    //             tablaFootHtml += "<tr>"
+    //                     + "<td style='text-align:right;' colspan='5'><b>" + dataTotalizados.costo_directo.nombre + "</b></td>"
+    //                     + "<td style='text-align:right;'><b>" + formatearNumeroPorCantidadDecimales(dataTotalizados.costo_directo.monto, 2) + "</b></td>"
+    //                     + "<tr>";
+    //         }
 
-            if (!isEmpty(dataTotalizados.adicionales)) {
-                $.each(dataTotalizados.adicionales, function (index, item) {
-                    tablaFootHtml += "<tr>"
-                            + "<td style='text-align:right;' colspan='5'><b>" + item.nombre + "</b></td>"
-                            + "<td style='text-align:right;'><b>" + formatearNumeroPorCantidadDecimales(item.monto, 2) + "</b></td>"
-                            + "<tr>";
-                });
-            }
+    //         if (!isEmpty(dataTotalizados.adicionales)) {
+    //             $.each(dataTotalizados.adicionales, function (index, item) {
+    //                 tablaFootHtml += "<tr>"
+    //                         + "<td style='text-align:right;' colspan='5'><b>" + item.nombre + "</b></td>"
+    //                         + "<td style='text-align:right;'><b>" + formatearNumeroPorCantidadDecimales(item.monto, 2) + "</b></td>"
+    //                         + "<tr>";
+    //             });
+    //         }
 
-            if (!isEmpty(dataTotalizados.subtotal)) {
-                tablaFootHtml += "<tr>"
-                        + "<td style='text-align:right;' colspan='5'><b>" + dataTotalizados.subtotal.nombre + "</b></td>"
-                        + "<td style='text-align:right;'><b>" + formatearNumeroPorCantidadDecimales(dataTotalizados.subtotal.monto, 2) + "</b></td>"
-                        + "<tr>";
-            }
+    //         if (!isEmpty(dataTotalizados.subtotal)) {
+    //             tablaFootHtml += "<tr>"
+    //                     + "<td style='text-align:right;' colspan='5'><b>" + dataTotalizados.subtotal.nombre + "</b></td>"
+    //                     + "<td style='text-align:right;'><b>" + formatearNumeroPorCantidadDecimales(dataTotalizados.subtotal.monto, 2) + "</b></td>"
+    //                     + "<tr>";
+    //         }
 
-            if (!isEmpty(dataTotalizados.igv)) {
-                tablaFootHtml += "<tr>"
-                        + "<td style='text-align:right;' colspan='5'><b>" + dataTotalizados.igv.nombre + "</b></td>"
-                        + "<td style='text-align:right;'><b>" + formatearNumeroPorCantidadDecimales(dataTotalizados.igv.monto, 2) + "</b></td>"
-                        + "<tr>";
-            }
+    //         if (!isEmpty(dataTotalizados.igv)) {
+    //             tablaFootHtml += "<tr>"
+    //                     + "<td style='text-align:right;' colspan='5'><b>" + dataTotalizados.igv.nombre + "</b></td>"
+    //                     + "<td style='text-align:right;'><b>" + formatearNumeroPorCantidadDecimales(dataTotalizados.igv.monto, 2) + "</b></td>"
+    //                     + "<tr>";
+    //         }
 
-            if (!isEmpty(dataTotalizados.total)) {
-                tablaFootHtml += "<tr>"
-                        + "<td style='text-align:right;' colspan='5'><b>" + dataTotalizados.total.nombre + "</b></td>"
-                        + "<td style='text-align:right;'><b>" + formatearNumeroPorCantidadDecimales(dataTotalizados.total.monto, 2) + "</b></td>"
-                        + "<tr>";
-            }
-            $("#dataTablePartidasModal tfoot").html(tablaFootHtml);
-        }
-    }
+    //         if (!isEmpty(dataTotalizados.total)) {
+    //             tablaFootHtml += "<tr>"
+    //                     + "<td style='text-align:right;' colspan='5'><b>" + dataTotalizados.total.nombre + "</b></td>"
+    //                     + "<td style='text-align:right;'><b>" + formatearNumeroPorCantidadDecimales(dataTotalizados.total.monto, 2) + "</b></td>"
+    //                     + "<tr>";
+    //         }
+    //         $("#dataTablePartidasModal tfoot").html(tablaFootHtml);
+    //     }
+    // }
     //#endregion Partidas
 
 
@@ -1435,7 +1446,9 @@ function cargarDataDocumento(data, configuracionEditable = [], dataDocumentoAdju
                                     break;
                                 case 4:
                                 case 40:
-                                    valor += '<select name="cbo_' + item.documento_tipo_id + '" id="cbo_' + item.documento_tipo_id + '" class="select2"></select>';
+                                    if(!isEmpty(item.valor_id)){
+                                        valor += '<select name="cbo_' + item.documento_tipo_id + '" id="cbo_' + item.documento_tipo_id + '" class="select2"></select>';
+                                    }
                                     break;
                                 case 5:
                                     valor += '<div id ="div_persona" ><select name="cbo_' + item.documento_tipo_id + '" id="cbo_' + item.documento_tipo_id + '" class="select2">';
@@ -1536,11 +1549,13 @@ function cargarDataDocumento(data, configuracionEditable = [], dataDocumentoAdju
 
                                     break;
                                 case 4:
-                                    select2.cargar("cbo_" + item.documento_tipo_id, itemEditable.data, "id", "descripcion");
-                                    $("#cbo_" + item.documento_tipo_id).select2({
-                                        width: '100%'
-                                    });
-                                    select2.asignarValor("cbo_" + item.documento_tipo_id, itemEditable.valor_id);
+                                    if(!isEmpty(item.valor_id)){
+                                        select2.cargar("cbo_" + item.documento_tipo_id, itemEditable.data, "id", "descripcion");
+                                        $("#cbo_" + item.documento_tipo_id).select2({
+                                            width: '100%'
+                                        });
+                                        select2.asignarValor("cbo_" + item.documento_tipo_id, itemEditable.valor_id);
+                                    }
                                     break;
                                 case 5:
                                     $("#cbo_" + item.documento_tipo_id).select2({
@@ -1700,13 +1715,25 @@ function cargarDetalleDocumento(data, dataMovimientoTipoColumna) {
 
         var html = '';
         html += "<tr>";
+        var rowspan = '';
+        if (existeColumnaCodigo(27)) {
+            rowspan = "rowspan='2'";
+        }
 //        if(existeColumnaCodigo(15)){
         if (!isEmpty(dataVisualizarDocumento.organizador)) {
-            html += "<th style='text-align:center;'>Organizador</th>";
+            html += "<th style='text-align:center;'"+ rowspan +">Organizador</th>";
         }
-        html += "<th style='text-align:center;'>Cantidad</th>";
-        html += "<th style='text-align:center;'>Unidad de medida</th>";
-        html += "<th style='text-align:center;'>Producto</th> ";
+        if (existeColumnaCodigo(33)) {
+            html += "<th style='text-align:center;'>Cantidad compras</th>";
+            html += "<th style='text-align:center;'>Cantidad en reserva</th>";
+        }else{
+            html += "<th style='text-align:center;' "+ rowspan +">Cantidad</th>";
+        }
+        if (existeColumnaCodigo(34)) {
+            html += "<th style='text-align:center;'>Cantidad solicitada</th>";
+        } 
+        html += "<th style='text-align:center;' "+ rowspan +">Unidad de medida</th>";
+        html += "<th style='text-align:center;' "+ rowspan +">Producto</th> ";
         if (existeColumnaCodigo(5)) {
             html += "<th style='text-align:center;'>Precio Unitario</th>";
             html += "<th style='text-align:center;'>Total</th>";
@@ -1714,9 +1741,38 @@ function cargarDetalleDocumento(data, dataMovimientoTipoColumna) {
         if (existeColumnaCodigo(21) || existeColumnaCodigo(22)) {
             html += "<th style='text-align:center;'>Comentario</th>";
         }
-        html += "</tr>";
-        tHeadDetalle.append(html);
+        if (existeColumnaCodigo(26)) {
+            html += "<th style='text-align:center;'>CeCo</th>";
+        }
+        if (existeColumnaCodigo(33)) {
+            html += "<th style='text-align:center;'>Compras</th>";
+        }          
+        if (existeColumnaCodigo(36)) {
+            html += "<th style='text-align:center;'>Adjunto</th>";
+            html += "<th style='text-align:center;'>Reserva</th>";
+        }    
+        if (existeColumnaCodigo(27)) {
+            var moneda1 = data[0]['moneda_postor1'] == "2"? "S/":"$";
+            var moneda2 = data[0]['moneda_postor2'] == "2"? "S/":"$";;
+            var moneda3 = data[0]['moneda_postor3'] == "2"? "S/":"$";;
 
+            html += "<th style='text-align:center;' colspan='2'>Postor N° 1 <br>"+ moneda1 +"</th>";
+            html += "<th style='text-align:center;' colspan='2'>Postor N° 2 <br>"+ moneda2 +"</th>";
+            html += "<th style='text-align:center;' colspan='2'>Postor N° 3 <br>"+ moneda3 +"</th>";
+        }            
+        html += "</tr>";
+        if (existeColumnaCodigo(27)) {
+            html += "<tr>"+
+            "<th style='text-align:center;' >Precio</th>"+
+            "<th style='text-align:center;' >Sub. Total</th>"+
+            "<th style='text-align:center;' >Precio</th>"+
+            "<th style='text-align:center;' >Sub. Total</th>"+
+            "<th style='text-align:center;' >Precio</th>"+
+            "<th style='text-align:center;' >Sub. Total</th>"+
+        "</tr>";
+        }
+        
+        tHeadDetalle.append(html);
 
         //CUERPO DETALLE
         var tBodyDetalle = $('#tbodyDetalle');
@@ -1730,6 +1786,10 @@ function cargarDetalleDocumento(data, dataMovimientoTipoColumna) {
                 html += "<td>" + item.organizador + "</td>";
             }
             html += "<td style='text-align:right;'>" + item.cantidad + "</td>";
+            if (existeColumnaCodigo(34)) {
+                html += "<td style='text-align:right;'>" + redondearNumerDecimales((item.cantidad_solicitada - item.cantidad), 2) + "</td>";
+                html += "<td style='text-align:right;'>" + redondearNumerDecimales(item.cantidad_solicitada, 2) + "</td>";
+            }  
             html += "<td>" + item.unidadMedida + "</td>";
             html += "<td>" + item.bien_codigo + " | " + item.descripcion + "</td> ";
             if (existeColumnaCodigo(5)) {
@@ -1738,6 +1798,34 @@ function cargarDetalleDocumento(data, dataMovimientoTipoColumna) {
             }
             if (existeColumnaCodigo(21) || existeColumnaCodigo(22)) {
                 html += "<td style='text-align:left;'>" + item.movimientoBienComentario + "</td>";
+            }
+            if (existeColumnaCodigo(26)) {
+                html += "<td style='text-align:left;'>" + item.centro_costo_descripcion + "</td>";
+            }
+            if (existeColumnaCodigo(33)) {
+                var esCompra = item.es_compra == 1? "Si":"No";
+                html += "<td style='text-align:center;'>" + esCompra + "</td>";
+            }            
+            if (existeColumnaCodigo(36)) {
+                var adjuntoBien = item.movimiento_bien_detalle;
+                var btn_upload = "";
+                if(!isEmpty(adjuntoBien)){
+                    btn_upload = "&nbsp;<a href='#' onclick='verImagenPdf("+ index +")'><i class='fa fa-cloud-download' style='color:blue;' title='"+ adjuntoBien[0].valor_detalle +"'></i></a> <input type='hidden' id='nombreAdjunto_"+ index +"' name='nombreAdjunto_"+ index +"' value='"+ adjuntoBien[0].valor_detalle +"'/>";
+                }
+                html += "<td style='text-align:center;'>" + btn_upload + "</td>";
+                if(!isEmpty(item.estadoReserva)){
+                    html += "<td style='text-align:center;'>Si</td>";
+                }else{
+                    html += "<td style='text-align:center;'>No</td>";
+                }
+            }
+            if (existeColumnaCodigo(27)) {
+                html += "<td style='text-align:center;'>" + redondearNumerDecimales(item.precio_postor1, 2) + "</td>";
+                html += "<td style='text-align:center;'>"+ redondearNumerDecimales((item.cantidad * item.precio_postor1), 2) +"</td>";
+                html += "<td style='text-align:center;'>" + redondearNumerDecimales(item.precio_postor2, 2) + "</td>";
+                html += "<td style='text-align:center;'>"+ redondearNumerDecimales((item.cantidad * item.precio_postor2), 2) +"</td>";
+                html += "<td style='text-align:center;'>" + redondearNumerDecimales(item.precio_postor3, 2) + "</td>";
+                html += "<td style='text-align:center;'>"+ redondearNumerDecimales((item.cantidad * item.precio_postor3), 2) +"</td>";
             }
             html += "</tr>";
         });
@@ -1755,6 +1843,13 @@ function fechaArmada(valor)
     var fecha = separarFecha(valor);
 
     return fecha.dia + "/" + fecha.mes + "/" + fecha.anio;
+}
+
+function redondearNumerDecimales(monto, decimales) {
+    if (isEmpty(decimales)) {
+        decimales = 2;
+    }
+    return Math.round(monto * Math.pow(10, decimales)) / Math.pow(10, decimales);
 }
 
 function confirmarAnularMovimiento(id) {
@@ -2138,6 +2233,21 @@ function onResponseObtenerDocumentoTipoDesplegable(data) {
         $('#liAgencia').show();
     }
 
+    if (data.documento_tipo[0]['id'] === '280') {
+        $('#liArea').show();
+        $('#liTipoRequerimiento').show();
+        select2.cargar("cboArea", data.area, "id", ["descripcion"]);
+        select2.cargar("cboTipoRequerimiento", data.tipo_requerimiento, "id", ["descripcion"]);
+        if(!isEmpty(dataConfiguracionInicial.getarea)){
+            select2.asignarValor('cboArea', dataConfiguracionInicial.getarea);
+            $("#cboArea").attr('disabled', 'disabled');
+        }
+    }
+    if (data.documento_tipo[0]['id'] === '104') {
+        $('#liEstadoCotizacion').show();
+        select2.asignarValor('cboEstadoCotizacion', "16");
+    }
+    fechasActuales();
 }
 
 //here
@@ -2160,19 +2270,22 @@ function buscarDesplegable()
     var progreso = select2.obtenerValor('cboProgreso');
     var prioridad = select2.obtenerValor('cboPrioridad');
     var agencia = $('#cboAgencia').val();
+    var area = select2.obtenerValor('cboArea');
+    var requerimiento_tipo = select2.obtenerValor('cboTipoRequerimiento');
+    var estado_cotizacion = select2.obtenerValor('cboEstadoCotizacion');
 
-    llenarParametrosBusqueda(personaId, tipoDocumentoIds, serie, numero, fechaEmision, monedaId, estadoNegocio, proyecto, serieCompra, numeroCompra, responsable, progreso, prioridad, agencia);
+    llenarParametrosBusqueda(personaId, tipoDocumentoIds, serie, numero, fechaEmision, monedaId, estadoNegocio, proyecto, serieCompra, numeroCompra, responsable, progreso, prioridad, agencia, area, requerimiento_tipo, estado_cotizacion);
 
 }
 
-function llenarParametrosBusqueda(personaId, tipoDocumentoIds, serie, numero, fechaEmision, monedaId, estadoNegocio, proyecto, serieCompra, numeroCompra, responsable, progreso, prioridad, agencia) {
+function llenarParametrosBusqueda(personaId, tipoDocumentoIds, serie, numero, fechaEmision, monedaId, estadoNegocio, proyecto, serieCompra, numeroCompra, responsable, progreso, prioridad, agencia, area, requerimiento_tipo, estado_cotizacion) {
     dataDocumentoTipoDato = [];
 
     if (isEmpty(personaId) && isEmpty(tipoDocumentoIds) && isEmpty(serie) && isEmpty(numero) && isEmpty(fechaEmision)) {
         dataDocumentoTipoDato = [];
     } else {
         dataDocumentoTipoDato.push({descripcion: "Persona", tipo: "5", valor: personaId, tipoDocumento: tipoDocumentoIds, monedaId: monedaId, estadoNegocio: estadoNegocio,
-            proyecto: proyecto, serieCompra: serieCompra, numeroCompra: numeroCompra, responsable: responsable, progreso: progreso, prioridad: prioridad, agencia: agencia});
+            proyecto: proyecto, serieCompra: serieCompra, numeroCompra: numeroCompra, responsable: responsable, progreso: progreso, prioridad: prioridad, agencia: agencia, area: area, requerimiento_tipo: requerimiento_tipo, estado_cotizacion: estado_cotizacion});
         dataDocumentoTipoDato.push({descripcion: "Serie", tipo: "7", valor: serie});
         dataDocumentoTipoDato.push({descripcion: "Numero", tipo: "8", valor: numero});
         dataDocumentoTipoDato.push({descripcion: "Fecha de emision", tipo: "9", valor: fechaEmision});
@@ -2494,20 +2607,15 @@ function onResponseObtenerPersonaDireccionTexto(data) {
  */
 function abrirDocumentoPDF(data, contenedor) {
     if (isEmpty(data.pdfSunat)) {
-        var link = document.createElement("a");
-        link.download = data.nombre + '.pdf';
-        link.href = contenedor + data.pdf;
+        // window.open(data.url, '_blank');
+        const link = document.createElement('a');
+        link.href = data.url;
+        link.target = '_blank';
         link.click();
-
-
-        //ax.setAccion("eliminarPDF");
-        //ax.addParamTmp("url", data.url);
-        //ax.consumir();
-
         setTimeout(function () {
-//        eliminarPDF(data.url);
             eliminarPDF(contenedor + data.pdf);
-        }, 3000);
+        }, 4000);
+
 
     } else {
         if(data.descargar = 0){
@@ -2613,6 +2721,19 @@ function onResponseObtenerMovimientoTipoColumnaLista(data) {
                         };
                         objColumnaDefs.targets = index;
                         indexFechaCreacion = index;
+                        break;
+                    case 10: //Estado
+                        if(dataConfiguracionInicial.movimientoTipo[0]['id'] == 144 || dataConfiguracionInicial.movimientoTipo[0]['id'] == 145 || dataConfiguracionInicial.movimientoTipo[0]['id'] == 146 || dataConfiguracionInicial.movimientoTipo[0]['id'] == 147 || dataConfiguracionInicial.movimientoTipo[0]['id'] == 148){
+                            objColumnaDefs.render = function (data, type, row) {
+                                return data + ' &nbsp<i class="fa fa-info-circle" aria-hidden="true" title="'+data+" por "+row.usuario_estado+'"></i>';
+                            };
+                            objColumnaDefs.targets = index;
+                        }else{
+                            objColumnaDefs.render = function (data, type, row) {
+                                return data;
+                            };
+                            objColumnaDefs.targets = index;
+                        }
                         break;
                     case 18: //ESTADO NEGOCIO
                         objColumnaDefs.render = function (data, type, row) {
@@ -4589,4 +4710,91 @@ function cargaVoucherContable(data) {
         var table = $('#datatableVocuher').DataTable();
         table.clear().draw();
     }
+}
+
+
+function fechasActuales(){
+    var fechaActual = new Date();
+    
+    // Formatear la fecha en formato dd/mm/yyyy
+    var dia = ('0' + fechaActual.getDate()).slice(-2);
+    var mes = ('0' + (fechaActual.getMonth() + 1)).slice(-2);
+    var anio = fechaActual.getFullYear();
+    var fechaFormateada = dia + '/' + mes + '/' + anio;
+
+    // Colocar la fecha actual en el campo "finFechaEmision"
+    $('#finFechaEmision').val(fechaFormateada);
+
+    // Calcular la fecha de hace un mes
+    fechaActual.setMonth(fechaActual.getMonth() - 1);
+    var diaInicio = ('0' + fechaActual.getDate()).slice(-2);
+    var mesInicio = ('0' + (fechaActual.getMonth() + 1)).slice(-2);
+    var anioInicio = fechaActual.getFullYear();
+    var fechaInicioFormateada = diaInicio + '/' + mesInicio + '/' + anioInicio;
+
+    // Colocar la fecha de hace un mes en el campo "inicioFechaEmision"
+    $('#inicioFechaEmision').val(fechaInicioFormateada);
+}
+
+function verImagenPdf(index){
+    var nombreAdjunto = $("#nombreAdjunto_" + index).val();
+    var partesNombreAdjunto = nombreAdjunto.split('.');
+    var newWindow = window.open();
+
+    if(partesNombreAdjunto[1] == "pdf"){
+        newWindow.document.write('<html><body>');
+        newWindow.document.write('<embed width="100%" height="100%" src="' + URL_BASE + "util/uploads/imagenAdjunto/" + nombreAdjunto + '" type="application/pdf">');
+        newWindow.document.write('</body></html>');
+        newWindow.document.close();
+    }else{
+        newWindow.document.write('<html><body>');
+        newWindow.document.write('<img src="' + URL_BASE + "util/uploads/imagenAdjunto/" + nombreAdjunto + '">'); 
+        newWindow.document.write('</body></html>');
+        newWindow.document.close();
+    }
+}
+
+function imprimirOrdenCompra(documentoId, documentoTipo){
+    loaderShow();
+    ax.setAccion("obtenerPdfOrdenCompra");
+    ax.addParamTmp("documentoId", documentoId);
+    ax.addParamTmp("documento_tipo_id", documentoTipo);
+    ax.consumir();
+}
+
+function cargarDataArchivoAdjuntos(data) {
+    $("#dataListArchivosAdjuntos").empty();
+    var cuerpo_total = "";
+    var cuerpo = "";
+    var cabeza = "<table id='datatableArchivosAdjuntos' class='table table-striped table-bordered'>"
+            + "<thead>"
+            + "<tr>"
+            + "<th style='text-align:center; vertical-align: middle; width:20%'>#</th>"
+            + "<th style='text-align:center; vertical-align: middle;'>Nombre Archivo</th>"
+            + "<th style='text-align:center; vertical-align: middle; width:15%'>Acciones</th>"
+            + "</tr>"
+            + "</thead>";
+    if (!isEmpty(data)) {
+        $("#liDataArchivoAdjuntos").show();
+        $.each(data, function (index, item) {
+            // if (!item.id.match(/t/g)) {
+            //     lstDocumentoArchivos[index]["data"] = "util/uploads/documentoAdjunto/" + item.nombre;
+            // }
+
+
+            cuerpo = "<tr>"
+                    + "<td style='text-align:center;'>" + (index + 1) + "</td>"
+                    + "<td style='text-align:center;'>" + item.archivo + "</td>";
+
+            cuerpo += "<td style='text-align:center;'>"
+                    + "<a href='" + "util/uploads/documentoAdjunto/"+ item.nombre + "' download='" + item.archivo + "' target='_blank'><i class='fa fa-cloud-download' style='color:#1ca8dd;'></i></a>&nbsp;\n"
+                    + "</td>"
+                    + "</tr>";
+            cuerpo_total += cuerpo;
+        });
+    }
+    var pie = '</table>';
+    var html = cabeza + cuerpo_total + pie;
+    $("#dataListArchivosAdjuntos").append(html);
+    $("#datatableArchivosAdjuntos").DataTable();
 }

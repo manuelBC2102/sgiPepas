@@ -1,5 +1,7 @@
 <?php
-session_start();
+if (session_status() == PHP_SESSION_NONE) {
+  session_start();
+}
 
 require_once __DIR__ . '/../../modelo/almacen/Persona.php';
 require_once __DIR__ . '/../../modelo/almacen/ConsultaWs.php';
@@ -880,9 +882,9 @@ class PersonaNegocio extends ModeloNegocioBase
     return Persona::create()->buscarPersonaXNombreXDocumento($opcionId, $busqueda);
   }
 
-  public function obtenerPersonasMayorMovimiento($opcionId)
+  public function obtenerPersonasMayorMovimiento($opcionId, $area = null)
   {
-    return Persona::create()->obtenerPersonasMayorMovimiento($opcionId);
+    return Persona::create()->obtenerPersonasMayorMovimiento($opcionId, $area);
   }
 
   public function obtenerPersonasMayorOperacion($opcionId)
@@ -1129,6 +1131,46 @@ class PersonaNegocio extends ModeloNegocioBase
   }
 
 
+  public function getAllArea()
+  {
+    return Persona::create()->getAllArea();
+  }  
 
+  public function getAllAreaXUsuarioId($usuarioId)
+  {
+    return Persona::create()->getAllAreaXUsuarioId($usuarioId);
+  }  
+
+  public function obtenerPersonaXUsuarioId($usuarioId){
+    return Persona::create()->obtenerPersonaXUsuarioId($usuarioId);
+  }
   
+  public function obtenerCuentaPersona($personaId){
+    return Persona::create()->obtenerCuentaPersona($personaId);
+  }
+
+  public function obtenerCuentaPersonaXUsuarioId($usuarioId)
+  {
+    $data = Persona::create()->obtenerCuentaPersonaXUsuarioId($usuarioId);
+    return $data;
+  }
+
+  public function insertPersonaCuenta($numero, $cci, $bancoId, $tipo, $tipo_cuenta, $usuarioCreacion)
+  {
+    $responsePersonaCuenta = Persona::create()->insertPersonaCuenta($numero, $cci, $bancoId, $tipo, $tipo_cuenta, $usuarioCreacion);
+    if ($responsePersonaCuenta[0]['vout_exito'] == 1) {
+      $personaClaseId = $responsePersonaCuenta[0]['id'];
+      $this->savePersonaClaseTipo($tipo, $personaClaseId, $usuarioCreacion);
+    }
+    return $responsePersonaCuenta;
+  }
+
+  public function updatePersonaCuenta($id, $numero, $cci, $bancoId, $tipo, $tipo_cuenta)
+  {
+    $responsePersonaCuenta = Persona::create()->updatePersonaCuenta($id,$numero, $cci, $bancoId, $tipo, $tipo_cuenta);
+    if ($responsePersonaCuenta[0]['vout_exito'] == 1) {
+      $this->savePersonaClaseTipo($tipo, $id, $usuarioCreacion = 0);
+    }
+    return $responsePersonaCuenta;
+  }
 }

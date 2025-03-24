@@ -74,6 +74,22 @@ function onResponseProgramacionPagoListar(response) {
             case 'anularProgramacion':
                 onResponseAnularProgramacion(response.data);
                 break;
+            case 'subirAdjunto':
+                $("#modalAdjunto").modal('hide');
+                $("#text_archivoAdjunto").val();
+                $("#base64archivoAdjunto").val();
+                swal({
+                    title: "Documento pago actualizado",
+                    text: response.data.mensaje,
+                    type: "success",
+                    showCancelButton: false,
+                    confirmButtonColor: "#33b86c",
+                    confirmButtonText: "Aceptar",
+                    closeOnConfirm: false,
+                    closeOnCancel: false
+                });
+                buscarDocumentos();
+                break;
         }
     }
 }
@@ -97,7 +113,7 @@ function obtenerFechaActualBD() {
     mes = (mes < 10) ? ('0' + mes) : mes;
     var anio = hoy.getFullYear();
 
-    return dia+ "/" + mes + "/" + anio ;
+    return dia + "/" + mes + "/" + anio;
 }
 
 function buscarDocumentos() {
@@ -171,7 +187,7 @@ function buscarDocumentos() {
                     } else {
                         muestraFecha = data;
                     }
-                    return muestraFecha;                
+                    return muestraFecha;
                 },
                 "targets": 4
             },
@@ -185,7 +201,15 @@ function buscarDocumentos() {
                 "render": function (data, type, row) {
                     var acciones = "";
                     acciones += "<a href='#' onclick='visualizarProgramacion(" + row.id + ")'><i class='fa fa-eye' style='color:blue;' title='Ver detalle programación'></i></a>&nbsp;";
-                    if (row.estado == 1) {
+                    if (row.estado == 1 && !isEmpty(row.url_pdf)) {
+                        acciones += "<a href='#' onclick='anularProgramacion(" + row.id + ")'><i class='fa fa-ban' style='color:red;' title='Anular'></i></a>&nbsp;";
+                        if (row.tipo_operacion == 1) {
+                            acciones += "<a href='#' onclick='generarTXTPagos(" + row.id + ")'><i class='fa fa-file-text-o' style='color:green;' title='Generar txt Interbank'></i></a>&nbsp;";
+                        } else {
+                            acciones += "<a href='#' onclick='generarTXTPagosDetraccion(" + row.id + ")'><i class='fa fa-file-text-o' style='color:green;' title='Generar txt Detracciones'></i></a>&nbsp;";
+                        }
+                    }else if (row.estado == 1 && isEmpty(row.url_pdf)) {
+                        acciones += "<a href='#' onclick='subirArchivosAdjuntos(" + row.id + ")'><i class='fa fa-cloud-upload' style='color:blue;' title='Subir archivos adjuntos'></i></a>&nbsp;";
                         acciones += "<a href='#' onclick='anularProgramacion(" + row.id + ")'><i class='fa fa-ban' style='color:red;' title='Anular'></i></a>&nbsp;";
                         if (row.tipo_operacion == 1) {
                             acciones += "<a href='#' onclick='generarTXTPagos(" + row.id + ")'><i class='fa fa-file-text-o' style='color:green;' title='Generar txt Interbank'></i></a>&nbsp;";
@@ -418,15 +442,15 @@ function onResponseVisualizarProgramacion(data) {
                 },
                 {
                     "render": function (data, type, row) {
-                        return row.serie + "-"+ row.correlativo;
+                        return row.serie + "-" + row.correlativo;
                     },
                     "targets": 1
                 },
                 {
                     "render": function (data, type, row) {
-                        if(data == 2){
+                        if (data == 2) {
                             return "S/";
-                        }else{
+                        } else {
                             return "$";
                         }
                     },
@@ -509,4 +533,118 @@ function visualizarProgramacion(id) {
     ax.setAccion("visualizarProgramacion");
     ax.addParamTmp("id", id);
     ax.consumir();
+}
+
+function subirArchivosAdjuntos(id, movimientoId) {
+    $("#modalAdjunto").modal('show');
+    $("#indiceImagenAdjuntaBien").val(id);
+}
+
+
+
+//Adjuntar imagen de producto para solicitud de requerimiento
+$("#fileInputAdjunto").change(function () {
+    var fileType = this.files[0].type
+    if (this.files && this.files[0]) {
+        var validImageTypes = ["image/jpeg", "image/png", "image/gif", "image/bmp", "image/webp"];
+        // Verificar si el archivo es una imagen válida
+        if (validImageTypes.includes(this.files[0].type)) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                var img = new Image();
+                img.src = e.target.result;
+                img.onload = function () {
+                    // Redimensionar la imagen si es necesario
+                    var canvas = document.createElement("canvas");
+                    var ctx = canvas.getContext("2d");
+                    // Establecer un tamaño máximo (por ejemplo, 800px de ancho)
+                    var maxWidth = 800;
+                    var maxHeight = 800;
+                    var width = img.width;
+                    var height = img.height;
+
+                    // Calcular las nuevas dimensiones manteniendo la relación de aspecto
+                    if (width > height) {
+                        if (width > maxWidth) {
+                            height = Math.round((height *= maxWidth / width));
+                            width = maxWidth;
+                        }
+                    } else {
+                        if (height > maxHeight) {
+                            width = Math.round((width *= maxHeight / height));
+                            height = maxHeight;
+                        }
+                    }
+
+                    // Establecer las dimensiones del canvas y dibujar la imagen redimensionada
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    // Convertir la imagen redimensionada a un formato de imagen (base64)
+                    var resizedImage = canvas.toDataURL(fileType);
+                    const fileSizeMB = base64ToSize(resizedImage);
+                    if (fileSizeMB > 3) {
+                        $("#error").html("EL archivo es mayor al permitido");
+                        return false;
+                    }
+                    // var indice = $('#indiceImagenAdjuntaBien').val();
+                    // var indexTemporal = -1;
+                    // $.each(detalle, function (i, item) {
+                    //     if (parseInt(item.index) === parseInt(indice)) {
+                    //         indexTemporal = i;
+                    //         return false;
+                    //     }
+                    // });
+
+                    // if (indexTemporal != -1) {
+                    //     detalle[indexTemporal].imagenAdjuntaBien = resizedImage;
+                    // }
+                    // Establecer la imagen redimensionada en el elemento de vista previa
+                    $("#base64archivoAdjunto").val(resizedImage);
+                    $("#error").hide();
+                };
+            };
+            reader.readAsDataURL(this.files[0]); // Leer el archivo seleccionado
+            $("#text_archivoAdjunto").html($("#fileInputAdjunto").val().slice(12));
+            $("#nombrearchivoAdjunto").val($("#fileInputAdjunto").val().slice(12));
+        } else if (this.files[0].type == "application/pdf") {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                const fileSizeMB = base64ToSize(e.target.result);
+
+                $("#base64archivoAdjunto").val(e.target.result);
+            }
+            reader.readAsDataURL(this.files[0]);
+            $("#text_archivoAdjunto").html($("#fileInputAdjunto").val().slice(12));
+            $("#nombrearchivoAdjunto").val($("#fileInputAdjunto").val().slice(12));
+            $("#error").hide();
+        } else {
+            // Si no es una imagen válida, mostrar un mensaje de error y ocultar la vista previa
+            $("#error").show();
+        }
+
+    }
+});
+
+function registrarImagenPdfBien() {
+    if (!isEmpty($("#base64archivoAdjunto").val())) {
+        ax.setAccion("subirAdjunto");
+        ax.addParamTmp("programacionId", $("#indiceImagenAdjuntaBien").val());
+        ax.addParamTmp("base64archivoAdjunto", $("#base64archivoAdjunto").val());
+        ax.consumir();
+    } else {
+        mostrarAdvertencia('Seleccione un producto');
+        return;
+    }
+
+}
+
+function base64ToSize(base64) {
+    // Eliminar el encabezado de la cadena base64, si está presente
+    const base64Data = base64.split(',')[1] || base64;
+    // El tamaño en bytes de la cadena base64
+    const byteSize = (base64Data.length * 3) / 4 - (base64Data.endsWith('==') ? 2 : base64Data.endsWith('=') ? 1 : 0);
+    // Convertir el tamaño a MB
+    const sizeInMB = byteSize / (1024 * 1024); // 1 MB = 1024 * 1024 bytes
+    return sizeInMB;
 }

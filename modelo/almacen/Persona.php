@@ -200,7 +200,7 @@ class Persona extends ModeloBase {
         $this->commandAddParameter(":vin_prioridad", $prioridad);
         $this->commandAddParameter(":vin_direccion", $direccion);
         $this->commandAddParameter(":vin_usuario_creacion", $usuarioCreacion);
-        $this->commandAddParameter(":vin_persona_direccion_id", $personaDireccionId);
+        $this->commandAddParameter(":vin_persona_direccion_id", $personaDireccionId=""?null:$personaDireccionId);
         $this->commandAddParameter(":vin_direccion_tipo_id", $direccionTipoId);
         $this->commandAddParameter(":vin_ubigeo_id", $ubigeoId);
         return $this->commandGetData();
@@ -358,9 +358,10 @@ class Persona extends ModeloBase {
         return $this->commandGetData();
     }
 
-    public function obtenerPersonasMayorMovimiento($opcionId) {
+    public function obtenerPersonasMayorMovimiento($opcionId, $area) {
         $this->commandPrepare("sp_persona_obtenerXMayorMovimiento");
         $this->commandAddParameter(":vin_opcion_id", $opcionId);
+        $this->commandAddParameter(":vin_area_id", $area);
         return $this->commandGetData();
     }
 
@@ -847,7 +848,52 @@ class Persona extends ModeloBase {
         return $this->commandGetData();
     }
     
-    
+    public function getAllArea() 
+    {
+        $this->commandPrepare("sp_area_getAll");
+        return $this->commandGetData();
+    }
+
+    public function getAllAreaXUsuarioId($usuarioId) 
+    {
+        $this->commandPrepare("sp_area_getAllXUsuarioId");
+        $this->commandAddParameter(":vin_usuario_id", $usuarioId);
+        return $this->commandGetData();
+    }
+
+    public function obtenerCuentaPersona($personaId){
+        $this->commandPrepare("sp_persona_cuenta_personaXPersonaId");
+        $this->commandAddParameter(":vin_persona_id", $personaId);
+        return $this->commandGetData();
+    }
+
+    public function obtenerCuentaPersonaXUsuarioId($usuarioId) {
+        $this->commandPrepare("sp_cuenta_personaXUsuarioId");
+        $this->commandAddParameter(":vin_usuario_id", $usuarioId);
+        return $this->commandGetData();
+    }
+
+    public function insertPersonaCuenta($numero, $cci, $bancoId, $tipo, $tipo_cuenta, $usuarioCreacion) {
+        $this->commandPrepare("sp_cuenta_persona_insert");
+        $this->commandAddParameter(":vin_numero", $numero);
+        $this->commandAddParameter(":vin_cci", $cci);
+        $this->commandAddParameter(":vin_banco_id", $bancoId);
+        $this->commandAddParameter(":vin_tipo", $tipo);
+        $this->commandAddParameter(":vin_tipo_cuenta", $tipo_cuenta);
+        $this->commandAddParameter(":vin_usuario_creacion", $usuarioCreacion);
+        return $this->commandGetData();
+    }
+
+    public function updatePersonaCuenta($id, $numero, $cci, $bancoId, $tipo, $tipo_cuenta) {
+        $this->commandPrepare("sp_cuenta_persona_update");
+        $this->commandAddParameter(":vin_id", $id);
+        $this->commandAddParameter(":vin_numero", $numero);
+        $this->commandAddParameter(":vin_cci", $cci);
+        $this->commandAddParameter(":vin_banco_id", $bancoId);
+        $this->commandAddParameter(":vin_tipo", $tipo);
+        $this->commandAddParameter(":vin_tipo_cuenta", $tipo_cuenta);
+        return $this->commandGetData();
+    }
 }
 
 

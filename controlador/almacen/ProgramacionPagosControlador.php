@@ -83,4 +83,11 @@ class ProgramacionPagosControlador extends ControladorBase
         $id = $this->getParametro("id");
         return ProgramacionPagosNegocio::create()->anularProgramacion($id);
     }
+
+    public function subirAdjunto(){
+        $usuario = $this->getUsuarioId();
+        $programacionId = $this->getParametro("programacionId");
+        $base64archivoAdjunto = $this->getParametro("base64archivoAdjunto");
+        return ProgramacionPagosNegocio::create()->subirAdjunto($usuario, $programacionId, $base64archivoAdjunto);
+    }
 }

@@ -189,5 +189,16 @@ class MatrizAprobacion extends ModeloBase {
         return $this->commandGetData();
     }
     
+    public function obtenerMatrizXDocumentoTipoXArea($documentoTipoId, $areaId = null){
+        $this->commandPrepare("sp_matriz_obtenerMatrizXDocumentoTipoXArea");
+        $this->commandAddParameter(":vin_documento_tipo", $documentoTipoId);
+        $this->commandAddParameter(":vin_area_id", $areaId);
+        return $this->commandGetData();
+    }
 
+    public function validarDocumentoAprobacionUltimoNivel($documentoTipoId){
+        $this->commandPrepare("sp_documento_validar_aprobacionUltimoNivel");
+        $this->commandAddParameter(":vin_documento_tipo", $documentoTipoId);
+        return $this->commandGetData();
+    }
 }

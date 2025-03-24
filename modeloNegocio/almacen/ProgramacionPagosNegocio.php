@@ -149,7 +149,8 @@ class ProgramacionPagosNegocio extends ModeloNegocioBase
         return $respuesta;
     }
 
-    public function visualizarProgramacion($id) {
+    public function visualizarProgramacion($id)
+    {
         $ppagos = ProgramacionPagos::create()->obtener_ppagosXId($id);
         return ProgramacionPagos::create()->obtener_ppagos_detalleXId($id, $ppagos[0]['tipo_operacion']);
     }
@@ -200,12 +201,12 @@ class ProgramacionPagosNegocio extends ModeloNegocioBase
                 if ($row['tipo_abono'] == "99") {
                     $tipo_abono = Util::completarCadena($row['tipo_abono'], 10, ' ', 'D');
                     $numero_cuenta_proveedor = Util::completarCadena(($row['cci'] . $identificador . $row['tipo_doc'] . ($row['ruc'])), 38, ' ', 'D'); //revisar
-                    $nombreprovedor = Util::completarCadena(substr(Util::normaliza($row['persona_nombre']),0,60), 263, ' ', 'D');
+                    $nombreprovedor = Util::completarCadena(substr(Util::normaliza($row['persona_nombre']), 0, 60), 263, ' ', 'D');
                 } else { //09
                     $tipo_abono = '09';
                     $tipo_abono = Util::completarCadena(($tipo_abono . $row['tipo_cuenta'] . $row['moneda_abono'] . $row['numero_cuenta']), 30, ' ', 'D');
                     $numero_cuenta_proveedor = Util::completarCadena(($identificador . $row['tipo_doc']) . ($row['ruc']), 18, ' ', 'D'); //revisar
-                    $nombreprovedor = Util::completarCadena(substr(Util::normaliza($row['persona_nombre']),0,60), 263, ' ', 'D');
+                    $nombreprovedor = Util::completarCadena(substr(Util::normaliza($row['persona_nombre']), 0, 60), 263, ' ', 'D');
                 }
 
                 fwrite($file, $tipo_documento . '');
@@ -285,6 +286,40 @@ class ProgramacionPagosNegocio extends ModeloNegocioBase
         $respuesta = new stdClass();
         $respuesta->tipo_mensaje = 1;
         $respuesta->mensaje = "Anulación de programación Exitosa!";
+        return $respuesta;
+    }
+
+    public function subirAdjunto($usuario, $programacionId, $base64archivoAdjunto)
+    {
+        $decode = Util::base64ToImage($base64archivoAdjunto);
+        // Verificar los "números mágicos" de varios tipos de archivos
+        if (substr($decode, 0, 3) == "\xFF\xD8\xFF") {
+            // JPEG
+            $ext = 'jpg';
+        } elseif (substr($decode, 0, 4) == "\x89PNG") {
+            // PNG
+            $ext = 'png';
+        } elseif (substr($decode, 0, 4) == "%PDF") {
+            // PDF
+            $ext = 'pdf';
+        } elseif (substr($decode, 0, 4) == "GIF8") {
+            // GIF
+            $ext = 'gif';
+        } elseif (substr($decode, 0, 2) == "PK") {
+            // ZIP / DOCX / XLSX
+            $ext = 'zip';
+        }
+        $hoy = date("YmdHis");
+        $nombreGenerado = $programacionId . $hoy . $usuario .".". $ext;
+        $url = __DIR__ . '/../../util/uploads/documentoAdjunto/' . $nombreGenerado;
+
+        file_put_contents($url, $decode);
+
+        $ppagos = ProgramacionPagos::create()->subirAdjunto($programacionId, $nombreGenerado);
+
+        $respuesta = new stdClass();
+        $respuesta->tipo_mensaje = 1;
+        $respuesta->mensaje = "Operación Exitosa!";
         return $respuesta;
     }
 }

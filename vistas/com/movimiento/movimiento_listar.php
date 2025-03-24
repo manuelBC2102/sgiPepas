@@ -196,7 +196,7 @@
                                                 </div>
                                             </div>
                                         </li>
-                                        <li>
+                                        <li id ="liMoneda" hidden>
                                             <div class="form-group col-md-2">
                                                 <label style="color: #141719;">Moneda</label>
                                             </div>
@@ -213,6 +213,50 @@
                                                 </div>
                                             </div>
                                         </li>
+                                        <li id="liArea" hidden>
+                                            <div class="form-group col-md-2" >
+                                                <label style="color: #141719;">Area</label>
+                                            </div>
+                                            <div class="form-group col-md-10">
+                                                <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                                    <select name="cboArea" id="cboArea" class="select2">
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li id ="liTipoRequerimiento" hidden>
+                                            <div class="form-group col-md-2">
+                                                <label style="color: #141719;">Tipo Requerimiento</label>
+                                            </div>
+                                            <div class="form-group col-md-6">
+                                                <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                                    <select name="cboTipoRequerimiento" id="cboTipoRequerimiento" class="select2">
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li id="liEstadoCotizacion" hidden>
+                                            <div class="form-group col-md-2" >
+                                                <label style="color: #141719;">Area</label>
+                                            </div>
+                                            <div class="form-group col-md-10">
+                                                <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                                    <select name="cboEstadoCotizacion" id="cboEstadoCotizacion" class="select2">
+                                                        <option value="0">Seleccionar</option>
+                                                        <option value="16">Ganador</option>
+                                                        <option value="1">Registrado</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <div style="float: right">
+                                                <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" >
+                                                    <button id="btnBusqueda" type="button" href="#bg-info" onclick="limpiarBuscadores()" class="btn btn-danger"> <i class="fa fa-close"></i>Cancelar</button>
+                                                    <button id="btnBusqueda" type="button" href="#bg-info" onclick="buscarDesplegable()" class="btn btn-purple"> <i class="fa fa-search"></i>Buscar</button>                                        
+                                                </div>
+                                            </div>
+                                        </li>                                                                          
                                     </ul>
                                 </span>
                                 <input type="text" id="txtBuscar" name="txtBuscar" data-toggle="dropdown" class="dropdown-toggle form-control" placeholder="Buscar" onkeyup="buscarCriteriosBusqueda()">                                
@@ -231,7 +275,7 @@
                                 <a type="button" class="btn btn-success" onclick="actualizarBusqueda()" title="Actualizar resultados de búsqueda"><i class="ion-refresh"></i></a>
                             </div>
 
-                            <div class="input-group-btn" style="padding-left: 10px;">
+                            <!-- <div class="input-group-btn" style="padding-left: 10px;">
                                 <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
                                     <i class="ion-gear-a"></i>  <span class="caret"></span>
                                 </button>
@@ -260,7 +304,7 @@
                                         </a>
                                     </li>
                                 </ul>
-                            </div>
+                            </div> -->
                         </div>
                     </div>
                     <!--</div>-->
@@ -339,6 +383,12 @@
                                                     </span> 
                                                 </a> 
                                             </li>
+                                            <li id="liDataArchivoAdjuntos"> 
+                                                <a href="#dataArchivosAdjuntos" data-toggle="tab" aria-expanded="false" title="Documento Relacion"> 
+                                                    <span class="hidden-xs">Archivos Adjuntos 
+                                                    </span> 
+                                                </a> 
+                                            </li>                                            
                                         </ul>
                                         <div id="div_contenido_tab" class="tab-content">
                                             <div class="tab-pane active" id="dataGeneral">
@@ -480,6 +530,25 @@
                                                     </div> 
                                                 </div>
                                             </div>
+                                            <div class="tab-pane" id="dataArchivosAdjuntos">
+                                                <div class="col-lg-12 ">
+                                                    <div class="portlet" style="box-shadow: 0 0px 0px">
+                                                        <div id="portlet4" class="row">
+                                                            <div class="portlet-body">
+                                                                <div class="row" id="scroll">
+                                                                    <div class="form-group col-md-12" >
+                                                                        <div class="table">
+                                                                            <div id="dataListArchivosAdjuntos">
+
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div> 
+                                                    </div> 
+                                                </div>
+                                            </div>                                            
                                         </div>
                                     </div>
                                 </div>
@@ -519,10 +588,10 @@
 
                     <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
                         <div class="checkbox pull-left" style="margin-top: 15px;">
-                            <label class="cr-styled">
+                            <!-- <label class="cr-styled">
                                 <input onclick="getUserEmailByUserId()" type="checkbox" name="checkIncluirSelf" id="checkIncluirSelf">
                                 <i class="fa"></i> Incluir mi e-mail
-                            </label>
+                            </label> -->
                         </div>
                     </div>
 
@@ -534,7 +603,7 @@
                                                 </form>-->
                         <!--<div class="alert alert-info fade in" style="float: right">-->
                         <div class="input-group m-t-10" style="float: right">
-                            <a id="btnGuardarEdicionModal" class="btn btn-success" onclick="editarComentarioDocumento()"><i class="fa fa-save"></i> Guardar</a>
+                            <!-- <a id="btnGuardarEdicionModal" class="btn btn-success" onclick="editarComentarioDocumento()"><i class="fa fa-save"></i> Guardar</a> -->
                             <button type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-close"></i> Cerrar</button>                 
                         </div>
                         <!--</div>-->  

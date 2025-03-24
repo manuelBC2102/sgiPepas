@@ -451,7 +451,7 @@ class ActaRetiro extends ModeloBase {
 
     public function registrarFacturaProveedor( $facturadorSerie,$facturadorCorrelativo,$subtotal,$igv,$totalFactura,
     $detraccion,$netoPago,$usuarioId,$comentarioEfact,$facturarDocumento,$transportistaId,
-    $solicitudId) {
+    $solicitudId, $monedaId = null) {
         $this->commandPrepare("sp_proveedor_registrarFacturaPlanta");
         $this->commandAddParameter(":vin_serie", $facturadorSerie);
         $this->commandAddParameter(":vin_correlativo", $facturadorCorrelativo);
@@ -465,6 +465,7 @@ class ActaRetiro extends ModeloBase {
         $this->commandAddParameter(":vin_facturarDocumento", $facturarDocumento);
         $this->commandAddParameter(":vin_persona", $transportistaId);
         $this->commandAddParameter(":vin_codigo", $solicitudId);
+        $this->commandAddParameter(":vin_moneda_id", $monedaId);
         return $this->commandGetData();
     }
 
@@ -658,6 +659,14 @@ class ActaRetiro extends ModeloBase {
     public function obtenerLoteSecundarios($lote){
         $this->commandPrepare("sp_suma_mineralLoteObtener23");
         $this->commandAddParameter(":vin_lote", $lote);
+        return $this->commandGetData();
+    }
+
+    public function validarFacturacion_proveedor($persona_proveedor_id, $serie, $numero){
+        $this->commandPrepare("sp_facturacion_proveedorValidar");
+        $this->commandAddParameter(":vin_persona_proveedor_id", $persona_proveedor_id);
+        $this->commandAddParameter(":vin_serie", $serie);
+        $this->commandAddParameter(":vin_numero", $numero);
         return $this->commandGetData();
     }
         

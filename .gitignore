@@ -11,6 +11,12 @@ modelo/core/Connection.php
 # Carpeta Utils
 util/uploads/*.txt
 util/uploads/*.xls
+util/uploads/*.pdf
+util/uploads/documentoAdjunto/*.pdf
+util/uploads/documentoAdjunto/*.xlsx
+util/uploads/documentoAdjunto/*.xml
+util/uploads/documentoAdjunto/*.jpg
+util/uploads/documentoAdjunto/*.png
 util/formatos/*.xlsx
 util/formatos/documentoActivoFijo/*.xlsx
 

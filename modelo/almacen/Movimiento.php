@@ -18,7 +18,7 @@ class Movimiento extends ModeloBase {
         return parent::create();
     }
 
-    public function obtenerDocumentosXCriterios($movimientoTipoId, $documentoTipoId, $personaId, $codigo, $serie, $numero, $fechaEmisionDesde, $fechaEmisionHasta, $fechaVencimientoDesde, $fechaVencimientoHasta, $fechaTentativaDesde, $fechaTentativaHasta, $columnaOrdenar, $formaOrdenar, $elemntosFiltrados, $start, $monedaId = null, $estadoNegocioPago = null, $proyecto = null, $serieCompra = null, $numeroCompra = null, $progreso = null, $prioridad = null, $responsable = null,$agenciaIds = null) {
+    public function obtenerDocumentosXCriterios($movimientoTipoId, $documentoTipoId, $personaId, $codigo, $serie, $numero, $fechaEmisionDesde, $fechaEmisionHasta, $fechaVencimientoDesde, $fechaVencimientoHasta, $fechaTentativaDesde, $fechaTentativaHasta, $columnaOrdenar, $formaOrdenar, $elemntosFiltrados, $start, $monedaId = null, $estadoNegocioPago = null, $proyecto = null, $serieCompra = null, $numeroCompra = null, $progreso = null, $prioridad = null, $responsable = null,$agenciaIds = null, $area = null, $requerimiento_tipo = null, $estado_cotizacion = null) {
         $this->commandPrepare("sp_movimiento_obtenerXCriterios");
         //$this->commandPrepare("sp_reporte_balance");
         $this->commandAddParameter(":vin_movimiento_tipo_id", $movimientoTipoId);
@@ -37,15 +37,18 @@ class Movimiento extends ModeloBase {
         $this->commandAddParameter(":vin_forma_ordenar", $formaOrdenar);
         $this->commandAddParameter(":vin_limite", $elemntosFiltrados);
         $this->commandAddParameter(":vin_tamanio", $start);
-        $this->commandAddParameter(":vin_moneda_id", $monedaId);
-        $this->commandAddParameter(":vin_estado_negocio_pago", $estadoNegocioPago);
-        $this->commandAddParameter(":vin_proyecto", $proyecto);
+        $this->commandAddParameter(":vin_moneda_id", $monedaId == ""? null :$monedaId);
+        $this->commandAddParameter(":vin_estado_negocio_pago", $estadoNegocioPago == ""? null :$estadoNegocioPago);
+        $this->commandAddParameter(":vin_proyecto", $proyecto == ""? null :$proyecto);
         $this->commandAddParameter(":vin_serieCompra", $serieCompra);
         $this->commandAddParameter(":vin_numeroCompra", $numeroCompra);
-        $this->commandAddParameter(":vin_progreso", $progreso);
-        $this->commandAddParameter(":vin_prioridad", $prioridad);
-        $this->commandAddParameter(":vin_responsable_id", $responsable);
-        $this->commandAddParameter(":vin_agencia_id", $agenciaIds);        
+        $this->commandAddParameter(":vin_progreso", $progreso == ""? null:$progreso);
+        $this->commandAddParameter(":vin_prioridad", $prioridad == ""? null:$prioridad);
+        $this->commandAddParameter(":vin_responsable_id", $responsable == ""? null:$responsable);
+        $this->commandAddParameter(":vin_agencia_id", $agenciaIds);
+        $this->commandAddParameter(":vin_area", $area == ""? null:$area);        
+        $this->commandAddParameter(":vin_tipo_requerimiento", $requerimiento_tipo == ""? null:$requerimiento_tipo);        
+        $this->commandAddParameter(":vin_estado_cotizacion", $estado_cotizacion == ""? null:$estado_cotizacion);        
         return $this->commandGetData();
     }
 
@@ -139,7 +142,7 @@ class Movimiento extends ModeloBase {
         $this->commandPrepare("sp_documento_buscarParaCopiar");
         $this->commandAddParameter(":vin_empresa_id", $empresaId);
         $this->commandAddParameter(":vin_documento_tipo_ids", $documentoTipoIds);
-        $this->commandAddParameter(":vin_persona_id", $personaId);
+        $this->commandAddParameter(":vin_persona_id", $personaId==""?null:$personaId);
         $this->commandAddParameter(":vin_serie", $serie);
         $this->commandAddParameter(":vin_numero", $numero);
         $this->commandAddParameter(":vin_fecha_emision_desde", $fechaEmisionInicio);
@@ -164,7 +167,7 @@ class Movimiento extends ModeloBase {
         $this->commandPrepare("sp_documento_buscarParaCopiar_contador");
         $this->commandAddParameter(":vin_empresa_id", $empresaId);
         $this->commandAddParameter(":vin_documento_tipo_ids", $documentoTipoIds);
-        $this->commandAddParameter(":vin_persona_id", $personaId);
+        $this->commandAddParameter(":vin_persona_id", $personaId==""?null:$personaId);
         $this->commandAddParameter(":vin_serie", $serie);
         $this->commandAddParameter(":vin_numero", $numero);
         $this->commandAddParameter(":vin_fecha_emision_desde", $fechaEmisionInicio);
@@ -336,4 +339,9 @@ class Movimiento extends ModeloBase {
         return $this->commandGetData();
     }
 
+    public function obtenerTipoRequerimientoXMovimientoTipo($movimientoTipoId) {
+        $this->commandPrepare("sp_obtener_tipoRequerimientoXMovimientoTipo");
+        $this->commandAddParameter(":vin_movimientoTipo_id", $movimientoTipoId);
+        return $this->commandGetData();
+    }
 }

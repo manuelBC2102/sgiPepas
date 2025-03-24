@@ -272,9 +272,30 @@ function onResponseObtenerMenuXEmpresa(data) {
                         dataMenu += '<a data-toggle="reload" onclick="cargarDivIndex(\'#window\',\'' + URL_BASE + valueHijo.url + '\',\'' + idOpcion + '\',\'' + valueHijo.nombre + '\');';
                         dataMenu += ' active(' + valueHijo.id + ',' + value.id + ');"style="display: table-cell;padding-left: 0px;">';
                         dataMenu += '<i class="' + valueHijo.icono + ' "style="width: 15px;"></i>' + valueHijo.nombre + '</a></li>';
-                    }
-                    
-                    else{
+                    }else if(value.id == 381 || value.id == 396){
+                        if(valueHijo.url.indexOf('tipoInterfaz=4')!=-1){
+                            urlNuevoMov='movimiento_form_dua.php?tipoInterfaz=2';
+                        }else if(valueHijo.url.indexOf('tipoInterfaz=3')!=-1){
+                            urlNuevoMov='movimiento_form_tablas_atencion.php?tipoInterfaz=3';
+                        }else {
+                            urlNuevoMov='movimiento_form_tablas.php?tipoInterfaz=2';
+                        }
+                        
+                        idOpcion = (isEmpty(valueHijo["opcion_id"])) ? valueHijo.id : valueHijo["opcion_id"];
+                        $id_li_hijo = "m" + valueHijo.id;
+                        dataMenu += '<li id="' + $id_li_hijo + '">';
+                        if(!(valueHijo.nombre).includes("Aprobación") && !(valueHijo.nombre).includes("Documentos") && valueHijo.nombre != "Cotizaciones"){
+                            dataMenu += '<a style="display: table-cell; padding-right: 5px;"';                                 
+                            dataMenu += ' onclick="cargarDivIndex(\'#window\',\'' + URL_BASE + 'vistas/com/movimiento/'+ urlNuevoMov + '\',\'' + idOpcion + '\',\'' + valueHijo.nombre + '\');active(' + valueHijo.id + ',' + value.id + ');">';
+                            dataMenu += '<span class="badge bg-primary">+</span></a>';
+                        }else{
+                            dataMenu += '<a style="display: table-cell; padding-right: 5px;"';                                 
+                            dataMenu += ' onclick="active(' + valueHijo.id + ',' + value.id + ');">';
+                        }
+                        dataMenu += '<a data-toggle="reload" onclick="cargarDivIndex(\'#window\',\'' + URL_BASE + valueHijo.url + '\',\'' + idOpcion + '\',\'' + valueHijo.nombre + '\');';
+                        dataMenu += ' active(' + valueHijo.id + ',' + value.id + ');"style="display: table-cell;padding-left: 0px;">';
+                        dataMenu += '<i class="' + valueHijo.icono + ' "style="width: 15px;"></i>' + valueHijo.nombre + '</a></li>';
+                    }else{
                         idOpcion = (isEmpty(valueHijo["opcion_id"])) ? valueHijo.id : valueHijo["opcion_id"];
                         $id_li_hijo = "m" + valueHijo.id;
                         dataMenu += '<li id="' + $id_li_hijo + '"><a data-toggle="reload" onclick="cargarDivIndex(\'#window\',\'' + URL_BASE + valueHijo.url + '\',\'' + idOpcion + '\',\'' + valueHijo.nombre + '\');';

@@ -19,7 +19,7 @@
                             <div id="cabeceraBuscador" name="cabeceraBuscador">
                                 <div class="col-md-2">
                                     <button class="btn btn-info" onclick="abrirModalDocumentos()" style="width: 100%;">
-                                        <i class=" fa fa-plus-square-o"></i> 
+                                        <i class=" fa fa-plus-square-o"></i>
                                         Nuevo
                                     </button>
                                 </div>
@@ -187,7 +187,7 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-md-12 col-sm-12 col-xs-12" >
+                    <div class="col-md-12 col-sm-12 col-xs-12">
                         <table id="dtDocumentos" class="table table-striped table-bordered" style="width: 100%">
                             <thead>
                                 <tr>
@@ -196,7 +196,7 @@
                                     <th style='text-align:center;'>Persona</th>
                                     <th style='text-align:center;'>S/N Doc.</th>
                                     <th style='text-align:center;'>Moneda</th>
-                                    <th style='text-align:center;'>Total</th>
+                                    <th style='text-align:center;'>Monto Pago</th>
                                     <th style='text-align:center;'>Usuario</th>
                                     <th style='text-align:center;' hidden>PersonaId</th>
                                     <th style='text-align:center;' hidden>facturacionProveedorId</th>
@@ -255,6 +255,37 @@
                         <button type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-close"></i> Cerrar</button>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="modalAdjunto" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <input type="hidden" id="indiceImagenAdjuntaBien" value="0">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h4 class="modal-title">Adjuntar Archivo (Max. 3MB)</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div id="divContenedorAdjunto" class="form-group col-md-2">
+                        &nbsp;<a href='#' onclick="$('#fileInputAdjunto').click();" class="fileUpload btn btn-purple" style="border-radius: 0px;"><i class="fa fa-cloud-upload" title="Adjuntar cotización"></i> Cargar archivo</a>
+                        <input type="file" id="fileInputAdjunto" style="display:none;">
+                        <br><br>
+                        &nbsp;<a id="text_archivoAdjunto" onclick="verImagenPdf()"></a>
+                        &nbsp;<input type='hidden' id="nombrearchivoAdjunto" />
+                        &nbsp;<input type='hidden' id="base64archivoAdjunto" />
+                    </div>
+                    <div class="col-sm-12" id="divImagenAdjuntaBien" style="display: flex; justify-content: center; align-items: center;">
+                        <div id="error" style="color: red; display: none;">El archivo no es válido, tiene que ser una imagen o pdf</div>
+                    </div>
+                </div> <!--!--End row-->
+            </div>
+
+            <div class="modal-footer">
+                <a class="btn btn-danger" id="id" data-dismiss="modal"><i class="fa fa-close"></i>&ensp;Cancelar</a>
+                <a class="btn btn-success" onclick="registrarImagenPdfBien()"><i class="fa fa-send-o"></i> Guardar</a>
             </div>
         </div>
     </div>
