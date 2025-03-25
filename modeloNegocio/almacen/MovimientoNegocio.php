@@ -36,6 +36,7 @@ require_once __DIR__ . '/../../modelo/almacen/Pago.php';
 require_once __DIR__ . '/../../modelo/contabilidad/Tabla.php';
 require_once __DIR__ . '/MatrizAprobacionNegocio.php';
 require_once __DIR__ . '/../../modelo/almacen/ProgramacionPagos.php';
+require_once __DIR__ . '/../../modelo/almacen/OrdenCompraServicio.php';
 
 
 
@@ -176,6 +177,7 @@ class MovimientoNegocio extends ModeloNegocioBase
         throw new WarningException("No existe tipo de cambio para la fecha actual.");
       }
     }
+    $respuesta->centroCostoRequerimiento = CentroCostoNegocio::create()->listarCentroCostoXArea($empresaId, $usuarioId);
     return $respuesta;
   }
 
@@ -11228,6 +11230,19 @@ class MovimientoNegocio extends ModeloNegocioBase
     $tabla = $tabla . '</table>';
 
     $pdf->writeHTML($tabla, true, false, true, false, '');
+    $tablaHeight = $pdf->GetY(); 
+    $espacio = 0;  // Inicializar el espacio
+    $paginaAltura = $pdf->getPageHeight();  // Altura total de la página
+    $alturaDisponible = $paginaAltura - $tablaHeight - 20; 
+    // Ahora puedes ajustar el valor de $espacio basado en el espacio disponible
+    if ($alturaDisponible > 50) {
+      // Si hay mucho espacio, usa ese espacio
+      $espacio = $tablaHeight + 5;  // Ajusta un pequeño margen después de la tabla
+    } else {
+      // Si el espacio es limitado, podrías agregar una nueva página
+      $pdf->AddPage();
+      $espacio = 15;  // Nuevo espacio al inicio de la nueva página
+    }
     // Establecer la marca de agua de texto
     // $pdf->SetAlpha(0.3); // Opcional: Ajusta la opacidad (0 es totalmente transparente, 1 es opaco)
     // $pdf->SetFont('helvetica', 'B', 50); // Fuente, estilo y tamaño
@@ -11238,39 +11253,39 @@ class MovimientoNegocio extends ModeloNegocioBase
     // $pdf->Text(50, 120, 'Sin aprobar', false, false, true, ''); // Especifica la posición del texto
 
     $pdf->SetFont('helvetica', 'B', 6);
-    $pdf->MultiCell(18, 5, 'MONEDA:', 0, 'L', 1, 0, 105, 200, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(18, 5, 'MONEDA:', 0, 'L', 1, 0, 105, $espacio, true, 0, false, true, 5, 'M');
     $pdf->SetFont('helvetica', '', 6);
-    $pdf->MultiCell(11, 5, $dataDocumento[0]["moneda_descripcion"], 0, 'L', 1, 0, 123, 200, true, 0, false, true, 5, 'M'); //revisar
+    $pdf->MultiCell(11, 5, $dataDocumento[0]["moneda_descripcion"], 0, 'L', 1, 0, 123, $espacio, true, 0, false, true, 5, 'M'); //revisar
 
     $pdf->SetFont('helvetica', 'B', 6);
-    $pdf->MultiCell(21, 5, 'SUBTOTAL', 1, 'L', 1, 0, 134, 205, true, 0, false, true, 5, 'M');
-    $pdf->MultiCell(21, 5, 'IGV 18%', 1, 'L', 1, 0, 134, 210, true, 0, false, true, 5, 'M');
-    $pdf->MultiCell(21, 5, 'TOTAL', 1, 'L', 1, 0, 134, 215, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(21, 5, 'SUBTOTAL', 1, 'L', 1, 0, 134, $espacio + 5, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(21, 5, 'IGV 18%', 1, 'L', 1, 0, 134, $espacio + 10, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(21, 5, 'TOTAL', 1, 'L', 1, 0, 134, $espacio + 15, true, 0, false, true, 5, 'M');
 
-    $pdf->MultiCell(22, 5, number_format($dataDocumento[0]['subtotal'], 2), 1, 'R', 1, 0, 155, 205, true, 0, false, true, 5, 'M'); //Revisar
-    $pdf->MultiCell(22, 5, number_format($dataDocumento[0]['igv'], 2), 1, 'R', 1, 0, 155, 210, true, 0, false, true, 5, 'M'); //Revisar
-    $pdf->MultiCell(22, 5, number_format($dataDocumento[0]['total'], 2), 1, 'R', 1, 0, 155, 215, true, 0, false, true, 5, 'M'); //Revisar
+    $pdf->MultiCell(22, 5, number_format($dataDocumento[0]['subtotal'], 2), 1, 'R', 1, 0, 155, $espacio + 5, true, 0, false, true, 5, 'M'); //Revisar
+    $pdf->MultiCell(22, 5, number_format($dataDocumento[0]['igv'], 2), 1, 'R', 1, 0, 155, $espacio + 10, true, 0, false, true, 5, 'M'); //Revisar
+    $pdf->MultiCell(22, 5, number_format($dataDocumento[0]['total'], 2), 1, 'R', 1, 0, 155, $espacio + 15, true, 0, false, true, 5, 'M'); //Revisar
 
 
 
-    $pdf->MultiCell(90, 5, 'Intrucciones', 1, 'L', 1, 0, '', 200, true, 0, false, true, 5, 'M');
-    $pdf->MultiCell(90, 5, '* Entrega del bien con GR,OC/OS  y  FACTURA, sino no se recepcionará.', 1, 'L', 1, 0, '', 205, true, 0, false, true, 5, 'M');
-    $pdf->MultiCell(90, 5, '* En la guia de remision mencionar el numero de orden de compra', 1, 'L', 1, 0, '', 210, true, 0, false, true, 5, 'M');
-    $pdf->MultiCell(90, 5, '* incluye IGV', 1, 'L', 1, 0, '', 215, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(90, 5, 'Intrucciones', 1, 'L', 1, 0, '', $espacio, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(90, 5, '* Entrega del bien con GR,OC/OS  y  FACTURA, sino no se recepcionará.', 1, 'L', 1, 0, '', $espacio + 5, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(90, 5, '* En la guia de remision mencionar el numero de orden de compra', 1, 'L', 1, 0, '', $espacio + 10, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(90, 5, '* incluye IGV', 1, 'L', 1, 0, '', $espacio + 15, true, 0, false, true, 5, 'M');
 
 
     $pdf->SetFont('helvetica', '', 4);
-    $pdf->MultiCell(70, 3, '*El lugar de entrega se coordinará con el Comprador.', 0, 'L', 1, 0, '', 226, true, 0, false, true, 3, 'M');
-    $pdf->MultiCell(70, 3, '*Para aclaraciones contactar con el comprador :', 0, 'L', 1, 0, '', 229, true, 0, false, true, 3, 'M');
+    $pdf->MultiCell(70, 3, '*El lugar de entrega se coordinará con el Comprador.', 0, 'L', 1, 0, '', $espacio + 26, true, 0, false, true, 3, 'M');
+    $pdf->MultiCell(70, 3, '*Para aclaraciones contactar con el comprador :', 0, 'L', 1, 0, '', $espacio + 29, true, 0, false, true, 3, 'M');
     $pdf->SetFont('helvetica', 'B', 4);
-    $pdf->MultiCell(70, 3, 'Procedimiento para presentación de facturas y comprobantes de pago', 0, 'L', 1, 0, '', 232, true, 0, false, true, 3, 'M');
+    $pdf->MultiCell(70, 3, 'Procedimiento para presentación de facturas y comprobantes de pago', 0, 'L', 1, 0, '', $espacio + 32, true, 0, false, true, 3, 'M');
     $pdf->SetFont('helvetica', '', 4);
-    $pdf->MultiCell(70, 3, '• Validación SUNAT para Comprobantes electrónicos.', 10, 'L', 1, 0, '', 235, true, 0, false, true, 3, 'M');
-    $pdf->MultiCell(70, 3, '• Validación de emisor electrónicos para Comprobantes físicos.', 0, 'L', 1, 0, '', 238, true, 0, false, true, 3, 'M');
-    $pdf->MultiCell(70, 3, '• En el caso de facturas electrónicas deben remitir el archivo en pdf y xml.', 0, 'L', 1, 0, '', 241, true, 0, false, true, 3, 'M');
-    $pdf->MultiCell(70, 3, '• Copia de la Orden de Compra.', 0, 'L', 1, 0, '', 244, true, 0, false, true, 3, 'M');
-    $pdf->MultiCell(70, 3, '• Acta de conformidad y/o Liquidación en el caso de ser un servicio.', 0, 'L', 1, 0, '', 247, true, 0, false, true, 3, 'M');
-    $pdf->MultiCell(70, 3, '• Guía de remisión con sello de recepción o conformidad.', 0, 'L', 1, 0, '', 250, true, 0, false, true, 3, 'M');
+    $pdf->MultiCell(70, 3, '• Validación SUNAT para Comprobantes electrónicos.', 10, 'L', 1, 0, '', $espacio + 35, true, 0, false, true, 3, 'M');
+    $pdf->MultiCell(70, 3, '• Validación de emisor electrónicos para Comprobantes físicos.', 0, 'L', 1, 0, '', $espacio + 38, true, 0, false, true, 3, 'M');
+    $pdf->MultiCell(70, 3, '• En el caso de facturas electrónicas deben remitir el archivo en pdf y xml.', 0, 'L', 1, 0, '', $espacio + 41, true, 0, false, true, 3, 'M');
+    $pdf->MultiCell(70, 3, '• Copia de la Orden de Compra.', 0, 'L', 1, 0, '', $espacio + 44, true, 0, false, true, 3, 'M');
+    $pdf->MultiCell(70, 3, '• Acta de conformidad y/o Liquidación en el caso de ser un servicio.', 0, 'L', 1, 0, '', $espacio + 47, true, 0, false, true, 3, 'M');
+    $pdf->MultiCell(70, 3, '• Guía de remisión con sello de recepción o conformidad.', 0, 'L', 1, 0, '', $espacio + 50, true, 0, false, true, 3, 'M');
 
 
     //
@@ -11319,28 +11334,28 @@ class MovimientoNegocio extends ModeloNegocioBase
     $personaFirma3 = __DIR__ . "/../../vistas/com/persona/firmas/" . $resultadoMatriz[3]['firma_digital'] . "png";
 
     $pdf->SetFont('helvetica', 'B', 6);
-    $pdf->MultiCell(39, 5, 'Autorizado por.', 0, 'C', 1, 0, 90, 225, true, 0, false, true, 5, 'M');
-    $pdf->MultiCell(47, 8, '', 1, 'C', 1, 0, 130, 225, true, 0, false, true, 8, 'M'); //Revisar
-    $pdf->Image($personaFirma1, 47, 130, 225, 20, '', '', '', false, 300, '', false, false, 1);
+    $pdf->MultiCell(39, 5, 'Autorizado por.', 0, 'C', 1, 0, 90, $espacio + 25, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(47, 8, '', 1, 'C', 1, 0, 130, $espacio + 25, true, 0, false, true, 8, 'M'); //Revisar
+    $pdf->Image($personaFirma1, 47, 130, $espacio + 25, 20, '', '', '', false, 300, '', false, false, 1);
     $pdf->SetFont('helvetica', '', 6);
-    $pdf->MultiCell(39, 3, 'JEFE DE LOGISTICA', 0, 'C', 1, 0, 90, 230, true, 0, false, true, 3, 'M');
+    $pdf->MultiCell(39, 3, 'JEFE DE LOGISTICA', 0, 'C', 1, 0, 90, $espacio + 30, true, 0, false, true, 3, 'M');
 
     $pdf->SetFont('helvetica', 'B', 6);
-    $pdf->MultiCell(39, 5, 'Autorizado por.', 0, 'C', 1, 0, 90, 235, true, 0, false, true, 5, 'M');
-    $pdf->MultiCell(47, 8, '', 1, 'C', 0, 0, 130, 235, true, 0, false, true, 8, 'M'); //Revisar
+    $pdf->MultiCell(39, 5, 'Autorizado por.', 0, 'C', 1, 0, 90, $espacio + 35, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(47, 8, '', 1, 'C', 0, 0, 130, $espacio + 35, true, 0, false, true, 8, 'M'); //Revisar
     $pdf->SetFont('helvetica', '', 6);
-    $pdf->MultiCell(39, 3, 'COMPRADOR', 0, 'C', 1, 0, 90, 240, true, 0, false, true, 3, 'M');
+    $pdf->MultiCell(39, 3, 'COMPRADOR', 0, 'C', 1, 0, 90, $espacio + 40, true, 0, false, true, 3, 'M');
 
     $pdf->SetFont('helvetica', 'B', 6);
-    $pdf->MultiCell(39, 5, 'Autorizado por.', 0, 'C', 1, 0, 90, 245, true, 0, false, true, 5, 'M');
-    $pdf->MultiCell(47, 8, '', 1, 'C', 0, 0, 130, 245, true, 0, false, true, 8, 'M'); //Revisar
+    $pdf->MultiCell(39, 5, 'Autorizado por.', 0, 'C', 1, 0, 90, $espacio + 45, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(47, 8, '', 1, 'C', 0, 0, 130, $espacio + 45, true, 0, false, true, 8, 'M'); //Revisar
     $pdf->SetFont('helvetica', '', 6);
-    $pdf->MultiCell(39, 3, 'GERENTE GENERAL', 0, 'C', 1, 0, 90, 250, true, 0, false, true, 3, 'M');
+    $pdf->MultiCell(39, 3, 'GERENTE GENERAL', 0, 'C', 1, 0, 90, $espacio + 50, true, 0, false, true, 3, 'M');
 
     $pdf->SetFont('helvetica', '', 4);
-    $pdf->MultiCell(150, 2, 'El horario de recepción es de lunes a viernes de 8:00 am a 1:00 pm; los documentos que envíen después de este horario o los días sábados, domingos y feriados serán considerados como recibidos a partir', 0, 'L', 1, 0, '', 260, true, 0, false, true, 2, 'M');
-    $pdf->MultiCell(150, 2, 'del siguiente día hábil y deberán ser remitidos a la siguiente dirección de correo electrónico ', 0, 'L', 1, 0, '', 262, true, 0, false, true, 2, 'M');
-    $pdf->MultiCell(150, 2, 'El pago es semanal todos los jueves, se programarán todos los comprobantes que cumplan con el procedimiento solicitado y hayan sido emitidos y registrados hasta el martes previo.', 0, 'L', 1, 0, '', 264, true, 0, false, true, 2, 'M');
+    $pdf->MultiCell(150, 2, 'El horario de recepción es de lunes a viernes de 8:00 am a 1:00 pm; los documentos que envíen después de este horario o los días sábados, domingos y feriados serán considerados como recibidos a partir', 0, 'L', 1, 0, '', $espacio + 55, true, 0, false, true, 2, 'M');
+    $pdf->MultiCell(150, 2, 'del siguiente día hábil y deberán ser remitidos a la siguiente dirección de correo electrónico ', 0, 'L', 1, 0, '', $espacio + 57, true, 0, false, true, 2, 'M');
+    $pdf->MultiCell(150, 2, 'El pago es semanal todos los jueves, se programarán todos los comprobantes que cumplan con el procedimiento solicitado y hayan sido emitidos y registrados hasta el martes previo.', 0, 'L', 1, 0, '', $espacio + 59, true, 0, false, true, 2, 'M');
 
 
     $html1 = '<strong>1. Generalidades y Objeto</strong> <br>
@@ -11416,6 +11431,37 @@ class MovimientoNegocio extends ModeloNegocioBase
     12.3. Las obligaciones de esta Cláusula 12 continuarán en vigor por un período de 5 (cinco) años a partir de la fecha de terminación del último período de garantía de calidad. <br>
     12.4. Excepto cuando se disponga algo diferente en la OC, el PROVEEDOR deberá devolver o destruir, según le indique el COMPRADOR, toda la información confidencial del COMPRADOR que tuviera en su poder. <br><br>';
 
+    $pdf->AddPage();
+
+    $distribucionPagos = OrdenCompraServicio::create()->obtenerDistribucionPagos($documentoId);
+    $cont_distribucionPagos = 0;
+    $pdf->SetFont('helvetica', '', 7);
+    $tabla_distribucionPagos = '<table cellspacing="0" cellpadding="1" border="1">
+        <tr style="background-color:rgb(254, 191, 0);">
+            <th style="text-align:center;vertical-align:middle;" width="5%"><b>Item</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="35%"><b>Fecha pago</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="30%"><b>Importe</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="30%"><b>Porcentaje</b></th>
+        </tr>
+    ';
+    if (!ObjectUtil::isEmpty($distribucionPagos)) {
+      foreach ($distribucionPagos as $index => $item) {
+        $cont_distribucionPagos++;
+
+        $tabla_distribucionPagos = $tabla_distribucionPagos . '<tr>'
+          . '<td style="text-align:center"  width="5%">' . ($index + 1) . '</td>'
+          . '<td align="center" width="35%">' . $item['fecha_pago'] . '</td>'
+          . '<td style="text-align:center"  width="30%">' . number_format($item['importe'], 2) . '</td>'
+          . '<td style="text-align:center"  width="30%">' . number_format($item['porcentaje'], 2) . '</td>'
+          . '</tr>';
+      }
+    }
+    $tabla_distribucionPagos = $tabla_distribucionPagos . '</table>';
+
+    $tabla_distribucionPagosTitulo = '<div style="text-align: center;"> <h3>DISTRIBUCIÓN DE PAGOS</h3></div> <div style="text-align: justify;"></div>';
+    $pdf->writeHTML($tabla_distribucionPagosTitulo, true, false, true, false, '');
+
+    $pdf->writeHTML($tabla_distribucionPagos, true, false, true, false, '');
 
     $html_total = '<div style="text-align: center;"> <h3>CONDICIONES GENERALES DE COMPRA</h3></div> <div style="text-align: justify;">' . $html1 . $html2 . $html3 . $html4 . $html5 . $html6 . $html7 . $html8 . $html9 . $html10 . $html11 . $html12 . '</div>';
     $pdf->AddPage();

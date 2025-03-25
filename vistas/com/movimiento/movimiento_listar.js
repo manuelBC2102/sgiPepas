@@ -4743,7 +4743,7 @@ function verImagenPdf(index){
 
     if(partesNombreAdjunto[1] == "pdf"){
         newWindow.document.write('<html><body>');
-        newWindow.document.write('<embed width="100%" height="100%" src="' + URL_BASE + "util/uploads/imagenAdjunto/" + nombreAdjunto + '" type="application/pdf">');
+        newWindow.document.write('<embed width="100%" height="100%" src="' + URL_BASE + "util/uploads/documentoAdjunto/" + nombreAdjunto + '" type="application/pdf">');
         newWindow.document.write('</body></html>');
         newWindow.document.close();
     }else{

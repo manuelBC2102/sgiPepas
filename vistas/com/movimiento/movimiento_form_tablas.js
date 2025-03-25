@@ -1842,7 +1842,7 @@ function llenarTablaDetalle(data) {
         cargarBienDetalleCombo(data.bien, i);
         cargarPrecioTipoDetalleCombo(data.precioTipo, i);
         cargarAgenciaDetalleCombo(data.dataAgencia, i);
-        cargarCeCoDetalleCombo(data.centroCosto, i);
+        cargarCeCoDetalleCombo(data.centroCostoRequerimiento, i);
         var compras = [{"id":1, "descripcion": "Si"},{"id":2, "descripcion": "No"}];
         cargarComprasDetalleCombo(compras, i);
         inicializarFechaVencimiento(i);
@@ -1890,7 +1890,7 @@ function verTodasFilas() {
         cargarUnidadMedidadDetalleCombo(i);
         cargarBienDetalleCombo(dataCofiguracionInicial.bien, i);
         cargarPrecioTipoDetalleCombo(dataCofiguracionInicial.precioTipo, i);
-        cargarCeCoDetalleCombo(dataCofiguracionInicial.centroCosto, i);
+        cargarCeCoDetalleCombo(dataCofiguracionInicial.centroCostoRequerimiento, i);
         var compras = [{"id":1, "descripcion": "Si"},{"id":2, "descripcion": "No"}];
         cargarComprasDetalleCombo(compras, i);
         inicializarFechaVencimiento(i);
@@ -2509,7 +2509,7 @@ function agregarCantidadDetalleTabla(i) {
         disabled = 'disabled';
     }
     var $html = "<div class=\"input-group col-lg-12 col-md-12 col-sm-12 col-xs-12\">" +
-            "<input type=\"number\" id=\"txtCantidad_" + i + "\" name=\"txtCantidad_" + i + "\" class=\"form-control\" required=\"\" aria-required=\"true\" value=\"1\" style=\"text-align: right;\" onchange=\"hallarSubTotalDetalle(" + i + ");hallarStockSaldo(" + i + ");\" onkeyup =\"hallarSubTotalDetalle(" + i + ");hallarStockSaldo(" + i + ");\" "+ disabled +"/></div><input type=\"hidden\" id=\"txtmovimiento_bien_ids_" + i + "\" name=\"txtmovimiento_bien_ids_" + i + "\" />";
+            "<input type=\"number\" id=\"txtCantidad_" + i + "\" name=\"txtCantidad_" + i + "\" class=\"form-control\" required=\"\" aria-required=\"true\" value=\"0\" style=\"text-align: right;\" onchange=\"hallarSubTotalDetalle(" + i + ");hallarStockSaldo(" + i + ");\" onkeyup =\"hallarSubTotalDetalle(" + i + ");hallarStockSaldo(" + i + ");\" "+ disabled +"/></div><input type=\"hidden\" id=\"txtmovimiento_bien_ids_" + i + "\" name=\"txtmovimiento_bien_ids_" + i + "\" />";
 
     return $html;
 }
@@ -2940,7 +2940,7 @@ function validarFormularioDetalleTablas(indice) {
                     break;
                 case 12:// CANTIDAD
                     if ((isEmpty(valor) || !esNumero(valor) || valor <= 0) && validar) {
-                        $('#txtCantidad_' + indice).val(1);
+                        $('#txtCantidad_' + indice).val("0");
                         mostrarValidacionLoaderClose("Debe ingresar: " + item.descripcion + " válida, en fila " + (indice + 1));
                         correcto = false;
                     }
@@ -3076,7 +3076,7 @@ function limpiarFilaDetalleFormulario(indice) {
                     $("#cboBien_" + indice).select2({width: alturaBienTD + 'px'});
                     break;
                 case 12:
-                    document.getElementById("txtCantidad_" + indice).value = '1';
+                    document.getElementById("txtCantidad_" + indice).value = '0';
                     break;
                 case 13:
                     select2.asignarValor('cboUnidadMedida_' + indice, '');
@@ -3401,7 +3401,7 @@ function onResponseObtenerDocumentoTipoDato(data) {
                     break;
                 case 9:
                     fechaEmisionId = item.id;
-                    html += '<input type="text" class="form-control fecha" placeholder="dd/mm/yyyy" id="datepicker_' + item.id + '"  onchange="obtenerTipoCambioDatepicker();">' +
+                    html += '<input type="text" class="form-control fecha" placeholder="dd/mm/yyyy" id="datepicker_' + item.id + '"  onchange="obtenerTipoCambioDatepicker();" disabled>' +
                             '<span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>';
                     break;
                 case 3:
@@ -4167,7 +4167,7 @@ function eliminarDetalleFormularioTabla(indice) {
     cargarBienDetalleCombo(dataCofiguracionInicial.bien, nroFilasReducida);
     cargarPrecioTipoDetalleCombo(dataCofiguracionInicial.precioTipo, nroFilasReducida);
     cargarAgenciaDetalleCombo(dataCofiguracionInicial.dataAgencia, nroFilasReducida);
-    cargarCeCoDetalleCombo(dataCofiguracionInicial.centroCosto, nroFilasReducida);
+    cargarCeCoDetalleCombo(dataCofiguracionInicial.centroCostoRequerimiento, nroFilasReducida);
     var compras = [{"id":1, "descripcion": "Si"},{"id":2, "descripcion": "No"}];
     cargarComprasDetalleCombo(compras, nroFilasReducida);
     inicializarFechaVencimiento(nroFilasReducida);
@@ -7787,7 +7787,7 @@ function agregarFila() {
         cargarBienDetalleCombo(dataCofiguracionInicial.bien, nroFilasReducida);
         cargarPrecioTipoDetalleCombo(dataCofiguracionInicial.precioTipo, nroFilasReducida);
         cargarAgenciaDetalleCombo(dataCofiguracionInicial.dataAgencia, nroFilasReducida);
-        cargarCeCoDetalleCombo(dataCofiguracionInicial.centroCosto, nroFilasReducida);
+        cargarCeCoDetalleCombo(dataCofiguracionInicial.centroCostoRequerimiento, nroFilasReducida);
         var compras = [{"id":1, "descripcion": "Si"},{"id":2, "descripcion": "No"}];
         cargarComprasDetalleCombo(compras, nroFilasReducida);        
         // nroFilasInicial++;

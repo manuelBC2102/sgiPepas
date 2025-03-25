@@ -59,4 +59,11 @@ class CentroCosto extends ModeloBase {
         $this->commandAddParameter(":vin_empresa_id", $empresaId);
         return $this->commandGetData();
     }
+
+    public function listarCentroCostoXArea($empresaId, $areaId) {
+        $this->commandPrepare(" sp_centro_costo_listarxEmpresaXAreaId");
+        $this->commandAddParameter(":vin_empresa_id", $empresaId);
+        $this->commandAddParameter(":vin_area_id", $areaId);
+        return $this->commandGetData();
+    }
 }

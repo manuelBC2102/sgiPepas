@@ -39,5 +39,11 @@ class OrdenCompraServicio extends ModeloBase
         return $this->commandGetData();
     }
 
+    public function obtenerDistribucionPagos($documentoId)
+    {
+        $this->commandPrepare("sp_distribucion_pago_obtenerXDocumentoId");
+        $this->commandAddParameter(":vin_documento_id", $documentoId);
+        return $this->commandGetData();
+    }
 
 }

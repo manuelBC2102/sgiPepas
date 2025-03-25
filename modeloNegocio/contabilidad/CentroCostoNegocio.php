@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../../modelo/contabilidad/CentroCosto.php';
 require_once __DIR__ . '/../../modeloNegocio/core/ModeloNegocioBase.php';
 require_once __DIR__ . '/../../modeloNegocio/almacen/MonedaNegocio.php';
+require_once __DIR__ . '/../../modeloNegocio/almacen/PersonaNegocio.php';
 
 class CentroCostoNegocio extends ModeloNegocioBase {
 
@@ -49,6 +50,23 @@ class CentroCostoNegocio extends ModeloNegocioBase {
 
     public function listarCentroCosto($empresaId) {
         return CentroCosto::create()->listarCentroCosto($empresaId);
+    }
+
+    public function listarCentroCostoXArea($empresaId, $usuarioId) {
+        $dataPerfil = PerfilNegocio::create()->obtenerPerfilXUsuarioId($usuarioId);
+        $mostrarCeco = 0;
+        foreach ($dataPerfil as $itemPerfil) {
+          if ($itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_TI_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_JEFE_LOGISTA || $itemPerfil['id'] == PerfilNegocio::PERFIL_LOGISTA) {
+            $mostrarCeco = 1;
+          }
+        }
+
+        if($mostrarCeco == 0){
+            $areaId = PersonaNegocio::create()->getAllAreaXUsuarioId($usuarioId)[0]['id'];
+            return CentroCosto::create()->listarCentroCostoXArea($empresaId, $areaId);
+        }else{
+            return CentroCosto::create()->listarCentroCosto($empresaId);
+        }
     }
 
 }
