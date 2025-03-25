@@ -35,6 +35,9 @@ require_once __DIR__ . '/../../modelo/almacen/Actividad.php';
 require_once __DIR__ . '/../../modelo/almacen/Pago.php';
 require_once __DIR__ . '/../../modelo/contabilidad/Tabla.php';
 require_once __DIR__ . '/MatrizAprobacionNegocio.php';
+require_once __DIR__ . '/../../modelo/almacen/ProgramacionPagos.php';
+
+
 
 $objPHPExcel = null;
 $objWorkSheet = null;
@@ -85,7 +88,7 @@ class MovimientoNegocio extends ModeloNegocioBase
       throw new WarningException("El movimiento no cuenta con tipos de documentos asociados");
     }
 
-    if($respuesta->documento_tipo[0]["id"] == 280){
+    if($respuesta->documento_tipo[0]["id"] == Configuraciones::SOLICITUD_REQUERIMIENTO || $respuesta->documento_tipo[0]["id"] == Configuraciones::REQUERIMIENTO_AREA){
       //validar perfil
       $mostrarAccNuevo = 0;
       $dataPerfil = PerfilNegocio::create()->obtenerPerfilXUsuarioId($usuarioId);
@@ -513,7 +516,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     if ($documentoTipoId == Configuraciones::GENERAR_COTIZACION) {
       $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::COTIZACIONES,$detalle, $respuesta, $periodoId, 160, 1);
       //generamos OC
-      $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::ORDEN_COMPRA,$detalle, $respuesta, $periodoId, 385, 2, $listaPagoProgramacion);
+      $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::ORDEN_COMPRA,$detalle, $respuesta, $periodoId, 395, 2, $listaPagoProgramacion);
 
     }
 
@@ -11617,10 +11620,10 @@ class MovimientoNegocio extends ModeloNegocioBase
     });
     $filtradosTipo4 = array_values($filtradosTipo4);
 
-    $filtradosTipo47 = array_filter($camposDinamicosConsolidado, function($item) {
-      return $item['tipo'] === "47";
-    });
-    $filtradosTipo47 = array_values($filtradosTipo47);    
+    // $filtradosTipo47 = array_filter($camposDinamicosConsolidado, function($item) {
+    //   return $item['tipo'] === "47";
+    // });
+    // $filtradosTipo47 = array_values($filtradosTipo47);    
     
     $sumaMontosprecioPostor1  = array_reduce($detalle, function ($acumulador, $seleccion) {
       return $acumulador + ($seleccion['precioPostor1'] * $seleccion['cantidad']);
@@ -11672,20 +11675,17 @@ class MovimientoNegocio extends ModeloNegocioBase
       foreach ($configuraciones as $item) {
         switch ($item['tipo']) {
           case 4:
-            
-            break;
-          case 4:
             if($item['descripcion'] == "Condición de pago"){
               $valor = null;
-              if($documentoTipoId == Configuraciones::COTIZACIONES && $filtradosTipo4[0]['valor'] == 503){//credito
+              if($documentoTipoId == Configuraciones::COTIZACIONES && $filtradosTipo4[0]['valor'] == 502){//credito
                 $valor = 472;
-              }else if($documentoTipoId == Configuraciones::COTIZACIONES && $filtradosTipo4[0]['valor'] == 502){//contado
+              }else if($documentoTipoId == Configuraciones::COTIZACIONES && $filtradosTipo4[0]['valor'] == 501){//contado
                 $valor = 471;
               }
-              if($documentoTipoId == Configuraciones::ORDEN_COMPRA && $filtradosTipo4[0]['valor'] == 503){//credito
+              if($documentoTipoId == Configuraciones::ORDEN_COMPRA && $filtradosTipo4[0]['valor'] == 502){//credito
+                $valor = 469;
+              }else if($documentoTipoId == Configuraciones::ORDEN_COMPRA && $filtradosTipo4[0]['valor'] == 501){//contado
                 $valor = 468;
-              }else if($documentoTipoId == Configuraciones::ORDEN_COMPRA && $filtradosTipo4[0]['valor'] == 502){//contado
-                $valor = 467;
               }
               $camposDinamicosCotizacion[] = array(
                 "id" => $item['id'],
@@ -11702,7 +11702,7 @@ class MovimientoNegocio extends ModeloNegocioBase
               "id" => $item['id'],
               "tipo" => $item['tipo'],
               "opcional" => "0",
-              "descripcion" => $itemTipo23['descripcion'],
+              "descripcion" => $item['descripcion'],
               "codigo" => $itemTipo23['codigo'],
               "valor" => $itemTipo23['valor']
             );
@@ -11786,6 +11786,7 @@ class MovimientoNegocio extends ModeloNegocioBase
               "codigo" => $itemTipo23['codigo'],
               "valor" => $itemTipo23['valor']
             );
+            break; 
           case 46:
             $camposDinamicosCotizacion[] = array(
               "id" => $item['id'],
@@ -11797,15 +11798,19 @@ class MovimientoNegocio extends ModeloNegocioBase
             );
             break; 
           case 47:
+            $cuenta_persona = ProgramacionPagos::create()->obtenerCuentaPrincipalxPersonaId($itemTipo23['valor'], 1, $monedaId);
+            if(ObjectUtil::isEmpty($cuenta_persona)){
+              throw new WarningException("No existen registros de cuentas para el " . $itemTipo23['descripcion']);
+            }
             $camposDinamicosCotizacion[] = array(
               "id" => $item['id'],
               "tipo" => $item['tipo'],
               "opcional" => "0",
-              "descripcion" => $filtradosTipo47[0]['descripcion'],
-              "codigo" => $filtradosTipo47[0]['codigo'],
-              "valor" => $filtradosTipo47[0]['valor']
+              "descripcion" => $item['descripcion'],
+              "codigo" => $item['codigo'],
+              "valor" => $cuenta_persona[0]['id']
             );
-            break;            
+            break;
         }
       }
 

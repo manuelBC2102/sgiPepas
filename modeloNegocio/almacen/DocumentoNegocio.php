@@ -286,7 +286,7 @@ class DocumentoNegocio extends ModeloNegocioBase
         if ($resSN === false) {
           $documentoRepetido = Documento::create()->obtenerXDocumentoTipoXGrupoUnico($documentoTipoId, $itemGrupo['grupo_unico'], $itemGrupo['valor']);
           if (!ObjectUtil::isEmpty($documentoRepetido)) {
-            if($documentoTipoId == Configuraciones::SOLICITUD_REQUERIMIENTO){
+            if($documentoTipoId == Configuraciones::SOLICITUD_REQUERIMIENTO || $documentoTipoId == Configuraciones::REQUERIMIENTO_AREA){
               $banderaNumero = false;
               while($banderaNumero == false){
                 $nuevocorrelativo = DocumentoNegocio::create()->obtenerNumeroAutoXDocumentoTipo($documentoTipoId);

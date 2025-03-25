@@ -1477,6 +1477,20 @@ function onResponseObtenerConfiguracionesIniciales(data) {
         });
     }
 
+    var dtdTipoUrgencia = obtenerDocumentoTipoDatoXTipoXCodigo(4, "04");
+    $("#cbo_" + dtdTipoUrgencia.id).select2({
+        width: "100%"
+    }).on("change", function (e) {
+        var dtdTipoArea = obtenerDocumentoTipoDatoIdXTipo(43);
+        select2.asignarValor("cbo_"+dtdTipoArea, 0);
+        dataStockReservaOk = [];
+        detalle = [];
+        indiceLista = [];
+        banderaCopiaDocumento = 0;
+        indexDetalle = 0;
+        nroFilasReducida = parseInt(5);
+        limpiarDetalle();
+    });
 }
 
 function imageIsLoaded(e) {

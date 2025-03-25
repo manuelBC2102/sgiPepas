@@ -717,6 +717,24 @@ class MovimientoControlador extends AlmacenIndexControlador
     // VALIDO SI ES FACTURACION ELECTRONICA PARA QUE INGRESE MOTIVO DE ANULACION
     $dataEmpresa = EmpresaNegocio::create()->obtenerEmpresaXDocumentoId($documentoId);
     $documentoTipo = DocumentoTipoNegocio::create()->obtenerDocumentoTipoXDocumentoId($documentoId);
+    if (ObjectUtil::isEmpty($documentoTipo)) {
+      throw new WarningException("El movimiento no cuenta con tipos de documentos asociados");
+    }
+
+    if($documentoTipo[0]["id"] == Configuraciones::SOLICITUD_REQUERIMIENTO || $documentoTipo[0]["id"] == Configuraciones::REQUERIMIENTO_AREA){
+      //validar perfil
+      $mostrarAccNuevo = 0;
+      $dataPerfil = PerfilNegocio::create()->obtenerPerfilXUsuarioId($usuarioId);
+      foreach ($dataPerfil as $itemPerfil) {
+        if ($itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_TI_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_JEFE_LOGISTA || $itemPerfil['id'] == PerfilNegocio::PERFIL_SOLICITANTE_REQUERIMIENTO) {
+          $mostrarAccNuevo = 1;
+        }
+      }
+      if($mostrarAccNuevo != 1){
+        throw new WarningException("No tiene perfil necesario para realizar esta acción");
+      }
+    }
+
     $idNegocio = $documentoTipo[0]['identificador_negocio'];
     $documento = DocumentoNegocio::create()->obtenerXId($documentoId, $documentoTipo[0]['id']);
     $serie = $documento[0]['serie'];
