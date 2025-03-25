@@ -191,4 +191,8 @@ class MatrizAprobacionNegocio extends ModeloNegocioBase
   }
 
    
+  public function obtenerMatrizXDocumentoTipoUrgente($documentoTipoId){
+    return MatrizAprobacion::create()->obtenerMatrizXDocumentoTipoUrgente($documentoTipoId);
+  }
+
 }

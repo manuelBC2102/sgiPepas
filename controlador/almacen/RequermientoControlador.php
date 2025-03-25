@@ -42,10 +42,17 @@ class RequermientoControlador extends AlmacenIndexControlador
             if($data[$i]['documento_tipo_id'] == 280){
                 $dataDocumento = DocumentoNegocio::create()->obtenerDetalleDocumento($data[$i]['id']);
                 foreach ($dataDocumento as $key => $value) {
-                    switch ($value['tipo']) {
-                        case '43':
-                            $matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXDocumentoTipoXArea($data[$i]['documento_tipo_id'], $value['valorid']);
-                            break;
+                    if($value['descripcion'] == "Urgencia" && $value['valor'] == "Si") {
+                        $matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXDocumentoTipoUrgente($data[$i]['documento_tipo_id']);
+                    }
+                }
+                if($matrizUsuario == null){
+                    foreach ($dataDocumento as $key => $value) {
+                        switch ($value['tipo']) {
+                            case '43':
+                                $matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXDocumentoTipoXArea($data[$i]['documento_tipo_id'], $value['valorid']);
+                                break;
+                        }
                     }
                 }
             }else{
@@ -155,16 +162,22 @@ class RequermientoControlador extends AlmacenIndexControlador
                 return $item['nivel'] == $nivel_minimo;
             });
 
+            $icon_aprobacion = "<i class='fa fa-eye' style='color:green;' title='Ver detalle'></i>";
             if (in_array($usuarioId, $arrayAprobadores) && !in_array($usuarioId, $arrayAprobaciones) && $filtrado[0]['usuario_aprobador_id'] == $usuarioId) {
                 // $stringAcciones .= "<a href='#' onclick='aprobar(" . $data[$i]['id'] . ", " . $data[$i]['movimiento_id']. ", " . $data[$i]['documento_tipo_id']. ")'><i class='fa fa-check' style='color:blue;' title='Aprobar'></i></a>&nbsp;";
                 // $stringAcciones .= "<a href='#' onclick='rechazar(" . $data[$i]['id'] . ", " . $data[$i]['movimiento_id'].  ", " . $data[$i]['documento_tipo_id']. ")'><i class='fa fa-times' style='color:red;' title='Rechazar '></i></a>&nbsp;";
                 if($criterios['documento_tipo'] == 282){
                     $stringAcciones .= "<a href='#' onclick='archivosAdjuntos(" . $data[$i]['id'] . ", " . $data[$i]['movimiento_id']. ")'><i class='fa fa-cloud-upload' style='color:blue;' title='Revisar archivos adjuntos'></i></a>&nbsp;";
                 }
-                $data[$i]['estado_descripcion'] = "Por Aprobar";
+                $data[$i]['uasurio_estado_descripcion'] = "Por Aprobar";
+                $icon_aprobacion = "<i class='fa fa-check' style='color:blue;' title='Aprobar'></i>";
             }
 
-            $stringAcciones .= "<a href='#' onclick='visualizar(" . $data[$i]['id'] . ", " . $data[$i]['movimiento_id']. ", " . $data[$i]['documento_estado_id']. ", \"".$data[$i]['estado_descripcion']."\", " . $data[$i]['documento_tipo_id']. ", \"".$data[$i]['documento_tipo_descripcion']."\")'><i class='fa fa-eye' style='color:green;' title='Ver detalle'></i></a>&nbsp;";
+            if(count($usuario_estado) < count($matrizUsuario)){
+                $data[$i]['estado_descripcion'] = "Por Aprobar";
+
+            }
+            $stringAcciones .= "<a href='#' onclick='visualizar(" . $data[$i]['id'] . ", " . $data[$i]['movimiento_id']. ", " . $data[$i]['documento_estado_id']. ", \"".$data[$i]['uasurio_estado_descripcion']."\", " . $data[$i]['documento_tipo_id']. ", \"".$data[$i]['documento_tipo_descripcion']."\")'>". $icon_aprobacion."</a>&nbsp;";
             $data[$i]['progreso'] = $stringProgressBar;
             $data[$i]['acciones'] = $stringAcciones;
         }

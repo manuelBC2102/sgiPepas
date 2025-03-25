@@ -22,6 +22,8 @@ function onResponseAprobacionConsolidado(response) {
                     var btn_aprobar_rechazar = '<button type="button" class="btn btn-danger " data-dismiss="modal" onclick="rechazar()" id="btn_rechazar"><i class="fa fa-ban"></i> Rechazar</button>';
                     btn_aprobar_rechazar += '<button type="button" class="btn btn-primary " data-dismiss="modal" onclick="aprobar()" id="btn_aprobador"><i class="fa fa-check"></i> Aprobar</button>';
                     $("#div_btn_aprobar").html(btn_aprobar_rechazar);                        
+                }else{
+                    $("#div_btn_aprobar").html("");                        
                 }
                 break;
             case 'visualizarRequerimiento':
@@ -30,6 +32,8 @@ function onResponseAprobacionConsolidado(response) {
                     var btn_aprobar_rechazar = '<button type="button" class="btn btn-danger " data-dismiss="modal" onclick="rechazar()" id="btn_rechazar"><i class="fa fa-ban"></i> Rechazar</button>';
                     btn_aprobar_rechazar += '<button type="button" class="btn btn-primary " data-dismiss="modal" onclick="aprobar()" id="btn_aprobador"><i class="fa fa-check"></i> Aprobar</button>';
                     $("#div_btn_aprobar").html(btn_aprobar_rechazar);                        
+                }else{
+                    $("#div_btn_aprobar").html("");                        
                 }
                 break;
             case 'visualizarOrdenCompraServicio':
@@ -38,6 +42,8 @@ function onResponseAprobacionConsolidado(response) {
                     var btn_aprobar_rechazar = '<button type="button" class="btn btn-danger " data-dismiss="modal" onclick="rechazar()" id="btn_rechazar"><i class="fa fa-ban"></i> Rechazar</button>';
                     btn_aprobar_rechazar += '<button type="button" class="btn btn-primary " data-dismiss="modal" onclick="aprobar()" id="btn_aprobador"><i class="fa fa-check"></i> Aprobar</button>';
                     $("#div_btn_aprobar").html(btn_aprobar_rechazar);                        
+                }else{
+                    $("#div_btn_aprobar").html("");                        
                 }
                 break;                               
             case 'aprobarRequerimiento':

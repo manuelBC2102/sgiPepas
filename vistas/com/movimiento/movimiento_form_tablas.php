@@ -184,11 +184,11 @@
                                                     <span class="hidden-xs">Ingreso del detalle</span> 
                                                 </a> 
                                             </li> 
-                                            <li> 
+                                            <!-- <li> 
                                                 <a href="#distribucion" data-toggle="tab" aria-expanded="false"  id="tabDistribucionContable" title="Distribución Contable"> 
                                                     <span class="hidden-xs">Ingreso distribución contable</span> 
                                                 </a> 
-                                            </li>
+                                            </li> -->
                                         </ul> 
                                         <div id="div_contenido_tab" class="tab-content">
                                             <div class="tab-pane active" id="detalle" >
@@ -215,7 +215,7 @@
                                                     </div>                          
                                                 </div>
                                             </div>      
-                                            <div class="tab-pane" id="distribucion" hidden="">
+                                            <!-- <div class="tab-pane" id="distribucion" hidden="">
                                                 <div class="row" style="height: auto;">    
                                                     <table id="datatableDistribucion" class="table table-striped table-bordered">
                                                         <thead id="headDetalleCabeceraDistribucion">
@@ -233,7 +233,7 @@
                                                         </div>                           
                                                     </div>                          
                                                 </div>
-                                            </div>
+                                            </div> -->
                                         </div>
                                     </div>                                
                                     <div class="row text-center m-t-10 m-b-10">           

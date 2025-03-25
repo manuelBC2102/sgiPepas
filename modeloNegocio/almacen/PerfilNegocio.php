@@ -14,8 +14,9 @@ class PerfilNegocio extends ModeloNegocioBase {
     // Sección de constantes
     const PERFIL_ADMINISTRADOR_ID = 1;
     const PERFIL_ADMINISTRADOR_TI_ID = 118;
-    const PERFIL_JEFE_LOGISTA = 144;
+    const PERFIL_JEFE_LOGISTA = 150;
     const PERFIL_SOLICITANTE_REQUERIMIENTO = 146;
+    const PERFIL_APROBADOR_SOLICITANTE_REQUERIMIENTO_URGENTE = 151;
     
     /**
      * 

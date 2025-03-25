@@ -286,7 +286,19 @@ class DocumentoNegocio extends ModeloNegocioBase
         if ($resSN === false) {
           $documentoRepetido = Documento::create()->obtenerXDocumentoTipoXGrupoUnico($documentoTipoId, $itemGrupo['grupo_unico'], $itemGrupo['valor']);
           if (!ObjectUtil::isEmpty($documentoRepetido)) {
-            throw new WarningException($itemGrupo['descripcion'] . " está duplicado");
+            if($documentoTipoId == Configuraciones::SOLICITUD_REQUERIMIENTO){
+              $banderaNumero = false;
+              while($banderaNumero == false){
+                $nuevocorrelativo = DocumentoNegocio::create()->obtenerNumeroAutoXDocumentoTipo($documentoTipoId);
+                $documentosRepetidos = Documento::create()->obtenerXSerieNumero($documentoTipoId, $serie, $nuevocorrelativo);                
+                if (ObjectUtil::isEmpty($documentosRepetidos)) {
+                  $banderaNumero = true;
+                  $numero = $nuevocorrelativo;
+                }
+              }
+            }else{
+              throw new WarningException($itemGrupo['descripcion'] . " está duplicado");
+            }
           }
         }
       }

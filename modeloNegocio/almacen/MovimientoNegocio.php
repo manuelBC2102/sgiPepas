@@ -1814,7 +1814,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     }
 
     // Guardar documento
-    $documentoId = $this->guardar($opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $documentoARelacionar, $valorCheck, $comentario, $checkIgv, $monedaId, $tipoPago, $periodoId, $datosExtras, $contOperacionTipoId, null, $igv_porcentaje);
+    $documento = $this->guardar($opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $documentoARelacionar, $valorCheck, $comentario, $checkIgv, $monedaId, $tipoPago, $periodoId, $datosExtras, $contOperacionTipoId, null, $igv_porcentaje);
 
     if (
       $documentoTipoId == ContDistribucionContableNegocio::DOCUMENTO_TIPO_ID_FACTURA_VENTA ||
@@ -1822,8 +1822,8 @@ class MovimientoNegocio extends ModeloNegocioBase
       $documentoTipoId == ContDistribucionContableNegocio::DOCUMENTO_TIPO_ID_NOTA_CREDITO_VENTA ||
       $documentoTipoId == ContDistribucionContableNegocio::DOCUMENTO_TIPO_ID_NOTA_DEBITO_VENTA
     ) {
-      $respuestaContVoucher = ContVoucherNegocio::create()->registrarContVoucherRegistroVentas($documentoId, $usuarioId);
-      $respuestaActualizarEstado = DocumentoNegocio::create()->ActualizarDocumentoEstadoId($documentoId, NULL, $usuarioId, 'AP', NULL);
+      $respuestaContVoucher = ContVoucherNegocio::create()->registrarContVoucherRegistroVentas($documento[0]['vout_id'], $usuarioId);
+      $respuestaActualizarEstado = DocumentoNegocio::create()->ActualizarDocumentoEstadoId($documento[0]['vout_id'], NULL, $usuarioId, 'AP', NULL);
       if ($respuestaActualizarEstado[0]['vout_exito'] != 1) {
         throw new WarningException($respuestaActualizarEstado[0]['vout_mensaje']);
       }
@@ -1831,11 +1831,11 @@ class MovimientoNegocio extends ModeloNegocioBase
     if (!ObjectUtil::isEmpty($atiende)) {
       if ($atiende == false) {
         // ---GUARDAR VALORES AUTOMATICOS
-        $relacionadosDocumentoActual = DocumentoNegocio::create()->obtenerDocumentosRelacionados($documentoId);
+        $relacionadosDocumentoActual = DocumentoNegocio::create()->obtenerDocumentosRelacionados($documento[0]['vout_id']);
 
         foreach ($relacionadosDocumentoActual as $item) {
           $docRelacionadoId = $item['documento_relacionado_id'];
-          $movimientoIdActual = MovimientoBien::create()->obtenerMovimientoIdXDocumentoId($documentoId);
+          $movimientoIdActual = MovimientoBien::create()->obtenerMovimientoIdXDocumentoId($documento[0]['vout_id']);
           $dataMovBien = MovimientoBien::create()->obtenerXIdMovimiento($movimientoIdActual[0]['movimiento_id']);
           $bienesIdRelacionados = MovimientoBien::create()->obtenerBienesIdRelacionadosXDocumentoId($docRelacionadoId);
           foreach ($dataMovBien as $dataMovBienActual) {
@@ -1851,12 +1851,12 @@ class MovimientoNegocio extends ModeloNegocioBase
         }
       } else {
         // Guardar asignaciones que hace el usuario
-        $relacionadosDocumentoActual = DocumentoNegocio::create()->obtenerDocumentosRelacionados($documentoId);
+        $relacionadosDocumentoActual = DocumentoNegocio::create()->obtenerDocumentosRelacionados($documento[0]['vout_id']);
         $detallesMovimientoBien = $camposDinamicos['atencionesRef'];
         // foreach ($relacionadosDocumentoActual as $item) {
         // $docRelacionadoId = $item['documento_relacionado_id'];
 
-        $movimientoIdActual = MovimientoBien::create()->obtenerMovimientoIdXDocumentoId($documentoId);
+        $movimientoIdActual = MovimientoBien::create()->obtenerMovimientoIdXDocumentoId($documento[0]['vout_id']);
         $dataMovBien = MovimientoBien::create()->obtenerXIdMovimiento($movimientoIdActual[0]['movimiento_id']);
         $guardadoNormal = array();
         $guardadoNormal = $dataMovBien;
@@ -1873,7 +1873,7 @@ class MovimientoNegocio extends ModeloNegocioBase
         }
 
         if (!ObjectUtil::isEmpty($guardadoNormal)) {
-          $this->guardarNormalmente($documentoId, $guardadoNormal, $usuarioId);
+          $this->guardarNormalmente($documento[0]['vout_id'], $guardadoNormal, $usuarioId);
         }
 
         foreach ($dataMovBien as $dataMovBienActual) {
@@ -1903,7 +1903,7 @@ class MovimientoNegocio extends ModeloNegocioBase
         $porcentaje = $item[3];
         $glosa = $item[4];
 
-        $res = Pago::create()->guardarPagoProgramacion($documentoId, $fechaPago, $importePago, $dias, $porcentaje, $glosa, $usuarioId);
+        $res = Pago::create()->guardarPagoProgramacion($documento[0]['vout_id'], $fechaPago, $importePago, $dias, $porcentaje, $glosa, $usuarioId);
       }
     }
 
@@ -1911,47 +1911,50 @@ class MovimientoNegocio extends ModeloNegocioBase
     if ((bool) preg_match("/^{$accionBusquedad}$/i", $accionEnvio)) {
       // SI EL MOVIMIENTO ES COTIZACION DE VENTA
       if ($movimientoTipo[0]['codigo'] == 7 && $documentoTipoId == 23) {
-        DocumentoNegocio::create()->ActualizarDocumentoEstadoId($documentoId, 1, $usuarioId);
+        DocumentoNegocio::create()->ActualizarDocumentoEstadoId($documento[0]['vout_id'], 1, $usuarioId);
       }
     }
 
-    $dataMovimientoDocumento = MovimientoBien::create()->obtenerMovimientoIdXDocumentoId($documentoId);
+    $dataMovimientoDocumento = MovimientoBien::create()->obtenerMovimientoIdXDocumentoId($documento[0]['vout_id']);
     $respuesta = new stdClass();
     $respuesta->movimientoId = $dataMovimientoDocumento[0]['movimiento_id'];
 
     if ($accionEnvio == 'guardar') {
-      $respuesta->documentoId = $documentoId;
+      $dataDocumentoTipo = DocumentoTipoNegocio::create()->obtenerDocumentoTipoXId($documentoTipoId);
+      $respuesta->documentoId = $documento[0]['vout_id'];
+      $respuesta->serieNumero = $documento[0]['serie']."-".$documento[0]['numero'];
+      $respuesta->documentoTipoDescripcion = $dataDocumentoTipo[0]['descripcion'];
       return $respuesta;
     }
 
     if ($accionEnvio == 'enviar') {
-      $respuesta->documentoId = $documentoId;
+      $respuesta->documentoId = $documento[0]['vout_id'];
       return $respuesta;
     }
 
     if ($accionEnvio == 'enviarEImprimir') {
-      $respuesta->dataImprimir = $this->imprimirExportarPDFDocumento($documentoTipoId, $documentoId, $usuarioId);
-      $respuesta->documentoId = $documentoId;
+      $respuesta->dataImprimir = $this->imprimirExportarPDFDocumento($documentoTipoId, $documento[0]['vout_id'], $usuarioId);
+      $respuesta->documentoId = $documento[0]['vout_id'];
       return $respuesta;
     } else {
       // obtener email de plantilla
       $movimientoTipoId = $this->obtenerIdXOpcion($opcionId);
       $plantilla = EmailPlantillaNegocio::create()->obtenerPlantillaDestinatarioXAccionDescripcionXMovimientoTipoId($accionEnvio, $movimientoTipoId);
-      $dataPersona = DocumentoNegocio::create()->obtenerPersonaXDocumentoId($documentoId);
+      $dataPersona = DocumentoNegocio::create()->obtenerPersonaXDocumentoId($documento[0]['vout_id']);
 
-      $correosPlantilla = EmailPlantillaNegocio::create()->obtenerEmailXDestinatario($plantilla[0]["destinatario"], $documentoId, $dataPersona[0]['id']);
+      $correosPlantilla = EmailPlantillaNegocio::create()->obtenerEmailXDestinatario($plantilla[0]["destinatario"], $documento[0]['vout_id'], $dataPersona[0]['id']);
 
       //validar si se muestra el modal de confirmacion de emails.
       if ($plantilla[0]["confirmacion"] == 1) {
         $respuesta->dataPlantilla = $plantilla;
         $respuesta->dataCorreos = $correosPlantilla;
-        $respuesta->documentoId = $documentoId;
+        $respuesta->documentoId = $documento[0]['vout_id'];
         return $respuesta;
       }
 
       if (ObjectUtil::isEmpty($correosPlantilla)) {
         $this->setMensajeEmergente("Email en blanco, nose pudo enviar correo.", null, Configuraciones::MENSAJE_WARNING);
-        $respuesta->documentoId = $documentoId;
+        $respuesta->documentoId = $documento[0]['vout_id'];
         return $respuesta;
       }
 
@@ -1961,8 +1964,8 @@ class MovimientoNegocio extends ModeloNegocioBase
       }
 
       $plantillaId = $plantilla[0]["email_plantilla_id"];
-      $respuesta->dataEnvioCorreo = $this->enviarCorreoXAccion($correos, $comentario, $accionEnvio, $documentoId, $plantillaId, $usuarioId);
-      $respuesta->documentoId = $documentoId;
+      $respuesta->dataEnvioCorreo = $this->enviarCorreoXAccion($correos, $comentario, $accionEnvio, $documento[0]['vout_id'], $plantillaId, $usuarioId);
+      $respuesta->documentoId = $documento[0]['vout_id'];
       return $respuesta;
     }
   }
@@ -2009,11 +2012,11 @@ class MovimientoNegocio extends ModeloNegocioBase
       $detalle[$indexDet]['organizadorId'] = $organanizadorDestinoId;
     }
 
-    $documentoId = $this->guardar($opcionIdR, $usuarioId, $documentoTipoIdR, $camposDinamicosGuia, $detalle, null, 1, $comentario, $checkIgv, $monedaId, $tipoPago, $periodoId);
-    $documentoARelacionarRecep = array('documentoId' => $documentoId, 'movimientoId' => '', 'detalleLink' => '', 'posicion' => '');
+    $documento = $this->guardar($opcionIdR, $usuarioId, $documentoTipoIdR, $camposDinamicosGuia, $detalle, null, 1, $comentario, $checkIgv, $monedaId, $tipoPago, $periodoId);
+    $documentoARelacionarRecep = array('documentoId' => $documento[0]['vout_id'], 'movimientoId' => '', 'detalleLink' => '', 'posicion' => '');
 
     $respuesta = new stdClass();
-    $respuesta->documentoIdRecep = $documentoId;
+    $respuesta->documentoIdRecep = $documento[0]['vout_id'];
     $respuesta->documentoARelacionarRecep = $documentoARelacionarRecep;
 
     return $respuesta;
@@ -2429,7 +2432,7 @@ class MovimientoNegocio extends ModeloNegocioBase
       MovimientoDuaNegocio::create()->generarPorDocumentoId($documentoId, $usuarioId);
     }
 
-    return $documentoId;
+    return $documento;
   }
 
   public function movimientoBienDetalleGuardarCadena($movimientoBienId, $columnaCodigo, $valorCadena, $usuarioId)
@@ -2743,9 +2746,9 @@ class MovimientoNegocio extends ModeloNegocioBase
     // if (!file_exists($nombre_fichero)) {
     //   throw new WarningException("No existe el archivo del documento para imprimir.");
     // }
-    $documentoId = $this->guardar($opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $documentoARelacionar, $valorCheck, $comentario, $checkIgv, $monedaId);
+    $documento = $this->guardar($opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $documentoARelacionar, $valorCheck, $comentario, $checkIgv, $monedaId);
 
-    return $this->imprimir($documentoId, $documentoTipoId);
+    return $this->imprimir($documento[0]['vout_id'], $documentoTipoId);
   }
 
   public function imprimir($documentoId, $documentoTipoId)
@@ -10552,12 +10555,11 @@ class MovimientoNegocio extends ModeloNegocioBase
       $pdf->MultiCell(50, 30, 'Gerente General', 1, 'C', 1, 0, 85, $espacio + 5, true, 0, false, true, 30, 'B');
       $pdf->Image($personaFirma2, 135, $espacio + 5, 50, 20, '', '', '', false, 300, '', false, false, 1);
       $pdf->MultiCell(50, 30, 'Jefe de Logistica', 1, 'C', 1, 0, 135, $espacio + 5, true, 0, false, true, 30, 'B');
-      $pdf->MultiCell(60, 5, 'Fecha:', 1, 'L', 1, 0, 35, $espacio + 30, true, 0, false, true, 5, 'M');
+      $pdf->MultiCell(60, 5, 'Fecha:', 1, 'L', 1, 0, 35, $espacio + 35, true, 0, false, true, 5, 'M');
       $pdf->SetFont('helvetica', '', 6);
-      $pdf->MultiCell(50, 5, date_format((date_create($dataDocumento[0]['fecha_emision'])), 'd/m/Y'), 1, 'L', 1, 0, 45, $espacio + 30, true, 0, false, true, 5, 'M');
+      $pdf->MultiCell(50, 5, date_format((date_create($dataDocumento[0]['fecha_emision'])), 'd/m/Y'), 1, 'L', 1, 0, 45, $espacio + 35, true, 0, false, true, 5, 'M');
       $pdf->SetFont('helvetica', 'B', 6);
       $pdf->MultiCell(50, 5, 'Fecha:', 1, 'L', 1, 0, 85, $espacio + 35, true, 0, false, true, 5, 'M');
-      $pdf->SetFont('helvetica', '', 6);
       $pdf->SetFont('helvetica', 'B', 6);
       $pdf->MultiCell(40, 5, date_format((date_create($dataDocumento[1]['fecha_emision'])), 'd/m/Y'), 1, 'L', 1, 0, 95, $espacio + 35, true, 0, false, true, 5, 'M');
       $pdf->SetFont('helvetica', 'B', 6);
@@ -11850,7 +11852,7 @@ class MovimientoNegocio extends ModeloNegocioBase
         "documentoPadreId" => ""
       );
 
-      $documentoId = $this->guardar($opcionId, $usuarioId, $documentoTipoId, $camposDinamicosCotizacion, $detalleCotizacion, $documentoARelacionarSalida, 1, "", 1, $monedaId, null, $periodoId, null, null, null, null);
+      $documento = $this->guardar($opcionId, $usuarioId, $documentoTipoId, $camposDinamicosCotizacion, $detalleCotizacion, $documentoARelacionarSalida, 1, "", 1, $monedaId, null, $periodoId, null, null, null, null);
     
       if($banderaCotizacon == 1){
         $checkedOC = ($detalle[0]['checked1'] == "true") ? "1" : 
@@ -11862,9 +11864,9 @@ class MovimientoNegocio extends ModeloNegocioBase
       });
 
       if(!ObjectUtil::isEmpty($filtradosTipo23)){
-        $respuestaActualizarDocumentoEstado = DocumentoNegocio::create()->ActualizarDocumentoEstadoId($documentoId, 16, $usuarioId);
+        $respuestaActualizarDocumentoEstado = DocumentoNegocio::create()->ActualizarDocumentoEstadoId($documento[0]['vout_id'], 16, $usuarioId);
       }
-      $documentosIdCotizaciones [] = $documentoId;
+      $documentosIdCotizaciones [] = $documento[0]['vout_id'];
     }
   
     if($documentoTipoId == Configuraciones::ORDEN_COMPRA){
@@ -11876,7 +11878,7 @@ class MovimientoNegocio extends ModeloNegocioBase
           $porcentaje = $item[3];
           $glosa = $item[4];
   
-          $res = Pago::create()->guardarDistribucionPagos($documentoId, $fechaPago, $importePago, $dias, $porcentaje, $glosa, $usuarioId);
+          $res = Pago::create()->guardarDistribucionPagos($documento[0]['vout_id'], $fechaPago, $importePago, $dias, $porcentaje, $glosa, $usuarioId);
         }
       }
 

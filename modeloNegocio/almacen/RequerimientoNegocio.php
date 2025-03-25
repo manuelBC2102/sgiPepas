@@ -44,7 +44,7 @@ class RequerimientoNegocio extends ModeloNegocioBase
             $mostrarTodasAreas = 0;
             $dataPerfil = PerfilNegocio::create()->obtenerPerfilXUsuarioId($usuarioId);
             foreach ($dataPerfil as $itemPerfil) {
-                if ($itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_TI_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_JEFE_LOGISTA) {
+                if ($itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_TI_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_JEFE_LOGISTA || $itemPerfil['id'] == PerfilNegocio::PERFIL_APROBADOR_SOLICITANTE_REQUERIMIENTO_URGENTE) {
                     $mostrarTodasAreas = 1;
                 }
             }

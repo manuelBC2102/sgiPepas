@@ -300,7 +300,7 @@ class MovimientoControlador extends AlmacenIndexControlador
         }
 
         $resGuia = MovimientoNegocio::create()->guardar($opcionId, $usuarioId, $documentoTipoId, $camposDinamicosGuia, $itemDet, $documentoARelacionar, $valorCheck, $comentario, $checkIgv, $monedaId);
-        array_push($documentoARelacionarVenta, array('documentoId' => $resGuia, 'movimientoId' => '', 'detalleLink' => '', 'posicion' => ''));
+        array_push($documentoARelacionarVenta, array('documentoId' => $resGuia[0]['vout_id'], 'movimientoId' => '', 'detalleLink' => '', 'posicion' => ''));
       }
 
       // --- antes solo una guia
@@ -419,7 +419,7 @@ class MovimientoControlador extends AlmacenIndexControlador
         }
 
         $resNota = MovimientoNegocio::create()->guardar($opcionId, $usuarioId, $documentoTipoId, $camposDinamicosNota, $itemDet, $documentoARelacionar, $valorCheck, $comentario, $checkIgv, $monedaId);
-        array_push($documentoARelacionarVenta, array('documentoId' => $resNota, 'movimientoId' => '', 'detalleLink' => '', 'posicion' => ''));
+        array_push($documentoARelacionarVenta, array('documentoId' => $resNota[0]['vout_id'], 'movimientoId' => '', 'detalleLink' => '', 'posicion' => ''));
 
         // logica correo:
         // $plantilla = EmailPlantillaNegocio::create()->obtenerEmailPlantillaXID(2);

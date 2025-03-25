@@ -1147,8 +1147,6 @@ function onResponseObtenerConfiguracionesIniciales(data) {
             indiceLista = [];
             banderaCopiaDocumento = 0;
             indexDetalle = 0;
-            nroFilasInicial = parseInt(dataDocumentoTipo[0]['cantidad_detalle']);
-            limpiarDetalle();
             ax.setAccion("obtenerDetalleXAreaId");
             ax.addParamTmp("empresaId", commonVars.empresa);
             ax.addParamTmp("areaId", select2.obtenerValor("cbo_" + dtdTipoArea));
@@ -1304,8 +1302,6 @@ function onResponseObtenerConfiguracionesIniciales(data) {
             indiceLista = [];
             banderaCopiaDocumento = 0;
             indexDetalle = 0;
-            nroFilasInicial = parseInt(dataDocumentoTipo[0]['cantidad_detalle']);
-            limpiarDetalle();
             ax.setAccion("obtenerDetalleXGrupoProductoId");
             ax.addParamTmp("grupoProductoId", select2.obtenerValor("cbo_" + dtdTipoGrupo_producto));
             ax.addParamTmp("tipoRequerimiento", select2.obtenerValor("cboTipoRequerimiento_" + dtdTipoTipoRequerimiento));
@@ -1880,6 +1876,9 @@ function verTodasFilas() {
         cargarUnidadMedidadDetalleCombo(i);
         cargarBienDetalleCombo(dataCofiguracionInicial.bien, i);
         cargarPrecioTipoDetalleCombo(dataCofiguracionInicial.precioTipo, i);
+        cargarCeCoDetalleCombo(dataCofiguracionInicial.centroCosto, i);
+        var compras = [{"id":1, "descripcion": "Si"},{"id":2, "descripcion": "No"}];
+        cargarComprasDetalleCombo(compras, i);
         inicializarFechaVencimiento(i);
     }
 
@@ -3306,7 +3305,7 @@ function onResponseObtenerDocumentoTipoDato(data) {
                     }
 
                     $("#contenedorSerieDiv").show();
-                    $("#contenedorSerie").html('<input type="text" id="txt_' + item.id + '" name="txt_' + item.id + '" class="form-control" value="' + value + '" maxlength="' + longitudMaxima + '" placeholder="Serie"  style="text-align: right;"/>');
+                    $("#contenedorSerie").html('<input type="text" id="txt_' + item.id + '" name="txt_' + item.id + '" class="form-control" value="' + value + '" maxlength="' + longitudMaxima + '" placeholder="Serie"  style="text-align: right;" disabled/>');
                     break;
 
                 case 8:
@@ -3319,7 +3318,7 @@ function onResponseObtenerDocumentoTipoDato(data) {
                     }
 
                     $("#contenedorNumeroDiv").show();
-                    $("#contenedorNumero").html('<input type="text" id="txt_' + item.id + '" name="txt_' + item.id + '" class="form-control" value="' + value + '" maxlength="' + longitudMaxima + '" placeholder="Número"  style="text-align: right;"/>');
+                    $("#contenedorNumero").html('<input type="text" id="txt_' + item.id + '" name="txt_' + item.id + '" class="form-control" value="' + value + '" maxlength="' + longitudMaxima + '" placeholder="Número"  style="text-align: right;" disabled/>');
                     break;
 
                 case 14:
@@ -4155,7 +4154,8 @@ function eliminarDetalleFormularioTabla(indice) {
     cargarPrecioTipoDetalleCombo(dataCofiguracionInicial.precioTipo, nroFilasReducida);
     cargarAgenciaDetalleCombo(dataCofiguracionInicial.dataAgencia, nroFilasReducida);
     cargarCeCoDetalleCombo(dataCofiguracionInicial.centroCosto, nroFilasReducida);
-    cargarComprasDetalleCombo(dataCofiguracionInicial.centroCosto, nroFilasReducida);
+    var compras = [{"id":1, "descripcion": "Si"},{"id":2, "descripcion": "No"}];
+    cargarComprasDetalleCombo(compras, nroFilasReducida);
     inicializarFechaVencimiento(nroFilasReducida);
 
     nroFilasInicial++;
@@ -7363,6 +7363,14 @@ function onResponseEnviar(data) {
             }
         } else {
             cargarPantallaListar();
+            swal({
+                title: data.documentoTipoDescripcion + ", generada exitosamente!",
+                text: "Con Serie y Número: " + data.serieNumero+"",
+                type: "success",
+                confirmButtonColor: "#33b86c",
+                confirmButtonText: "Aceptar",
+                timer: 4000
+            });
         }
     }
 
@@ -7765,6 +7773,9 @@ function agregarFila() {
         cargarBienDetalleCombo(dataCofiguracionInicial.bien, nroFilasReducida);
         cargarPrecioTipoDetalleCombo(dataCofiguracionInicial.precioTipo, nroFilasReducida);
         cargarAgenciaDetalleCombo(dataCofiguracionInicial.dataAgencia, nroFilasReducida);
+        cargarCeCoDetalleCombo(dataCofiguracionInicial.centroCosto, nroFilasReducida);
+        var compras = [{"id":1, "descripcion": "Si"},{"id":2, "descripcion": "No"}];
+        cargarComprasDetalleCombo(compras, nroFilasReducida);        
         // nroFilasInicial++;
         nroFilasReducida++;
 
@@ -10833,6 +10844,8 @@ function onResponseObtenerDetalle(data){
     if (!isEmpty(data.detalleRequerimientos)) {
         dataCofiguracionInicial.bien = data.dataBien;
         cargarDataDocumentoACopiar(null, data.dataDocumentoRelacionada);
+        nroFilasReducida = parseInt(data.detalleRequerimientos.length);
+        limpiarDetalle();
 
         var DocumentoIds = [];
         
@@ -10868,6 +10881,13 @@ function onResponseObtenerDetalle(data){
         });
         obtnerStockParaProductosDeCopia();
     }else{
+        dataStockReservaOk = [];
+        detalle = [];
+        indiceLista = [];
+        banderaCopiaDocumento = 0;
+        indexDetalle = 0;
+        nroFilasReducida = parseInt(5);
+        limpiarDetalle();
         mostrarAdvertencia("No se encontrtaron datos");
     }
 }

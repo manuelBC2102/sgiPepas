@@ -147,8 +147,8 @@
                                 <br>
                                 <b>Leyenda:</b>&nbsp;&nbsp;
                                 <i class='fa fa-eye' style='color:green;'></i> Ver detalle &nbsp;&nbsp;&nbsp;
-                                <!-- <i class='fa fa-check' style='color:blue;'></i> Aprobar  &nbsp;&nbsp;&nbsp;
-                                <i class='fa fa-times' style='color:red;'></i> Rechazar  &nbsp;&nbsp;&nbsp; -->
+                                <i class='fa fa-check' style='color:blue;'></i> Aprobar  &nbsp;&nbsp;&nbsp;
+                                <!-- <i class='fa fa-times' style='color:red;'></i> Rechazar  &nbsp;&nbsp;&nbsp; -->
                             </p>
                         </div>
                     </div>
