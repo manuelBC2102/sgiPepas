@@ -234,58 +234,35 @@ class RequerimientoNegocio extends ModeloNegocioBase
             throw new WarningException("El monto del consolidado supera al habilitado para el usuario , comunicarse con el Administrador");
         } else {
             $data = DocumentoNegocio::create()->ActualizarDocumentoEstadoId($documentoId, 3, $usuarioId); // 3 = Aprobado
-
             if (ObjectUtil::isEmpty($data)) {
-                throw new WarningException("Hubo un problema al aporbar Consolidado");
+                throw new WarningException("Hubo un problema al aporbar Orden de compra");
             }
 
 
-            $validarDocumento = MatrizAprobacion::create()->validarDocumentoAprobacionUltimoNivel($dataDocumento[0]['documento_tipo_id']);
-
+            $validarDocumento = MatrizAprobacion::create()->validarDocumentoAprobacionUltimoNivelXMonto($documentoId, $dataDocumento[0]['documento_tipo_id'], $sumaDetalle);
             if ($validarDocumento[0]["validar"] == 1) {
-                $documentoAdjuntos = DocumentoNegocio::create()->obtenerDocumentoAdjuntoXDocumentoId($documentoId);
-                foreach ($documentoAdjuntos as $item) {
-                    if ($item['tipo_archivoId'] == 4) {
-                        $xml = simplexml_load_file(__DIR__ . '/../../util/uploads/documentoAdjunto/' . $item['nombre']);
-                        if ($xml === false) {
-                            throw new WarningException("Error al leer archivo XML");
-                        } else {
-                            $ruc_emisor = (string)$xml->xpath("//cac:AccountingSupplierParty/cac:Party/cac:PartyIdentification/cbc:ID")[0];
-                            $serie_numero = (string) $xml->xpath("//cbc:ID")[0];
-                            $serie_numero = explode("-", $serie_numero);
-                            $serie = $serie_numero[0];
-                            $numero = $serie_numero[1];
-                            $subTotal = (string)$xml->xpath("//cac:LegalMonetaryTotal/cbc:LineExtensionAmount ")[0];
-                            $igv = (string)$xml->xpath("//cac:TaxTotal/cbc:TaxAmount")[0];
-                            $total = (string)$xml->xpath("//cac:LegalMonetaryTotal/cbc:PayableAmount")[0];
-                            $personaId = PersonaNegocio::create()->obtenerPersonaXCodigoIdentificacion($ruc_emisor)[0]['id'];
+                $detalleDistribucionPagos = OrdenCompraServicio::create()->obtenerDistribucionPagos($documentoId);
 
-                            $detraccion = 0; //Falta extraer detracción
-                            $netoPago = $total - $detraccion;
-
-                            $validar = ActaRetiro::create()->validarFacturacion_proveedor($personaId, $serie, $numero)[0];
-
-                            if ($validar['validacion'] == 1) {
-                                throw new WarningException("Existe una factura registrada con los mismo datos");
-                            }
-                            $valorizacion = ActaRetiro::create()->registrarFacturaProveedor(
-                                $serie,
-                                $numero,
-                                $subTotal,
-                                $igv,
-                                $total,
-                                $detraccion,
-                                $netoPago,
-                                $usuarioId,
-                                null,
-                                null,
-                                $personaId,
-                                null,
-                                $dataDocumento[0]['moneda_id']
-                            );
-                        }
-                    }
+                foreach($detalleDistribucionPagos as $item){
+                    $subTotal =  round($item['importe'] / 1.18);
+                    $igv = $item['importe'] - $subTotal;
+                    $valorizacion = ActaRetiro::create()->registrarFacturaProveedor(
+                        "", //Serie
+                        "", //Numero
+                        $subTotal,
+                        $igv,
+                        $item['importe'], //Total
+                        0, //Detraccion
+                        $item['importe'],
+                        $usuarioId,
+                        null,
+                        null,
+                        $dataDocumento[0]['persona_id'],
+                        null,
+                        $dataDocumento[0]['moneda_id']
+                    );
                 }
+                $distribucionPagos = OrdenCompraServicio::create()->cambiarEstadoDistribucionPagos($documentoId);
             }
 
             $respuesta =  new stdClass();

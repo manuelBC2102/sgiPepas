@@ -585,6 +585,9 @@ class MovimientoControlador extends AlmacenIndexControlador
         } elseif ((($data[$i]['documento_estado_id'] == 3) && ($responseAcciones[$j]['id'] == 3))) {
           //
           $stringAcciones .= '';
+        } elseif ((($data[$i]['documento_estado_id'] == 9) && ($responseAcciones[$j]['id'] == 3))) {
+          //
+          $stringAcciones .= '';          
         }else {
           if ($responseAcciones[$j]['id'] == 1 || $responseAcciones[$j]['id'] == 22 || $responseAcciones[$j]['id'] == 28 || $responseAcciones[$j]['id'] == 29 || $responseAcciones[$j]['id'] == 30) {
             $datoPivot = $data[$i]['documento_tipo_id'];

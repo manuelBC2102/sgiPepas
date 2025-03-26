@@ -130,6 +130,8 @@
                                 <i class='fa fa-file-text-o' style='color:green;'></i> Generar TXT &nbsp;&nbsp;&nbsp;
                                 <i class='fa fa-ban' style='color:red;'></i> Anular programación &nbsp;&nbsp;&nbsp;
                                 <i class='fa fa-eye' style='color:blue;'></i> Ver detalle &nbsp;&nbsp;&nbsp;
+                                <i class='fa fa-cloud-upload' style='color:blue;'></i> Subir pago &nbsp;&nbsp;&nbsp;
+                                <i class='fa fa-cloud-download' style='color:blue;'></i> Descargar pago &nbsp;&nbsp;&nbsp;
                             </p>
                         </div>
                     </div>

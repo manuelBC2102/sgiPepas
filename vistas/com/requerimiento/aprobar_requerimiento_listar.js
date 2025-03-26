@@ -616,7 +616,6 @@ var documentoTipoId = null;
 var documento_tipo_descripcionText = null;
 function visualizar(id, movimientoId, documento_estado_id, documento_estado, documento_tipo_id, documento_tipo_descripcion) {
     $("#visualizarDocumentoId").val(id);
-    $("#btn_rechazar").val(id);
     documento_tipo_descripcionText = documento_tipo_descripcion;
     loaderShow();
     documentoTipoId = documento_tipo_id;
@@ -809,7 +808,7 @@ function aprobar() {
 
 var documentoId;
 function rechazar() {
-    id = $("#btn_rechazar").val();
+    id = $("#visualizarDocumentoId").val();
     loaderShow();
     swal({
         title: " ¿Desea continuar?",

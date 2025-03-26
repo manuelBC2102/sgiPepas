@@ -901,6 +901,10 @@ function onResponseObtenerConfiguracionesIniciales(data) {
             llenarTablatfoot();
         }
 
+        if(doc_TipoId == REQUERIMIENTO_AREA || doc_TipoId == GENERAR_COTIZACION){
+            $("#ver_filas").hide();
+        }
+
         if (!isEmpty(dataCofiguracionInicial.movimientoTipoColumna)) {
             $('#datatable').DataTable({
                 "scrollX": true,

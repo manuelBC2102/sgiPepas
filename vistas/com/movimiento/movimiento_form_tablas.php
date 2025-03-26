@@ -200,7 +200,7 @@
                                                         </tbody>                                      
                                                     </table>                               
                                                 </div>                      
-                                                <div class="row">                                   
+                                                <div class="row" id="ver_filas">                                   
                                                     <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">     
                                                         <div style="height: auto; float: right; margin-top: 0px;" id="divAgregarFila">  
                                                             <a onclick="agregarFila();">

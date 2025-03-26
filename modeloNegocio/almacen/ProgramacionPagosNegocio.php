@@ -311,7 +311,11 @@ class ProgramacionPagosNegocio extends ModeloNegocioBase
         }
         $hoy = date("YmdHis");
         $nombreGenerado = $programacionId . $hoy . $usuario .".". $ext;
-        $url = __DIR__ . '/../../util/uploads/documentoAdjunto/' . $nombreGenerado;
+        if($ext == "pdf"){
+            $url = __DIR__ . '/../../util/uploads/documentoAdjunto/' . $nombreGenerado;
+        }else{
+            $url = __DIR__ . '/../../util/uploads/imagenAdjunto/' . $nombreGenerado;
+        }
 
         file_put_contents($url, $decode);
 

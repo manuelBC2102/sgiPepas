@@ -196,8 +196,9 @@ class MatrizAprobacion extends ModeloBase {
         return $this->commandGetData();
     }
 
-    public function validarDocumentoAprobacionUltimoNivel($documentoTipoId){
+    public function validarDocumentoAprobacionUltimoNivel($documentoId, $documentoTipoId){
         $this->commandPrepare("sp_documento_validar_aprobacionUltimoNivel");
+        $this->commandAddParameter(":vin_documento_id", $documentoId);
         $this->commandAddParameter(":vin_documento_tipo", $documentoTipoId);
         return $this->commandGetData();
     }
@@ -207,4 +208,12 @@ class MatrizAprobacion extends ModeloBase {
         $this->commandAddParameter(":vin_documento_tipo", $documentoTipoId);
         return $this->commandGetData();
     }    
+
+    public function validarDocumentoAprobacionUltimoNivelXMonto($documentoId, $documentoTipoId, $monto){
+        $this->commandPrepare("sp_documento_validar_aprobacionUltimoNivelXMonto");
+        $this->commandAddParameter(":vin_documento_id", $documentoId);
+        $this->commandAddParameter(":vin_documento_tipo", $documentoTipoId);
+        $this->commandAddParameter(":vin_monto", $monto);
+        return $this->commandGetData();
+    }
 }

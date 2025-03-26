@@ -6,7 +6,7 @@ require_once __DIR__ . '/../../modeloNegocio/almacen/PersonaNegocio.php';
 require_once __DIR__ . '/../../modeloNegocio/almacen/RequerimientoNegocio.php';
 require_once __DIR__ . '/../../modeloNegocio/almacen/MatrizAprobacionNegocio.php';
 
-class RequermientoControlador extends AlmacenIndexControlador
+class RequerimientoControlador extends AlmacenIndexControlador
 {
 
     public function obtenerConfiguracionInicialListado()
@@ -64,14 +64,17 @@ class RequermientoControlador extends AlmacenIndexControlador
                 return $acumulador + ($seleccion['cantidad'] * $seleccion['valor_monetario']);
             }, 0);
             
-            if($data[$i]['urgencia'] != "Si" && $data[$i]['urgencia'] != ""){
+            // if($data[$i]['urgencia'] != "Si" && $data[$i]['urgencia'] != ""){
+            //     $nivelM=1;
+            //     $matrizUsuario = array_filter($matrizUsuario, function($item) use ($nivelM) {
+            //         return $item['nivel'] <= $nivelM;
+            //     });
+            // }
+            if($data[$i]['documento_tipo_id'] == "282" && 30000 > $sumaDetalle){
                 $nivelM=1;
                 $matrizUsuario = array_filter($matrizUsuario, function($item) use ($nivelM) {
                     return $item['nivel'] <= $nivelM;
                 });
-            }
-            if($data[$i]['documento_tipo_id'] == 281 && $sumaDetalle){
-
             }
 
             $usuario_estado = DocumentoNegocio::create()->obtenerDocumentoDocumentoEstadoXdocumentoId($data[$i]['id'], "0,1");
@@ -166,11 +169,11 @@ class RequermientoControlador extends AlmacenIndexControlador
             if (in_array($usuarioId, $arrayAprobadores) && !in_array($usuarioId, $arrayAprobaciones) && $filtrado[0]['usuario_aprobador_id'] == $usuarioId) {
                 // $stringAcciones .= "<a href='#' onclick='aprobar(" . $data[$i]['id'] . ", " . $data[$i]['movimiento_id']. ", " . $data[$i]['documento_tipo_id']. ")'><i class='fa fa-check' style='color:blue;' title='Aprobar'></i></a>&nbsp;";
                 // $stringAcciones .= "<a href='#' onclick='rechazar(" . $data[$i]['id'] . ", " . $data[$i]['movimiento_id'].  ", " . $data[$i]['documento_tipo_id']. ")'><i class='fa fa-times' style='color:red;' title='Rechazar '></i></a>&nbsp;";
-                if($criterios['documento_tipo'] == 282){
-                    $stringAcciones .= "<a href='#' onclick='archivosAdjuntos(" . $data[$i]['id'] . ", " . $data[$i]['movimiento_id']. ")'><i class='fa fa-cloud-upload' style='color:blue;' title='Revisar archivos adjuntos'></i></a>&nbsp;";
-                }
                 $data[$i]['uasurio_estado_descripcion'] = "Por Aprobar";
                 $icon_aprobacion = "<i class='fa fa-check' style='color:blue;' title='Aprobar'></i>";
+                // if($criterios['documento_tipo'] == 282){
+                //     $stringAcciones .= "<a href='#' onclick='archivosAdjuntos(" . $data[$i]['id'] . ", " . $data[$i]['movimiento_id']. ")'><i class='fa fa-cloud-upload' style='color:blue;' title='Revisar archivos adjuntos'></i></a>&nbsp;";
+                // }
             }
 
             if(count($usuario_estado) < count($matrizUsuario)){
@@ -254,4 +257,5 @@ class RequermientoControlador extends AlmacenIndexControlador
         $usuarioId = $this->getUsuarioId();
         return RequerimientoNegocio::create()->aprobarOrdenCompraServicio($id, $usuarioId);
     }
+
 }

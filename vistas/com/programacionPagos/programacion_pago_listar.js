@@ -75,6 +75,7 @@ function onResponseProgramacionPagoListar(response) {
                 onResponseAnularProgramacion(response.data);
                 break;
             case 'subirAdjunto':
+                loaderClose();
                 $("#modalAdjunto").modal('hide');
                 $("#text_archivoAdjunto").val();
                 $("#base64archivoAdjunto").val();
@@ -208,6 +209,7 @@ function buscarDocumentos() {
                         } else {
                             acciones += "<a href='#' onclick='generarTXTPagosDetraccion(" + row.id + ")'><i class='fa fa-file-text-o' style='color:green;' title='Generar txt Detracciones'></i></a>&nbsp;";
                         }
+                        acciones += "<a href='#' onclick='verPdf(\"" + row.url_pdf + "\")'><i class='fa fa-cloud-download' style='color:blue;' title='Generar txt Detracciones'></i></a>&nbsp;";
                     }else if (row.estado == 1 && isEmpty(row.url_pdf)) {
                         acciones += "<a href='#' onclick='subirArchivosAdjuntos(" + row.id + ")'><i class='fa fa-cloud-upload' style='color:blue;' title='Subir archivos adjuntos'></i></a>&nbsp;";
                         acciones += "<a href='#' onclick='anularProgramacion(" + row.id + ")'><i class='fa fa-ban' style='color:red;' title='Anular'></i></a>&nbsp;";
@@ -628,6 +630,7 @@ $("#fileInputAdjunto").change(function () {
 
 function registrarImagenPdfBien() {
     if (!isEmpty($("#base64archivoAdjunto").val())) {
+        loaderShow("#modalAdjunto");
         ax.setAccion("subirAdjunto");
         ax.addParamTmp("programacionId", $("#indiceImagenAdjuntaBien").val());
         ax.addParamTmp("base64archivoAdjunto", $("#base64archivoAdjunto").val());
@@ -647,4 +650,21 @@ function base64ToSize(base64) {
     // Convertir el tamaño a MB
     const sizeInMB = byteSize / (1024 * 1024); // 1 MB = 1024 * 1024 bytes
     return sizeInMB;
+}
+
+function verPdf(nombreAdjunto){
+    var partesNombreAdjunto = nombreAdjunto.split('.');
+    var newWindow = window.open();
+
+    if(partesNombreAdjunto[1] == "pdf"){
+        newWindow.document.write('<html><body>');
+        newWindow.document.write('<embed width="100%" height="100%" src="' + URL_BASE + "util/uploads/documentoAdjunto/" + nombreAdjunto + '" type="application/pdf">');
+        newWindow.document.write('</body></html>');
+        newWindow.document.close();
+    }else{
+        newWindow.document.write('<html><body>');
+        newWindow.document.write('<img src="' + URL_BASE + "util/uploads/imagenAdjunto/" + nombreAdjunto + '">'); 
+        newWindow.document.write('</body></html>');
+        newWindow.document.close();
+    }
 }
