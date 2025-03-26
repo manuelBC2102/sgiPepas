@@ -509,17 +509,24 @@ class MovimientoNegocio extends ModeloNegocioBase
     //Reservar stock
     if (!ObjectUtil::isEmpty($dataStockReservaOk) && $documentoTipoId == Configuraciones::REQUERIMIENTO_AREA) {
       //generar salida
-      $this->guardarDocumnentoReservaEntradaSalida($usuarioId, Configuraciones::INGRESO_RESERVA_STOCK,$dataStockReservaOk, $respuesta, $periodoId, 393, 64, 1);
+      $this->guardarDocumnentoReservaEntradaSalida($usuarioId, Configuraciones::INGRESO_RESERVA_STOCK,$dataStockReservaOk, $respuesta, $periodoId, 403, 64, 1);
       //Generar ingreso a almacen Reserva
-      $this->guardarDocumnentoReservaEntradaSalida($usuarioId, Configuraciones::SALIDA_RESERVA_STOCK,$dataStockReservaOk, $respuesta, $periodoId, 394, 78, 2);
+      $this->guardarDocumnentoReservaEntradaSalida($usuarioId, Configuraciones::SALIDA_RESERVA_STOCK,$dataStockReservaOk, $respuesta, $periodoId, 404, 78, 2);
 
     }
 
+    //se usa para compras
     if ($documentoTipoId == Configuraciones::GENERAR_COTIZACION) {
       $respuestaCotizacion = $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::COTIZACIONES,$detalle, $respuesta, $periodoId, 160, 1);
       //generamos OC
       $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::ORDEN_COMPRA,$detalle, $respuesta, $periodoId, 395, 2, $listaPagoProgramacion, $respuestaCotizacion);
 
+    }
+
+    //Se usa para Servicio
+    if ($documentoTipoId == Configuraciones::COTIZACION_SERVICIO) {
+      //generamos OS
+      $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::ORDEN_SERVICIO,$detalle, $respuesta, $periodoId, 401, 3, $listaPagoProgramacion, null, $monedaId);
     }
 
     $this->guardarAnticipos($respuesta, $anticiposAAplicar, $usuarioId, $camposDinamicos, $monedaId);
@@ -2786,7 +2793,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     foreach ($documentoDetalle as $detalle) {
       $subTotal = $detalle['cantidad'] * $detalle['valor_monetario'];
       $descripcionEditada = $detalle['bien_descripcion_editada'];
-      array_push($arrayDetalle, $this->getDetalle("", $detalle['cantidad'], (!ObjectUtil::isEmpty($descripcionEditada)) ? $descripcionEditada : $detalle['bien_descripcion'], $detalle['valor_monetario'], $subTotal, $detalle['unidad_medida_descripcion'], $detalle['simbolo'], $detalle['bien_codigo'], $detalle['unidad_medida_id'], $detalle['bien_id'], $detalle['ad_valorem'], $detalle['movimiento_bien_comentario'], $detalle["bien_tipo_descripcion"], $detalle["codigo_contable"], $detalle["agencia_descripcion"], $detalle['ticket'], $detalle['centro_costo_descripcion'], $detalle['precio_postor1'], $detalle['precio_postor2'], $detalle['precio_postor3'], $detalle['postor_ganador_id'], $detalle['es_compra'], $detalle['cantidad_solicitada'], null, null, $detalle['moneda_postor1'], $detalle['moneda_postor2'], $detalle['moneda_postor3']));
+      array_push($arrayDetalle, $this->getDetalle($detalle['movimiento_bien_id'],"", $detalle['cantidad'], (!ObjectUtil::isEmpty($descripcionEditada)) ? $descripcionEditada : $detalle['bien_descripcion'], $detalle['valor_monetario'], $subTotal, $detalle['unidad_medida_descripcion'], $detalle['simbolo'], $detalle['bien_codigo'], $detalle['unidad_medida_id'], $detalle['bien_id'], $detalle['ad_valorem'], $detalle['movimiento_bien_comentario'], $detalle["bien_tipo_descripcion"], $detalle["codigo_contable"], $detalle["agencia_descripcion"], $detalle['ticket'], $detalle['centro_costo_descripcion'], $detalle['precio_postor1'], $detalle['precio_postor2'], $detalle['precio_postor3'], $detalle['postor_ganador_id'], $detalle['es_compra'], $detalle['cantidad_solicitada'], null, null, $detalle['moneda_postor1'], $detalle['moneda_postor2'], $detalle['moneda_postor3']));
       $total += $subTotal;
     }
 
@@ -3206,7 +3213,7 @@ class MovimientoNegocio extends ModeloNegocioBase
         $resMovimientoBienDetalleReverva = MovimientoBien::create()->movimientoBienDetalleObtenerReservaRequerimientoXMovimientoBienId($detalle['movimiento_bien_id']);
         $resMovimientoBienDetalle = MovimientoBien::create()->obtenerMovimientoBienDetalleXMovimientoBienId($detalle['movimiento_bien_id']);
         $subTotal = $detalle['cantidad'] * $detalle['valor_monetario']; // + $detalle['ad_valorem']
-        array_push($arrayDetalle, $this->getDetalle($detalle['organizador_descripcion'], $detalle['cantidad'], $detalle['bien_descripcion'], $detalle['valor_monetario'], $subTotal, $detalle['unidad_medida_descripcion'], $detalle['simbolo'], $detalle['bien_codigo'], $detalle['unidad_medida_id'], $detalle["bien_id"], $detalle["ad_valorem"], $detalle["movimiento_bien_comentario"], $detalle["bien_tipo_descripcion"], $detalle["codigo_contable"], $detalle["agencia_descripcion"], $detalle["ticket"], $detalle["centro_costo_descripcion"], $detalle["precio_postor1"], $detalle["precio_postor2"], $detalle["precio_postor3"], $detalle["postor_ganador_id"], $detalle["es_compra"], $detalle["cantidad_solicitada"], $resMovimientoBienDetalle, $resMovimientoBienDetalleReverva, $detalle["moneda_postor1"], $detalle["moneda_postor2"], $detalle["moneda_postor3"]));
+        array_push($arrayDetalle, $this->getDetalle($detalle['movimiento_bien_id'] ,$detalle['organizador_descripcion'], $detalle['cantidad'], $detalle['bien_descripcion'], $detalle['valor_monetario'], $subTotal, $detalle['unidad_medida_descripcion'], $detalle['simbolo'], $detalle['bien_codigo'], $detalle['unidad_medida_id'], $detalle["bien_id"], $detalle["ad_valorem"], $detalle["movimiento_bien_comentario"], $detalle["bien_tipo_descripcion"], $detalle["codigo_contable"], $detalle["agencia_descripcion"], $detalle["ticket"], $detalle["centro_costo_descripcion"], $detalle["precio_postor1"], $detalle["precio_postor2"], $detalle["precio_postor3"], $detalle["postor_ganador_id"], $detalle["es_compra"], $detalle["cantidad_solicitada"], $resMovimientoBienDetalle, $resMovimientoBienDetalleReverva, $detalle["moneda_postor1"], $detalle["moneda_postor2"], $detalle["moneda_postor3"]));
         $total += $subTotal;
       }
     }
@@ -3215,9 +3222,10 @@ class MovimientoNegocio extends ModeloNegocioBase
     return $respuesta;
   }
 
-  private function getDetalle($organizador, $cantidad, $descripcion, $precioUnitario, $importe, $unidadMedida, $simbolo, $bien_codigo, $unidadMedidaID, $bienId, $adValorem = 0, $movimientoBienComentario = '', $bienTipoDescripcion = '', $codigoContable = '', $agenciaDescripcion = '', $ticket = '', $centro_costo_descripcion = '', $precio_postor1 = '', $precio_postor2 = '', $precio_postor3 = null, $postor_ganador_id = null, $es_compra = '', $cantidad_solicitada = '', $movimientoBienDetalle = null, $estadoReserva = null, $moneda_postor1 = null, $moneda_postor2 = null, $moneda_postor3 = null)
+  private function getDetalle($movimientoBienId ,$organizador, $cantidad, $descripcion, $precioUnitario, $importe, $unidadMedida, $simbolo, $bien_codigo, $unidadMedidaID, $bienId, $adValorem = 0, $movimientoBienComentario = '', $bienTipoDescripcion = '', $codigoContable = '', $agenciaDescripcion = '', $ticket = '', $centro_costo_descripcion = '', $precio_postor1 = '', $precio_postor2 = '', $precio_postor3 = null, $postor_ganador_id = null, $es_compra = '', $cantidad_solicitada = '', $movimientoBienDetalle = null, $estadoReserva = null, $moneda_postor1 = null, $moneda_postor2 = null, $moneda_postor3 = null)
   {
     $detalle = new stdClass();
+    $detalle->movimientoBienId = $movimientoBienId;
     $detalle->organizador = $organizador;
     $detalle->cantidad = $cantidad;
     $detalle->descripcion = $descripcion;
@@ -10739,6 +10747,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     // $pdf->MultiCell(10, 5, 'N°', 1, 'C', 1, 0, '', 59, true, 0, false, true, 5, 'M');
     // $pdf->MultiCell(10, 5, 'TIPO DE REQUERIMIENTO', 1, 'C', 1, 0, '', 59, true, 0, false, true, 5, 'M');
     $cont = 0;
+    $pdf->SetFont('helvetica', 'B', 5);
 
     $pdf->Ln(10);
     $tabla = '<table cellspacing="0" cellpadding="1" border="1">
@@ -10747,14 +10756,17 @@ class MovimientoNegocio extends ModeloNegocioBase
             <th style="text-align:center;vertical-align:middle;" width="12%"><b>CODIGO</b></th>
             <th style="text-align:center;vertical-align:middle;" width="35%"><b>DESCRIPCION</b></th>
             <th style="text-align:center;vertical-align:middle;" width="8%"><b>MARCA</b></th>
-            <th style="text-align:center;vertical-align:middle;" width="10%"><b>MODELO</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="8%"><b>MODELO</b></th>
             <th style="text-align:center;vertical-align:middle;" width="8%"><b>CANTIDAD</b></th>
             <th style="text-align:center;vertical-align:middle;" width="8%"><b>UNIDAD DE MEDIDA</b></th>
-            <th style="text-align:center;vertical-align:middle;" width="16%"><b>INFORMACION ADICIONAL</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="10%"><b>N° RQ</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="8%"><b>INFORMACION ADICIONAL</b></th>
         </tr>
     ';
     if (!ObjectUtil::isEmpty($detalle)) {
       foreach ($detalle as $index => $item) {
+        $resMovimientoBienDetalle = MovimientoBien::create()->obtenerMovimientoBienDetalleObtenerSolicitudR($item->movimientoBienId);
+
         $cont++;
         // if (strlen($item->descripcion) > 39) {
         //   $cont++;
@@ -10765,10 +10777,11 @@ class MovimientoNegocio extends ModeloNegocioBase
           . '<td align="center" width="12%">' . $item->bien_codigo . '</td>'
           . '<td style="text-align:left; vertical-align:middle; display: table-cell;" width="35%">' . $item->descripcion . '</td>'
           . '<td style="text-align:center"  width="8%"></td>'
-          . '<td style="text-align:center"  width="10%"></td>'
+          . '<td style="text-align:center"  width="8%"></td>'
           . '<td style="text-align:center"  width="8%">' . number_format($item->cantidad, 2) . '</td>'
           . '<td style="text-align:center"  width="8%">' . $item->simbolo . '</td>'
-          . '<td style="text-align:center"  width="16%">' . $item->movimientoBienComentario . '</td>'
+          . '<td style="text-align:center"  width="10%">'.$resMovimientoBienDetalle[0]['solicitud_requerimiento'].'</td>'
+          . '<td style="text-align:center"  width="8%">' . $item->movimientoBienComentario . '</td>'
           . '</tr>';
       }
     }
@@ -10779,10 +10792,11 @@ class MovimientoNegocio extends ModeloNegocioBase
         . '<td style="text-align:left"  width="12%"></td>'
         . '<td style="text-align:left"  width="35%"></td>'
         . '<td style="text-align:center"  width="8%"></td>'
+        . '<td style="text-align:center"  width="8%"></td>'
+        . '<td style="text-align:center"  width="8%"></td>'
+        . '<td style="text-align:center"  width="8%"></td>'
         . '<td style="text-align:center"  width="10%"></td>'
         . '<td style="text-align:center"  width="8%"></td>'
-        . '<td style="text-align:center"  width="8%"></td>'
-        . '<td style="text-align:center"  width="16%"></td>'
         . '</tr>';
     }
 
@@ -11638,7 +11652,7 @@ class MovimientoNegocio extends ModeloNegocioBase
   
   }
 
-  public function guardarDocumentoCotizacion($camposDinamicosConsolidado,$usuarioId, $documentoTipoId, $detalle, $respuesta, $periodoId, $opcionId, $banderaCotizacon, $listaPagoProgramacion = null, $respuestaCotizacion = null)
+  public function guardarDocumentoCotizacion($camposDinamicosConsolidado,$usuarioId, $documentoTipoId, $detalle, $respuesta, $periodoId, $opcionId, $banderaCotizacon, $listaPagoProgramacion = null, $respuestaCotizacion = null, $monedaIdExt = null)
   {
     //generar cotizacion
     $checkedOC = ($detalle[0]['checked1'] == "true") ? "1" : 
@@ -11657,12 +11671,16 @@ class MovimientoNegocio extends ModeloNegocioBase
       $filtradosTipo23 = array_filter($camposDinamicosConsolidado, function($item) {
         return $item['tipo'] === "23" && !empty($item['valor']);
       });
-    }else{
+    }else if($banderaCotizacon == 2){
       $filtradosTipo23 = array_filter($camposDinamicosConsolidado, function($item) use ($checkedOC){
         return $item['tipo'] === "23" && !empty($item['valor']) && stripos($item['descripcion'], $checkedOC) == true;
       });
+    }else if($banderaCotizacon == 3){
+      $filtradosTipo23 = array_filter($camposDinamicosConsolidado, function($item) use ($checkedOC){
+        return $item['tipo'] === "5" && !empty($item['valor']);
+      });
     }
-
+    
     $filtradosTipo10 = array_filter($camposDinamicosConsolidado, function($item) {
       return $item['tipo'] === "10";
     });
@@ -11677,6 +11695,21 @@ class MovimientoNegocio extends ModeloNegocioBase
       return $item['tipo'] === "4" && $item['codigo'] === "05";
     });
     $filtradosTipo4 = array_values($filtradosTipo4);
+
+    $filtradosTipo14 = array_filter($camposDinamicosConsolidado, function($item) {
+      return $item['tipo'] === "14";
+    });
+    $filtradosTipo14 = array_values($filtradosTipo14);
+
+    $filtradosTipo15 = array_filter($camposDinamicosConsolidado, function($item) {
+      return $item['tipo'] === "15";
+    });
+    $filtradosTipo15 = array_values($filtradosTipo15);
+
+    $filtradosTipo16 = array_filter($camposDinamicosConsolidado, function($item) {
+      return $item['tipo'] === "16";
+    });
+    $filtradosTipo16 = array_values($filtradosTipo16);
 
     // $filtradosTipo47 = array_filter($camposDinamicosConsolidado, function($item) {
     //   return $item['tipo'] === "47";
@@ -11713,21 +11746,29 @@ class MovimientoNegocio extends ModeloNegocioBase
       $texto1 = stripos($itemTipo23['descripcion'], "1");
       $texto2 = stripos($itemTipo23['descripcion'], "2");
       $texto3 = stripos($itemTipo23['descripcion'], "3");
-      if($texto1 == true){
-        $importeTotal = $sumaMontosprecioPostor1;
-        $igv = $igvPostor1;
-        $monedaId = $checkeMoneda1;
-        $subTotal = $subTotalPostor1;
-      }else if($texto2 == true){
-        $importeTotal = $sumaMontosprecioPostor2;
-        $subTotal = $subTotalPostor2;
-        $igv = $igvPostor2;
-        $monedaId = $checkeMoneda2;
-      }else if($texto3 == true){
-        $importeTotal = $sumaMontosprecioPostor3;
-        $igv = $igvPostor3;
-        $subTotal = $subTotalPostor3;
-        $monedaId = $checkeMoneda3;
+
+      if($banderaCotizacon != 3){
+        if($texto1 == true){
+          $importeTotal = $sumaMontosprecioPostor1;
+          $igv = $igvPostor1;
+          $monedaId = $checkeMoneda1;
+          $subTotal = $subTotalPostor1;
+        }else if($texto2 == true){
+          $importeTotal = $sumaMontosprecioPostor2;
+          $subTotal = $subTotalPostor2;
+          $igv = $igvPostor2;
+          $monedaId = $checkeMoneda2;
+        }else if($texto3 == true){
+          $importeTotal = $sumaMontosprecioPostor3;
+          $igv = $igvPostor3;
+          $subTotal = $subTotalPostor3;
+          $monedaId = $checkeMoneda3;
+        }
+      }else{
+        $importeTotal = $filtradosTipo14[0]['valor'];
+        $igv = $filtradosTipo15[0]['valor'];
+        $subTotal = $filtradosTipo16[0]['valor'];
+        $monedaId = $monedaIdExt;
       }
 
       foreach ($configuraciones as $item) {
@@ -11740,11 +11781,18 @@ class MovimientoNegocio extends ModeloNegocioBase
               }else if($documentoTipoId == Configuraciones::COTIZACIONES && $filtradosTipo4[0]['valor'] == 501){//contado
                 $valor = 471;
               }
+              
               if($documentoTipoId == Configuraciones::ORDEN_COMPRA && $filtradosTipo4[0]['valor'] == 502){//credito
                 $valor = 469;
               }else if($documentoTipoId == Configuraciones::ORDEN_COMPRA && $filtradosTipo4[0]['valor'] == 501){//contado
                 $valor = 468;
               }
+
+              if($documentoTipoId == Configuraciones::ORDEN_SERVICIO && $filtradosTipo4[0]['valor'] == 500){//credito
+                $valor = 469;
+              }else if($documentoTipoId == Configuraciones::ORDEN_SERVICIO && $filtradosTipo4[0]['valor'] == 499){//contado
+                $valor = 468;
+              }              
               $camposDinamicosCotizacion[] = array(
                 "id" => $item['id'],
                 "tipo" => $item['tipo'],

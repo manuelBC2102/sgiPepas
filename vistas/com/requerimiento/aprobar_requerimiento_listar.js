@@ -619,16 +619,16 @@ function visualizar(id, movimientoId, documento_estado_id, documento_estado, doc
     documento_tipo_descripcionText = documento_tipo_descripcion;
     loaderShow();
     documentoTipoId = documento_tipo_id;
-    if(documento_tipo_id == 280){ //Solicitud Requerimiento
+    if(documento_tipo_id == SOLICITUD_REQUERIMIENTO){ //Solicitud Requerimiento
         ax.setAccion("visualizarSolicitudRequerimiento");
         ax.setTag(documento_estado);
-    }else if(documento_tipo_id == 283){ //Consolidar Requerimientos Area
+    }else if(documento_tipo_id == REQUERIMIENTO_AREA){ //Consolidar Requerimientos Area
         ax.setAccion("visualizarRequerimiento");
         ax.setTag(documento_estado);
-    }else if(documento_tipo_id == 281){ //Consolidar Requerimientos
+    }else if(documento_tipo_id == GENERAR_COTIZACION){ //Consolidar Requerimientos
         ax.setAccion("visualizarConsolidado");
         ax.setTag(documento_estado);
-    }else if(documento_tipo_id == 282 || documento_tipo_id == 284){ //Orden de Compra o Servicio
+    }else if(documento_tipo_id == ORDEN_COMPRA || documento_tipo_id == ORDEN_SERVICIO){ //Orden de Compra o Servicio
         ax.setAccion("visualizarOrdenCompraServicio");
         ax.setTag(documento_estado);        
     }
@@ -711,7 +711,7 @@ function fechaArmada(valor) {
 
 function aprobar() {
     id = $("#visualizarDocumentoId").val();
-    if(documentoTipoId == 280 || documentoTipoId == 284 || documentoTipoId == 283){ //Requerimiento
+    if(documentoTipoId == SOLICITUD_REQUERIMIENTO || documentoTipoId == ORDEN_SERVICIO || documentoTipoId == REQUERIMIENTO_AREA){ //Requerimiento
         swal({
             title: " ¿Desea continuar?",
             text: "Se procede aprobar "+ documento_tipo_descripcionText,
@@ -736,7 +736,7 @@ function aprobar() {
                 loaderClose();
             }
         });
-    }else if(documentoTipoId == 281){ // Consolidado RQ
+    }else if(documentoTipoId == GENERAR_COTIZACION){ // Consolidado RQ
         var checked1 = $('#selectPostor1').is(":checked");
         var checked2 = $('#selectPostor2').is(":checked");
         var checked3 = $('#selectPostor3').is(":checked");
@@ -778,7 +778,7 @@ function aprobar() {
             loaderClose();
             return;
         }
-    }else if(documentoTipoId == 282){ // Orden de compra o Servicio
+    }else if(documentoTipoId == ORDEN_COMPRA){ // Orden de compra o Servicio
         swal({
             title: " ¿Desea continuar?",
             text: "Se procede aprobar la " + documento_tipo_descripcionText,
@@ -821,7 +821,13 @@ function rechazar() {
         cancelButtonText: "No, cancelar !",
     }, function (isConfirm) {
         if (isConfirm) {
-            $('#tituloModalAnulacion').html("Rechazar Consolidado ");
+            if(documentoTipoId == SOLICITUD_REQUERIMIENTO){
+                $('#tituloModalAnulacion').html("Rechazar Solicitud requerimiento");
+            }else if(documentoTipoId == ORDEN_COMPRA){
+                $('#tituloModalAnulacion').html("Rechazar Orden de compra");
+            }else if(documentoTipoId == REQUERIMIENTO_AREA){
+                $('#tituloModalAnulacion').html("Rechazar Requerimiento por área");
+            }
             $('#txtMotivoRechazo').val('');
             $('#modalAnulacion').modal('show');
             documentoId = id;

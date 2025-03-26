@@ -3137,7 +3137,7 @@ function agregarCompra(i) {
 
 function agregarBienDetalleTabla(i) {
     var disabled = '';
-    if(doc_TipoId == GENERAR_COTIZACION || doc_TipoId == REQUERIMIENTO_AREA){
+    if(doc_TipoId == GENERAR_COTIZACION || doc_TipoId == REQUERIMIENTO_AREA || doc_TipoId == COTIZACION_SERVICIO){
         disabled = 'disabled';
     }
     var $html = "<div class=\"input-group col-lg-12 col-md-12 col-sm-12 col-xs-12\">" +
@@ -4739,7 +4739,9 @@ function guardar(accion) {
         lstDocumentoArchivos.push(lstDocumentoArchivos1[0]);
         lstDocumentoArchivos.push(lstDocumentoArchivos2[0]);
         lstDocumentoArchivos.push(lstDocumentoArchivos3[0]);
+    }
 
+    if(doc_TipoId == GENERAR_COTIZACION || doc_TipoId == COTIZACION_SERVICIO){
         var totalPago = 0;
         listaPagoProgramacion.forEach(function (item) {
           totalPago = totalPago + item[1] * 1;
@@ -4750,7 +4752,6 @@ function guardar(accion) {
           return;
         }
     }
-
     if(doc_TipoId == REQUERIMIENTO_AREA){
         var dtdTipoTipoRequerimiento = obtenerDocumentoTipoDatoIdXTipo(42);
         select2.obtenerValor("cboTipoRequerimiento_" + dtdTipoTipoRequerimiento);
@@ -10994,6 +10995,7 @@ function hallarSubTotalPostorDetalle(indice, numero){
         $('#fechaPago').datepicker('setDate', sumaFecha(1,fechaEmision));
 
         $('#txtImportePago').val(devolverDosDecimales(calculoTotal));
+        $('#txtPorcentaje').val(devolverDosDecimales(100));
     });
 }
 
