@@ -3096,7 +3096,7 @@ function limpiarFilaDetalleFormulario(indice) {
                     $("#cboCeCo_" + indice).select2({width: anchoCeCoTD + 'px'});
                     break;
                 case 34:
-                    document.getElementById("txtCantidadAprobada_" + indice).value = '1';
+                    document.getElementById("txtCantidadAprobada_" + indice).value = '0';
                     break;               
             }
         });
@@ -3980,6 +3980,7 @@ function asignarValoresDetalleFormulario() {
                     }
                 case 12:// CANTIDAD
                     $('#txtCantidad_' + indexDetalle).val(devolverDosDecimales(valoresFormularioDetalle.cantidad));
+                    $('#txtCantidadAprobada_' + indexDetalle).val(devolverDosDecimales(valoresFormularioDetalle.cantidad));
                     break;
 
                     //combos, seleccion
