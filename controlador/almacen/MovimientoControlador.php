@@ -1963,15 +1963,8 @@ class MovimientoControlador extends AlmacenIndexControlador
     $usuarioId = $this->getUsuarioId();
     $dataRelacionada = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoId($documentoId);
     foreach($dataRelacionada as $itemRelacion){
-      if($itemRelacion['documento_tipo_id'] == Configuraciones::GENERAR_COTIZACION){
-          $dataRelacionada1 = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoId($itemRelacion['documento_relacionado_id']);
-          foreach($dataRelacionada1 as $itemRelacion1){
-            if($itemRelacion1['documento_tipo_id'] == Configuraciones::ORDEN_COMPRA){
-              return MovimientoNegocio::create()->imprimirExportarPDFDocumento($documentoTipoId, $itemRelacion1['documento_relacionado_id'], $usuarioId);
-  
-            }
-          }
-
+      if($itemRelacion['documento_tipo_id'] == Configuraciones::ORDEN_COMPRA){
+        return MovimientoNegocio::create()->imprimirExportarPDFDocumento($documentoTipoId, $itemRelacion['documento_relacionado_id'], $usuarioId);
       }
     }
   }

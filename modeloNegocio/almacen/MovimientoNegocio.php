@@ -516,9 +516,9 @@ class MovimientoNegocio extends ModeloNegocioBase
     }
 
     if ($documentoTipoId == Configuraciones::GENERAR_COTIZACION) {
-      $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::COTIZACIONES,$detalle, $respuesta, $periodoId, 160, 1);
+      $respuestaCotizacion = $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::COTIZACIONES,$detalle, $respuesta, $periodoId, 160, 1);
       //generamos OC
-      $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::ORDEN_COMPRA,$detalle, $respuesta, $periodoId, 395, 2, $listaPagoProgramacion);
+      $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::ORDEN_COMPRA,$detalle, $respuesta, $periodoId, 395, 2, $listaPagoProgramacion, $respuestaCotizacion);
 
     }
 
@@ -11154,10 +11154,22 @@ class MovimientoNegocio extends ModeloNegocioBase
     $pdf->MultiCell(45, 10, '', 1, 'C', 1, 0, 105, 79, true, 0, false, true, 10, 'M'); //verificar
 
 
+    $serieNumeroCotizacion = '';
+    $serieNumeroSolicitudRequerimiento = '';
+    $dataRelacionada = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoId($documentoId);
+    foreach($dataRelacionada as $itemRelacion){
+      if($itemRelacion['documento_tipo_id'] == Configuraciones::COTIZACIONES){
+        $serieNumeroCotizacion = $itemRelacion['serie_numero'];
+      }
+      if($itemRelacion['documento_tipo_id'] == Configuraciones::SOLICITUD_REQUERIMIENTO){
+        $serieNumeroSolicitudRequerimiento .= $itemRelacion['serie_numero']. ", ";
+      }
+    }
+
     $pdf->SetFont('helvetica', 'B', 8);
     $pdf->MultiCell(45, 5, 'REQUERIMIENTO:', 1, 'L', 1, 0, '', 89, true, 0, false, true, 5, 'M');
     $pdf->SetFont('helvetica', '', 7);
-    $pdf->MultiCell(90, 5, $requerimiento, 1, 'L', 1, 0, 60, 89, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(90, 5, $serieNumeroSolicitudRequerimiento, 1, 'L', 1, 0, 60, 89, true, 0, false, true, 5, 'M');
     $pdf->SetFont('helvetica', 'B', 8);
     $pdf->MultiCell(45, 5, 'U.O:', 1, 'L', 1, 0, '', 94, true, 0, false, true, 5, 'M');
     $pdf->SetFont('helvetica', '', 7);
@@ -11173,7 +11185,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     $pdf->SetFont('helvetica', 'B', 8);
     $pdf->MultiCell(45, 5, 'COTIZACION:', 1, 'L', 1, 0, '', 109, true, 0, false, true, 5, 'M');
     $pdf->SetFont('helvetica', '', 7);
-    $pdf->MultiCell(90, 5, $cotizacion, 1, 'L', 1, 0, 60, 109, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(90, 5, $serieNumeroCotizacion, 1, 'L', 1, 0, 60, 109, true, 0, false, true, 5, 'M');
     $pdf->SetFont('helvetica', 'B', 8);
     $pdf->MultiCell(45, 5, 'CUENTA:', 1, 'L', 1, 0, '', 114, true, 0, false, true, 5, 'M');
     $pdf->SetFont('helvetica', '', 7);
@@ -11626,7 +11638,7 @@ class MovimientoNegocio extends ModeloNegocioBase
   
   }
 
-  public function guardarDocumentoCotizacion($camposDinamicosConsolidado,$usuarioId, $documentoTipoId, $detalle, $respuesta, $periodoId, $opcionId, $banderaCotizacon, $listaPagoProgramacion = null)
+  public function guardarDocumentoCotizacion($camposDinamicosConsolidado,$usuarioId, $documentoTipoId, $detalle, $respuesta, $periodoId, $opcionId, $banderaCotizacon, $listaPagoProgramacion = null, $respuestaCotizacion = null)
   {
     //generar cotizacion
     $checkedOC = ($detalle[0]['checked1'] == "true") ? "1" : 
@@ -11896,12 +11908,22 @@ class MovimientoNegocio extends ModeloNegocioBase
         );
         $detalleCotizacion[] = $arrayItem;
       }
-      $documentoARelacionarSalida [] = array(
-        "documentoId" => $respuesta->documentoId,
-        "movimientoId" => $respuesta->movimientoId,
-        "tipo" => "1",
-        "documentoPadreId" => ""
-      );
+
+      if($documentoTipoId == Configuraciones::ORDEN_COMPRA){
+        $documentoARelacionarSalida [] = array(
+          "documentoId" => $respuestaCotizacion[0],
+          "movimientoId" => "",
+          "tipo" => "1",
+          "documentoPadreId" => ""
+        );
+      }else{
+        $documentoARelacionarSalida [] = array(
+          "documentoId" => $respuesta->documentoId,
+          "movimientoId" => $respuesta->movimientoId,
+          "tipo" => "1",
+          "documentoPadreId" => ""
+        );
+      }
 
       $documento = $this->guardar($opcionId, $usuarioId, $documentoTipoId, $camposDinamicosCotizacion, $detalleCotizacion, $documentoARelacionarSalida, 1, "", 1, $monedaId, null, $periodoId, null, null, null, null);
     
@@ -11916,8 +11938,8 @@ class MovimientoNegocio extends ModeloNegocioBase
 
       if(!ObjectUtil::isEmpty($filtradosTipo23)){
         $respuestaActualizarDocumentoEstado = DocumentoNegocio::create()->ActualizarDocumentoEstadoId($documento[0]['vout_id'], 16, $usuarioId);
+        $documentosIdCotizaciones [] = $documento[0]['vout_id'];
       }
-      $documentosIdCotizaciones [] = $documento[0]['vout_id'];
     }
   
     if($documentoTipoId == Configuraciones::ORDEN_COMPRA){
@@ -11934,6 +11956,7 @@ class MovimientoNegocio extends ModeloNegocioBase
       }
 
     }
+    return $documentosIdCotizaciones;
   }
 
   public function obtenerDetalleBienRequerimiento($movimientoBienId){
