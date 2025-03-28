@@ -328,6 +328,16 @@ function onResponseMovimientoListar(response) {
                     abrirDocumentoPDF(response.data, 'vistas/com/movimiento/documentos/');
                 }
                 break;
+            case 'obtenerPdfOrdenServicio':
+                loaderClose();
+                if (!isEmpty(response.data.dataDocumento)) {
+                    cargarDatosImprimir(response.data);
+                } else if (!isEmpty(response.data.iReport)) {
+                    abrirDocumentoPDF(response.data, URL_BASE + '/reporteJasper/documentos/');
+                } else {
+                    abrirDocumentoPDF(response.data, 'vistas/com/movimiento/documentos/');
+                }
+                break;                
         }
     } else {
         switch (response[PARAM_ACCION_NAME]) {
@@ -4797,4 +4807,12 @@ function cargarDataArchivoAdjuntos(data) {
     var html = cabeza + cuerpo_total + pie;
     $("#dataListArchivosAdjuntos").append(html);
     $("#datatableArchivosAdjuntos").DataTable();
+}
+
+function imprimirOrdenServicio(documentoId, documentoTipo){
+    loaderShow();
+    ax.setAccion("obtenerPdfOrdenServicio");
+    ax.addParamTmp("documentoId", documentoId);
+    ax.addParamTmp("documento_tipo_id", documentoTipo);
+    ax.consumir();
 }

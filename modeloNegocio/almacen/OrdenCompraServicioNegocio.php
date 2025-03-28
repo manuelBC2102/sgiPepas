@@ -28,7 +28,6 @@ class OrdenCompraServicioNegocio extends ModeloNegocioBase
     {
         $respuesta = new stdClass();
 
-        $responseMovimientoTipo = Movimiento::create()->ObtenerMovimientoTipoPorOpcion();
         return $respuesta;
     }
 

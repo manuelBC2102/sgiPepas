@@ -1,3 +1,5 @@
+var documento_tipo = document.getElementById("documento_tipo").value;
+
 $(document).ready(function () {
     criterioBusquedaDocumentos = [];
     cargarComponetentes();
@@ -190,12 +192,6 @@ $('.fecha').datepicker({
 function onResponseObtenerConfiguracionInicialListadoDocumentos(data) {
     //desplegable de documentos
     fechasActuales();
-    $('#cboTipo').append('<option value=0>Todos</option>');
-    if (!isEmpty(data.tipo_requerimiento)) {
-        $.each(data.tipo_requerimiento, function (index, item) {
-            $('#cboTipo').append('<option value="' + item['id'] + '">' + item['descripcion'] + '</option>');
-        });
-    }
 }
 
 //here
@@ -206,9 +202,8 @@ function buscarPorCriterios() {
     };
 
     var estadoId = select2.obtenerValor("cboEstado");
-    var tipoId = select2.obtenerValor("cboTipo");
 
-    llenarParametrosBusqueda(fechaEmision, estadoId, tipoId);
+    llenarParametrosBusqueda(fechaEmision, estadoId, documento_tipo);
 
     buscarOrdenCompraServicio();
 }
@@ -233,7 +228,6 @@ function limpiarBuscadores() {
     $('#finFechaEmision').val('');
 
     select2.asignarValor("cboEstado", 0);
-    select2.asignarValor("cboTipo", 0);
 
     criterioBusquedaDocumentos = {};
 }

@@ -32,10 +32,10 @@ class RequerimientoNegocio extends ModeloNegocioBase
         $respuesta = new stdClass();
 
         switch ($opcionId) {
-            case 387:
+            case 397:
                 $movimientoTipoId = 144;
                 break;
-            case 390:
+            case 400:
                 $movimientoTipoId = 147;
                 break;
         }

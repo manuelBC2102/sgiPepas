@@ -9,6 +9,7 @@
 </div>
 
 <div class="panel panel-default">
+<input type="hidden" id="documento_tipo" value="<?php echo $_GET['documento_tipo']; ?>" />
     <div class="row">
         <div class="panel panel-default m-t-20 p-t-0" style="padding-left: 0px;padding-bottom: 1px;padding-right: 0px;">
             <div class="tab-content" style="margin: 0px;padding: 15px">
@@ -66,24 +67,6 @@
                                                         </div>
                                                     </div>
                                                 </div>                                                
-                                                <div class="form-group col-md-2">
-                                                    <label style="color: #141719;">Tipo</label>
-                                                </div>
-                                                <div class="form-group col-md-4">
-                                                    <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                                                        <div class="row">
-                                                            <div class="form-group col-md-12">
-                                                                <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                                                                    <select name="cboTipo" id="cboTipo" class="select2">
-                                                                        <option value="0">seleccionar</option>
-                                                                        <option value="282">Orden de Compra</option>
-                                                                        <option value="284">Orden de Servicio</option>    
-                                                                    </select>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
                                             </li>
                                             <li>
                                                 <div style="float: right">

@@ -277,9 +277,6 @@ function onResponseObtenerConfiguracionInicial(data) {
         select2.asignarValor('cboArea', 0);
     }
 
-    if(documento_tipo == '282,284'){
-        $("#liTipo").show();
-    }
     fechasActuales();
 }
 

@@ -11261,7 +11261,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     $paginaAltura = $pdf->getPageHeight();  // Altura total de la página
     $alturaDisponible = $paginaAltura - $tablaHeight - 20; 
     // Ahora puedes ajustar el valor de $espacio basado en el espacio disponible
-    if ($alturaDisponible > 50) {
+    if ($alturaDisponible > 70) {
       // Si hay mucho espacio, usa ese espacio
       $espacio = $tablaHeight + 5;  // Ajusta un pequeño margen después de la tabla
     } else {
@@ -11680,42 +11680,35 @@ class MovimientoNegocio extends ModeloNegocioBase
         return $item['tipo'] === "5" && !empty($item['valor']);
       });
     }
-    
-    $filtradosTipo10 = array_filter($camposDinamicosConsolidado, function($item) {
-      return $item['tipo'] === "10";
-    });
-    $filtradosTipo10 = array_values($filtradosTipo10);
 
-    $filtradosTipo46 = array_filter($camposDinamicosConsolidado, function($item) {
-      return $item['tipo'] === "46";
-    });
-    $filtradosTipo46 = array_values($filtradosTipo46);
+    $filtradosTipo10 = array_values(array_filter($camposDinamicosConsolidado, function($item) {
+      return $item['tipo'] === "10" && !empty($item['valor']);
+    }));
 
-    $filtradosTipo4 = array_filter($camposDinamicosConsolidado, function($item) {
+    $filtradosTipo46 = array_values(array_filter($camposDinamicosConsolidado, function($item) {
+      return $item['tipo'] === "46" && !empty($item['valor']);
+    }));
+
+    $filtradosTipo45 = array_values(array_filter($camposDinamicosConsolidado, function($item) {
+      return $item['tipo'] === "45" && !empty($item['valor']);
+    }));
+
+    $filtradosTipo4 = array_values(array_filter($camposDinamicosConsolidado, function($item) {
       return $item['tipo'] === "4" && $item['codigo'] === "05";
-    });
-    $filtradosTipo4 = array_values($filtradosTipo4);
+    }));
 
-    $filtradosTipo14 = array_filter($camposDinamicosConsolidado, function($item) {
-      return $item['tipo'] === "14";
-    });
-    $filtradosTipo14 = array_values($filtradosTipo14);
+    $filtradosTipo14 = array_values(array_filter($camposDinamicosConsolidado, function($item) {
+      return $item['tipo'] === "14" && !empty($item['valor']);
+    }));
 
-    $filtradosTipo15 = array_filter($camposDinamicosConsolidado, function($item) {
-      return $item['tipo'] === "15";
-    });
-    $filtradosTipo15 = array_values($filtradosTipo15);
+    $filtradosTipo15 = array_values(array_filter($camposDinamicosConsolidado, function($item) {
+      return $item['tipo'] === "15" && !empty($item['valor']);
+    }));
 
-    $filtradosTipo16 = array_filter($camposDinamicosConsolidado, function($item) {
-      return $item['tipo'] === "16";
-    });
-    $filtradosTipo16 = array_values($filtradosTipo16);
+    $filtradosTipo16 = array_values(array_filter($camposDinamicosConsolidado, function($item) {
+      return $item['tipo'] === "16" && !empty($item['valor']);
+    }));
 
-    // $filtradosTipo47 = array_filter($camposDinamicosConsolidado, function($item) {
-    //   return $item['tipo'] === "47";
-    // });
-    // $filtradosTipo47 = array_values($filtradosTipo47);    
-    
     $sumaMontosprecioPostor1  = array_reduce($detalle, function ($acumulador, $seleccion) {
       return $acumulador + ($seleccion['precioPostor1'] * $seleccion['cantidad']);
     }, 0);
@@ -11803,7 +11796,7 @@ class MovimientoNegocio extends ModeloNegocioBase
               );
             }
             break;
-          case 5:
+          case 5: //Proveedor, cliente, etc
             $camposDinamicosCotizacion[] = array(
               "id" => $item['id'],
               "tipo" => $item['tipo'],
@@ -11813,7 +11806,7 @@ class MovimientoNegocio extends ModeloNegocioBase
               "valor" => $itemTipo23['valor']
             );
             break;
-          case 7:
+          case 7: //Serie
             $camposDinamicosCotizacion[] = array(
               "id" => $item['id'],
               "tipo" => $item['tipo'],
@@ -11823,7 +11816,7 @@ class MovimientoNegocio extends ModeloNegocioBase
               "valor" => $item['cadena_defecto']
             );
             break;
-          case 8:
+          case 8: //Número
             $camposDinamicosCotizacion[] = array(
               "id" => $item['id'],
               "tipo" => $item['tipo'],
@@ -11833,7 +11826,7 @@ class MovimientoNegocio extends ModeloNegocioBase
               "valor" => $item['data']
             );
             break;
-          case 9:
+          case 9: //Fecha de emisión
             $camposDinamicosCotizacion[] = array(
               "id" => $item['id'],
               "tipo" => $item['tipo'],
@@ -11843,7 +11836,7 @@ class MovimientoNegocio extends ModeloNegocioBase
               "valor" => $item['data']
             );
             break;
-          case 10:
+          case 10: //
             $camposDinamicosCotizacion[] = array(
               "id" => $item['id'],
               "tipo" => $item['tipo'],
@@ -11883,7 +11876,7 @@ class MovimientoNegocio extends ModeloNegocioBase
               "valor" => $subTotal
             );
             break;                              
-          case 23:
+          case 23: //Proveedor u otros
             $camposDinamicosCotizacion[] = array(
               "id" => $item['id'],
               "tipo" => $item['tipo'],
@@ -11893,7 +11886,17 @@ class MovimientoNegocio extends ModeloNegocioBase
               "valor" => $itemTipo23['valor']
             );
             break; 
-          case 46:
+          case 45: //Entrega en destino
+            $camposDinamicosCotizacion[] = array(
+              "id" => $item['id'],
+              "tipo" => $item['tipo'],
+              "opcional" => "0",
+              "descripcion" => $filtradosTipo45[0]['descripcion'],
+              "codigo" => $filtradosTipo45[0]['codigo'],
+              "valor" => $filtradosTipo45[0]['valor']
+            );
+            break;            
+          case 46: //U.O
             $camposDinamicosCotizacion[] = array(
               "id" => $item['id'],
               "tipo" => $item['tipo'],
@@ -11903,7 +11906,7 @@ class MovimientoNegocio extends ModeloNegocioBase
               "valor" => $filtradosTipo46[0]['valor']
             );
             break; 
-          case 47:
+          case 47: // CUenta
             $cuenta_persona = ProgramacionPagos::create()->obtenerCuentaPrincipalxPersonaId($itemTipo23['valor'], 1, $monedaId);
             if(ObjectUtil::isEmpty($cuenta_persona)){
               throw new WarningException("No existen registros de cuentas para el " . $itemTipo23['descripcion']);
@@ -11927,12 +11930,16 @@ class MovimientoNegocio extends ModeloNegocioBase
         $texto1 = stripos($itemTipo23['descripcion'], "1");
         $texto2 = stripos($itemTipo23['descripcion'], "2");
         $texto3 = stripos($itemTipo23['descripcion'], "3");
-        if($texto1 == true){
-          $precioItem = $itemDetalle['precioPostor1'];
-        }else if($texto2 == true){
-          $precioItem = $itemDetalle['precioPostor2'];
-        }else if($texto3 == true){
-          $precioItem = $itemDetalle['precioPostor3'];
+        if($banderaCotizacon != 3){
+          if($texto1 == true){
+            $precioItem = $itemDetalle['precioPostor1'];
+          }else if($texto2 == true){
+            $precioItem = $itemDetalle['precioPostor2'];
+          }else if($texto3 == true){
+            $precioItem = $itemDetalle['precioPostor3'];
+          }
+        }else{
+          $precioItem = $itemDetalle['precio'];
         }
 
         $arrayItem = array(
@@ -11990,7 +11997,7 @@ class MovimientoNegocio extends ModeloNegocioBase
       }
     }
   
-    if($documentoTipoId == Configuraciones::ORDEN_COMPRA){
+    if($documentoTipoId == Configuraciones::ORDEN_COMPRA || $documentoTipoId == Configuraciones::ORDEN_SERVICIO){
       if (!ObjectUtil::isEmpty($listaPagoProgramacion)) {
         foreach ($listaPagoProgramacion as $ind => $item) {
           $fechaPago = DateUtil::formatearCadenaACadenaBD($item[0]);
@@ -12025,6 +12032,23 @@ class MovimientoNegocio extends ModeloNegocioBase
 
     $dataTipoCambio = TipoCambioNegocio::create()->obtenerTipoCambioXfecha(substr($dataDocumento[0]["fecha_emision"], 0, 10))[0]['equivalencia_venta'];
 
+
+    $razon_social1 = '';
+    $razon_social2 = '';
+    $razon_social3 = '';
+    foreach ($documentoDatoValor as $index => $item) {
+      switch ($item['tipo'] * 1) {
+        case 23:
+          if ($item['descripcion'] == "Postor N° 1") {
+            $razon_social1 = $item['valor'];
+          } else if ($item['descripcion'] == "Postor N° 2") {
+            $razon_social2 = $item['valor'];
+          } else if ($item['descripcion'] == "Postor N° 3") {
+            $razon_social3 = $item['valor'];
+          }
+          break;
+      }
+    }
     $pdf = new TCPDF('L', PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
 
     // set document information
@@ -12077,6 +12101,22 @@ class MovimientoNegocio extends ModeloNegocioBase
 
 
     $pdf->SetFont('helvetica', 'B', 8);
+
+    $pdf->SetFillColor(254, 191, 0);
+    $pdf->MultiCell(30, 5, 'Postor N° 1', 1, 'C', 1, 0, 15, 35, true, 0, false, true, 5, 'M');
+    $pdf->SetFillColor(255, 255, 255);
+    $pdf->MultiCell(100, 5, $razon_social1, 1, 'C', 1, 0, 45, 35, true, 0, false, true, 5, 'M');
+
+    $pdf->SetFillColor(254, 191, 0);
+    $pdf->MultiCell(30, 5, 'Postor N° 2', 1, 'C', 1, 0, 15, 42, true, 0, false, true, 5, 'M');
+    $pdf->SetFillColor(255, 255, 255);
+    $pdf->MultiCell(100, 5, $razon_social2, 1, 'C', 1, 0, 45, 42, true, 0, false, true, 5, 'M');
+
+    $pdf->SetFillColor(254, 191, 0);
+    $pdf->MultiCell(30, 5, 'Postor N° 3', 1, 'C', 1, 0, 15, 49, true, 0, false, true, 5, 'M');
+    $pdf->SetFillColor(255, 255, 255);
+    $pdf->MultiCell(100, 5, $razon_social3, 1, 'C', 1, 0, 45, 49, true, 0, false, true, 5, 'M');
+
     $pdf->SetFillColor(254, 191, 0);
     $pdf->MultiCell(30, 5, 'Nro', 1, 'C', 1, 0, 190, 35, true, 0, false, true, 5, 'M');
     $pdf->SetFillColor(255, 255, 255);
@@ -12112,26 +12152,35 @@ class MovimientoNegocio extends ModeloNegocioBase
 
 
     $cont = 0;
+    $pdf->SetFont('helvetica', 'B', 7);
 
-    $pdf->Ln(10);
+    $pdf->Ln(15);
     $tabla = '<table cellspacing="0" cellpadding="1" border="1">
         <tr style="background-color:rgb(254, 191, 0);">
-            <th style="text-align:center;vertical-align:middle;" width="3%" rowspan="2"><b>N°</b></th>
-            <th style="text-align:center;vertical-align:middle;" width="35%" rowspan="2"><b>DESCRIPCION</b></th>
-            <th style="text-align:center;vertical-align:middle;" width="8%" rowspan="2"><b>CANTIDAD</b></th>
-            <th style="text-align:center;vertical-align:middle;" width="8%" rowspan="2"><b>UNIDAD DE MEDIDA</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="3%" rowspan="3"><b>N°</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="35%" rowspan="3"><b>DESCRIPCION</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="8%" rowspan="3"><b>CANTIDAD</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="8%" rowspan="3"><b>UNIDAD DE MEDIDA</b></th>
             <th style="text-align:center;vertical-align:middle;" width="45%" colspan="3"><b>COTIZACION DE PROVEEDORES</b></th>
         </tr>
         <tr style="background-color:rgb(254, 191, 0);">
-            <th style="text-align:center;vertical-align:middle;" width="15%" colspan="3"><b>POSTOR N° 1 <br>'. $monedaPostor1 .'</b></th>
-            <th style="text-align:center;vertical-align:middle;" width="15%" colspan="3"><b>POSTOR N° 2 <br>'. $monedaPostor2 .'</b></th>
-            <th style="text-align:center;vertical-align:middle;" width="15%" colspan="3"><b>POSTOR N° 3 <br>'. $monedaPostor3 .'</b></th>
-        </tr>        
+            <th style="text-align:center;vertical-align:middle;" width="15%" colspan="2"><b>POSTOR N° 1 <br>'. $monedaPostor1 .'</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="15%" colspan="2"><b>POSTOR N° 2 <br>'. $monedaPostor2 .'</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="15%" colspan="2"><b>POSTOR N° 3 <br>'. $monedaPostor3 .'</b></th>
+        </tr>
+        <tr style="background-color:rgb(254, 191, 0);">
+            <th style="text-align:center;vertical-align:middle;" width="7.5%" ><b>P.U </b></th>
+            <th style="text-align:center;vertical-align:middle;" width="7.5%" ><b>P.T </b></th>
+            <th style="text-align:center;vertical-align:middle;" width="7.5%" ><b>P.U </b></th>
+            <th style="text-align:center;vertical-align:middle;" width="7.5%" ><b>P.T </b></th>
+            <th style="text-align:center;vertical-align:middle;" width="7.5%" ><b>P.U </b></th>
+            <th style="text-align:center;vertical-align:middle;" width="7.5%" ><b>P.T </b></th>
+        </tr> 
     ';
 
-    $subtotal1 = 0;
-    $subtotal2 = 0;
-    $subtotal3 = 0;
+    $total1 = 0;
+    $total2 = 0;
+    $total3 = 0;
     if (!ObjectUtil::isEmpty($detalle)) {
       foreach ($detalle as $index => $item) {
         $cont++;
@@ -12140,26 +12189,26 @@ class MovimientoNegocio extends ModeloNegocioBase
         // }
 
 
-        $subtotal1 = $subtotal1 + number_format(($item->cantidad * $item->precio_postor1), 2);
-        $subtotal2 = $subtotal2 + number_format(($item->cantidad * $item->precio_postor2), 2);
-        $subtotal3 = $subtotal3 + number_format(($item->cantidad * $item->precio_postor3), 2);
+        $total1 = $total1 + ($item->cantidad * $item->precio_postor1);
+        $total2 = $total2 + ($item->cantidad * $item->precio_postor2);
+        $total3 = $total3 + ($item->cantidad * $item->precio_postor3);
 
         $tabla = $tabla . '<tr>'
           . '<td style="text-align:center"  width="3%">' . ($index + 1) . '</td>'
           . '<td style="text-align:left; vertical-align:middle; display: table-cell;" width="35%">' .  $item->bien_codigo .' | '. $item->descripcion . '</td>'
-          . '<td style="text-align:center"  width="8%">' . number_format($item->cantidad, 2) . '</td>'
+          . '<td style="text-align:right"  width="8%">' . number_format($item->cantidad, 2) . '</td>'
           . '<td style="text-align:center"  width="8%">' . $item->simbolo . '</td>'
-          . '<td style="text-align:center;'. $color_ganador1 .'"  width="7.5%">' . number_format($item->precio_postor1, 2) . '</td>'
-          . '<td style="text-align:center;'. $color_ganador1 .'"  width="7.5%">' . number_format(($item->cantidad * $item->precio_postor1), 2) . '</td>'
-          . '<td style="text-align:center;'. $color_ganador2 .'"  width="7.5%">' . number_format($item->precio_postor2, 2) . '</td>'
-          . '<td style="text-align:center;'. $color_ganador2 .'"  width="7.5%">' . number_format(($item->cantidad * $item->precio_postor2), 2) . '</td>'    
-          . '<td style="text-align:center;'. $color_ganador3 .'"  width="7.5%">' . number_format($item->precio_postor3, 2) . '</td>'
-          . '<td style="text-align:center;'. $color_ganador3 .'"  width="7.5%">' . number_format(($item->cantidad * $item->precio_postor3), 2) . '</td>'
+          . '<td style="text-align:right;'. $color_ganador1 .'"  width="7.5%">' . number_format($item->precio_postor1, 2) . '</td>'
+          . '<td style="text-align:right;'. $color_ganador1 .'"  width="7.5%">' . number_format(($item->cantidad * $item->precio_postor1), 2) . '</td>'
+          . '<td style="text-align:right;'. $color_ganador2 .'"  width="7.5%">' . number_format($item->precio_postor2, 2) . '</td>'
+          . '<td style="text-align:right;'. $color_ganador2 .'"  width="7.5%">' . number_format(($item->cantidad * $item->precio_postor2), 2) . '</td>'    
+          . '<td style="text-align:right;'. $color_ganador3 .'"  width="7.5%">' . number_format($item->precio_postor3, 2) . '</td>'
+          . '<td style="text-align:right;'. $color_ganador3 .'"  width="7.5%">' . number_format(($item->cantidad * $item->precio_postor3), 2) . '</td>'
           . '</tr>';
       }
     }
 
-    for ($i = count($detalle); $i < 20; $i++) {
+    for ($i = count($detalle); $i < 10; $i++) {
       $tabla = $tabla . '<tr>'
         . '<td style="text-align:center"  width="3%">' . ($i + 1) . '</td>'
         . '<td style="text-align:left"  width="35%"></td>'
@@ -12179,22 +12228,44 @@ class MovimientoNegocio extends ModeloNegocioBase
     $moneda_tipo3 = $detalle[0]->moneda_postor3;
 
     if($moneda_tipo1 == 4){
-      $subtotal1 = $subtotal1 * $dataTipoCambio;
+      $totalDolaresSoles1 = $total1 * $dataTipoCambio;
     }
     if($moneda_tipo2 == 4){
-      $subtotal2 = $subtotal2 * $dataTipoCambio;
+      $totalDolaresSoles2 = $total2 * $dataTipoCambio;
     }
     if($moneda_tipo3 == 4){
-      $subtotal2 = $subtotal3 * $dataTipoCambio;
+      $totalDolaresSoles3 = $total3 * $dataTipoCambio;
     }
+
+    $subtotal1 = $total1 /1.18;
+    $subtotal2 = $total2 /1.18;
+    $subtotal3 = $total3 /1.18;
 
     $tabla .= '<tfoot>
               <tr>
-                  <th colspan="4" style="text-align:right">Totales:</th>
-                  <th style="text-align:right" colspan="2" >'. number_format($subtotal1, 2) .'</th>
-                  <th style="text-align:right" colspan="2" >'. number_format($subtotal2, 2) .'</th>
-                  <th style="text-align:right" colspan="2" >'. number_format($subtotal3, 2) .'</th>
+                  <th colspan="4" style="text-align:right"></th>
+                  <th style="text-align:right" colspan="2" >'. number_format(($total1 /1.18), 2).'</th>
+                  <th style="text-align:right" colspan="2" >'. number_format(($total2 /1.18), 2) .'</th>
+                  <th style="text-align:right" colspan="2" >'. number_format(($total3 /1.18), 2) .'</th>
               </tr>
+              <tr>
+                  <th colspan="4" style="text-align:right">Igv (18 %):</th>
+                  <th style="text-align:right" colspan="2" >'. number_format(($total1 - $subtotal1), 2).'</th>
+                  <th style="text-align:right" colspan="2" >'. number_format(($total2 - $subtotal2), 2) .'</th>
+                  <th style="text-align:right" colspan="2" >'. number_format(($total3 - $subtotal3), 2) .'</th>
+              </tr>
+              <tr>
+                  <th colspan="4" style="text-align:right">Total Dolares:</th>
+                  <th style="text-align:right" colspan="2" >'. number_format($totalDolaresSoles1, 2).'</th>
+                  <th style="text-align:right" colspan="2" >'. number_format($totalDolaresSoles2, 2) .'</th>
+                  <th style="text-align:right" colspan="2" >'. number_format($totalDolaresSoles3, 2) .'</th>
+              </tr>
+              <tr>
+                  <th colspan="4" style="text-align:right">Total Soles:</th>
+                  <th style="text-align:right" colspan="2" >'. number_format($total1, 2).'</th>
+                  <th style="text-align:right" colspan="2" >'. number_format($total2, 2) .'</th>
+                  <th style="text-align:right" colspan="2" >'. number_format($total3, 2) .'</th>
+              </tr>              
           </tfoot>';
 
     $tabla = $tabla . '</table>';
@@ -12208,7 +12279,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     // Ahora puedes ajustar el valor de $espacio basado en el espacio disponible
     if ($alturaDisponible > 40) {
       // Si hay mucho espacio, usa ese espacio
-      $espacio = $tablaHeight;  // Ajusta un pequeño margen después de la tabla
+      $espacio = $tablaHeight + 5;  // Ajusta un pequeño margen después de la tabla
     } else {
       // Si el espacio es limitado, podrías agregar una nueva página
       $pdf->AddPage();
@@ -12228,12 +12299,12 @@ class MovimientoNegocio extends ModeloNegocioBase
     $personaFirma0 = __DIR__ . "/../../vistas/com/persona/firmas/" . $persona[0]['firma_digital'] . "png";
 
     $pdf->SetFont('helvetica', 'B', 6);
-    $pdf->MultiCell(50, 5, 'Solicitado por', 1, 'C', 1, 0, 35, $espacio, true, 0, false, true, 5, 'M');
-    $pdf->MultiCell(50, 30, $dataDocumento[0]['nombre'], 1, 'C', 1, 0, 35, $espacio, true, 0, false, true, 30, 'B');
+    $pdf->MultiCell(50, 5, 'Generado por', 1, 'C', 1, 0, 185, $espacio, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(50, 30, $dataDocumento[0]['nombre'], 1, 'C', 1, 0, 185, $espacio, true, 0, false, true, 30, 'B');
    
-    $pdf->MultiCell(50, 5, 'Fecha:', 1, 'L', 1, 0, 35, $espacio + 30, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(50, 5, 'Fecha:', 1, 'L', 1, 0, 185, $espacio + 30, true, 0, false, true, 5, 'M');
     $pdf->SetFont('helvetica', '', 6);
-    $pdf->MultiCell(40, 5, date_format((date_create($dataDocumento[0]['fecha_emision'])), 'd/m/Y'), 1, 'L', 1, 0, 45, $espacio + 30, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(40, 5, date_format((date_create($dataDocumento[0]['fecha_emision'])), 'd/m/Y'), 1, 'L', 1, 0, 195, $espacio + 30, true, 0, false, true, 5, 'M');
 
     ob_clean();
 
