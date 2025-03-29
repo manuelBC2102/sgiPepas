@@ -5,6 +5,8 @@ require_once __DIR__ . '/AlmacenIndexControlador.php';
 require_once __DIR__ . '/../../modeloNegocio/almacen/PersonaNegocio.php';
 require_once __DIR__ . '/../../modeloNegocio/almacen/RequerimientoNegocio.php';
 require_once __DIR__ . '/../../modeloNegocio/almacen/MatrizAprobacionNegocio.php';
+require_once __DIR__ . '/../../modeloNegocio/almacen/OrdenCompraServicioNegocio.php';
+require_once __DIR__ . '/../../modeloNegocio/almacen/MovimientoNegocio.php';
 
 class RequerimientoControlador extends AlmacenIndexControlador
 {
@@ -212,9 +214,8 @@ class RequerimientoControlador extends AlmacenIndexControlador
 
     public function visualizarConsolidado()
     {
-        $id = $this->getParametro("id");
-        $movimientoId = $this->getParametro("movimientoId");
-        return RequerimientoNegocio::create()->visualizarConsolidado($id, $movimientoId);
+        $documentoId = $this->getParametro("documentoId");
+        return RequerimientoNegocio::create()->visualizarConsolidado($documentoId);
     }
 
     public function aprobarRequerimiento()
@@ -258,4 +259,24 @@ class RequerimientoControlador extends AlmacenIndexControlador
         return RequerimientoNegocio::create()->aprobarOrdenCompraServicio($id, $usuarioId);
     }
 
+    public function visualizarDistribucionPagos(){
+        $documentoId = $this->getParametro("documentoId");
+        return OrdenCompraServicioNegocio::create()->visualizarDistribucionPagos($documentoId);
+    }
+
+    public function obtenerDocumentoAdjuntoXDistribucionPagos(){
+        $distribucionPagoId = $this->getParametro("distribucionPagoId");
+        return OrdenCompraServicioNegocio::create()->obtenerDocumentoAdjuntoXDistribucionPagos($distribucionPagoId);
+    }
+
+    public function abrirPdfCuadroComparativoCotizacion(){
+        $documentoId = $this->getParametro("documentoId");
+        $usuarioId = $this->getUsuarioId();
+        $dataRelacionada = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoId($documentoId);
+        foreach($dataRelacionada as $itemRelacion){
+          if($itemRelacion['documento_tipo_id'] == Configuraciones::GENERAR_COTIZACION){
+            return MovimientoNegocio::create()->imprimirExportarPDFDocumento(Configuraciones::GENERAR_COTIZACION, $itemRelacion['documento_relacionado_id'], $usuarioId);
+          }
+        }
+    }
 }

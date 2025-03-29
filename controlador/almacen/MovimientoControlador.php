@@ -1239,7 +1239,8 @@ class MovimientoControlador extends AlmacenIndexControlador
     $valor = $this->getParametro("busqueda");
     $opcionId = $this->getOpcionId();
 
-    $tipoIds = '(0),(1),(4)';
+    // $tipoIds = '(0),(1),(4)';
+    $tipoIds = '';
     $movimientoTipo = MovimientoTipoNegocio::create()->obtenerXOpcion($opcionId);
     $movimientoTipoId = $movimientoTipo[0]["id"];
     $documentoTipoArray = DocumentoTipoNegocio::create()->obtenerDocumentoTipoXEmpresaXTipoXMovimientoTipo($movimientoTipoId, $empresaId, $tipoIds);

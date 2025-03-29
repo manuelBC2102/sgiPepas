@@ -272,7 +272,7 @@ function onResponseObtenerMenuXEmpresa(data) {
                         dataMenu += '<a data-toggle="reload" onclick="cargarDivIndex(\'#window\',\'' + URL_BASE + valueHijo.url + '\',\'' + idOpcion + '\',\'' + valueHijo.nombre + '\');';
                         dataMenu += ' active(' + valueHijo.id + ',' + value.id + ');"style="display: table-cell;padding-left: 0px;">';
                         dataMenu += '<i class="' + valueHijo.icono + ' "style="width: 15px;"></i>' + valueHijo.nombre + '</a></li>';
-                    }else if(value.id == 381 || value.id == 396){
+                    }else if(value.id == 391 || value.id == 405 || value.id == 406){
                         if(valueHijo.url.indexOf('tipoInterfaz=4')!=-1){
                             urlNuevoMov='movimiento_form_dua.php?tipoInterfaz=2';
                         }else if(valueHijo.url.indexOf('tipoInterfaz=3')!=-1){
@@ -284,7 +284,7 @@ function onResponseObtenerMenuXEmpresa(data) {
                         idOpcion = (isEmpty(valueHijo["opcion_id"])) ? valueHijo.id : valueHijo["opcion_id"];
                         $id_li_hijo = "m" + valueHijo.id;
                         dataMenu += '<li id="' + $id_li_hijo + '">';
-                        if(!(valueHijo.nombre).includes("Aprobación") && !(valueHijo.nombre).includes("Documentos") && valueHijo.nombre != "Cotizaciones"){
+                        if(!(valueHijo.nombre).includes("Aprobación") && !(valueHijo.nombre).includes("Facturación") && valueHijo.nombre != "Cotizaciones"){
                             dataMenu += '<a style="display: table-cell; padding-right: 5px;"';                                 
                             dataMenu += ' onclick="cargarDivIndex(\'#window\',\'' + URL_BASE + 'vistas/com/movimiento/'+ urlNuevoMov + '\',\'' + idOpcion + '\',\'' + valueHijo.nombre + '\');active(' + valueHijo.id + ',' + value.id + ');">';
                             dataMenu += '<span class="badge bg-primary">+</span></a>';

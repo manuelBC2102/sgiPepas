@@ -89,12 +89,12 @@ class MovimientoNegocio extends ModeloNegocioBase
       throw new WarningException("El movimiento no cuenta con tipos de documentos asociados");
     }
 
-    if($respuesta->documento_tipo[0]["id"] == Configuraciones::SOLICITUD_REQUERIMIENTO || $respuesta->documento_tipo[0]["id"] == Configuraciones::REQUERIMIENTO_AREA){
+    if($respuesta->documento_tipo[0]["id"] == Configuraciones::SOLICITUD_REQUERIMIENTO || $respuesta->documento_tipo[0]["id"] == Configuraciones::REQUERIMIENTO_AREA  || $respuesta->documento_tipo[0]["id"] == Configuraciones::GENERAR_COTIZACION){
       //validar perfil
       $mostrarAccNuevo = 0;
       $dataPerfil = PerfilNegocio::create()->obtenerPerfilXUsuarioId($usuarioId);
       foreach ($dataPerfil as $itemPerfil) {
-        if ($itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_TI_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_JEFE_LOGISTA || $itemPerfil['id'] == PerfilNegocio::PERFIL_SOLICITANTE_REQUERIMIENTO) {
+        if ($itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_TI_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_JEFE_LOGISTA || $itemPerfil['id'] == PerfilNegocio::PERFIL_SOLICITANTE_REQUERIMIENTO || $itemPerfil['id'] == PerfilNegocio::PERFIL_LOGISTA) {
           $mostrarAccNuevo = 1;
         }
       }
@@ -515,13 +515,13 @@ class MovimientoNegocio extends ModeloNegocioBase
 
     }
 
-    //se usa para compras
-    if ($documentoTipoId == Configuraciones::GENERAR_COTIZACION) {
-      $respuestaCotizacion = $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::COTIZACIONES,$detalle, $respuesta, $periodoId, 160, 1);
-      //generamos OC
-      $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::ORDEN_COMPRA,$detalle, $respuesta, $periodoId, 395, 2, $listaPagoProgramacion, $respuestaCotizacion);
+    // //se usa para compras
+    // if ($documentoTipoId == Configuraciones::GENERAR_COTIZACION) {
+    //   $respuestaCotizacion = $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::COTIZACIONES,$detalle, $respuesta, $periodoId, 160, 1);
+    //   //generamos OC
+    //   $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::ORDEN_COMPRA,$detalle, $respuesta, $periodoId, 395, 2, $listaPagoProgramacion, $respuestaCotizacion);
 
-    }
+    // }
 
     //Se usa para Servicio
     if ($documentoTipoId == Configuraciones::COTIZACION_SERVICIO) {
@@ -3898,7 +3898,9 @@ class MovimientoNegocio extends ModeloNegocioBase
             $detalle['precio_postor1'],
             $detalle['precio_postor2'],
             $detalle['precio_postor3'],
-            $detalle['postor_ganador_id']
+            $detalle['postor_ganador_id'],
+            $detalle['movimiento_bien_ids'],
+            $detalle['cantidad_atendida']
           ));
         }
         $banderaMerge = 0;
@@ -3918,7 +3920,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     //        return $respuesta;
   }
 
-  private function getDocumentoACopiarMerge($organizadorDescripcion, $organizadorId, $cantidad, $bienDescripcion, $bienId, $valorMonetario, $unidadMedidaId, $unidadMedidaDescripcion, $precioTipoId, $movimientoBienDetalle, $movimientoBienComentario, $codigoBien, $agenciaId, $agenciaDescripcion, $agrupadorId, $agrupadorDescripcion, $ticket, $CeCoId, $precio_postor1, $precio_postor2, $precio_postor3, $postor_ganador_id)
+  private function getDocumentoACopiarMerge($organizadorDescripcion, $organizadorId, $cantidad, $bienDescripcion, $bienId, $valorMonetario, $unidadMedidaId, $unidadMedidaDescripcion, $precioTipoId, $movimientoBienDetalle, $movimientoBienComentario, $codigoBien, $agenciaId, $agenciaDescripcion, $agrupadorId, $agrupadorDescripcion, $ticket, $CeCoId, $precio_postor1, $precio_postor2, $precio_postor3, $postor_ganador_id, $movimiento_bien_ids, $cantidad_atendida)
   {
 
     $detalle = array(
@@ -3944,6 +3946,8 @@ class MovimientoNegocio extends ModeloNegocioBase
       "precio_postor2" => $precio_postor2,
       "precio_postor3" => $precio_postor3,
       "postor_ganador_id" => $postor_ganador_id,
+      "movimiento_bien_ids" => $movimiento_bien_ids,
+      "cantidad_atendida" => $cantidad_atendida
     );
     return $detalle;
   }

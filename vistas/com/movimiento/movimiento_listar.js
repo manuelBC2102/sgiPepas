@@ -2247,7 +2247,7 @@ function onResponseObtenerDocumentoTipoDesplegable(data) {
         $('#liArea').show();
         $('#liTipoRequerimiento').show();
         select2.cargar("cboArea", data.area, "id", ["descripcion"]);
-        select2.cargar("cboTipoRequerimiento", data.tipo_requerimiento, "id", ["descripcion"]);
+        select2.cargar("cboTipoRequerimiento", data.tipo_requerimiento, "descripcion", ["descripcion"]);
         if(!isEmpty(dataConfiguracionInicial.getarea)){
             select2.asignarValor('cboArea', dataConfiguracionInicial.getarea);
             $("#cboArea").attr('disabled', 'disabled');

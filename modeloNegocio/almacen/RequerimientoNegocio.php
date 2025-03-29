@@ -130,11 +130,19 @@ class RequerimientoNegocio extends ModeloNegocioBase
         return $respuesta;
     }
 
-    public function visualizarConsolidado($id, $movimientoId)
+    public function visualizarConsolidado($documentoId)
     {
         $respuesta = new stdClass();
-        $detalle =  MovimientoBien::create()->obtenerXIdMovimiento($movimientoId);
-        $respuesta->dataDocumento = DocumentoNegocio::create()->obtenerDetalleDocumento($id);
+        
+        $dataRelacionada = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoId($documentoId);
+        foreach($dataRelacionada as $itemRelacion){
+          if($itemRelacion['documento_tipo_id'] == Configuraciones::GENERAR_COTIZACION){
+            $respuesta->dataDocumento = DocumentoNegocio::create()->obtenerDetalleDocumento($itemRelacion['documento_relacionado_id']);
+            $respuesta->dataDocumentoCabecera = DocumentoNegocio::create()->obtenerDocumentoXDocumentoId($itemRelacion['documento_relacionado_id']);
+            $detalle =  MovimientoBien::create()->obtenerXIdMovimiento($respuesta->dataDocumentoCabecera[0]['movimiento_id']);          }
+        }
+
+
 
         foreach ($detalle as $index => $item) {
             $detalle[$index]["subTotal_precio_postor1"] = $item["cantidad"] * $item["precio_postor1"];

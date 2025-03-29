@@ -1675,6 +1675,7 @@ function llenarCabeceraDetalle() {
                     anchoDinamicoTabla += parseInt(item.ancho);
                     break;
                 case 11:// 310 PRODUCTO
+                    alturaBienTD =  parseInt(item.ancho) + 200;
                     fila += "<th style='text-align:center; width: " + item.ancho + "px;' "+ rowspan +">" +
                             // "<a href='#' title='Nuevo producto' onclick='cargarBien()'>&nbsp;&nbsp;<i class='fa fa-plus-circle' style='color:#1ca8dd'></i></a>"+
                             "&nbsp;&nbsp;" + item.descripcion + "</th>";
@@ -1732,15 +1733,15 @@ function llenarCabeceraDetalle() {
                     anchoDinamicoTabla += parseInt(item.ancho);
                     break;
                 case 27://Postor N° 1
-                    fila += "<th style='text-align:center; width: " + item.ancho + "px;' id='tb_postor_"+ item.id +"' "+ colspan +">" + item.descripcion +" &nbsp;<input type='checkbox' id='selectPostor1' class='grupocheckbox' ><br>$&nbsp;<input type='checkbox' id='selectPostor1Moneda' class='grupocheckboxMoneda' onclick='hallarSubTotalPostorDetalle(1,1,2)'></th>";
+                    fila += "<th style='text-align:center; width: " + item.ancho + "px;' id='tb_postor_"+ item.id +"' "+ colspan +">" + item.descripcion +" &nbsp;<input type='checkbox' id='selectPostor1' class='grupocheckbox' onclick='hallarSubTotalPostorDetalle(1,1,2)'><br>$&nbsp;<input type='checkbox' id='selectPostor1Moneda' class='grupocheckboxMoneda' onclick='hallarSubTotalPostorDetalle(1,1,2)'></th>";
                     anchoDinamicoTabla += parseInt(item.ancho);
                     break;
                  case 28://Postor N° 2
-                    fila += "<th style='text-align:center; width: " + item.ancho + "px;' id='tb_postor_"+ item.id +"' "+ colspan +">" + item.descripcion +" &nbsp;<input type='checkbox' id='selectPostor2' class='grupocheckbox' ><br>$&nbsp;<input type='checkbox' id='selectPostor2Moneda' class='grupocheckboxMoneda' onclick='hallarSubTotalPostorDetalle(1,2,2)'></th>";
+                    fila += "<th style='text-align:center; width: " + item.ancho + "px;' id='tb_postor_"+ item.id +"' "+ colspan +">" + item.descripcion +" &nbsp;<input type='checkbox' id='selectPostor2' class='grupocheckbox' onclick='hallarSubTotalPostorDetalle(1,2,2)'><br>$&nbsp;<input type='checkbox' id='selectPostor2Moneda' class='grupocheckboxMoneda' onclick='hallarSubTotalPostorDetalle(1,2,2)'></th>";
                     anchoDinamicoTabla += parseInt(item.ancho);
                     break;
                 case 29://Postor N° 3
-                    fila += "<th style='text-align:center; width: " + item.ancho + "px;' id='tb_postor_"+ item.id +"' "+ colspan +">" + item.descripcion +" &nbsp;<input type='checkbox' id='selectPostor3' class='grupocheckbox' ><br>$&nbsp;<input type='checkbox' id='selectPostor3Moneda' class='grupocheckboxMoneda' onclick='hallarSubTotalPostorDetalle(1,3,2)'></th>";
+                    fila += "<th style='text-align:center; width: " + item.ancho + "px;' id='tb_postor_"+ item.id +"' "+ colspan +">" + item.descripcion +" &nbsp;<input type='checkbox' id='selectPostor3' class='grupocheckbox' onclick='hallarSubTotalPostorDetalle(1,3,2)'><br>$&nbsp;<input type='checkbox' id='selectPostor3Moneda' class='grupocheckboxMoneda' onclick='hallarSubTotalPostorDetalle(1,3,2)'></th>";
                     anchoDinamicoTabla += parseInt(item.ancho);
                     break;
                 case 33://Compras
@@ -1804,9 +1805,9 @@ function llenarTablaDetalle(data) {
 
     $('#datatable tbody').append(cuerpo);
 
-    if (existeColumnaCodigo(11)) {
-        alturaBienTD = $("#tdBien_" + (nroFilas - 1)).width();
-    }
+    // if (existeColumnaCodigo(11)) {
+    //     alturaBienTD = $("#tdBien_" + (nroFilas - 1)).width();
+    // }
     if (existeColumnaCodigo(4)) {
         anchoTipoPrecioTD = $("#tdTipoPrecio_" + (nroFilas - 1)).width();
     }
@@ -2505,7 +2506,7 @@ function agregarOrganizadorDetalleTabla(i) {
 
 function agregarCantidadDetalleTabla(i) {
     var disabled = '';
-    if(doc_TipoId == REQUERIMIENTO_AREA || doc_TipoId == GENERAR_COTIZACION){
+    if(doc_TipoId == REQUERIMIENTO_AREA){
         disabled = 'disabled';
     }
     var $html = "<div class=\"input-group col-lg-12 col-md-12 col-sm-12 col-xs-12\">" +
@@ -6028,9 +6029,9 @@ function getDataTableDocumentoACopiar()
                         var soloRelacionar = '';
 
                         if(row.documento_tipo_id != "283"){
-                            if (row.relacionar == '1') {
-                                soloRelacionar = '<a onclick="agregarCabeceraDocumentoRelacion(' + row.documento_tipo_id + ',' + row.documento_id + ',' + row.movimiento_id + ')"><b><i class="fa fa-arrow-down" style = "color:#1ca8dd;" tooltip-btndata-toggle="tooltip" title="Solo relacionar"></i></b></a>';
-                            }
+                            // if (row.relacionar == '1') {
+                            //     soloRelacionar = '<a onclick="agregarCabeceraDocumentoRelacion(' + row.documento_tipo_id + ',' + row.documento_id + ',' + row.movimiento_id + ')"><b><i class="fa fa-arrow-down" style = "color:#1ca8dd;" tooltip-btndata-toggle="tooltip" title="Solo relacionar"></i></b></a>';
+                            // }
 
                             return '<a onclick="agregarDocumentoRelacion(' + row.documento_tipo_id + ',' + row.documento_id + ',' + row.movimiento_id + ',' + row.moneda_id + ',' + row.relacionar + ')"><b><i class="fa fa-download" style = "color:#04B404;" tooltip-btndata-toggle="tooltip" title="Copiar">&nbsp&nbsp</i></b></a>' +
                                     soloRelacionar
@@ -6166,7 +6167,7 @@ function obtenerParametrosBusquedaDocumentoACopiar()
 
 function agregarDocumentoRelacion(documentoTipoOrigenId, documentoId, movimientoId, monedaId, relacionar)
 {
-    if(doc_TipoId == GENERAR_COTIZACION && documentoTipoOrigenId == SOLICITUD_REQUERIMIENTO){
+    if(doc_TipoId == GENERAR_COTIZACION || documentoTipoOrigenId == SOLICITUD_REQUERIMIENTO){
         if (!isEmpty(detalle)){
             mostrarAdvertencia("No puede copiar el documento al formulario.");
             loaderClose();
@@ -6605,7 +6606,7 @@ function cargarDetalleDocumentoRelacion(data)
                             item.unidad_medida_id, item.valor_monetario, item.organizador_descripcion,
                             ((!isEmpty(item.bien_codigo) ? item.bien_codigo + " | " : "") + item.bien_descripcion), item.unidad_medida_descripcion, item.precio_tipo_id,
                             item.movimiento_bien_detalle, item.dataUnidadMedida, item.movimiento_bien_comentario, item.agencia_id, item.agencia_descripcion, item.agrupador_id, item.agrupador_descripcion, item.ticket, item.ceco_id,
-                            null, item.precio_postor1, item.precio_postor2, item.precio_postor3,item.postor_ganador_id
+                            null, item.precio_postor1, item.precio_postor2, item.precio_postor3,item.postor_ganador_id,item.movimiento_bien_ids, item.cantidad_atendida 
                             )
                     );
 
@@ -6878,7 +6879,7 @@ function asignarStockXOrganizador()
 
 function cargarFormularioDetalleACopiar(organizadorId, bienId, cantidad, unidadMedidaId, precio,
         organizadorDesc, bienDesc, unidadMedidaDesc, precioTipoId, movimientoBienDetalle, dataUnidadMedida, movimientoBienComentario,
-        ageniaId, agenciaDescripcion,agrupadorBien,agrupadorBienDescripcion, ticket, CeCoId, movimiento_bien_ids, precio_postor1, precio_postor2, precio_postor3, postor_ganador_id
+        ageniaId, agenciaDescripcion,agrupadorBien,agrupadorBienDescripcion, ticket, CeCoId, movimiento_bien_ids, precio_postor1, precio_postor2, precio_postor3, postor_ganador_id, movimiento_bien_ids, cantidad_atendida 
 
         ) {
 
@@ -6913,7 +6914,11 @@ function cargarFormularioDetalleACopiar(organizadorId, bienId, cantidad, unidadM
                     }
                     break;
                 case 12:// CANTIDAD
-                    objDetalle.cantidad = cantidad;
+                    if(doc_TipoId == GENERAR_COTIZACION){
+                        objDetalle.cantidad = parseFloat(cantidad) - parseFloat(cantidad_atendida);
+                    }else{
+                        objDetalle.cantidad = cantidad;
+                    }
                     break;
 
                     //combos, seleccion
@@ -6929,7 +6934,7 @@ function cargarFormularioDetalleACopiar(organizadorId, bienId, cantidad, unidadM
                     if(!isEmpty(movimientoBienComentario)){
                         objDetalle.comentarioBien = movimientoBienComentario;
                     }
-                    if(doc_TipoId == GENERAR_COTIZACION || doc_TipoId == ORDEN_COMPRA || doc_TipoId == REQUERIMIENTO_AREA || doc_TipoId == ORDEN_SERVICIO){
+                    if(doc_TipoId == GENERAR_COTIZACION || doc_TipoId == ORDEN_COMPRA || doc_TipoId == REQUERIMIENTO_AREA || doc_TipoId == ORDEN_SERVICIO || doc_TipoId == SOLICITUD_REQUERIMIENTO){
                         objDetalle.movimiento_bien_ids = movimiento_bien_ids;
                     }
 
@@ -11341,4 +11346,12 @@ function onResponseobtenerDetalleBienRequerimiento(data){
 function habilitarModalCuotasPagos(){
     $('#modalProgramacionPagos').modal('show');
     actualizarPorcentajePago();
+}
+
+function limpiarBuscadores_movimiento_form_tablas(){
+    $('#txtSerie').val('');
+    $('#txtNumero').val('');
+    
+    select2.asignarValor('cboDocumentoTipoM', -1);
+    select2.asignarValor('cboPersonaM', -1);
 }

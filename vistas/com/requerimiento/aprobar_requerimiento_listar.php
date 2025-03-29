@@ -59,8 +59,8 @@
                                                                 <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
                                                                     <select name="cboTipo" id="cboTipo" class="select2">
                                                                         <option value="0">seleccionar</option>
-                                                                        <option value="282">Orden de Compra</option>
-                                                                        <option value="284">Orden de Servicio</option>    
+                                                                        <option value="Compra">Orden de Compra</option>
+                                                                        <option value="Servicio">Orden de Servicio</option>    
                                                                     </select>
                                                                 </div>
                                                             </div>
@@ -148,6 +148,9 @@
                                 <b>Leyenda:</b>&nbsp;&nbsp;
                                 <i class='fa fa-eye' style='color:green;'></i> Ver detalle &nbsp;&nbsp;&nbsp;
                                 <i class='fa fa-check' style='color:blue;'></i> Aprobar  &nbsp;&nbsp;&nbsp;
+                                <i class='fa fa-eye' style='color:blue;'></i> Ver detalle cuadro comparativo&nbsp;&nbsp;&nbsp;
+                                <i class='fa fa-print' style='color:black;'></i> Ver pdf de cuadro comparativo&nbsp;&nbsp;&nbsp;
+                                <i class='fa fa-eye' style='color:black;'></i> Ver detalle distribución pagos&nbsp;&nbsp;&nbsp;
                                 <!-- <i class='fa fa-times' style='color:red;'></i> Rechazar  &nbsp;&nbsp;&nbsp; -->
                             </p>
                         </div>
@@ -364,5 +367,79 @@
         </div>
     </div>
 </div>
+<!--modal para detalle distribucion pagos -->
+<div id="modalDetalleDistribucionPagos" class="modal fade" role="dialog" aria-labelledby="myModalLabel2" aria-hidden="true" style="display: none;">
+    <div class="modal-dialog modal-full">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h4 class="modal-title">Detalle de distribución de Pagos</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <table id="dtmodalDetalleDistribucionPagos" class="table table-striped table-bordered" style="width: 100%">
+                        <thead>
+                            <tr>
+                                <th style='text-align:center;'>#</th>
+                                <th style='text-align:center;'>Fecha pago</th>
+                                <th style='text-align:center;'>Glosa</th>
+                                <th style='text-align:center;'>Importe</th>
+                                <th style='text-align:center;'>Porcentaje (%)</th>
+                                <th style='text-align:center;'>Estado</th>
+                                <th style='text-align:center;'>Acciones</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer" style="padding-bottom:  0px;padding-top: 10px;clear:left">
+                <div class="form-group">
+                    <div class="col-md-6" style="text-align: left;">
+                    </div>
+                    <div class="col-md-6">
+                        <button type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-close"></i> Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="modalDetalleArchivosDistribucionPagos" class="modal fade" role="dialog" aria-labelledby="myModalLabel2" aria-hidden="true" style="display: none;">
+    <div class="modal-dialog modal-full">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h4 class="modal-title">Documentos de distribución de Pagos  <span id="tituloDistribucionPagos"></span></h4>
+            </div>
+            <div class="modal-body">
+                <span id="msjDocumentoDistribucionPagos" style="color:#cb2a2a;font-style: normal;"></span>
+                <br>
+                <div class="row" id="scroll">
+                    <div class="form-group col-md-12">
+                        <div class="table">
+                            <div id="dataList2DistribucionPagos">
 
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="divLeyenda">
+                    <b>Leyenda:</b>&nbsp;&nbsp;
+                    <i class="fa fa-cloud-download" style="color:#1ca8dd;"></i>&nbsp;Descargar &nbsp;&nbsp;&nbsp;
+                    <i class="fa fa-trash-o" style="color:#cb2a2a;"></i>&nbsp;Eliminar &nbsp;&nbsp;&nbsp;
+                    <!-- <i class='fa fa-times' style='color:red;'></i> Rechazar Documento &nbsp;&nbsp;&nbsp; -->
+                </div>
+            </div>
+            <div class="modal-footer" style="padding-bottom:  0px;padding-top: 10px;clear:left">
+                <div class="form-group">
+                    <div class="col-md-6" style="text-align: left;">
+                    </div>
+                    <div class="col-md-6">
+                        <button type="button" class="btn btn-danger" onclick="ocultarModalDistribucionPagos()"><i class="fa fa-close"></i> Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <script src="vistas/com/requerimiento/aprobar_requerimiento_listar.js"></script>

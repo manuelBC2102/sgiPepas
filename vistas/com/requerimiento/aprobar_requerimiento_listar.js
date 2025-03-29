@@ -61,7 +61,7 @@ function onResponseAprobacionConsolidado(response) {
                 buscarRequerimientos();
                 break;
             case 'visualizarConsolidado':
-                onResponsevisualizarConsolidado(response.data, response.tag);
+                onResponsevisualizarConsolidado(response.data);
                 break;
             case 'aprobarConsolidado':
                 swal({
@@ -117,7 +117,20 @@ function onResponseAprobacionConsolidado(response) {
                 }
                 onResponseListarArchivosDocumento(response.data);
                 loaderClose();
-                break;                
+                break;
+            case 'visualizarDistribucionPagos':
+                onResponseListarDistribucionPagos(response.data);
+                break;
+            case 'obtenerDocumentoAdjuntoXDistribucionPagos':
+                if(!isEmpty(response.data)){
+                    lstDocumentoArchivos = response.data;
+                }
+                onResponseListarArchivosDistribucionPago(response.data);
+                break;       
+            case 'abrirPdfCuadroComparativoCotizacion':
+                loaderClose();
+                abrirDocumentoPDF(response.data, 'vistas/com/movimiento/documentos/');
+                break;                                               
         }
     }else{
         switch (response[PARAM_ACCION_NAME]) {
@@ -223,6 +236,18 @@ function buscarRequerimientos() {
                 },
                 "targets": 3
             },
+            {
+                "render": function (data, type, row) {
+                    var acciones = "";
+                    if(documento_tipo == ORDEN_COMPRA){
+                        acciones += "<a href='#' onclick='visualizarCuadroComparativo(" + row.id + ")'><i class='fa fa-eye' style='color:blue;' title='Ver detalle cuadro comparativo'></i></a>&nbsp;";
+                        acciones += "<a href='#' onclick='abrirPdfCuadroComparativoCotizacion(" + row.id + ")'><i class='fa fa-print' style='color:black;' title='Ver pdf de cuadro comparativo'></i></a>&nbsp;";
+                        acciones += "<a href='#' onclick='visualizarDistribucionPagos(" + row.id + ")'><i class='fa fa-eye' style='color:black;' title='Ver detalle distribución pagos'></i></a>&nbsp;";
+                    }   
+                    return data + "" + acciones;
+                },
+                "targets": 8
+            },
         ],
         "dom": '<"top">rt<"bottom"<"col-md-3"l><"col-md-9"p><"col-md-12"i>><"clear">',
         destroy: true
@@ -264,7 +289,7 @@ function onResponseObtenerConfiguracionInicial(data) {
     $('#cboTipoRequerimiento').append('<option value=0>Todos</option>');
     if (!isEmpty(data.tipo_requerimiento)) {
         $.each(data.tipo_requerimiento, function (index, item) {
-            $('#cboTipoRequerimiento').append('<option value="' + item['id'] + '">' + item['descripcion'] + '</option>');
+            $('#cboTipoRequerimiento').append('<option value="' + item['descripcion'] + '">' + item['descripcion'] + '</option>');
         });
     }else{
         $('#liarea_tipo').hide();
@@ -446,23 +471,17 @@ function onResponsevisualizarRequerimiento(data, documento_estado) {
     }
 }
 
-function onResponsevisualizarConsolidado(data, documento_estado) {
+function onResponsevisualizarConsolidado(data) {
     var cont = 0;
-
     $('#selectPostor1').prop('checked', false);
     $('#selectPostor2').prop('checked', false);
     $('#selectPostor3').prop('checked', false);
 
-    if(documento_estado == "Rechazado" || documento_estado == "Registrado" || documento_estado == "Aprobado"){
-        $("#div_btn_aprobar").html("");
-        $("#selectPostor1").prop("disabled", true);
-        $("#selectPostor2").prop("disabled", true);
-        $("#selectPostor3").prop("disabled", true);
-    }else{
-        $("#selectPostor1").prop("disabled", false);
-        $("#selectPostor2").prop("disabled", false);
-        $("#selectPostor3").prop("disabled", false);
-    }
+    $("#div_btn_aprobar").html("");
+    $("#selectPostor1").prop("disabled", true);
+    $("#selectPostor2").prop("disabled", true);
+    $("#selectPostor3").prop("disabled", true);
+
     cargarDataDocumento(data.dataDocumento);
     $("#tableConsolidado").show();
     if (!isEmpty(data.detalle)) {
@@ -621,9 +640,6 @@ function visualizar(id, movimientoId, documento_estado_id, documento_estado, doc
         ax.setTag(documento_estado);
     }else if(documento_tipo_id == REQUERIMIENTO_AREA){ //Consolidar Requerimientos Area
         ax.setAccion("visualizarRequerimiento");
-        ax.setTag(documento_estado);
-    }else if(documento_tipo_id == GENERAR_COTIZACION){ //Consolidar Requerimientos
-        ax.setAccion("visualizarConsolidado");
         ax.setTag(documento_estado);
     }else if(documento_tipo_id == ORDEN_COMPRA || documento_tipo_id == ORDEN_SERVICIO){ //Orden de Compra o Servicio
         ax.setAccion("visualizarOrdenCompraServicio");
@@ -928,4 +944,147 @@ function onResponseListarArchivosDocumento(data) {
     var html = cabeza + cuerpo_total + pie;
     $("#dataList2").append(html);
     $("#datatable3").DataTable();
+}
+
+function visualizarCuadroComparativo(documentoId){
+    loaderShow();
+    ax.setAccion("visualizarConsolidado");
+    ax.addParamTmp("documentoId", documentoId);
+    ax.consumir();
+}
+
+function visualizarDistribucionPagos(documentoId) {
+    loaderShow();
+    ax.setAccion("visualizarDistribucionPagos");
+    ax.addParamTmp("documentoId", documentoId);
+    ax.consumir();
+}
+
+function onResponseListarDistribucionPagos(data) {
+    var cont = 0;
+
+    if (!isEmpty(data)) {
+        $("#modalDetalleDistribucionPagos").modal('show');
+        $('#dtmodalDetalleDistribucionPagos').dataTable({
+            "processing": true,
+            "ordering": false,
+            "data": data,
+            "order": [[1, "desc"]],
+            "columns": [
+                { "data": "id", "width": "5%", "sClass": "alignCenter" },
+                { "data": "fecha_pago", "width": "10%", "sClass": "alignCenter" },
+                { "data": "glosa", "width": "25%", "sClass": "alignLeft" },
+                { "data": "importe", "width": "10%", "sClass": "alignRight" },
+                { "data": "porcentaje", "width": "10%", "sClass": "alignRight" },
+                { "data": "estado", "width": "4%", "sClass": "alignCenter" },
+                { "data": "documento_id", "width": "4%", "sClass": "alignCenter" },
+            ],
+            columnDefs: [
+                {
+                    "render": function (data, type, row) {
+                        cont = 1 + cont;
+                        return cont;
+                    },
+                    "targets": 0
+                },
+                {
+                    "render": function (data, type, row) {
+                        return data.substring(0, 10);
+                    },
+                    "targets": 1
+                },
+                {
+                    "render": function (data, type, row) {
+                        return devolverDosDecimales(data);
+                    },
+                    "targets": [3,4]
+                },
+                {
+                    "render": function (data, type, row) {
+                        switch(data){
+                            case "1":
+                                return "Registrado";
+                                break;
+                            case "2":
+                                return "Programado";
+                                break;
+                            case "3":
+                                return "Pägado";
+                                break;
+                        }
+                    },
+                    "targets": 5
+                },
+                {
+                    "render": function (data, type, row) {
+                        $("#tituloDistribucionPagos").html("( Por un monto de: " + devolverDosDecimales(row.importe)+" )");
+                        var acciones = "<a href='#' onclick='subirArchivosAdjuntosDistribucionPagos(" + row.id + ", " + row.documento_id + ")'><i class='fa fa-archive' style='color:blue;' title='Subir archivos adjuntos'></i></a>&nbsp;";
+                        return acciones;
+                    },
+                    "targets": 6
+                }
+            ],
+            "dom": '<"top">rt<"bottom"<"col-md-3"l><"col-md-9"p><"col-md-12"i>><"clear">',
+            destroy: true
+        });
+        loaderClose();
+    }
+}
+
+function subirArchivosAdjuntosDistribucionPagos(id, documentoId) {
+    loaderShow();
+    $("#dataList2DistribucionPagos").empty();
+    $("#modalDetalleDistribucionPagos").modal('hide');
+    $("#modalDetalleArchivosDistribucionPagos").modal('show');
+    distribucionPagosIdGlobal = id;
+    documentoIdGlobal = documentoId;
+    
+    ax.setAccion("obtenerDocumentoAdjuntoXDistribucionPagos");
+    ax.addParamTmp("distribucionPagoId", id);
+    ax.consumir();
+}
+
+function onResponseListarArchivosDistribucionPago(data) {
+
+    $("#dataList2DistribucionPagos").empty();
+    var cuerpo_total = "";
+    var cuerpo = "";
+    var cabeza = "<table id='datatable3DistribucionPagos' class='table table-striped table-bordered'>"
+        + "<thead>"
+        + "<tr>"
+        + "<th style='text-align:center; vertical-align: middle; width:8%'>#</th>"
+        + "<th style='text-align:center; vertical-align: middle;'>Tipo Archivo</th>"
+        + "<th style='text-align:center; vertical-align: middle;'>Nombre</th>"
+        + "<th style='text-align:center; vertical-align: middle; width:15%'>Acciones</th>"
+        + "</tr>"
+        + "</thead>";
+    if (!isEmpty(data)) {
+        $.each(data, function (index, item) {
+            if (!item.id.match(/t/g)) {
+                lstDocumentoArchivos[index]["data"] = "util/uploads/documentoAdjunto/" + item.nombre;
+            }
+
+            cuerpo = "<tr>"
+                + "<td style='text-align:center;'>" + (index + 1) + "</td>"
+                + "<td style='text-align:center;'>" + item.tipo_archivo + "</td>"
+                + "<td style='text-align:center;'>" + item.archivo + "</td>";
+
+            cuerpo += "<td style='text-align:center;'>"
+                + "<a href='" + item.data + "' download='" + item.archivo + "' target='_blank'><i class='fa fa-cloud-download' style='color:#1ca8dd;'></i></a>&nbsp;\n"
+            cuerpo += "</td>"
+                + "</tr>";
+            cuerpo_total += cuerpo;
+        });
+    }
+    var pie = '</table>';
+    var html = cabeza + cuerpo_total + pie;
+    $("#dataList2DistribucionPagos").append(html);
+    $("#datatable3DistribucionPagos").DataTable();
+}
+
+function abrirPdfCuadroComparativoCotizacion(documentoId) {
+    loaderShow();
+    ax.setAccion("abrirPdfCuadroComparativoCotizacion");
+    ax.addParamTmp("documentoId", documentoId);
+    ax.consumir();
 }

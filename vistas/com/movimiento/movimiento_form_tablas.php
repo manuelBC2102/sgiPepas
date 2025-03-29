@@ -584,7 +584,7 @@
                                                 <li>                                           
                                                     <div style="float: right">                        
                                                         <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" >   
-                                                            <button id="btnBusqueda" type="button" href="#bg-info" onclick="limpiarBuscadores()" class="btn btn-danger">
+                                                            <button id="btnBusqueda" type="button" href="#bg-info" onclick="limpiarBuscadores_movimiento_form_tablas()" class="btn btn-danger">
                                                                 <i class="fa fa-close"></i> Cancelar
                                                             </button>                             
                                                             <button id="btnBusqueda" type="button" href="#bg-info" onclick="buscarDocumentoRelacionPorCriterios()" class="btn btn-purple">
