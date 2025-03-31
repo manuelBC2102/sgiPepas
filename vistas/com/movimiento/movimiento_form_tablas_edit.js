@@ -272,6 +272,9 @@ function onResponseMovimientoFormTablas(response) {
         }
         loaderClose();
         break;
+      case 'obtenerDetalleBienRequerimiento':
+        onResponseobtenerDetalleBienRequerimiento(response.data);
+        break;        
     }
   } else {
     switch (response[PARAM_ACCION_NAME]) {
@@ -662,6 +665,10 @@ var monedaBaseId = 0;
 var cboDetraccionId = null;
 var montoTotalDetraido = 0;
 var montoTotalRetencion = 0;
+var doc_TipoId = null;
+var lstDocumentoArchivos1 = [];
+var lstDocumentoArchivos2 = [];
+var lstDocumentoArchivos3 = [];
 function onResponseObtenerConfiguracionesIniciales(data) {
   if (!isEmpty(data.documento_tipo)) {
     dataCofiguracionInicial = data;
@@ -732,9 +739,9 @@ function onResponseObtenerConfiguracionesIniciales(data) {
     select2.cargar("cboMoneda", data.moneda, "id", ["descripcion", "simbolo"]);
     select2.cargar("cboPeriodo", data.periodo, "id", ["anio", "mes"]);
     var perfil_id = $("#perfil_id").val();
-    if(perfil_id == 93 || perfil_id == 1){
-      $("#cboPeriodo").prop("disabled", false);
-    }
+    // if(perfil_id == 93 || perfil_id == 1){
+    //   $("#cboPeriodo").prop("disabled", false);
+    // }
     select2.asignarValorQuitarBuscador("cboPeriodo", null);
 
     $.each(data.moneda, function (i, itemMoneda) {
@@ -850,7 +857,13 @@ function onResponseObtenerConfiguracionesIniciales(data) {
     llenarMonedaSimboloTotales();
     llenarCabeceraDetalle();
     llenarTablaDetalle(data);
+    if(doc_TipoId == GENERAR_COTIZACION){
+      llenarTablatfoot();
+    }
 
+    if(doc_TipoId == REQUERIMIENTO_AREA || doc_TipoId == GENERAR_COTIZACION){
+        $("#ver_filas").hide();
+    }
     if (!isEmpty(dataCofiguracionInicial.movimientoTipoColumna)) {
       $("#datatable").DataTable({
         scrollX: true,
@@ -959,156 +972,515 @@ function onResponseObtenerConfiguracionesIniciales(data) {
     }
   }
 
-  doc_TipoId = $("#cboDocumentoTipo").val();
+    //280 = Solicitud requerimiento, oculta o edita descripcion de formulario
+    if(doc_TipoId == SOLICITUD_REQUERIMIENTO){
+      $("#cargarBuscadorDocumentoACopiar").hide();
+      var dtdTipoClase = obtenerDocumentoTipoDatoXTipoXCodigo(4, "01");
+      var dtdTipoTipo = obtenerDocumentoTipoDatoXTipoXCodigo(4, "02");
+      var dtdTipoOtros = obtenerDocumentoTipoDatoIdXTipo(2);
+      var dtdTipoTipoRequerimiento = obtenerDocumentoTipoDatoIdXTipo(42);
 
-  if (dataCofiguracionInicial.documento_tipo[0]["identificador_negocio"] == 1) {
-    distribucionObligatoria = 0;
+
+      if(!isEmpty(dtdTipoClase)){
+          $("#id_"+dtdTipoClase.id +" label").html("Clase *");
+      }
+      $("#id_"+dtdTipoOtros).hide();
+
+      if(!isEmpty(dtdTipoClase)){
+          $("#cboTipoRequerimiento_"+dtdTipoTipoRequerimiento).select2({
+              width: "100%"
+          }).on("change", function (e) {
+              if(doc_TipoId == SOLICITUD_REQUERIMIENTO){
+                  tipoRequerimientoGlobalText = select2.obtenerText("cboTipoRequerimiento_"+dtdTipoTipoRequerimiento);
+                  if (e.val == 455) {
+                      loaderShow();
+                      detalle = [];
+                      indiceLista = [];
+                      banderaCopiaDocumento = 0;
+                      indexDetalle = 0;
+                      nroFilasInicial = parseInt(dataDocumentoTipo[0]['cantidad_detalle']);
+                      limpiarDetalle();
+                      loaderClose();
+
+                      $("#id_"+ dtdTipoTipo.id).show();
+                      $("#id_"+ dtdTipoTipo.id +" label").html("Tipo *");
+                      $("#id_" + dtdTipoClase.id).hide();
+                      select2.asignarValor("cbo_" + dtdTipoClase.id, "");
+                  } else {
+                      loaderShow();
+                      detalle = [];
+                      indiceLista = [];
+                      banderaCopiaDocumento = 0;
+                      indexDetalle = 0;
+                      nroFilasInicial = parseInt(dataDocumentoTipo[0]['cantidad_detalle']);
+                      limpiarDetalle();
+                      loaderClose();
+
+                      $("#id_"+ dtdTipoClase.id).show();
+                      $("#id_"+ dtdTipoClase.id +" label").html("Clase *");
+                      $("#id_"+ dtdTipoTipo.id).hide();
+                      select2.asignarValor("cbo_" + dtdTipoTipo.id, "");
+                      $("#id_"+dtdTipoOtros).hide();
+                  }
+              }
+          });
+      }
+
+      if(!isEmpty(dtdTipoTipo)){
+          $("#cbo_" + dtdTipoTipo.id).select2({
+              width: "100%"
+          }).on("change", function (e) {
+              if(doc_TipoId == SOLICITUD_REQUERIMIENTO){
+                  if (e.val == 459) {
+                      $("#id_"+dtdTipoOtros).show();
+                  } else {
+                      $("#id_"+dtdTipoOtros).hide();
+                  }
+              }
+          });
+      }
+
+      //Adjuntar imagen de producto para solicitud de requerimiento
+      $("#fileInputAdjunto").change(function () {
+          var fileType=this.files[0].type
+          if (this.files && this.files[0]) {
+              var validImageTypes = ["image/jpeg", "image/png", "image/gif", "image/bmp", "image/webp"];
+              // Verificar si el archivo es una imagen válida
+              if (validImageTypes.includes(this.files[0].type)) {
+                  var reader = new FileReader();
+                  reader.onload = function (e) {
+                      var img = new Image();
+                      img.src = e.target.result;
+                      img.onload = function () {
+                          // Redimensionar la imagen si es necesario
+                          var canvas = document.createElement("canvas");
+                          var ctx = canvas.getContext("2d");
+                          // Establecer un tamaño máximo (por ejemplo, 800px de ancho)
+                          var maxWidth = 800;
+                          var maxHeight = 800;
+                          var width = img.width;
+                          var height = img.height;
+
+                          // Calcular las nuevas dimensiones manteniendo la relación de aspecto
+                          if (width > height) {
+                              if (width > maxWidth) {
+                                  height = Math.round((height *= maxWidth / width));
+                                  width = maxWidth;
+                              }
+                          } else {
+                              if (height > maxHeight) {
+                                  width = Math.round((width *= maxHeight / height));
+                                  height = maxHeight;
+                              }
+                          }
+
+                          // Establecer las dimensiones del canvas y dibujar la imagen redimensionada
+                          canvas.width = width;
+                          canvas.height = height;
+                          ctx.drawImage(img, 0, 0, width, height);
+                          // Convertir la imagen redimensionada a un formato de imagen (base64)
+                          var resizedImage = canvas.toDataURL(fileType);
+                          const fileSizeMB = base64ToSize(resizedImage);
+                          if (fileSizeMB > 3) {
+                              $("#error").html("EL archivo es mayor al permitido");
+                              return false;
+                          }
+                          var indice = $('#indiceImagenAdjuntaBien').val();
+                          var indexTemporal = -1;
+                          $.each(detalle, function (i, item) {
+                              if (parseInt(item.index) === parseInt(indice)) {
+                                  indexTemporal = i;
+                                  return false;
+                              }
+                          });
+                      
+                          if (indexTemporal != -1)
+                          {
+                              detalle[indexTemporal].imagenAdjuntaBien = resizedImage;
+                          }
+                          // Establecer la imagen redimensionada en el elemento de vista previa
+                          $("#base64archivoAdjunto").val(e.target.result);
+                          $("#error").hide();
+                      };                         
+                  };
+                  reader.readAsDataURL(this.files[0]); // Leer el archivo seleccionado
+                  $("#text_archivoAdjunto").html($("#fileInputAdjunto").val().slice(12));
+                  $("#nombrearchivoAdjunto").val($("#fileInputAdjunto").val().slice(12));
+              } else if(this.files[0].type == "application/pdf") {
+                  var reader = new FileReader();
+                  reader.onload = function (e) {
+                      const fileSizeMB = base64ToSize(e.target.result);
+
+                      $("#base64archivoAdjunto").val(e.target.result);
+                  }
+                  reader.readAsDataURL(this.files[0]);
+                  $("#text_archivoAdjunto").html($("#fileInputAdjunto").val().slice(12));
+                  $("#nombrearchivoAdjunto").val($("#fileInputAdjunto").val().slice(12));
+              }else{ 
+                  // Si no es una imagen válida, mostrar un mensaje de error y ocultar la vista previa
+                  $("#error").show();
+              }
+
+          }
+      });
   }
 
-      //280 = Solicitud requerimiento, oculta o edita descripcion de formulario
-      if(doc_TipoId == 280){
-        $("#cargarBuscadorDocumentoACopiar").hide();
-        var dtdTipoClase = obtenerDocumentoTipoDatoXTipoXCodigo(4, "01");
-        var dtdTipoTipo = obtenerDocumentoTipoDatoXTipoXCodigo(4, "02");
-        var dtdTipoOtros = obtenerDocumentoTipoDatoIdXTipo(2);
-        var dtdTipoTipoRequerimiento = obtenerDocumentoTipoDatoIdXTipo(42);
+  //Se realiza la busqueda por área de solicitudes de requerimiento
+  var dtdTipoArea = obtenerDocumentoTipoDatoIdXTipo(43);
+  var dtdTipoTipoRequerimiento = obtenerDocumentoTipoDatoIdXTipo(42);
+  if(!isEmpty(dtdTipoArea) && doc_TipoId == REQUERIMIENTO_AREA){
+      $("#cargarBuscadorDocumentoACopiar").hide();
+      $("#cbo_" + dtdTipoArea).select2({
+          width: "100%"
+      }).on("change", function (e) {
+          if(isEmpty(select2.obtenerValor("cboTipoRequerimiento_" + dtdTipoTipoRequerimiento))){
+              select2.asignarValor("cboTipoRequerimiento_" + dtdTipoTipoRequerimiento, 0)
+              select2.asignarValor("cbo_" + dtdTipoArea, 0)
+              mostrarAdvertencia("Seleccionar Tipo de Requerimiento");
+              return false;
+          }
+          loaderShow();
+          dataStockReservaOk = [];
+          detalle = [];
+          indiceLista = [];
+          banderaCopiaDocumento = 0;
+          indexDetalle = 0;
+          ax.setAccion("obtenerDetalleXAreaId");
+          ax.addParamTmp("empresaId", commonVars.empresa);
+          ax.addParamTmp("areaId", select2.obtenerValor("cbo_" + dtdTipoArea));
+          ax.addParamTmp("documentoTipoId", doc_TipoId);
+          ax.addParamTmp("tipoRequerimiento", select2.obtenerValor("cboTipoRequerimiento_" + dtdTipoTipoRequerimiento));
+          // ax.addParamTmp("urgencia", select2.obtenerText("cbo_" + dtdTipoUrgencia.id));
+          ax.addParamTmp("urgencia", "No");
+          ax.consumir();
 
 
-        if(!isEmpty(dtdTipoClase)){
-            $("#id_"+dtdTipoClase.id +" label").html("Clase *");
-        }
-        $("#id_"+dtdTipoOtros).hide();
+          //Validamos nuevamente y ocultamos columnas
+          if(doc_TipoId == REQUERIMIENTO_AREA){
+              if (select2.obtenerValor("cboTipoRequerimiento_" + dtdTipoTipoRequerimiento) == 488) {
+                  $("#tb_cantidad_470").hide();
+                  $("#tb_cantidad_aceptada_475").hide();
+                  $("#tb_stock_473").hide();
+                  $("#tb_unidad_medida_471").hide();
+                  var dtdetalle_cantidad = document.querySelectorAll('.dtdetalle_cantidad');
+                  dtdetalle_cantidad.forEach(function (columna) {
+                      columna.classList.add('hidden');
+                  });
+                  var dtdetalle_cantidad_aceptada = document.querySelectorAll('.dtdetalle_cantidad_aceptada');
+                  dtdetalle_cantidad_aceptada.forEach(function (columna) {
+                      columna.classList.add('hidden');
+                  });
+                  var dtdetalle_stock= document.querySelectorAll('.dtdetalle_stock');
+                  dtdetalle_stock.forEach(function (columna) {
+                      columna.classList.add('hidden');
+                  });  
+                  var dtdetalle_unidad_medida = document.querySelectorAll('.dtdetalle_unidad_medida');
+                  dtdetalle_unidad_medida.forEach(function (columna) {
+                      columna.classList.add('hidden');
+                  });                     
+                  $("#datatable").resize();
+              } else {
+                  $("#tb_cantidad_470").show();
+                  $("#tb_cantidad_aceptada_475").show();
+                  $("#tb_stock_473").show();
+                  $("#tb_unidad_medida_471").show();
+                  var dtdetalle_cantidad = document.querySelectorAll('.dtdetalle_cantidad');
+                  dtdetalle_cantidad.forEach(function (columna) {
+                      columna.classList.remove('hidden');
+                  });
+                  var dtdetalle_cantidad_aceptada = document.querySelectorAll('.dtdetalle_cantidad_aceptada');
+                  dtdetalle_cantidad_aceptada.forEach(function (columna) {
+                      columna.classList.remove('hidden');
+                  });
+                  var dtdetalle_stock = document.querySelectorAll('.dtdetalle_stock');
+                  dtdetalle_stock.forEach(function (columna) {
+                      columna.classList.remove('hidden');
+                  });  
+                  var dtdetalle_unidad_medida = document.querySelectorAll('.dtdetalle_unidad_medida');
+                  dtdetalle_unidad_medida.forEach(function (columna) {
+                      columna.classList.remove('hidden');
+                  });                       
+                  $("#datatable").resize();
+              }
+          }
+      });
 
-        if(!isEmpty(dtdTipoClase)){
-            $("#cboTipoRequerimiento_"+dtdTipoTipoRequerimiento).select2({
-                width: "100%"
-            }).on("change", function (e) {
-                if(doc_TipoId == 280){
-                    tipoRequerimientoGlobalText = select2.obtenerText("cboTipoRequerimiento_"+dtdTipoTipoRequerimiento);
-                    if (e.val == 455) {
-                        loaderShow();
-                        detalle = [];
-                        indiceLista = [];
-                        banderaCopiaDocumento = 0;
-                        indexDetalle = 0;
-                        nroFilasInicial = parseInt(dataDocumentoTipo[0]['cantidad_detalle']);
-                        limpiarDetalle();
-                        loaderClose();
+      //Al cambiar el tipo de requerimiento se oculta columnas //revisar
+      $("#cboTipoRequerimiento_"+dtdTipoTipoRequerimiento).select2({
+          width: "100%"
+      }).on("change", function (e) {
+          tipoRequerimientoGlobal = e.val;
+          tipoRequerimientoGlobalText = select2.obtenerText("cboTipoRequerimiento_"+dtdTipoTipoRequerimiento);
+          if (e.val == 488) {
+              $("#tb_cantidad_470").hide();
+              $("#tb_cantidad_aceptada_475").hide();
+              $("#tb_stock_473").hide();
+              $("#tb_unidad_medida_471").hide();
 
-                        $("#id_"+ dtdTipoTipo.id).show();
-                        $("#id_"+ dtdTipoTipo.id +" label").html("Tipo *");
-                        $("#id_" + dtdTipoClase.id).hide();
-                        select2.asignarValor("cbo_" + dtdTipoClase.id, "");
-                    } else {
-                        loaderShow();
-                        detalle = [];
-                        indiceLista = [];
-                        banderaCopiaDocumento = 0;
-                        indexDetalle = 0;
-                        nroFilasInicial = parseInt(dataDocumentoTipo[0]['cantidad_detalle']);
-                        limpiarDetalle();
-                        loaderClose();
+              loaderShow();
+              detalle = [];
+              indiceLista = [];
+              banderaCopiaDocumento = 0;
+              indexDetalle = 0;
+              nroFilasInicial = parseInt(dataDocumentoTipo[0]['cantidad_detalle']);
+              limpiarDetalle();
+              loaderClose();
 
-                        $("#id_"+ dtdTipoClase.id).show();
-                        $("#id_"+ dtdTipoClase.id +" label").html("Clase *");
-                        $("#id_"+ dtdTipoTipo.id).hide();
-                        select2.asignarValor("cbo_" + dtdTipoTipo.id, "");
-                        $("#id_"+dtdTipoOtros).hide();
-                    }
-                }
-            });
-        }
+              var dtdetalle_cantidad = document.querySelectorAll('.dtdetalle_cantidad');
+              dtdetalle_cantidad.forEach(function (columna) {
+                  columna.classList.add('hidden');
+              });
+              var dtdetalle_cantidad_aceptada = document.querySelectorAll('.dtdetalle_cantidad_aceptada');
+              dtdetalle_cantidad_aceptada.forEach(function (columna) {
+                  columna.classList.add('hidden');
+              }); 
+              var dtdetalle_stock= document.querySelectorAll('.dtdetalle_stock');
+              dtdetalle_stock.forEach(function (columna) {
+                  columna.classList.add('hidden');
+              });  
+              var dtdetalle_unidad_medida = document.querySelectorAll('.dtdetalle_unidad_medida');
+              dtdetalle_unidad_medida.forEach(function (columna) {
+                  columna.classList.add('hidden');
+              });
 
-        if(!isEmpty(dtdTipoTipo)){
-            $("#cbo_" + dtdTipoTipo.id).select2({
-                width: "100%"
-            }).on("change", function (e) {
-                if(doc_TipoId == 280){
-                    if (e.val == 459) {
-                        $("#id_"+dtdTipoOtros).show();
-                    } else {
-                        $("#id_"+dtdTipoOtros).hide();
-                    }
-                }
-            });
-        }
+              $("#datatable").resize();
+          } else {
+              $("#tb_cantidad_470").show();
+              $("#tb_cantidad_aceptada_475").show();
+              $("#tb_stock_473").show();
+              $("#tb_unidad_medida_471").show();
 
-        //Adjuntar imagen de producto para solicitud de requerimiento
-        $("#fileInputAdjunto").change(function () {
-            debugger;
-            var fileType=this.files[0].type
-            $("#text_archivoAdjunto").html($("#fileInputAdjunto").val().slice(12));
-            if (this.files && this.files[0]) {
-                var validImageTypes = ["image/jpeg", "image/png", "image/gif", "image/bmp", "image/webp"];
-                // Verificar si el archivo es una imagen válida
-                if (validImageTypes.includes(this.files[0].type)) {
-                    var reader = new FileReader();
-                    reader.onload = function (e) {
-                        var img = new Image();
-                        img.src = e.target.result;
-                        img.onload = function () {
-                            // Redimensionar la imagen si es necesario
-                            var canvas = document.createElement("canvas");
-                            var ctx = canvas.getContext("2d");
-                            // Establecer un tamaño máximo (por ejemplo, 800px de ancho)
-                            var maxWidth = 800;
-                            var maxHeight = 800;
-                            var width = img.width;
-                            var height = img.height;
+              loaderShow();
+              detalle = [];
+              indiceLista = [];
+              banderaCopiaDocumento = 0;
+              indexDetalle = 0;
+              nroFilasInicial = parseInt(dataDocumentoTipo[0]['cantidad_detalle']);
+              limpiarDetalle();
+              loaderClose();
 
-                            // Calcular las nuevas dimensiones manteniendo la relación de aspecto
-                            if (width > height) {
-                                if (width > maxWidth) {
-                                    height = Math.round((height *= maxWidth / width));
-                                    width = maxWidth;
-                                }
-                            } else {
-                                if (height > maxHeight) {
-                                    width = Math.round((width *= maxHeight / height));
-                                    height = maxHeight;
-                                }
-                            }
+              var dtdetalle_cantidad = document.querySelectorAll('.dtdetalle_cantidad');
+              dtdetalle_cantidad.forEach(function (columna) {
+                  columna.classList.remove('hidden');
+              });
+              var dtdetalle_cantidad_aceptada = document.querySelectorAll('.dtdetalle_cantidad_aceptada');
+              dtdetalle_cantidad_aceptada.forEach(function (columna) {
+                  columna.classList.remove('hidden');
+              });
+              var dtdetalle_stock = document.querySelectorAll('.dtdetalle_stock');
+              dtdetalle_stock.forEach(function (columna) {
+                  columna.classList.remove('hidden');
+              });  
+              var dtdetalle_unidad_medida = document.querySelectorAll('.dtdetalle_unidad_medida');
+              dtdetalle_unidad_medida.forEach(function (columna) {
+                  columna.classList.remove('hidden');
+              });
+              
+              $("#datatable").resize();
+          }
+      });
+  }
 
-                            // Establecer las dimensiones del canvas y dibujar la imagen redimensionada
-                            canvas.width = width;
-                            canvas.height = height;
-                            ctx.drawImage(img, 0, 0, width, height);
-                            // Convertir la imagen redimensionada a un formato de imagen (base64)
-                            var resizedImage = canvas.toDataURL(fileType);
 
-                            var indice = $('#indiceImagenAdjuntaBien').val();
-                            var indexTemporal = -1;
-                            $.each(detalle, function (i, item) {
-                                if (parseInt(item.index) === parseInt(indice)) {
-                                    indexTemporal = i;
-                                    return false;
-                                }
-                            });
-                        
-                            if (indexTemporal != -1)
-                            {
-                                detalle[indexTemporal].imagenAdjuntaBien = resizedImage;
-                            }
-                            // Establecer la imagen redimensionada en el elemento de vista previa
-                            $("#text_archivoAdjunto").val(e.target.result);
-                            $("#error").hide();
-                        };                         
-                    };
-                    reader.readAsDataURL(this.files[0]); // Leer el archivo seleccionado
-                } else if(this.files[0].type == "application/pdf") {
-                    var reader = new FileReader();
-                    reader.onload = function (e) {
-                        $("#text_archivoAdjunto").val(e.target.result);
-                    }
-                    reader.readAsDataURL(this.files[0]);
-                }else{ 
-                    // Si no es una imagen válida, mostrar un mensaje de error y ocultar la vista previa
-                    $("#error").show();
-                }
+  var dtdTipoGrupo_producto = obtenerDocumentoTipoDatoIdXTipo(44);
+  if(!isEmpty(dtdTipoGrupo_producto) && doc_TipoId == GENERAR_COTIZACION){
+      $("#cbo_" + dtdTipoGrupo_producto).select2({
+          width: "100%"
+      }).on("change", function (e) {
+          if(e.val != 0){
+              var dtdTipoTipoRequerimiento = obtenerDocumentoTipoDatoIdXTipo(42);
+              if(isEmpty(select2.obtenerValor("cboTipoRequerimiento_" + dtdTipoTipoRequerimiento))){
+                  select2.asignarValor("cboTipoRequerimiento_" + dtdTipoTipoRequerimiento, 0)
+                  select2.asignarValor("cbo_" + dtdTipoArea, 0)
+                  mostrarAdvertencia("Seleccionar Tipo de Requerimiento");
+                  return false;
+              }
+              loaderShow();
+              dataStockReservaOk = [];
+              detalle = [];
+              indiceLista = [];
+              banderaCopiaDocumento = 0;
+              indexDetalle = 0;
+              ax.setAccion("obtenerDetalleXGrupoProductoId");
+              ax.addParamTmp("grupoProductoId", select2.obtenerValor("cbo_" + dtdTipoGrupo_producto));
+              ax.addParamTmp("tipoRequerimiento", select2.obtenerValor("cboTipoRequerimiento_" + dtdTipoTipoRequerimiento));
+              ax.addParamTmp("urgencia", "No");
+              ax.consumir();
+          }
 
-            }
-        });
-    }
+      });
+  }
+
+  // 281 = Generar Cotización
+  var dtdTipoCotizacion = obtenerDocumentoTipoDatoXTipoXCodigo(4, "01");
+  var dtdTipoPosto1 = obtenerDocumentoTipoDatoXTipoXCodigo(23, "01");
+  var dtdTipoPosto2 = obtenerDocumentoTipoDatoXTipoXCodigo(23, "02");
+  var dtdTipoPosto3 = obtenerDocumentoTipoDatoXTipoXCodigo(23, "03");
+
+  if(!isEmpty(dtdTipoCotizacion) && doc_TipoId == GENERAR_COTIZACION){
+      $("#id_"+ dtdTipoPosto1.id +" label").html("Postor N° 1 *");
+      $("#id_"+ dtdTipoPosto2.id +" label").html("Postor N° 2 *");
+      $("#id_"+ dtdTipoPosto3.id +" label").html("Postor N° 3 *");
+
+      $("#cbo_" + dtdTipoCotizacion.id).select2({
+          width: "100%"
+      }).on("change", function (e) {
+          if(e.val == 467){
+              $("#id_" + dtdTipoPosto3.id).hide();
+              $("#id_" + dtdTipoPosto2.id).hide();
+              $("#tb_postor_457").hide();
+              $("#tb_postor_458").hide();
+              var dtdetalle_postor2 = document.querySelectorAll('.dtdetalle_postor2');
+              dtdetalle_postor2.forEach(function (columna) {
+                  columna.classList.add('hidden');
+              });
+              var dtdetalle_postor3 = document.querySelectorAll('.dtdetalle_postor3');
+              dtdetalle_postor3.forEach(function (columna) {
+                  columna.classList.add('hidden');
+              });
+
+              //Cantidad
+              var dtdetalle_postor_cantidad2 = document.querySelectorAll('.dtdetalle_postor_cantidad2');
+              dtdetalle_postor_cantidad2.forEach(function (columna) {
+                  columna.classList.add('hidden');
+              });
+              var dtdetalle_postor_cantidad3 = document.querySelectorAll('.dtdetalle_postor_cantidad3');
+              dtdetalle_postor_cantidad3.forEach(function (columna) {
+                  columna.classList.add('hidden');
+              });
+              //precio
+              var dtdetalle_postor_precio = document.querySelectorAll('.postor_precio');
+              dtdetalle_postor_precio.forEach(function (columna) {
+                  columna.classList.add('hidden');
+              });
+              var dtdetalle_postor_subtotal = document.querySelectorAll('.postor_subtotal');
+              dtdetalle_postor_subtotal.forEach(function (columna) {
+                  columna.classList.add('hidden');
+              });
+              
+              var tfootpostor2_class = document.querySelectorAll('.tfootpostor2_class');
+              tfootpostor2_class.forEach(function (columna) {
+                  columna.classList.add('hidden');
+              });
+              var tfootpostor3_class = document.querySelectorAll('.tfootpostor3_class');
+              tfootpostor3_class.forEach(function (columna) {
+                  columna.classList.add('hidden');
+              });
+
+              $("#datatable").resize();
+              select2.asignarValor("cbo_"+dtdTipoPosto2.id, 0);
+              select2.asignarValor("cbo_"+dtdTipoPosto3.id, 0);
+          }else{
+              $("#id_" + dtdTipoPosto3.id).show();
+              $("#id_" + dtdTipoPosto2.id).show();
+              $("#tb_postor_457").show();
+              $("#tb_postor_458").show();
+              var dtdetalle_postor2 = document.querySelectorAll('.dtdetalle_postor2');
+              dtdetalle_postor2.forEach(function (columna) {
+                  columna.classList.remove('hidden');
+              });
+              var dtdetalle_postor3 = document.querySelectorAll('.dtdetalle_postor3');
+              dtdetalle_postor3.forEach(function (columna) {
+                  columna.classList.remove('hidden');
+              });
+              //Cantidad
+              var dtdetalle_postor_cantidad2 = document.querySelectorAll('.dtdetalle_postor_cantidad2');
+              dtdetalle_postor_cantidad2.forEach(function (columna) {
+                  columna.classList.remove('hidden');
+              });
+              var dtdetalle_postor_cantidad3 = document.querySelectorAll('.dtdetalle_postor_cantidad3');
+              dtdetalle_postor_cantidad3.forEach(function (columna) {
+                  columna.classList.remove('hidden');
+              });
+              //precio
+              var dtdetalle_postor_precio = document.querySelectorAll('.postor_precio');
+              dtdetalle_postor_precio.forEach(function (columna) {
+                  columna.classList.remove('hidden');
+              });
+              var dtdetalle_postor_subtotal = document.querySelectorAll('.postor_subtotal');
+              dtdetalle_postor_subtotal.forEach(function (columna) {
+                  columna.classList.remove('hidden');
+              });
+
+              var tfootpostor2_class = document.querySelectorAll('.tfootpostor2_class');
+              tfootpostor2_class.forEach(function (columna) {
+                  columna.classList.remove('hidden');
+              });
+              var tfootpostor3_class = document.querySelectorAll('.tfootpostor3_class');
+              tfootpostor3_class.forEach(function (columna) {
+                  columna.classList.remove('hidden');
+              });
+              $("#datatable").resize();
+          }
+      });
+  }
+
+  //Cargar postores
+  if(!isEmpty(data.postores)){
+      $("#cboPostor1").select2({
+          width: "100%"
+      });
+      select2.cargar("cboPostor1", data.postores, "id", ["codigo_identificacion","persona_nombre"]);
+  }
+
+  if(doc_TipoId == GENERAR_COTIZACION){
+      //Botones de carga de archivos de cotizaciones
+      $("#fileInput_" + dtdTipoPosto1.id).change(function () {
+          $("#text_archivo_" + dtdTipoPosto1.id).html($("#fileInput_" + dtdTipoPosto1.id).val().slice(12));
+          if (this.files && this.files[0]) {
+              lstDocumentoArchivos1 = [];
+              var documento = {};
+              var reader = new FileReader();
+              reader.onload =function(e) {
+                  documento.data = e.target.result;
+                  documento.archivo = $("#fileInput_" + dtdTipoPosto1.id).val().slice(12);
+                  documento.id = "t" + 0;
+                  documento.contenido_archivo = "postor1";
+                  lstDocumentoArchivos1.push(documento);
+              };
+              reader.readAsDataURL(this.files[0]);
+          }
+      });
+
+      $("#fileInput_" + dtdTipoPosto2.id).change(function () {
+          $("#text_archivo_" + dtdTipoPosto2.id).html($("#fileInput_" + dtdTipoPosto2.id).val().slice(12));
+          if (this.files && this.files[0]) {
+              lstDocumentoArchivos2 = [];
+              var documento = {};
+              var reader = new FileReader();
+              reader.onload =function(e) {
+                  documento.data = e.target.result;
+                  documento.archivo = $("#fileInput_" + dtdTipoPosto2.id).val().slice(12);
+                  documento.id = "t" + 1;
+                  documento.contenido_archivo = "postor2";
+                  lstDocumentoArchivos2.push(documento);            
+              };
+              reader.readAsDataURL(this.files[0]);
+          }
+      });
+
+      $("#fileInput_" + dtdTipoPosto3.id).change(function () {
+          $("#text_archivo_" + dtdTipoPosto3.id).html($("#fileInput_" + dtdTipoPosto3.id).val().slice(12));
+          if (this.files && this.files[0]) {
+              lstDocumentoArchivos3 = [];
+              var documento = {};
+              var reader = new FileReader();
+              reader.onload =function(e) {
+                  documento.data = e.target.result;
+                  documento.archivo = $("#fileInput_" + dtdTipoPosto3.id).val().slice(12);
+                  documento.id = "t" + 2;
+                  documento.contenido_archivo = "postor3";
+                  lstDocumentoArchivos3.push(documento);
+              };
+              reader.readAsDataURL(this.files[0]);
+          }
+      });
+  }
+
+}
+
+function imageIsLoaded(e) {
+  $('#dataArchivoMulti').attr('value', e.target.result);
 }
 
 function habilitarComboTipoPago() {
@@ -1218,7 +1590,14 @@ function llenarCabeceraDetalle() {
   //columnas dinamicas de acuerdo a documento_tipo_columna
   var anchoDinamicoTabla = 0; //;500;//941-> 1041px
 
-  fila += "<th style='text-align:center; width: 20px;'>#</th>"; // # Item
+  var rowspan = "";
+  var colspan = "";
+  if(doc_TipoId == GENERAR_COTIZACION){
+      rowspan = "rowspan='2'";
+      colspan = "colspan='2'";
+  }
+  
+  fila += "<th style='text-align:center; width: 20px;' "+ rowspan +">#</th>"; // # Item
   anchoDinamicoTabla += parseInt(40);
 
   if (!isEmpty(dataColumna)) {
@@ -1290,13 +1669,8 @@ function llenarCabeceraDetalle() {
             "</div></th>";
           anchoDinamicoTabla += parseInt(item.ancho);
           break;
-        case 7: // 40px STOCK
-          fila +=
-            "<th style='text-align:center; width: " +
-            item.ancho +
-            "px;'>" +
-            item.descripcion +
-            "</th>";
+        case 7:// 40px STOCK
+          fila += "<th style='text-align:center; width: " + item.ancho + "px;' id='tb_stock_"+ item.id +"' "+ rowspan +">" + item.descripcion + "</th>";
           anchoDinamicoTabla += parseInt(item.ancho);
           break;
         case 8: // 86px STOCK MINIMO
@@ -1332,43 +1706,25 @@ function llenarCabeceraDetalle() {
             "px;' bgcolor='#FFFFFF'></th>";
           anchoDinamicoTabla += parseInt(item.ancho);
           break;
-        case 11: // 310 PRODUCTO
-          fila +=
-            "<th style='text-align:center; width: " +
-            item.ancho +
-            "px;'>" +
-            "<a href='#' title='Nuevo producto' onclick='cargarBien()'>&nbsp;&nbsp;<i class='fa fa-plus-circle' style='color:#1ca8dd'></i></a>&nbsp;&nbsp;" +
-            item.descripcion +
-            "</th>";
-          anchoDinamicoTabla += parseInt(item.ancho);
-          break;
-        case 12: // 47 CANTIDAD
-          fila +=
-            "<th style='text-align:center; width: " +
-            item.ancho +
-            "px;'>" +
-            item.descripcion +
-            "</th>";
-          anchoDinamicoTabla += parseInt(item.ancho);
-          break;
-        case 13: // 71 UNIDAD DE MEDIDA
-          fila +=
-            "<th style='text-align:center; width: " +
-            item.ancho +
-            "px;'>" +
-            item.descripcion +
-            "</th>";
-          anchoDinamicoTabla += parseInt(item.ancho);
-          break;
-        case 14: // 40 ACCIONES
-          fila +=
-            "<th style='text-align:center; width: " +
-            item.ancho +
-            "px;'>" +
-            item.descripcion +
-            "</th>";
-          anchoDinamicoTabla += parseInt(item.ancho);
-          break;
+        case 11:// 310 PRODUCTO
+            alturaBienTD =  parseInt(item.ancho) + 200;
+            fila += "<th style='text-align:center; width: " + item.ancho + "px;' "+ rowspan +">" +
+                    // "<a href='#' title='Nuevo producto' onclick='cargarBien()'>&nbsp;&nbsp;<i class='fa fa-plus-circle' style='color:#1ca8dd'></i></a>"+
+                    "&nbsp;&nbsp;" + item.descripcion + "</th>";
+            anchoDinamicoTabla += parseInt(item.ancho);
+            break;
+        case 12:// 47 CANTIDAD
+            fila += "<th style='text-align:center; width: " + item.ancho + "px;' id='tb_cantidad_"+ item.id +"' "+ rowspan +">" + item.descripcion + "</th>";
+            anchoDinamicoTabla += parseInt(item.ancho);
+            break;
+        case 13:// 71 UNIDAD DE MEDIDA
+            fila += "<th style='text-align:center; width: " + item.ancho + "px;' id='tb_unidad_medida_"+ item.id +"' "+ rowspan +">" + item.descripcion + "</th>";
+            anchoDinamicoTabla += parseInt(item.ancho);
+            break;
+        case 14:// 40 ACCIONES
+            fila += "<th style='text-align:center; width: " + item.ancho + "px;' "+ rowspan +">" + item.descripcion + "</th>";
+            anchoDinamicoTabla += parseInt(item.ancho);
+            break;
         case 15: // 47 Organizador
           if (muestraOrganizador && organizadorIdDefectoTM == 0) {
             fila +=
@@ -1440,30 +1796,41 @@ function llenarCabeceraDetalle() {
           anchoDinamicoTabla += parseInt(item.ancho);
           break;
         case 27://Postor N° 1
-          fila += "<th style='text-align:center; width: " + item.ancho + "px;' id='tb_postor_"+ item.id +"' "+ colspan +">" + item.descripcion +" &nbsp;<input type='checkbox' id='selectPostor1' class='grupocheckbox'></th>";
-          anchoDinamicoTabla += parseInt(item.ancho);
-          break;
+            fila += "<th style='text-align:center; width: " + item.ancho + "px;' id='tb_postor_"+ item.id +"' "+ colspan +">" + item.descripcion +" &nbsp;<input type='checkbox' id='selectPostor1' class='grupocheckbox' onclick='hallarSubTotalPostorDetalle(1,1,2)'><br>$&nbsp;<input type='checkbox' id='selectPostor1Moneda' class='grupocheckboxMoneda' onclick='hallarSubTotalPostorDetalle(1,1,2)'></th>";
+            anchoDinamicoTabla += parseInt(item.ancho);
+            break;
         case 28://Postor N° 2
-          fila += "<th style='text-align:center; width: " + item.ancho + "px;' id='tb_postor_"+ item.id +"' "+ colspan +">" + item.descripcion +" &nbsp;<input type='checkbox' id='selectPostor2' class='grupocheckbox'></th>";
-          anchoDinamicoTabla += parseInt(item.ancho);
-          break;
+            fila += "<th style='text-align:center; width: " + item.ancho + "px;' id='tb_postor_"+ item.id +"' "+ colspan +">" + item.descripcion +" &nbsp;<input type='checkbox' id='selectPostor2' class='grupocheckbox' onclick='hallarSubTotalPostorDetalle(1,2,2)'><br>$&nbsp;<input type='checkbox' id='selectPostor2Moneda' class='grupocheckboxMoneda' onclick='hallarSubTotalPostorDetalle(1,2,2)'></th>";
+            anchoDinamicoTabla += parseInt(item.ancho);
+            break;
         case 29://Postor N° 3
-          fila += "<th style='text-align:center; width: " + item.ancho + "px;' id='tb_postor_"+ item.id +"' "+ colspan +">" + item.descripcion +" &nbsp;<input type='checkbox' id='selectPostor3' class='grupocheckbox'></th>";
-          anchoDinamicoTabla += parseInt(item.ancho);
-          break;
+            fila += "<th style='text-align:center; width: " + item.ancho + "px;' id='tb_postor_"+ item.id +"' "+ colspan +">" + item.descripcion +" &nbsp;<input type='checkbox' id='selectPostor3' class='grupocheckbox' onclick='hallarSubTotalPostorDetalle(1,3,2)'><br>$&nbsp;<input type='checkbox' id='selectPostor3Moneda' class='grupocheckboxMoneda' onclick='hallarSubTotalPostorDetalle(1,3,2)'></th>";
+            anchoDinamicoTabla += parseInt(item.ancho);
+            break;
         case 33://Compras
-          fila += "<th style='text-align:center; width: " + item.ancho + "px;' "+ rowspan +">" + item.descripcion + "</th>";
-          anchoDinamicoTabla += parseInt(item.ancho);
-          break;
+            fila += "<th style='text-align:center; width: " + item.ancho + "px;' "+ rowspan +">" + item.descripcion + "</th>";
+            anchoDinamicoTabla += parseInt(item.ancho);
+            break;
         case 34://Cantidad aceptada
-          fila += "<th style='text-align:center; width: " + item.ancho + "px;' id='tb_cantidad_aceptada_"+ item.id +"' "+ rowspan +">" + item.descripcion + "</th>";
-          anchoDinamicoTabla += parseInt(item.ancho);
-          break;              
+            fila += "<th style='text-align:center; width: " + item.ancho + "px;' id='tb_cantidad_aceptada_"+ item.id +"' "+ rowspan +">" + item.descripcion + "</th>";
+            anchoDinamicoTabla += parseInt(item.ancho);
+            break;               
       }
     });
   }
 
   fila = fila + "</tr>";
+
+  if(doc_TipoId == GENERAR_COTIZACION){
+    fila = fila + "<tr>"+
+        "<th style='text-align:center;' >Precio</th>"+
+        "<th style='text-align:center;' >Sub. Total</th>"+
+        "<th style='text-align:center;' class='postor_precio'>Precio</th>"+
+        "<th style='text-align:center;' class='postor_subtotal'>Sub. Total</th>"+
+        "<th style='text-align:center;' class='postor_precio'>Precio</th>"+
+        "<th style='text-align:center;' class='postor_subtotal'>Sub. Total</th>"+
+    "</tr>";
+}
 
   if (
     documentoTipoTipo == 1 &&
@@ -2388,7 +2755,7 @@ function agregarCeCoDetalleTabla(i) {
 
 function agregarPrecioUnitarioPDetalleTabla(i,  numero) {
   var $html = "<div class=\"input-group col-lg-12 col-md-12 col-sm-12 col-xs-12\">" +
-          "<input type=\"number\" id=\"txtPrecioP"+ numero +"_" + i + "\" name=\"txtPrecioP"+ numero +"_" + i + "\" class=\"form-control\" required=\"\" aria-required=\"true\" value=\"\" style=\"text-align: right;\" onchange=\"hallarSubTotalPostorDetalle(" + i + ", "+ numero +")\" onkeyup =\"hallarSubTotalPostorDetalle(" + i + ", "+ numero +")\"/></div>";
+          "<input type=\"number\" id=\"txtPrecioP"+ numero +"_" + i + "\" name=\"txtPrecioP"+ numero +"_" + i + "\" class=\"form-control\" required=\"\" aria-required=\"true\" value=\"\" style=\"text-align: right;\" onchange=\"hallarSubTotalPostorDetalle(" + i + ", "+ numero +", 1)\" onkeyup =\"hallarSubTotalPostorDetalle(" + i + ", "+ numero +", 1)\"/></div>";
 
   return $html;
 }
@@ -2426,6 +2793,12 @@ function hallarSubTotalDetalle(indice) {
 
   //hallar utilidades generales
   obtenerUtilidadesGenerales();
+
+  if(doc_TipoId == GENERAR_COTIZACION){
+    hallarSubTotalPostorDetalle(indice, 1, 1);
+    hallarSubTotalPostorDetalle(indice, 2, 1);
+    hallarSubTotalPostorDetalle(indice, 3, 1);
+  }
 }
 
 function obtenerUtilidadesGenerales() {
@@ -2619,6 +2992,7 @@ function validarFormularioDetalleTablas(indice) {
   var correcto = true;
   var valor;
   var detDetalle = [];
+  var validar_postor = false;
 
   if (!isEmpty(dataColumna)) {
     $.each(dataColumna, function (index, item) {
@@ -2645,8 +3019,12 @@ function validarFormularioDetalleTablas(indice) {
           objDetalle.precio = valor;
           break;
         case 12: // CANTIDAD
-          valor = document.getElementById("txtCantidad_" + indice).value;
-          objDetalle.cantidad = valor;
+        valor = document.getElementById("txtCantidad_" + indice).value;
+          if(doc_TipoId == REQUERIMIENTO_AREA){
+              objDetalle.cantidadAceptada = valor;
+          }else{
+              objDetalle.cantidad = valor;
+          }
           break;
 
         //combos, seleccion
@@ -2657,7 +3035,12 @@ function validarFormularioDetalleTablas(indice) {
         case 11: // PRODUCTO
           valor = select2.obtenerValor("cboBien_" + indice);
           objDetalle.bienId = valor;
+
           objDetalle.bienDesc = select2.obtenerText("cboBien_" + indice);
+          if(doc_TipoId == GENERAR_COTIZACION || doc_TipoId == ORDEN_COMPRA || doc_TipoId == REQUERIMIENTO_AREA || doc_TipoId == ORDEN_SERVICIO){
+              valormovimiento_bien_ids = $("#txtmovimiento_bien_ids_" + indice).val();
+              objDetalle.movimiento_bien_ids = valormovimiento_bien_ids;
+          }
           break;
         case 13: // UNIDAD DE MEDIDA
           valor = select2.obtenerValor("cboUnidadMedida_" + indice);
@@ -2708,40 +3091,37 @@ function validarFormularioDetalleTablas(indice) {
           objDetalle.CeCoId = valor;
           break;
         case 27://Postor N° 1
-          valor = $("#txtPrecioP1_" + indice).val();
-          objDetalle.precioPostor1 = valor;
-          objDetalle.checked1 = $('#selectPostor1').is(":checked");
-          break;
+            valor = $("#txtPrecioP1_" + indice).val();
+            objDetalle.precioPostor1 = valor;
+            objDetalle.checked1 = $('#selectPostor1').is(":checked");
+            objDetalle.checked1Moneda = $('#selectPostor1Moneda').is(":checked");
+            break;
         case 28://Postor N° 2
-          varlor = 0;
-          if(validar_postor){
-              valor = $("#txtPrecioP2_" + indice).val();
-          }
-          objDetalle.precioPostor2 = valor;
-          objDetalle.checked2 = $('#selectPostor2').is(":checked");
-          break;
+            valor = $("#txtPrecioP2_" + indice).val();
+            objDetalle.precioPostor2 = valor;
+            objDetalle.checked2 = $('#selectPostor2').is(":checked");
+            objDetalle.checked2Moneda = $('#selectPostor2Moneda').is(":checked");
+            break;
         case 29://Postor N° 3
-          varlor = 0;
-          if(validar_postor){
-              valor = $("#txtPrecioP3_" + indice).val();
-          }
-          objDetalle.precioPostor3 = valor;
-          objDetalle.checked3 = $('#selectPostor3').is(":checked");
-          break;
+            valor = $("#txtPrecioP3_" + indice).val();
+            objDetalle.precioPostor3 = valor;
+            objDetalle.checked3 = $('#selectPostor3').is(":checked");
+            objDetalle.checked3Moneda = $('#selectPostor3Moneda').is(":checked");
+            break;
         case 33://Compra
-          valor = select2.obtenerValor("cboCompra_" + indice);
-          objDetalle.esCompra = valor;
-          objDetalle.compraDesc = select2.obtenerText("cboCompra_" + indice);
-          break;
+            valor = select2.obtenerValor("cboCompra_" + indice);
+            objDetalle.esCompra = valor;
+            objDetalle.compraDesc = select2.obtenerText("cboCompra_" + indice);
+            break;
         case 34:// CANTIDAD ACEPTADA
-          valor = document.getElementById("txtCantidadAprobada_" + indice).value;
-          objDetalle.cantidad = valor;
-          break;
+            valor = document.getElementById("txtCantidadAprobada_" + indice).value;
+            objDetalle.cantidad = valor;
+            break;
         case 36:
-          valor = $('#imagenPdfAdjunto_' + indice).val();
-          var nombreArchivo = $("#nombreimagenPdfAdjunto_" + indice).val();
-          detDetalle.push({columnaCodigo: 36, valorDet: valor, nombreArchivo: nombreArchivo});
-          break;            
+            valor = $('#imagenPdfAdjunto_' + indice).val();
+            var nombreArchivo = $("#nombreimagenPdfAdjunto_" + indice).val();
+            detDetalle.push({columnaCodigo: 36, valorDet: valor, nombreArchivo: nombreArchivo});
+            break;         
       }
 
       //validar los valores del detalle
@@ -2979,37 +3359,40 @@ function agregarCompra(i) {
 }
 
 function agregarBienDetalleTabla(i) {
-  var $html =
-    '<div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">' +
-    //            "<select name=\"cboBien_" + i + "\" id=\"cboBien_" + i + "\" class=\"select2\"></select>" +
-    "<span name=\"obsupcboBien_" + i + "\" id=\"obsupcboBien_" + i + "\" class='select2-chosen hidden'>&nbsp;</span>" +
-    '<input name="cboBien_' +
-    i +
-    '" id="cboBien_' +
-    i +
-    '" class="select2">' +
-    "<span name=\"obscboBien_" + i + "\" id=\"obscboBien_" + i + "\" class='select2-chosen'></span>" +
-    "<span class='input-group-btn'>" +
-    "<button type='button' class='btn btn-effect-ripple btn-default' title='Actualizar producto'" +
-    "style='padding-bottom: 7px;' onclick='actualizarComboProducto(" +
-    i +
-    ")'><i class='ion-refresh' style='color: #5CB85C;'></i></button>";
+  var disabled = '';
+  if(doc_TipoId == GENERAR_COTIZACION || doc_TipoId == REQUERIMIENTO_AREA || doc_TipoId == COTIZACION_SERVICIO){
+      disabled = 'disabled';
+  }
+  var $html = "<div class=\"input-group col-lg-12 col-md-12 col-sm-12 col-xs-12\">" +
+//            "<select name=\"cboBien_" + i + "\" id=\"cboBien_" + i + "\" class=\"select2\"></select>" +
+          "<span name=\"obsupcboBien_" + i + "\" id=\"obsupcboBien_" + i + "\" class='select2-chosen hidden'>&nbsp;</span>" +
+          "<input name=\"cboBien_" + i + "\" id=\"cboBien_" + i + "\" class=\"select2\" "+ disabled +">" +
+          "<BR><span name=\"obscboBien_" + i + "\" id=\"obscboBien_" + i + "\" class='select2-chosen'></span>" +
+          "<span class='input-group-btn'>";
+  let arrayTipos = [GENERAR_COTIZACION, REQUERIMIENTO_AREA];
+  if(!arrayTipos.includes(doc_TipoId)){
+              $html += "<button type='button' class='btn btn-effect-ripple btn-default' title='Actualizar producto'" +
+      "style='padding-bottom: 7px;' onclick='actualizarComboProducto(" + i + ")' "+ disabled +"><i class='ion-refresh' style='color: #5CB85C;'></i></button>";
+  }
+
   if (existeColumnaCodigo(23) || existeColumnaCodigo(22)) {
-    $html +=
-      "<button type='button' class='btn btn-effect-ripple btn-default' title='Ingresar comentario'" +
-      "style='padding-bottom: 7px;' onclick='insertarComentarioBien(" +
-      i +
-      ")'><i class='fa fa-comment-o' style='color: #33BEFF;'></i></button>";
+      $html += "<button type='button' class='btn btn-effect-ripple btn-default' title='Ingresar comentario'" +
+              "style='padding-bottom: 7px;' onclick='insertarComentarioBien(" + i + ")'><i class='fa fa-comment-o' style='color: #33BEFF;'></i></button>";
   }
   if(existeColumnaCodigo(24)){
-    $html += "<button type='button' class='btn_agrupador btn btn-effect-ripple btn-default hidden' title='Ingresar agrupador'" +
-            "style='padding-bottom: 7px;' onclick='insertarAgrupadorBien(" + i + ")'><i class='fa fa-users' style='color: #33BEFF;'></i></button>";
+      $html += "<button type='button' class='btn_agrupador btn btn-effect-ripple btn-default hidden' title='Ingresar agrupador'" +
+              "style='padding-bottom: 7px;' onclick='insertarAgrupadorBien(" + i + ")'><i class='fa fa-users' style='color: #33BEFF;'></i></button>";
   }
   if (existeColumnaCodigo(36)) {
-    $html += "<button type='button' class='btn btn-effect-ripple btn-default' title='Adjuntar archivo'" +
-            "style='padding-bottom: 7px;' onclick='adjuntarImagenPdfBien(" + i + ")'><i class='fa fa-cloud-upload' style='color: #33BEFF;'></i></button><input type='hidden' id='imagenPdfAdjunto_" + i + "' name='imagenPdfAdjunto_" + i + "' /><input type='hidden' id='nombreimagenPdfAdjunto_" + i + "' name='nombreimagenPdfAdjunto_" + i + "' />";
+      $html += "<button type='button' class='btn btn-effect-ripple btn-default' title='Adjuntar archivo'" +
+              "style='padding-bottom: 7px;' onclick='adjuntarImagenPdfBien(" + i + ")'><i class='fa fa-cloud-upload' style='color: #33BEFF;'></i></button><input type='hidden' id='imagenPdfAdjunto_" + i + "' name='imagenPdfAdjunto_" + i + "' /><input type='hidden' id='nombreimagenPdfAdjunto_" + i + "' name='nombreimagenPdfAdjunto_" + i + "' />";
   }
-  $html += "</span>" + "</div>";
+  if(doc_TipoId == GENERAR_COTIZACION){
+      $html += "<button type='button' class='btn btn-effect-ripple btn-default' title='Ver detalle Requerimiento'" +
+              "style='padding-bottom: 7px;' onclick='verDetalleRequerimiento(" + i + ")'><i class='fa fa-comments-o' style='color: #33BEFF;'></i></button>";
+  }
+  $html += "</span>" +
+          "</div>";
 
   return $html;
 }
@@ -3076,20 +3459,37 @@ function onResponseObtenerDocumentoTipoDato(data) {
           }
           contador++;
           var hidden_4 = "";
-          if(doc_TipoId == 280){
-            if(item.descripcion == "Tipo" || item.descripcion == "Otros"){
-                hidden_4 = "hidden";
-            }
+          var btn_upload = "";
+          if(doc_TipoId == SOLICITUD_REQUERIMIENTO){
+              if(item.descripcion == "Tipo" || item.descripcion == "Otros"){
+                  hidden_4 = "hidden";
+              }
+          }
+          if(doc_TipoId == GENERAR_COTIZACION){
+              if((item.descripcion).indexOf("Postor N°") == 0){
+                  btn_upload = "&nbsp;<a href='#' onclick=\"$('#fileInput_"+item.id+"').click();\"><i class='fa fa-cloud-upload' style='color:blue;' title='Adjuntar cotización'></i></a>";
+                  btn_upload += "<input type='file' id='fileInput_" + item.id + "' style='display:none;'>";
+                  btn_upload += "&nbsp;<i id='text_archivo_" + item.id+"'></i>";
+              }
           }
 
           var html = '<div class="form-group col-md-4" id="id_'+item.id+'" '+hidden_4+'>';
-          if (item.tipo != 31) {
+          if(item.tipo == 46 || item.tipo == 49 || item.tipo == 50){
             html +=
               "<label>" +
               item.descripcion +
               " " +
-              (item.opcional == 0 ? "*" : "") +
-              "</label>";
+              "*" +
+              "</label>" + btn_upload;
+          }else{
+            if (item.tipo != 31) {
+              html +=
+                "<label>" +
+                item.descripcion +
+                " " +
+                (item.opcional == 0 ? "*" : "") +
+                "</label>" + btn_upload;
+            }
           }
 
           //                    if (item.tipo == 5)
@@ -3115,6 +3515,7 @@ function onResponseObtenerDocumentoTipoDato(data) {
             case 24:
             case 26:
             case 36:
+            case 49:
               html +=
                 '<div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">';
               break;
@@ -3160,12 +3561,12 @@ function onResponseObtenerDocumentoTipoDato(data) {
         case 20:
         case 21:
         case 22:
-        case 23:
+        // case 23:
         case 26:
         //fechas
         case 3:
         case 9:
-        case 10:
+        // case 10:
         case 11:
           readonly = parseInt(item.edicion_habilitar) === 0 ? "disabled" : "";
           break;
@@ -3661,20 +4062,15 @@ function onResponseObtenerDocumentoTipoDato(data) {
           iniciarArchivoAdjunto();
           break;
         case 31:
-          if (mostrarCampo) {
-            //DT Guia de remision BH
-            html +=
-              "<label>" +
-              item.descripcion +
-              " " +
-              (item.opcional == 0 ? "*" : "") +
-              "</label>";
-            html += '<div id ="divContenedorAdjuntoMultiple">';
-            html +=
-              '<a class="btn btn-primary btn-sm m-b-5" onclick="adjuntar();"><i class="fa fa-cloud-upload"></i> Adjuntar archivos</a>';
-            iniciarArchivoAdjuntoMultiple();
-          }
-          break;
+          if(doc_TipoId != GENERAR_COTIZACION){
+            if (mostrarCampo) { //DT Guia de remision BH
+                html += '<label>' + item.descripcion + ' ' + ((item.opcional == 0) ? '*' : '') + '</label>';
+                html += '<div id ="divContenedorAdjuntoMultiple">';
+                html += '<a class="btn btn-primary btn-sm m-b-5" onclick="adjuntar();"><i class="fa fa-cloud-upload"></i> Adjuntar archivos</a>';
+                iniciarArchivoAdjuntoMultiple();
+            }
+        }
+        break;
         case 32:
           $("#contenedorSwitchProductoDuplicado").show();
           break;
@@ -3821,7 +4217,7 @@ function onResponseObtenerDocumentoTipoDato(data) {
               $("#contenedorCboTipoRequerimiento").empty();
               $("#contenedorCboTipoRequerimiento").show();
               $("#contenedorCboTipoRequerimiento").append("<h4 class='text-dark text-uppercase'>"+
-                                      "<select id='cboTipoRequerimiento_"+item.id+"' name='cboTipoRequerimiento_"+item.id+"' class='select2' disabled></select>"+
+                                      "<select id='cboTipoRequerimiento_"+item.id+"' name='cboTipoRequerimiento_"+item.id+"' class='select2' ></select>"+
                                   "</h4>");
               var dtdTipoTipo = obtenerDocumentoTipoDatoXTipoXCodigo(4, "02");
               if (!isEmpty(item.data)) {
@@ -3832,18 +4228,41 @@ function onResponseObtenerDocumentoTipoDato(data) {
                   if (item.lista_defecto == 454) {
                       $("#id_"+ dtdTipoTipo.id).hide();
                   }
-                  if(doc_TipoId == 281 || doc_TipoId == 283){
+                  if(doc_TipoId == GENERAR_COTIZACION || doc_TipoId == REQUERIMIENTO_AREA){
                       $("#cboTipoRequerimiento_" + item.id).attr('disabled', 'disabled');
                   }
               }
               break;
-            case 43:
-                if(doc_TipoId == 283){
-                    html += '<select name="cbo_' + item.id + '" id="cbo_' + item.id + '" class="select2"></select>';
-                }else{
-                    html += '<select name="cbo_' + item.id + '" id="cbo_' + item.id + '" class="select2" disabled></select>';
-                }
-              break;              
+          case 43:
+              if(doc_TipoId == REQUERIMIENTO_AREA){
+                  html += '<select name="cbo_' + item.id + '" id="cbo_' + item.id + '" class="select2"></select>';
+              }else{
+                  html += '<select name="cbo_' + item.id + '" id="cbo_' + item.id + '" class="select2" disabled></select>';
+              }
+              break;
+           case 44:
+              html += '<select name="cbo_' + item.id + '" id="cbo_' + item.id + '" class="select2" disabled></select>';
+              break;
+          case 45:
+          case 46:
+          case 47:
+          case 48:
+              html += '<select name="cbo_' + item.id + '" id="cbo_' + item.id + '" class="select2"></select>';
+              break;
+        case 49:
+          html +=
+            '<input type="text" class="form-control fecha" placeholder="dd/mm/yyyy" id="datepicker_' +
+            item.id +
+            '"' +
+            " >" +
+            '<span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>';
+          break;              
+          case 50:
+              html +='<div class="input-group">';
+              html += '<select name="cbo_' + item.id + '" id="cbo_' + item.id + '" class="select2"></select>';
+              html +='<span class="input-group-btn"><button type="button" class="btn btn-effect-ripple btn-primary" onclick="habilitarModalCuotasPagos()"><i class="fa fa-calendar-o"></i></button></span>';
+              html +='</div">';
+          break;
                       
       }
       if (escribirItem) {
@@ -3858,6 +4277,7 @@ function onResponseObtenerDocumentoTipoDato(data) {
         //                case 9:
         case 10:
         case 11:
+        case 49:
           $("#datepicker_" + item.id).datepicker({
             isRTL: false,
             format: "dd/mm/yyyy",
@@ -3907,14 +4327,15 @@ function onResponseObtenerDocumentoTipoDato(data) {
 
           break;
         case 5:
-          $("#cbo_" + item.id)
-            .select2({
-              width: "100%",
-            })
-            .on("change", function (e) {
+          $("#cbo_" + item.id).select2({
+            width: '100%'
+          }).on("change", function (e) {
               obtenerPersonaDireccion(e.val);
               obtenerPersonaContacto(e.val);
-            });
+              if(doc_TipoId == ORDEN_COMPRA || doc_TipoId == ORDEN_SERVICIO || doc_TipoId == COTIZACIONES || doc_TipoId == COTIZACION_SERVICIO){
+                  obtenerCuentaPersona(e.val);
+              }
+          });
           break;
         case 17:
           $("#cbo_" + item.id).select2({
@@ -3990,7 +4411,7 @@ function onResponseObtenerDocumentoTipoDato(data) {
               width: '100%'
           });
           select2.asignarValor("cbo_" + item.id, 0);
-          if(doc_TipoId != 283){
+          if(doc_TipoId != REQUERIMIENTO_AREA){
               if (!isEmpty(item.lista_defecto)) {
                   if(item.lista_defecto == 3){
                       $("#cbo_" + item.id).prop("disabled", false);
@@ -4000,7 +4421,39 @@ function onResponseObtenerDocumentoTipoDato(data) {
                   }
               }
           }
-          break;        
+          break;
+        case 44:
+            select2.cargar("cbo_" + item.id, item.data, "id", ["codigo", "descripcion"]);
+            $("#cbo_" + item.id).select2({
+                width: '100%'
+            });
+            select2.asignarValor("cbo_" + item.id, 0);
+            break;
+        case 45:
+        case 46:
+            select2.cargar("cbo_" + item.id, item.data, "id", ["codigo", "descripcion"]);
+            $("#cbo_" + item.id).select2({
+                width: '100%'
+            });
+            select2.asignarValor("cbo_" + item.id, 0);
+            break;
+        case 47:
+            $("#cbo_" + item.id).select2({
+                width: '100%'
+            });
+            break;
+        case 48:
+            $("#cbo_" + item.id).select2({
+                width: '100%'
+            });
+            break;    
+        case 50:
+            select2.cargar("cbo_" + item.id, item.data, "id", "descripcion");
+            $("#cbo_" + item.id).select2({
+                width: '100%'
+            });
+            select2.asignarValor("cbo_" + item.id, 0);
+            break;               
       }
     });
     $("#id_3044").hide();
@@ -4214,7 +4667,9 @@ function asignarValoresDetalleFormulario() {
           );
           setearDescripcionProducto(indexDetalle);
           setearObservacionProducto(indexDetalle);
-
+          if(doc_TipoId == GENERAR_COTIZACION || doc_TipoId == ORDEN_COMPRA || doc_TipoId == REQUERIMIENTO_AREA || doc_TipoId == ORDEN_SERVICIO){
+            $('#txtmovimiento_bien_ids_' + indexDetalle).val(valoresFormularioDetalle.movimiento_bien_ids);
+          }
           break;
         //                case 13:// UNIDAD DE MEDIDA
         //                    obtenerUnidadMedida(valoresFormularioDetalle.bienId, indexDetalle);
@@ -4259,6 +4714,15 @@ function asignarValoresDetalleFormulario() {
               width: anchoCeCoTD + "px"
           });
           break;
+        case 27://Postor N° 1
+            $('#txtPrecioP1_' + indexDetalle).val(devolverDosDecimales(valoresFormularioDetalle.precioPostor1));
+          break;
+        case 28://Postor N° 2
+            $('#txtPrecioP2_' + indexDetalle).val(devolverDosDecimales(valoresFormularioDetalle.precioPostor2));
+            break;
+        case 29://Postor N° 3
+            $('#txtPrecioP3_' + indexDetalle).val(devolverDosDecimales(valoresFormularioDetalle.precioPostor3));
+            break;          
         case 33:
           $("#cboCompra_" + indexDetalle).select2({
               width: anchoCompraTD + "px"
@@ -4316,6 +4780,33 @@ function asignarValoresDetalleFormulario() {
       valoresFormularioDetalle.dataUnidadMedida,
       indexDetalle
     );
+
+    if(doc_TipoId == GENERAR_COTIZACION){
+      switch (parseInt(valoresFormularioDetalle.postor_ganador_id)) {
+        case 1:
+            $('#selectPostor1').prop('checked', true);
+            break;
+        case 2:
+            $('#selectPostor2').prop('checked', true);
+            break;
+        case 3:
+            $('#selectPostor3').prop('checked', true);
+            break;
+      }
+
+      var valormoneda1 = valoresFormularioDetalle.moneda_postor1 == 4 ? true: false;
+      var valormoneda2 = valoresFormularioDetalle.moneda_postor2 == 4 ? true: false;
+      var valormoneda3 = valoresFormularioDetalle.moneda_postor3 == 4 ? true: false;
+      $('#selectPostor1Moneda').prop('checked', valormoneda1);
+      $('#selectPostor2Moneda').prop('checked', valormoneda2);
+      $('#selectPostor3Moneda').prop('checked', valormoneda3);
+
+
+      hallarSubTotalPostorDetalle(indexDetalle, 1, 1);
+      hallarSubTotalPostorDetalle(indexDetalle, 2, 1);
+      hallarSubTotalPostorDetalle(indexDetalle, 3, 1);
+    }
+
   } else {
     mostrarValidacionLoaderClose("Falta configurar las columnas del detalle");
     return false;
@@ -4749,10 +5240,19 @@ function obtenerValoresCamposDinamicos() {
       case 9:
       case 10:
       case 11:
+      case 49:
         camposDinamicos[index]["valor"] = document.getElementById(
           "datepicker_" + item.id
         ).value;
         if (item.opcional == 0) {
+          //validamos
+          if (isEmpty(camposDinamicos[index]["valor"])) {
+            mostrarValidacionLoaderClose("Debe ingresar " + item.descripcion);
+            isOk = false;
+            return false;
+          }
+        }
+        if(item.tipo == 49 && doc_TipoId == GENERAR_COTIZACION){
           //validamos
           if (isEmpty(camposDinamicos[index]["valor"])) {
             mostrarValidacionLoaderClose("Debe ingresar " + item.descripcion);
@@ -4771,6 +5271,13 @@ function obtenerValoresCamposDinamicos() {
       case 26: // vendedor
       case 36: // Detraccion
       case 41: // Conductor
+      case 43:// Area
+      case 44:// Grupo productos
+      case 45:// Entrega en destino
+      case 46:// U.O
+      case 47:// Cuenta
+      case 48: //Requerimientos
+      case 50: //Condición de pago
         camposDinamicos[index]["valor"] = select2.obtenerValor(
           "cbo_" + item.id
         );
@@ -4783,6 +5290,47 @@ function obtenerValoresCamposDinamicos() {
             mostrarValidacionLoaderClose("Debe ingresar " + item.descripcion);
             isOk = false;
             return false;
+          }
+        }
+        if(doc_TipoId == GENERAR_COTIZACION){
+          var dtdTipoPosto1 = obtenerDocumentoTipoDatoXTipoXCodigo(23, "01");
+          var dtdTipoPosto2 = obtenerDocumentoTipoDatoXTipoXCodigo(23, "02");
+          var dtdTipoPosto3 = obtenerDocumentoTipoDatoXTipoXCodigo(23, "03");
+          
+          var dtdTipoPosto1_descripcion = select2.obtenerValor("cbo_" + dtdTipoPosto1.id);
+          var dtdTipoPosto2_descripcion = select2.obtenerValor("cbo_" + dtdTipoPosto2.id);
+          var dtdTipoPosto3_descripcion = select2.obtenerValor("cbo_" + dtdTipoPosto3.id);
+
+          var dtdTipoCotizacion = obtenerDocumentoTipoDatoIdXTipo(4);
+          if(select2.obtenerValor("cbo_" + dtdTipoCotizacion) == 464){
+              if(dtdTipoPosto1_descripcion != 0 || dtdTipoPosto2_descripcion != 0 || dtdTipoPosto3_descripcion != 0){
+                  if (dtdTipoPosto1_descripcion === dtdTipoPosto2_descripcion && dtdTipoPosto1_descripcion === dtdTipoPosto3_descripcion) {
+                      mostrarValidacionLoaderClose("Los tres postores son iguales. ");
+                      isOk = false;
+                      return false;
+                  } else if (dtdTipoPosto1_descripcion === dtdTipoPosto2_descripcion) {
+                      mostrarValidacionLoaderClose("El Postor N° 1 y Postor N° 2 son iguales.");
+                      isOk = false;
+                      return false;
+                  } else if (dtdTipoPosto1_descripcion === dtdTipoPosto3_descripcion) {
+                      mostrarValidacionLoaderClose("El Postor N° 1 y Postor N° 3 son iguales.");
+                      isOk = false;
+                      return false;
+                  } else if (dtdTipoPosto2_descripcion === dtdTipoPosto3_descripcion) {
+                      mostrarValidacionLoaderClose("El Postor N° 2 y Postor N° 3 son iguales.");
+                      isOk = false;
+                      return false;
+                  }
+              }
+          }
+
+          if(item.tipo == 46 || item.tipo == 50){
+            //validamos
+            if (isEmpty(camposDinamicos[index]["valor"])) {
+              mostrarValidacionLoaderClose("Debe ingresar " + item.descripcion);
+              isOk = false;
+              return false;
+            }
           }
         }
         break;
@@ -4859,6 +5407,31 @@ function obtenerValoresCamposDinamicos() {
           }
         }
       break;
+      case 42: // Tipo de requerimiento
+      var tipo_requerimiento = select2.obtenerValor('cboTipoRequerimiento_'+item.id);
+      camposDinamicos[index]["valor"] = tipo_requerimiento;
+
+      if(doc_TipoId == SOLICITUD_REQUERIMIENTO){
+          if (tipo_requerimiento == 454) {
+              var dtdTipoClase = obtenerDocumentoTipoDatoXTipoXCodigo(4, "01");
+              var clase = select2.obtenerValor('cbo_' + dtdTipoClase.id);
+              if (isEmpty(clase)) {
+                  mostrarValidacionLoaderClose("Debe ingresar " + dtdTipoClase.descripcion);
+                  isOk = false;
+                  return false;
+              }
+          } else {
+              var dtdTipoTipo = obtenerDocumentoTipoDatoXTipoXCodigo(4, "02");
+              var tipo = select2.obtenerValor('cbo_' + dtdTipoTipo.id);
+              if (isEmpty(tipo)) {
+                  mostrarValidacionLoaderClose("Debe ingresar " + dtdTipoTipo.descripcion);
+                  isOk = false;
+                  return false;
+              }
+          }
+
+      }
+      break;      
     }
   });
 
@@ -4930,6 +5503,38 @@ function enviarEImprimir() {
 
 function guardar(accion) {
   loaderShow();
+  if(doc_TipoId == GENERAR_COTIZACION){
+    var checkboxes = document.querySelectorAll('.grupocheckbox:checked');
+    var cantidadSeleccionados = checkboxes.length;
+    if (cantidadSeleccionados == 0) {
+        mostrarAdvertencia('Debe seleccionar un postor ganador');
+        loaderClose();
+        return;
+    } else if (cantidadSeleccionados > 0 && cantidadSeleccionados <= 1) {
+    
+    }else{
+        mostrarAdvertencia('Debe seleccionar solo un postor');
+        loaderClose();
+        return;
+    }
+    lstDocumentoArchivos = [];
+    lstDocumentoArchivos.push(lstDocumentoArchivos1[0]);
+    lstDocumentoArchivos.push(lstDocumentoArchivos2[0]);
+    lstDocumentoArchivos.push(lstDocumentoArchivos3[0]);
+
+    if(accion == "generar"){
+      var totalPago = 0;
+      listaPagoProgramacion.forEach(function (item) {
+          totalPago = totalPago + item[1] * 1;
+      });
+      if (totalPago != calculoTotal) {
+        mostrarValidacionLoaderClose('Total de pago no coincide con el total del documento, monto total por programar ' + formatearNumero(calculoTotal));
+        $('#modalProgramacionPagos').modal('show');
+        return;
+      }
+    }
+  }
+
   let datosExtras = {};
   datosExtras.afecto_detraccion_retencion = null;
   datosExtras.afecto_impuesto = null;
@@ -4964,10 +5569,12 @@ function guardar(accion) {
     return;
   }
 
-  //    if (isEmpty(detalle))
-  //        mostrarAdvertencia("Falta ingresar datos.");
-  //        loaderClose();
-  //        return;
+  if (isEmpty(detalle)){
+    mostrarAdvertencia("Falta ingresar datos en el detalle.");
+    loaderClose();
+    return;
+  }
+
   obtenerCheckDocumentoACopiar();
 
   var banderaProductoDuplicado = $("#switchProductoDuplicado").btnSwitch(
@@ -5058,7 +5665,7 @@ function guardar(accion) {
     }
   }
 
-  if (tipoPago != 2) {
+  if (tipoPago != 2 && !isEmpty(tipoPago)) {
     listaPagoProgramacion = [];
   }
 
@@ -5145,7 +5752,7 @@ function guardar(accion) {
   ax.addParamTmp("documentoId", documentoId);
   ax.addParamTmp("documentoTipoId", documentoTipoId);
   ax.addParamTmp("contOperacionTipoId", contOperacionTipoId);
-  ax.addParamTmp("camposDinamicos", camposDinamicosEditar);
+  ax.addParamTmp("camposDinamicos", camposDinamicos);
   ax.addParamTmp("detalle", detalle);
   ax.addParamTmp("listaDetalleEliminar", listaDetalleEliminar);
   ax.addParamTmp("documentoARelacionar", request.documentoRelacion);
@@ -5246,6 +5853,7 @@ function validarDetalleFormularioContenidoEnDocumentoRelacion() {
 
 function validarDetalleFormularioLlenos() {
   var valido = true;
+  var validar_postor = false;
 
   $.each(detalle, function (i, item) {
     actualizarTotalesGenerales(i);
@@ -5275,6 +5883,186 @@ function validarDetalleFormularioLlenos() {
     //                return false;
     //            }
     //        }
+    if (existeColumnaCodigo(26)) {
+      if (isEmpty(item.CeCoId) || item.CeCoId == 0) {
+          mostrarValidacionLoaderClose("Seleccione el Centro de Costos");
+          valido = false;
+          return false;
+      }
+    }
+
+    if(doc_TipoId == GENERAR_COTIZACION){
+        var dtdTipoCotizacion = obtenerDocumentoTipoDatoIdXTipo(4);
+        if(select2.obtenerValor("cbo_" + dtdTipoCotizacion) == 464){
+            validar_postor = true;
+        }
+    }
+
+    if (existeColumnaCodigo(27)) {
+        if (isEmpty(item.precioPostor1) || item.precioPostor1 == 0 ) {
+            mostrarValidacionLoaderClose("Ingrese precio de postor N° 1");
+            valido = false;
+            return false;
+        }
+        var dtdTipoPosto1 = obtenerDocumentoTipoDatoXTipoXCodigo(23, "01");
+        if(!isEmpty(dtdTipoPosto1)){
+            if(isEmpty(select2.obtenerValor("cbo_" + dtdTipoPosto1.id)) || select2.obtenerValor("cbo_" + dtdTipoPosto1.id) == 0){
+                mostrarValidacionLoaderClose("Seleccione Postor N° 1");
+                valido = false;
+                return false;
+            }
+            var text_archivo1 = $("#text_archivo_"+ dtdTipoPosto1.id).text();
+            if(isEmpty($("#fileInput_" + dtdTipoPosto1.id).val().slice(12)) && isEmpty(text_archivo1)){
+                mostrarValidacionLoaderClose("Debe subir una cotización PDF para el Postor N° 1");
+                valido = false;
+                return false;
+            }   
+        }
+    }
+    if (existeColumnaCodigo(28)) {
+        if(validar_postor){
+            if (isEmpty(item.precioPostor2) || item.precioPostor2 == 0 ) {
+                mostrarValidacionLoaderClose("Ingrese precio de postor N° 2");
+                valido = false;
+                return false;
+            }
+            var dtdTipoPosto2 = obtenerDocumentoTipoDatoXTipoXCodigo(23, "02");
+            if(!isEmpty(dtdTipoPosto2)){
+                if(isEmpty(select2.obtenerValor("cbo_" + dtdTipoPosto2.id)) || select2.obtenerValor("cbo_" + dtdTipoPosto2.id) == 0){
+                    mostrarValidacionLoaderClose("Seleccione Postor N° 2");
+                    valido = false;
+                    return false;
+                }
+            }
+            var text_archivo2 = $("#text_archivo_"+ dtdTipoPosto1.id).text();
+            if(isEmpty($("#fileInput_" + dtdTipoPosto2.id).val().slice(12)) && isEmpty(text_archivo2)){
+                mostrarValidacionLoaderClose("Debe subir una cotización PDF para el Postor N° 2");
+                valido = false;
+                return false;
+            }   
+        }
+    }
+    if (existeColumnaCodigo(29)) {
+        if(validar_postor){
+            if (isEmpty(item.precioPostor3) || item.precioPostor3 == 0 ) {
+                mostrarValidacionLoaderClose("Ingrese precio de postor N° 3");
+                valido = false;
+                return false;
+            }
+            var dtdTipoPosto3 = obtenerDocumentoTipoDatoXTipoXCodigo(23, "03");
+            if(!isEmpty(dtdTipoPosto3)){
+                if(isEmpty(select2.obtenerValor("cbo_" + dtdTipoPosto3.id)) || select2.obtenerValor("cbo_" + dtdTipoPosto3.id) == 0){
+                    mostrarValidacionLoaderClose("Seleccione Postor N° 3");
+                    valido = false;
+                    return false;
+                }
+            }
+            var text_archivo3 = $("#text_archivo_"+ dtdTipoPosto1.id).text();
+            if(isEmpty($("#fileInput_" + dtdTipoPosto3.id).val().slice(12)) && isEmpty(text_archivo3)){
+                mostrarValidacionLoaderClose("Debe subir una cotización PDF para el Postor N° 3");
+                valido = false;
+                return false;
+            }   
+        }
+    }
+
+    if (existeColumnaCodigo(33)) {
+        if (isEmpty(item.esCompra) || item.esCompra == 0) {
+            mostrarValidacionLoaderClose("Seleccione Si es compras o No, para la fila: "+  (item.index + 1));
+            valido = false;
+            return false;
+        }
+        var cantidad_ = parseInt(item.cantidad);
+        var cantidadAceptada_ = parseInt(item.cantidadAceptada);
+        var stockBien_ = parseInt(item.stockBien);
+
+        if(item.esCompra == 1){
+            var dataStockReservaBien = dataStockReservaOk.find(itemReversa => itemReversa.bien_id == item.bienId);
+            if(!isEmpty(dataStockReservaBien)){
+                if(cantidad_ == cantidadAceptada_){
+                    dataStockReservaOk = dataStockReservaOk.filter(objeto => objeto.bien_id != item.bienId);
+                    valido = false;
+                    return false;
+                }else if(cantidad_ < (cantidadAceptada_ - stockBien_)){
+                    mostrarValidacionLoaderClose("La catindad aceptada tiene que ser igual o mayor a la resta entre (Cant. solicitada - stock), para la fila: "+  (item.index + 1));
+                    valido = false;
+                    return false;
+                }else if((cantidad_ + (parseInt(dataStockReservaBien.reserva))) > item.stockBien && stockBien_ > 0 && (cantidad_ + (parseInt(dataStockReservaBien.reserva)) != cantidadAceptada_)){
+                    dataStockReservaOk = dataStockReservaOk.filter(objeto => objeto.bien_id != item.bienId);
+                    mostrarValidacionLoaderClose("Necesitas realizar una reserva de stock, para la fila: "+  (item.index + 1));
+                    reservarStockBien(item.index);
+                    valido = false;
+                    return false;
+                }else if((parseInt(dataStockReservaBien.reserva) + cantidad_) != cantidadAceptada_ && cantidad_ > 0){
+                    dataStockReservaOk = dataStockReservaOk.filter(objeto => objeto.bien_id != item.bienId);
+                    mostrarValidacionLoaderClose("Se ha cambiado la cantidad aceptada, tiene que actualizar el monto reservado, para la fila: "+  (item.index + 1));
+                    reservarStockBien(item.index);
+                    valido = false;
+                    return false;
+                }else if(cantidad_ == 0){
+                    dataStockReservaOk = dataStockReservaOk.filter(objeto => objeto.bien_id != item.bienId);
+                    mostrarValidacionLoaderClose("La cantidad aceptada tiene que ser mayo que 0, tiene que actualizar el monto reservado, para la fila: "+  (item.index + 1));
+                    valido = false;
+                }
+            }else{
+                if(cantidad_ < (cantidadAceptada_ - stockBien_)){
+                    mostrarValidacionLoaderClose("La cantidad aceptada tiene que ser igual o mayor a la resta entre (Cant. solicitada - stock), para la fila: "+  (item.index + 1));
+                    valido = false;
+                    return false;
+                }else if(cantidad_ > cantidadAceptada_){
+                    mostrarValidacionLoaderClose("La cantidad aceptada tiene que ser igual a la solicitada, para la fila: "+  (item.index + 1));
+                    valido = false;
+                    return false;
+                }else if(cantidad_ < cantidadAceptada_ && cantidad_ > 1){
+                    mostrarValidacionLoaderClose("Necesitas realizar una reserva de stock, para la fila: "+  (item.index + 1));
+                    reservarStockBien(item.index);
+                    valido = false;
+                    return false;
+                }else if(cantidad_ == 0){
+                    mostrarValidacionLoaderClose("Necesitas realizar una reserva de stock, para la fila: "+  (item.index + 1));
+                    valido = false;
+                    return false;
+                }                
+            }
+
+        }
+
+      if(item.esCompra == 2){
+          if(!isEmpty(dataStockReservaOk)){
+              var dataStockReservaBien = dataStockReservaOk.find(itemReversa => itemReversa.bien_id == item.bienId);
+              if(isEmpty(dataStockReservaBien)){
+                  mostrarValidacionLoaderClose("No se ha realizado la reserva de stock, para la fila: "+  (item.index + 1));
+                  reservarStockBien(item.index);
+                  valido = false;
+                  return false; 
+              }
+              // if(cantidad_ == 0 && (parseInt(dataStockReservaBien.reserva) + cantidad_)!= cantidadAceptada_){
+              //     mostrarValidacionLoaderClose("No se ha realizado la reserva de stock, para la fila: "+  (item.index + 1));
+              //     reservarStockBien(item.index);
+              //     valido = false;
+              //     return false;
+              // }
+          }else{
+              if(cantidad_ == 0){
+                  mostrarValidacionLoaderClose("No se ha realizado la reserva de stock, para la fila: "+  (item.index + 1));
+                  reservarStockBien(item.index);
+                  valido = false;
+                  return false;
+              }
+          }
+          if(cantidad_ != 0){
+              mostrarValidacionLoaderClose("Cantidad aceptada tiene que ser 0, para la fila: "+  (item.index + 1));
+              valido = false;
+              return false;
+          }
+          if(cantidad_ == cantidadAceptada_ && cantidad_ > stockBien_){
+              mostrarValidacionLoaderClose("Cantidad aceptada tiene que ser igual a la solicitada y menor al stock actual, para la fila: "+  (item.index + 1));
+              valido = false;
+              return false;
+          }
+      }
+
+    }    
   });
 
   return valido;
@@ -6535,6 +7323,7 @@ function cargarDataDocumentoACopiar(
           case 3:
           case 10:
           case 11:
+          case 49:
             $("#datepicker_" + item.otro_documento_id).val(
               formatearFechaJS(item.valor)
             );
@@ -6560,6 +7349,9 @@ function cargarDataDocumentoACopiar(
           case 40:
           case 41:
             select2.asignarValor("cbo_" + item.otro_documento_id, item.valor);
+            if(doc_TipoId == GENERAR_COTIZACION && item.descripcion == "Varios Postores"){
+              variosPostores(item.valor);
+            }
             break;
           case 25:
             select2.asignarValor("cboTipoPago", item.valor);
@@ -6577,6 +7369,24 @@ function cargarDataDocumentoACopiar(
               $(".popover-content").css("color", "black");
               $('[class="popover fade top in"]').css("z-index", "0");
             }
+            break;
+          case 31:
+            var dtdTipoPosto1 = obtenerDocumentoTipoDatoXTipoXCodigo(23, "01");
+            var dtdTipoPosto2 = obtenerDocumentoTipoDatoXTipoXCodigo(23, "02");
+            var dtdTipoPosto3 = obtenerDocumentoTipoDatoXTipoXCodigo(23, "03");
+            dataDocumentoAdjunto.forEach(element => {
+              switch(element.contenido_archivo){
+                case "postor1":
+                  $("#text_archivo_" + dtdTipoPosto1.id).html(element.archivo);                    
+                  break;
+                case "postor2":
+                  $("#text_archivo_" + dtdTipoPosto2.id).html(element.archivo);                    
+                  break;
+                case "postor3":
+                  $("#text_archivo_" + dtdTipoPosto3.id).html(element.archivo);                    
+                  break;                                    
+              }              
+            });
             break;
           case 39:
             var botones = document.querySelectorAll('.btn_agrupador');
@@ -6626,13 +7436,22 @@ function cargarDataDocumentoACopiar(
                   $(".dataTables_scrollHeadInner table").css("width", "1369px");
               }
             }
-            break;
-          case 43:
-            select2.asignarValor("cbo_" + item.otro_documento_id, item.valor);
-            break;            
+            break;          
           case 42:
             select2.asignarValor("cboTipoRequerimiento_" + item.otro_documento_id, item.valor);
             break;
+          case 43:
+              select2.asignarValor("cbo_" + item.otro_documento_id, item.valor);
+              break;             
+          case 44:
+              select2.asignarValor("cbo_" + item.otro_documento_id, item.valor);
+              break;             
+          case 46:
+            select2.asignarValor("cbo_" + item.otro_documento_id, item.valor);
+            break;
+          case 50:
+            select2.asignarValor("cbo_" + item.otro_documento_id, item.valor);
+            break;                       
         }
       });
       bandera.mostrarDivDocumentoRelacion = true;
@@ -6697,7 +7516,10 @@ function cargarDetalleDocumentoRelacion(data) {
           item.precio_postor1, 
           item.precio_postor2, 
           item.precio_postor3,
-          item.postor_ganador_id
+          item.postor_ganador_id,
+          item.moneda_postor1,
+          item.moneda_postor2,
+          item.moneda_postor3
         )
       );
     });
@@ -7002,7 +7824,10 @@ function cargarFormularioDetalleACopiar(
   precio_postor1, 
   precio_postor2, 
   precio_postor3, 
-  postor_ganador_id
+  postor_ganador_id,
+  moneda_postor1,
+  moneda_postor2,
+  moneda_postor3
 ) {
   //agregar logica de columnas dinamicas...
   //obtener los datos del detalle dinamico
@@ -7089,13 +7914,17 @@ function cargarFormularioDetalleACopiar(
           objDetalle.CeCoId = CeCoId;
           break;
         case 27://Postor N° 1
-          objDetalle.precioPostor1 = 0;
+          objDetalle.precioPostor1 = precio_postor1;
+          objDetalle.postor_ganador_id = postor_ganador_id;
+          objDetalle.moneda_postor1 = moneda_postor1;
           break;
         case 28://Postor N° 2
-          objDetalle.precioPostor2 = 0;
+          objDetalle.precioPostor2 = precio_postor2;
+          objDetalle.moneda_postor2 = moneda_postor2;
           break;
         case 29://Postor N° 3
-          objDetalle.precioPostor3 = 0;
+          objDetalle.precioPostor3 = precio_postor3;
+          objDetalle.moneda_postor3 = moneda_postor3;
           break;
         case 33://Compra
           objDetalle.esCompra = 0;
@@ -11761,4 +12590,262 @@ function registrarImagenPdfBien() {
       return;
   }
 
+}
+
+var totalPostorGanador = 0;
+function hallarSubTotalPostorDetalle(indice, numero, bandera){
+    if(bandera == 1){
+        valoresFormularioDetalle = validarFormularioDetalleTablas(indice);
+        valoresFormularioDetalle.index = indice;
+
+        var indexTemporal = -1;
+        $.each(detalle, function (i, item) {
+            if (parseInt(item.index) === parseInt(indice)) {
+                indexTemporal = i;
+                return false;
+            }
+        });
+        if (indexTemporal > -1) {
+            detalle[indexTemporal] = valoresFormularioDetalle;
+        } else {
+            detalle[detalle.length] = valoresFormularioDetalle;
+        }
+
+
+        var precio = $('#txtPrecioP'+ numero + '_' + indice).val();
+
+        var subTotal = valoresFormularioDetalle.cantidad * precio;
+
+        $('#txtSubtotalP'+ numero + '_' + indice).val(devolverDosDecimales(subTotal));
+    }
+
+    var tipo_cambio = dataCofiguracionInicial.dataTipoCambio[0].equivalencia_venta;
+
+    var valor1 = 0  , valor2 = 0, valor3 = 0;
+    var selectPostor1Moneda = $('#selectPostor1Moneda').is(":checked");
+    if(selectPostor1Moneda && isEmpty(tipo_cambio)){
+        mostrarAdvertencia("No se encontrtaron datos para el tipo de cambio para el postor 1");
+        return false;
+    }
+    var selectPostor2Moneda = $('#selectPostor2Moneda').is(":checked");
+    if(selectPostor1Moneda && isEmpty(tipo_cambio)){
+        mostrarAdvertencia("No se encontrtaron datos para el tipo de cambio para el postor 2");
+        return false;
+    }
+    var selectPostor3Moneda = $('#selectPostor3Moneda').is(":checked");
+    if(selectPostor1Moneda && isEmpty(tipo_cambio)){
+        mostrarAdvertencia("No se encontrtaron datos para el tipo de cambio para el postor 3");
+        return false;
+    }
+
+    $.each(detalle, function (i, item) {
+        var subtotal1 = $('#txtSubtotalP1' + '_' + item.index).val() == ""? 0 : $('#txtSubtotalP1_' + item.index).val();
+        valor1 = parseFloat(subtotal1) + parseFloat(valor1);
+        var table = $('#datatable').DataTable();
+        if(selectPostor1Moneda){
+            $(table.column(4).footer()).html(devolverDosDecimales((valor1 * tipo_cambio)));
+        }else{
+            $(table.column(4).footer()).html(devolverDosDecimales(valor1));
+        }
+
+        var subtotal2 = $('#txtSubtotalP2' + '_' + item.index).val() == ""? 0 : $('#txtSubtotalP2_' + item.index).val();
+        valor2 = parseFloat(subtotal2) + parseFloat(valor2);
+        var table = $('#datatable').DataTable();
+        if(selectPostor2Moneda){
+            $(table.column(6).footer()).html(devolverDosDecimales((valor2 * tipo_cambio)));
+        }else{
+            $(table.column(6).footer()).html(devolverDosDecimales(valor2));
+        }
+
+        var subtotal3 = $('#txtSubtotalP3' + '_' + item.index).val() == ""? 0 : $('#txtSubtotalP3_' + item.index).val();
+        valor3 = parseFloat(subtotal3) + parseFloat(valor3);
+        var table = $('#datatable').DataTable();
+        if(selectPostor3Moneda){
+            $(table.column(8).footer()).html(devolverDosDecimales((valor3 * tipo_cambio)));
+        }else{
+            $(table.column(8).footer()).html(devolverDosDecimales(valor3));
+        }
+
+        calculoTotal = 0;
+        if($('#selectPostor1').is(":checked")){
+            calculoTotal = valor1;
+        }else if($('#selectPostor2').is(":checked")){
+            calculoTotal = valor2;
+        }else if($('#selectPostor2').is(":checked")){
+            calculoTotal = valor3;
+        }
+        var fechaEmision = $('#datepicker_' + fechaEmisionId).val();
+        $('#fechaPago').datepicker('setDate', sumaFecha(1,fechaEmision));
+
+        $('#txtImportePago').val(devolverDosDecimales(calculoTotal));
+        $('#txtPorcentaje').val(devolverDosDecimales(100));
+        totalPostorGanador = calculoTotal;
+    });
+}
+
+function llenarTablatfoot(){
+  var tfoot = "<tfoot>"+
+                  "<tr>"+
+                      "<th colspan='4' style='text-align:right'>Totales Soles:</th>"+
+                      "<th style='text-align:right' colspan='2' class='tfootpostor1_class' id='tfootpostorSoles1'>0.00</th>"+
+                      "<th style='text-align:right' colspan='2' class='tfootpostor2_class' id='tfootpostorSoles2'>0.00</th>"+
+                      "<th style='text-align:right' colspan='2' class='tfootpostor3_class' id='tfootpostor3Soles'>0.00</th>"+
+                      "<th></th>"+
+                  "</tr>"+
+              "</tfoot>";
+
+  $('#datatable').append(tfoot);
+}
+
+function verDetalleRequerimiento(indice){
+  var indexTemporal = -1;
+  $.each(detalle, function (i, item) {
+      if (parseInt(item.index) === parseInt(indice)) {
+          indexTemporal = i;
+          return false;
+      }
+  });
+
+  if (indexTemporal != -1)
+  {
+      loaderShow();
+      ax.setAccion("obtenerDetalleBienRequerimiento");
+      ax.addParamTmp("movimientoBienId", $("#txtmovimiento_bien_ids_" + indexTemporal).val());
+      ax.consumir();
+      $('#modalDetalleRequerimiento').modal('show');
+  } else {
+      mostrarAdvertencia('Seleccione un producto');
+      return;
+  }
+}
+
+function onResponseobtenerDetalleBienRequerimiento(data){
+  if (!isEmptyData(data)) {
+      $('#datatableDetalleReserva').dataTable({
+          order: [[0, "desc"]],
+          "ordering": false,
+          "data": data,
+          "columns": [
+              {"data": "bien_codigo_descripcion"},
+              {"data": "comentario"},
+              {"data": "archivo_adjunto", "sClass": "alignRight"},
+          ],
+          columnDefs: [
+              {
+                  "render": function (data, type, row) {
+                      var archivo = data.split(".");
+                      if(archivo[1] == "pdf" || archivo[1] == "PDF"){
+                          return "<a href='"+ URL_BASE +"util/uploads/documentoAdjunto/"+ data +"' target='_blank' style='color:blue;'>"+ data +"</a>";
+                      }else{
+                          return "<a href='"+ URL_BASE +"util/uploads/imagenAdjunto/"+ data +"' target='_blank' style='color:blue;'>"+ data +"</a>";
+                      }
+                  },
+                  "targets": 2
+              },
+          ],
+          "destroy": true
+      });
+  } else {
+      var table = $('#datatableDetalleReserva').DataTable();
+      table.clear().draw();
+  }
+}
+
+function variosPostores(valor){
+    // 281 = Generar Cotización
+    var dtdTipoPosto1 = obtenerDocumentoTipoDatoXTipoXCodigo(23, "01");
+    var dtdTipoPosto2 = obtenerDocumentoTipoDatoXTipoXCodigo(23, "02");
+    var dtdTipoPosto3 = obtenerDocumentoTipoDatoXTipoXCodigo(23, "03");
+
+    $("#id_"+ dtdTipoPosto1.id +" label").html("Postor N° 1 *");
+    $("#id_"+ dtdTipoPosto2.id +" label").html("Postor N° 2 *");
+    $("#id_"+ dtdTipoPosto3.id +" label").html("Postor N° 3 *");
+
+  if(valor == 467){
+    $("#id_" + dtdTipoPosto3.id).hide();
+    $("#id_" + dtdTipoPosto2.id).hide();
+    $("#tb_postor_457").hide();
+    $("#tb_postor_458").hide();
+    var dtdetalle_postor2 = document.querySelectorAll('.dtdetalle_postor2');
+    dtdetalle_postor2.forEach(function (columna) {
+        columna.classList.add('hidden');
+    });
+    var dtdetalle_postor3 = document.querySelectorAll('.dtdetalle_postor3');
+    dtdetalle_postor3.forEach(function (columna) {
+        columna.classList.add('hidden');
+    });
+
+    //Cantidad
+    var dtdetalle_postor_cantidad2 = document.querySelectorAll('.dtdetalle_postor_cantidad2');
+    dtdetalle_postor_cantidad2.forEach(function (columna) {
+        columna.classList.add('hidden');
+    });
+    var dtdetalle_postor_cantidad3 = document.querySelectorAll('.dtdetalle_postor_cantidad3');
+    dtdetalle_postor_cantidad3.forEach(function (columna) {
+        columna.classList.add('hidden');
+    });
+    //precio
+    var dtdetalle_postor_precio = document.querySelectorAll('.postor_precio');
+    dtdetalle_postor_precio.forEach(function (columna) {
+        columna.classList.add('hidden');
+    });
+    var dtdetalle_postor_subtotal = document.querySelectorAll('.postor_subtotal');
+    dtdetalle_postor_subtotal.forEach(function (columna) {
+        columna.classList.add('hidden');
+    });
+    
+    var tfootpostor2_class = document.querySelectorAll('.tfootpostor2_class');
+    tfootpostor2_class.forEach(function (columna) {
+        columna.classList.add('hidden');
+    });
+    var tfootpostor3_class = document.querySelectorAll('.tfootpostor3_class');
+    tfootpostor3_class.forEach(function (columna) {
+        columna.classList.add('hidden');
+    });
+
+    $("#datatable").resize();
+    select2.asignarValor("cbo_"+dtdTipoPosto2.id, 0);
+    select2.asignarValor("cbo_"+dtdTipoPosto3.id, 0);
+}else{
+    $("#id_" + dtdTipoPosto3.id).show();
+    $("#id_" + dtdTipoPosto2.id).show();
+    $("#tb_postor_457").show();
+    $("#tb_postor_458").show();
+    var dtdetalle_postor2 = document.querySelectorAll('.dtdetalle_postor2');
+    dtdetalle_postor2.forEach(function (columna) {
+        columna.classList.remove('hidden');
+    });
+    var dtdetalle_postor3 = document.querySelectorAll('.dtdetalle_postor3');
+    dtdetalle_postor3.forEach(function (columna) {
+        columna.classList.remove('hidden');
+    });
+    //Cantidad
+    var dtdetalle_postor_cantidad2 = document.querySelectorAll('.dtdetalle_postor_cantidad2');
+    dtdetalle_postor_cantidad2.forEach(function (columna) {
+        columna.classList.remove('hidden');
+    });
+    var dtdetalle_postor_cantidad3 = document.querySelectorAll('.dtdetalle_postor_cantidad3');
+    dtdetalle_postor_cantidad3.forEach(function (columna) {
+        columna.classList.remove('hidden');
+    });
+    //precio
+    var dtdetalle_postor_precio = document.querySelectorAll('.postor_precio');
+    dtdetalle_postor_precio.forEach(function (columna) {
+        columna.classList.remove('hidden');
+    });
+    var dtdetalle_postor_subtotal = document.querySelectorAll('.postor_subtotal');
+    dtdetalle_postor_subtotal.forEach(function (columna) {
+        columna.classList.remove('hidden');
+    });
+
+    var tfootpostor2_class = document.querySelectorAll('.tfootpostor2_class');
+    tfootpostor2_class.forEach(function (columna) {
+        columna.classList.remove('hidden');
+    });
+    var tfootpostor3_class = document.querySelectorAll('.tfootpostor3_class');
+    tfootpostor3_class.forEach(function (columna) {
+        columna.classList.remove('hidden');
+    });
+    $("#datatable").resize();
+  }
 }

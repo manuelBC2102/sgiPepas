@@ -1640,6 +1640,7 @@ function cargarDataDocumento(data, configuracionEditable = [], dataDocumentoAdju
                                     $('#txt_' + item.documento_tipo_id).val(itemEditable.valor_id);
                                     break;
                                 case 40:
+                                case 50:
                                     select2.cargar("cbo_" + item.documento_tipo_id, itemEditable.data, "id", "descripcion");
                                     $("#cbo_" + item.documento_tipo_id).select2({
                                             width: '100%'

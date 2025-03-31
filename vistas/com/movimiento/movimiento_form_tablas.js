@@ -1330,7 +1330,7 @@ function onResponseObtenerConfiguracionesIniciales(data) {
         $("#cbo_" + dtdTipoCotizacion.id).select2({
             width: "100%"
         }).on("change", function (e) {
-            if(e.val == 465){
+            if(e.val == 467){
                 $("#id_" + dtdTipoPosto3.id).hide();
                 $("#id_" + dtdTipoPosto2.id).hide();
                 $("#tb_postor_457").hide();
@@ -3223,6 +3223,9 @@ function onResponseObtenerDocumentoTipoDato(data) {
                 case 39:
                 case 38:
                 case 42:
+                case 46:
+                case 49:
+                case 50:
                     contadorEspeciales += 1;
                     escribirItem = false;
                     break;
@@ -3408,20 +3411,13 @@ function onResponseObtenerDocumentoTipoDato(data) {
                 case 3:
                 case 10:
                 case 11:
-                    if (item.codigo != '11') {
+                    if (item.codigo != '11' && item.codigo != '01') {
                         html += '<input type="text" class="form-control fecha" placeholder="dd/mm/yyyy" id="datepicker_' + item.id + '">' +
                                 '<span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>';
                     }
                     break;
                 case 4:
-                    if(item.codigo == "05" && item.descripcion == "Condición de pago"){
-                        html +='<div class="input-group">';
-                    }
                     html += '<select name="cbo_' + item.id + '" id="cbo_' + item.id + '" class="select2"></select>';
-                    if(item.codigo == "05" && item.descripcion == "Condición de pago"){
-                        html +='<span class="input-group-btn"><button type="button" class="btn btn-effect-ripple btn-primary" onclick="habilitarModalCuotasPagos()"><i class="fa fa-calendar-o"></i></button></span>';
-                        html +='</div">';
-                    }
                     if (item.codigo == "10") {
                         html += '<span name="txt_' + item.id + '" id="txt_' + item.id + '" class="control-label" style="font-style: normal;" hidden=""></span>';
                     }
@@ -3617,7 +3613,7 @@ function onResponseObtenerDocumentoTipoDato(data) {
                     html += '<select name="cbo_' + item.id + '" id="cbo_' + item.id + '" class="select2"></select>';
                     break;
                 case 45:
-                case 46:
+                // case 46:
                 case 47:
                 case 48:
                     html += '<select name="cbo_' + item.id + '" id="cbo_' + item.id + '" class="select2"></select>';
@@ -3770,7 +3766,7 @@ function onResponseObtenerDocumentoTipoDato(data) {
                     select2.asignarValor("cbo_" + item.id, 0);
                     break;
                 case 45:
-                case 46:
+                // case 46:
                     select2.cargar("cbo_" + item.id, item.data, "id", ["codigo", "descripcion"]);
                     $("#cbo_" + item.id).select2({
                         width: '100%'
@@ -4550,7 +4546,7 @@ function obtenerValoresCamposDinamicos() {
             case 43:// Area
             case 44:// Grupo productos
             case 45:// Entrega en destino
-            case 46:// U.O
+            // case 46:// U.O
             case 47:// Cuenta
             case 48: //Requerimientos
                 camposDinamicos[index]["valor"] = select2.obtenerValor('cbo_' + item.id);
@@ -4753,7 +4749,7 @@ function guardar(accion) {
         lstDocumentoArchivos.push(lstDocumentoArchivos3[0]);
     }
 
-    if(doc_TipoId == GENERAR_COTIZACION || doc_TipoId == COTIZACION_SERVICIO){
+    if(doc_TipoId == COTIZACION_SERVICIO){
         var totalPago = 0;
         listaPagoProgramacion.forEach(function (item) {
           totalPago = totalPago + item[1] * 1;
@@ -6507,9 +6503,9 @@ function cargarDataDocumentoACopiar(data, dataDocumentoRelacionada)
                         case 45: //
                             select2.asignarValor('cbo_' + item.documento_tipo_dato_destino, item.valor);
                             break;                              
-                        case 46: //
-                            select2.asignarValor('cbo_' + item.documento_tipo_dato_destino, item.valor);
-                            break;                              
+                        // case 46: //
+                        //     select2.asignarValor('cbo_' + item.documento_tipo_dato_destino, item.valor);
+                        //     break;                              
                         case 47: // 
                             select2.asignarValor('cbo_' + item.documento_tipo_dato_destino, item.valor);
                             break;                            

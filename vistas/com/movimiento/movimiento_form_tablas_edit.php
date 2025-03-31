@@ -1333,6 +1333,34 @@
                 </div>         
             </div>    
         </div>
+        <div id="modalDetalleRequerimiento"  class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;"> 
+            <div class="modal-dialog">       
+                <div class="modal-content">      
+                    <div class="modal-header">                   
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>         
+                        <h4 class="modal-title">Detalle de requerimiento</h4>          
+                    </div>                    
+                    <div class="modal-body">     
+                        <div class="row">
+                            <table id="datatableDetalleReserva" class="table table-striped table-bordered">     
+                                <thead>                              
+                                    <tr>                                      
+                                        <th style='text-align:center;'>Producto</th>                      
+                                        <th style='text-align:center;'>Datos adicionales</th>         
+                                        <th style='text-align:center;'>Archivo adjunto</th>      
+                                    </tr>                             
+                                </thead>                         
+                            </table> 
+                        </div>  <!--!--End row--> 
+                    </div>  
+
+                    <div class="modal-footer">  
+                        <a class="btn btn-danger" id="id" data-dismiss="modal"><i class="fa fa-close"></i>&ensp;Cancelar</a>           
+                        <a class="btn btn-success"  onclick="registrarImagenPdfBien()"  ><i class="fa fa-send-o"></i> Guardar</a>        
+                    </div>           
+                </div>         
+            </div>    
+        </div>           
         <div id="datosImpresion" hidden="true"></div> 
         <script src="vistas/libs/imagina/js/jquery.btnswitch.js"></script>  
         <script src="vistas/com/movimiento/movimiento_form_tablas_edit.js"></script> 
