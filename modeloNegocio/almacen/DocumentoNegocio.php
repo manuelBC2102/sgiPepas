@@ -234,7 +234,7 @@ class DocumentoNegocio extends ModeloNegocioBase
                 array_push($cadenas, $valorDtd);
                 break;
               case DocumentoTipoNegocio::DATO_TIPO_REQUERIMIENTO: //Tipo requerimiento
-                if($documentoTipoId == 280 || $documentoTipoId == 284 || $documentoTipoId == 283){
+                if($documentoTipoId ==  Configuraciones::SOLICITUD_REQUERIMIENTO || $documentoTipoId == Configuraciones::ORDEN_SERVICIO || $documentoTipoId == Configuraciones::REQUERIMIENTO_AREA || $documentoTipoId == Configuraciones::GENERAR_COTIZACION){
                   $es_rq = $valor;
                   array_push($listas, $valorDtd);
                 }
@@ -253,6 +253,9 @@ class DocumentoNegocio extends ModeloNegocioBase
                 break;
               case DocumentoTipoNegocio::DATO_CUENTA_PROVEEDOR: //
                   array_push($cadenas, $valorDtd);
+                break;
+              case DocumentoTipoNegocio::CONDICION_PAGO:
+                  array_push($listas, $valorDtd);
                 break;
               default:
             }
@@ -668,6 +671,7 @@ class DocumentoNegocio extends ModeloNegocioBase
           $fechaEmision = DateUtil::formatearCadenaACadenaBD($valor);
           break;
         case DocumentoTipoNegocio::DATO_FECHA_VENCIMIENTO:
+        case DocumentoTipoNegocio::FECHA_VENCIMIENTO_COTIZACION:
           $fechaVencimiento = DateUtil::formatearCadenaACadenaBD($valor);
           break;
         case DocumentoTipoNegocio::DATO_FECHA_TENTATIVA:
@@ -750,6 +754,30 @@ class DocumentoNegocio extends ModeloNegocioBase
         case DocumentoTipoNegocio::DATO_NUM_LICENCIA_CONDUCIR:
           array_push($cadenas, $valorDtd);
           break;
+        case DocumentoTipoNegocio::DATO_TIPO_REQUERIMIENTO: //Tipo requerimiento
+          if($dataDocumento[0]['documento_tipo_id'] ==  Configuraciones::SOLICITUD_REQUERIMIENTO || $dataDocumento[0]['documento_tipo_id'] == Configuraciones::ORDEN_SERVICIO || $dataDocumento[0]['documento_tipo_id']  == Configuraciones::REQUERIMIENTO_AREA || $dataDocumento[0]['documento_tipo_id']  == Configuraciones::GENERAR_COTIZACION){
+            $es_rq = $valor;
+            array_push($listas, $valorDtd);
+          }
+          break;
+        case DocumentoTipoNegocio::DATO_AREA: //Area
+            array_push($cadenas, $valorDtd);
+          break;
+        case DocumentoTipoNegocio::DATO_GRUPO_PRODUCTO: //Area
+            array_push($cadenas, $valorDtd);
+          break;
+        case DocumentoTipoNegocio::DATO_ENTREGA_EN_DESTINO: //
+            array_push($cadenas, $valorDtd);
+          break;
+        case DocumentoTipoNegocio::DATO_UO:
+            array_push($cadenas, $valorDtd);
+          break;
+        case DocumentoTipoNegocio::DATO_CUENTA_PROVEEDOR: //
+            array_push($cadenas, $valorDtd);
+          break;   
+        case DocumentoTipoNegocio::CONDICION_PAGO: //
+            array_push($listas, $valorDtd);
+          break;                   
         default:
       }
     }

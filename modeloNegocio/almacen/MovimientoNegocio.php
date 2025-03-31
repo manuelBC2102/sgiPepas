@@ -515,14 +515,6 @@ class MovimientoNegocio extends ModeloNegocioBase
 
     }
 
-    // //se usa para compras
-    // if ($documentoTipoId == Configuraciones::GENERAR_COTIZACION) {
-    //   $respuestaCotizacion = $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::COTIZACIONES,$detalle, $respuesta, $periodoId, 160, 1);
-    //   //generamos OC
-    //   $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::ORDEN_COMPRA,$detalle, $respuesta, $periodoId, 395, 2, $listaPagoProgramacion, $respuestaCotizacion);
-
-    // }
-
     //Se usa para Servicio
     if ($documentoTipoId == Configuraciones::COTIZACION_SERVICIO) {
       //generamos OS
@@ -8142,6 +8134,19 @@ class MovimientoNegocio extends ModeloNegocioBase
 
     $dataMovimientoDocumento = MovimientoBien::create()->obtenerMovimientoIdXDocumentoId($documentoId);
     $respuesta->movimientoId = $dataMovimientoDocumento[0]['movimiento_id'];
+
+    if($accionEnvio == 'generar'){
+      $respuesta->documentoId = $documentoId;
+      //se usa para compras
+      if ($documentoTipoId == Configuraciones::GENERAR_COTIZACION) {
+        $respuestaCotizacion = $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::COTIZACIONES,$detalle, $respuesta, $periodoId, 160, 1);
+        //generamos OC
+        $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::ORDEN_COMPRA,$detalle, $respuesta, $periodoId, 395, 2, $listaPagoProgramacion, $respuestaCotizacion);
+        
+        DocumentoNegocio::create()->ActualizarDocumentoEstadoId($documentoId, 17, $usuarioId);
+      }
+      return $respuesta;
+    }
     if ($accionEnvio == 'guardar') {
       $respuesta->documentoId = $documentoId;
       return $respuesta;
@@ -8189,6 +8194,25 @@ class MovimientoNegocio extends ModeloNegocioBase
     $dataDocumento = DocumentoNegocio::create()->obtenerDocumentoXDocumentoId($documentoId);
     $dataDocumentoTipo = DocumentoTipoNegocio::create()->obtenerDocumentoTipoXId($documentoTipoId);
 
+    //valdiar
+    if($documentoTipoId == Configuraciones::GENERAR_COTIZACION){
+      $mensaje = '';
+      $documentoDetalle = MovimientoBien::create()->obtenerXIdMovimiento($dataDocumento[0]['movimiento_id']);
+      foreach($documentoDetalle as $itemDetalle){
+        foreach($detalle as $itemDetalleEdicion){
+          if($itemDetalleEdicion['bienId'] == $itemDetalle['bien_id']){
+            if(intval($itemDetalleEdicion['cantidad']) > intval($itemDetalle['cantidad'])){
+              $mensaje .= "El detalle no debe ser mayor que ".  round($itemDetalle['cantidad'])." que es la solicitada, para la fila: ". ($itemDetalle['index'] + 1) . "<br>";
+            }
+  
+          }
+        }
+      }
+      if (!ObjectUtil::isEmpty($mensaje)) {
+        throw new WarningException($mensaje);
+      }
+    }
+
     $respuestaDoc = MovimientoNegocio::create()->guardarEdicionDocumento($documentoId, $camposDinamicos, $comentario, $periodoId, $tipoPago, $monedaId, $usuarioId, $datosExtras, $contOperacionTipoId, $igv_porcentaje);
 
     //ELIMINAR MOVIMIENTO BIEN
@@ -8214,9 +8238,26 @@ class MovimientoNegocio extends ModeloNegocioBase
           $ticket = $item["ticket"];
         }
       }
+      if ($documentoTipoId == Configuraciones::GENERAR_COTIZACION) {
+        $postor_ganador_id = null;
+        if ($item["checked1"] == "true") {
+          $postor_ganador_id = 1;
+        }
+        if ($item["checked2"] == "true") {
+          $postor_ganador_id = 2;
+        }
+        if ($item["checked3"] == "true") {
+          $postor_ganador_id = 3;
+        }
+
+        $checked1Moneda = $item["checked1Moneda"] == "true"? 4: 2;
+        $checked2Moneda = $item["checked2Moneda"] == "true"? 4: 2;
+        $checked3Moneda = $item["checked3Moneda"] == "true"? 4: 2;
+
+      }
       //REGISTRAR LA EDICION DEL DETALLE
       if (!ObjectUtil::isEmpty($item['movimientoBienId'])) {
-        $movimientoBien = MovimientoBien::create()->editar($item['movimientoBienId'], $dataDocumento[0]['movimiento_id'], $item["organizadorId"], $item["bienId"], $item["unidadMedidaId"], $item["cantidad"], $item["precio"], 1, $usuarioId, $item["precioTipoId"], $item["utilidad"], $item["utilidadPorcentaje"], $checkIgv, $item["adValorem"], $item["comentarioBien"], $item["agenciaId"], $agrupadorDetalle, $ticket);
+        $movimientoBien = MovimientoBien::create()->editar($item['movimientoBienId'], $dataDocumento[0]['movimiento_id'], $item["organizadorId"], $item["bienId"], $item["unidadMedidaId"], $item["cantidad"], $item["precio"], 1, $usuarioId, $item["precioTipoId"], $item["utilidad"], $item["utilidadPorcentaje"], $checkIgv, $item["adValorem"], $item["comentarioBien"], $item["agenciaId"], $agrupadorDetalle, $ticket, $item["CeCoId"], ($item["precioPostor1"] == "" ? null : $item["precioPostor1"]), ($item["precioPostor2"] == "" ? null : $item["precioPostor2"]), ($item["precioPostor3"] == "" ? null : $item["precioPostor3"]), $item["esCompra"], $item["cantidadAceptada"], $postor_ganador_id, $checked1Moneda, $checked2Moneda, $checked3Moneda);
       } else {
         $movimientoBien = MovimientoBien::create()->guardar($dataDocumento[0]['movimiento_id'], $item["organizadorId"], $item["bienId"], $item["unidadMedidaId"], $item["cantidad"], $item["precio"], 1, $usuarioId, $item["precioTipoId"], $item["utilidad"], $item["utilidadPorcentaje"], $checkIgv, $item["adValorem"], $item["comentarioBien"], $item["agenciaId"], $agrupadorDetalle, $ticket);
       }
@@ -11047,7 +11088,7 @@ class MovimientoNegocio extends ModeloNegocioBase
             $cotizacion = $item['valor'];
           }
           break;
-        case 4:
+        case 50:
           $terminos_de_pago = $item['valor'];
           break;
         case 45:
@@ -11685,8 +11726,8 @@ class MovimientoNegocio extends ModeloNegocioBase
       });
     }
 
-    $filtradosTipo10 = array_values(array_filter($camposDinamicosConsolidado, function($item) {
-      return $item['tipo'] === "10" && !empty($item['valor']);
+    $filtradosTipo49 = array_values(array_filter($camposDinamicosConsolidado, function($item) {
+      return $item['tipo'] === "49" && !empty($item['valor']);
     }));
 
     $filtradosTipo46 = array_values(array_filter($camposDinamicosConsolidado, function($item) {
@@ -11698,7 +11739,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     }));
 
     $filtradosTipo4 = array_values(array_filter($camposDinamicosConsolidado, function($item) {
-      return $item['tipo'] === "4" && $item['codigo'] === "05";
+      return $item['tipo'] === "4" && !empty($item['valor']);
     }));
 
     $filtradosTipo14 = array_values(array_filter($camposDinamicosConsolidado, function($item) {
@@ -11712,6 +11753,10 @@ class MovimientoNegocio extends ModeloNegocioBase
     $filtradosTipo16 = array_values(array_filter($camposDinamicosConsolidado, function($item) {
       return $item['tipo'] === "16" && !empty($item['valor']);
     }));
+
+    $filtradosTipo50 = array_values(array_filter($camposDinamicosConsolidado, function($item) {
+      return $item['tipo'] === "50" && !empty($item['valor']);
+    }));    
 
     $sumaMontosprecioPostor1  = array_reduce($detalle, function ($acumulador, $seleccion) {
       return $acumulador + ($seleccion['precioPostor1'] * $seleccion['cantidad']);
@@ -11771,34 +11816,14 @@ class MovimientoNegocio extends ModeloNegocioBase
       foreach ($configuraciones as $item) {
         switch ($item['tipo']) {
           case 4:
-            if($item['descripcion'] == "Condición de pago"){
-              $valor = null;
-              if($documentoTipoId == Configuraciones::COTIZACIONES && $filtradosTipo4[0]['valor'] == 502){//credito
-                $valor = 472;
-              }else if($documentoTipoId == Configuraciones::COTIZACIONES && $filtradosTipo4[0]['valor'] == 501){//contado
-                $valor = 471;
-              }
-              
-              if($documentoTipoId == Configuraciones::ORDEN_COMPRA && $filtradosTipo4[0]['valor'] == 502){//credito
-                $valor = 469;
-              }else if($documentoTipoId == Configuraciones::ORDEN_COMPRA && $filtradosTipo4[0]['valor'] == 501){//contado
-                $valor = 468;
-              }
-
-              if($documentoTipoId == Configuraciones::ORDEN_SERVICIO && $filtradosTipo4[0]['valor'] == 500){//credito
-                $valor = 469;
-              }else if($documentoTipoId == Configuraciones::ORDEN_SERVICIO && $filtradosTipo4[0]['valor'] == 499){//contado
-                $valor = 468;
-              }              
-              $camposDinamicosCotizacion[] = array(
-                "id" => $item['id'],
-                "tipo" => $item['tipo'],
-                "opcional" => "0",
-                "descripcion" => $filtradosTipo4[0]['descripcion'],
-                "codigo" => $filtradosTipo4[0]['codigo'],
-                "valor" => $valor
-              );
-            }
+            $camposDinamicosCotizacion[] = array(
+              "id" => $item['id'],
+              "tipo" => $item['tipo'],
+              "opcional" => "0",
+              "descripcion" => $filtradosTipo4[0]['descripcion'],
+              "codigo" => $filtradosTipo4[0]['codigo'],
+              "valor" => $filtradosTipo4['valor']
+            );
             break;
           case 5: //Proveedor, cliente, etc
             $camposDinamicosCotizacion[] = array(
@@ -11838,16 +11863,6 @@ class MovimientoNegocio extends ModeloNegocioBase
               "descripcion" => $item['descripcion'],
               "codigo" => "",
               "valor" => $item['data']
-            );
-            break;
-          case 10: //
-            $camposDinamicosCotizacion[] = array(
-              "id" => $item['id'],
-              "tipo" => $item['tipo'],
-              "opcional" => "0",
-              "descripcion" => $item['descripcion'],
-              "codigo" => "",
-              "valor" => $filtradosTipo10['valor']
             );
             break;
           case 14://Importe total
@@ -11924,6 +11939,46 @@ class MovimientoNegocio extends ModeloNegocioBase
               "valor" => $cuenta_persona[0]['id']
             );
             break;
+          case 49: //
+            $camposDinamicosCotizacion[] = array(
+              "id" => $item['id'],
+              "tipo" => $item['tipo'],
+              "opcional" => "0",
+              "descripcion" => $item['descripcion'],
+              "codigo" => "",
+              "valor" => $filtradosTipo49['valor']
+            );
+            break;            
+          case 50:
+            if($item['descripcion'] == "Condición de pago"){
+              $valor = null;
+              if($documentoTipoId == Configuraciones::COTIZACIONES && $filtradosTipo50[0]['valor'] == 502){//credito
+                $valor = 472;
+              }else if($documentoTipoId == Configuraciones::COTIZACIONES && $filtradosTipo50[0]['valor'] == 501){//contado
+                $valor = 471;
+              }
+              
+              if($documentoTipoId == Configuraciones::ORDEN_COMPRA && $filtradosTipo50[0]['valor'] == 502){//credito
+                $valor = 469;
+              }else if($documentoTipoId == Configuraciones::ORDEN_COMPRA && $filtradosTipo50[0]['valor'] == 501){//contado
+                $valor = 468;
+              }
+
+              if($documentoTipoId == Configuraciones::ORDEN_SERVICIO && $filtradosTipo50[0]['valor'] == 500){//credito
+                $valor = 469;
+              }else if($documentoTipoId == Configuraciones::ORDEN_SERVICIO && $filtradosTipo50[0]['valor'] == 499){//contado
+                $valor = 468;
+              }              
+              $camposDinamicosCotizacion[] = array(
+                "id" => $item['id'],
+                "tipo" => $item['tipo'],
+                "opcional" => "0",
+                "descripcion" => $filtradosTipo50[0]['descripcion'],
+                "codigo" => $filtradosTipo50[0]['codigo'],
+                "valor" => $valor
+              );
+            }
+            break;            
         }
       }
 

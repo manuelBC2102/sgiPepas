@@ -54,6 +54,8 @@ class DocumentoTipoNegocio extends ModeloNegocioBase
   const DATO_UO = 46;
   const DATO_CUENTA_PROVEEDOR = 47;
   const DATO_REQUERIMIENTOS = 47;
+  const FECHA_VENCIMIENTO_COTIZACION = 49;
+  const CONDICION_PAGO = 50;
 
   const DATO_FLETE_DOCUMENTO = 00;
   const DATO_SEGURO_DOCUMENTO = 33;
@@ -176,6 +178,7 @@ class DocumentoTipoNegocio extends ModeloNegocioBase
             break;
           case self::DATO_LISTA:
           case self::DATO_TIPO_REQUERIMIENTO:
+          case self::CONDICION_PAGO:
             $dtd[$index]["data"] = DocumentoTipoDatoListaNegocio::create()->obtenerXDocumentoTipoDato($itemDtd["id"]);
             break;
           case self::DATO_FECHA_EMISION:

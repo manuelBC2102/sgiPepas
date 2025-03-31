@@ -278,7 +278,7 @@ function onResponseObtenerMenuXEmpresa(data) {
                         }else if(valueHijo.url.indexOf('tipoInterfaz=3')!=-1){
                             urlNuevoMov='movimiento_form_tablas_atencion.php?tipoInterfaz=3';
                         }else {
-                            urlNuevoMov='movimiento_form_tablas.php?tipoInterfaz=2';
+                            urlNuevoMov='compra_servicio_form_tablas.php?tipoInterfaz=2';
                         }
                         
                         idOpcion = (isEmpty(valueHijo["opcion_id"])) ? valueHijo.id : valueHijo["opcion_id"];
@@ -286,7 +286,7 @@ function onResponseObtenerMenuXEmpresa(data) {
                         dataMenu += '<li id="' + $id_li_hijo + '">';
                         if(!(valueHijo.nombre).includes("Aprobación") && !(valueHijo.nombre).includes("Facturación") && valueHijo.nombre != "Cotizaciones"){
                             dataMenu += '<a style="display: table-cell; padding-right: 5px;"';                                 
-                            dataMenu += ' onclick="cargarDivIndex(\'#window\',\'' + URL_BASE + 'vistas/com/movimiento/'+ urlNuevoMov + '\',\'' + idOpcion + '\',\'' + valueHijo.nombre + '\');active(' + valueHijo.id + ',' + value.id + ');">';
+                            dataMenu += ' onclick="cargarDivIndex(\'#window\',\'' + URL_BASE + 'vistas/com/compraServicio/'+ urlNuevoMov + '\',\'' + idOpcion + '\',\'' + valueHijo.nombre + '\');active(' + valueHijo.id + ',' + value.id + ');">';
                             dataMenu += '<span class="badge bg-primary">+</span></a>';
                         }else{
                             dataMenu += '<a style="display: table-cell; padding-right: 5px;"';                                 

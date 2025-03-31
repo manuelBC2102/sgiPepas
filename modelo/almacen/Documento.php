@@ -269,7 +269,7 @@ class Documento extends ModeloBase {
     $this->commandAddParameter(":vin_tipo_pago", $tipoPago);
     $this->commandAddParameter(":vin_bandera_producto_duplicado", $banderaProductoDuplicado);
     $this->commandAddParameter(":vin_detraccion_id", $detraccionId);
-    $this->commandAddParameter(":vin_afecto_detraccion_retencion", $afectoDetraccionRetencion);
+    $this->commandAddParameter(":vin_afecto_detraccion_retencion", $afectoDetraccionRetencion == ""? null : $afectoDetraccionRetencion);
     $this->commandAddParameter(":vin_porcentaje_afecto", $porcentajeDetraccionRetencion);
     $this->commandAddParameter(":vin_monto_detraccion_retencion", $montoDetraidoRetencion);
     $this->commandAddParameter(":vin_cont_operacion_tipo_id", $contOperacionTipoId);

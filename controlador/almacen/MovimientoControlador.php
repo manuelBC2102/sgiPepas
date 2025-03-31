@@ -549,7 +549,7 @@ class MovimientoControlador extends AlmacenIndexControlador
       $stringAcciones = '';
       for ($j = 0; $j < count($responseAcciones); $j++) {
         if (($data[$i]['documento_estado_id'] == 2) &&
-          ($responseAcciones[$j]['id'] == 3 || $responseAcciones[$j]['id'] == 4 || $responseAcciones[$j]['id'] == 13 || $responseAcciones[$j]['id'] == 14 || $responseAcciones[$j]['id'] == 19 || ($responseAcciones[$j]['id'] == 1 && $data[$i]['efact_ws_estado'] != 0) || ($responseAcciones[$j]['id'] == 28 && $data[$i]['efact_ws_estado'] != 0) || ($responseAcciones[$j]['id'] == 29 && $data[$i]['efact_ws_estado'] != 0))
+          ($responseAcciones[$j]['id'] == 3 || $responseAcciones[$j]['id'] == 4 || $responseAcciones[$j]['id'] == 13 || $responseAcciones[$j]['id'] == 14 || $responseAcciones[$j]['id'] == 19 || $responseAcciones[$j]['id'] == 33 || ($responseAcciones[$j]['id'] == 1 && $data[$i]['efact_ws_estado'] != 0) || ($responseAcciones[$j]['id'] == 28 && $data[$i]['efact_ws_estado'] != 0) || ($responseAcciones[$j]['id'] == 29 && $data[$i]['efact_ws_estado'] != 0))
         ) { //13 y 14 acciones para QR. 19 Editar
           $stringAcciones .= '';
         } elseif ($responseAcciones[$j]['id'] == 1 && $data[$i]['efact_ws_estado'] != 0 && ObjectUtil::isEmpty($data[$i]['efact_pdf_nombre'])) {
@@ -587,7 +587,10 @@ class MovimientoControlador extends AlmacenIndexControlador
           $stringAcciones .= '';
         } elseif ((($data[$i]['documento_estado_id'] == 9) && ($responseAcciones[$j]['id'] == 3))) {
           //
-          $stringAcciones .= '';          
+          $stringAcciones .= '';    
+        } elseif ((($data[$i]['documento_estado_id'] == 17) && ($responseAcciones[$j]['id'] == 33))) {
+          //
+          $stringAcciones .= '';                  
         }else {
           if ($responseAcciones[$j]['id'] == 1 || $responseAcciones[$j]['id'] == 22 || $responseAcciones[$j]['id'] == 28 || $responseAcciones[$j]['id'] == 29 || $responseAcciones[$j]['id'] == 30 || $responseAcciones[$j]['id'] == 31) {
             $datoPivot = $data[$i]['documento_tipo_id'];

@@ -484,6 +484,7 @@ function onResponsevisualizarConsolidado(data) {
 
     cargarDataDocumento(data.dataDocumento);
     $("#tableConsolidado").show();
+    $("#tableOrdenCompraServicio").hide();
     if (!isEmpty(data.detalle)) {
         $("#modalDetalle").modal('show');
         $('#dtmodalDetalleConsolidado').dataTable({
@@ -578,6 +579,7 @@ function onResponseVisualizarOrdenCompraServicio(data, documento_estado) {
 
     cargarDataDocumento(data.dataDocumento);
     $("#tableOrdenCompraServicio").show();
+    $("#tableConsolidado").hide();
     if (!isEmpty(data.detalle)) {
         $("#modalDetalle").modal('show');
         $('#dtmodalDetalletableOrdenCompraServicio').dataTable({
@@ -1087,4 +1089,9 @@ function abrirPdfCuadroComparativoCotizacion(documentoId) {
     ax.setAccion("abrirPdfCuadroComparativoCotizacion");
     ax.addParamTmp("documentoId", documentoId);
     ax.consumir();
+}
+
+function ocultarModalDistribucionPagos(){
+    $("#modalDetalleDistribucionPagos").modal('show');
+    $("#modalDetalleArchivosDistribucionPagos").modal('hide');
 }

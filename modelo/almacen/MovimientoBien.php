@@ -138,7 +138,7 @@ class MovimientoBien extends ModeloBase {
         return $this->commandGetData();                         
     }
     
-    public function editar($movimientoBienId, $movimientoId,$organizadorId, $bienId, $unidadMedidaId, $cantidad, $valorMonetario, $estado, $usuarioCreacionId,$precioTipoId=null,$utilidad=null,$utilidadPorcentaje=null,$checkIgv=1,$adValorem=0,$comentarioDetalle=null,$agenciaId=null, $agrupadorDetalle = null, $ticket = null) {
+    public function editar($movimientoBienId, $movimientoId,$organizadorId, $bienId, $unidadMedidaId, $cantidad, $valorMonetario, $estado, $usuarioCreacionId,$precioTipoId=null,$utilidad=null,$utilidadPorcentaje=null,$checkIgv=1,$adValorem=0,$comentarioDetalle=null,$agenciaId=null, $agrupadorDetalle = null, $ticket = null, $CeCoId = null, $precioPostor1 = null, $precioPostor2 = null, $precioPostor3 = null, $esCompra = null, $cantidad_solicitada = null, $postor_ganador_id = null, $checked1Moneda = null, $checked2Moneda = null, $checked3Moneda = null) {
         $this->commandPrepare("sp_movimiento_bien_editar");
         $this->commandAddParameter(":vin_movimiento_bien_id", $movimientoBienId);
         $this->commandAddParameter(":vin_movimiento_id", $movimientoId);
@@ -146,18 +146,28 @@ class MovimientoBien extends ModeloBase {
         $this->commandAddParameter(":vin_bien_id", $bienId);
         $this->commandAddParameter(":vin_unidad_medida_id", $unidadMedidaId);
         $this->commandAddParameter(":vin_cantidad", $cantidad);
-        $this->commandAddParameter(":vin_valor_monetario", $valorMonetario);
+        $this->commandAddParameter(":vin_valor_monetario", $valorMonetario == null?0:$valorMonetario);
         $this->commandAddParameter(":vin_estado", $estado);
         $this->commandAddParameter(":vin_usuario_creacion", $usuarioCreacionId);
         $this->commandAddParameter(":vin_precio_tipo_id", $precioTipoId);
         $this->commandAddParameter(":vin_utilidad", $utilidad);
         $this->commandAddParameter(":vin_utilidad_porcentaje", $utilidadPorcentaje);
         $this->commandAddParameter(":vin_incluye_igv", $checkIgv);
-        $this->commandAddParameter(":vin_ad_valorem", $adValorem);
+        $this->commandAddParameter(":vin_ad_valorem", $adValorem == null?0:$adValorem);
         $this->commandAddParameter(":vin_comentario_detalle", $comentarioDetalle);
         $this->commandAddParameter(":vin_agencia_id", $agenciaId);  
-        $this->commandAddParameter(":vin_agrupador_id", $agrupadorDetalle);
+        $this->commandAddParameter(":vin_agrupador_id", $agrupadorDetalle == ""?null:$agrupadorDetalle);
         $this->commandAddParameter(":vin_ticket", $ticket);
+        $this->commandAddParameter(":vin_centro_costo_id", $CeCoId);
+        $this->commandAddParameter(":vin_precio_postor1", $precioPostor1);
+        $this->commandAddParameter(":vin_precio_postor2", $precioPostor2);
+        $this->commandAddParameter(":vin_precio_postor3", $precioPostor3);
+        $this->commandAddParameter(":vin_es_compra", $esCompra);
+        $this->commandAddParameter(":vin_cantidad_solicitada", $cantidad_solicitada);
+        $this->commandAddParameter(":vin_postor_ganador_id", $postor_ganador_id);
+        $this->commandAddParameter(":vin_moneda_postor1", $checked1Moneda);
+        $this->commandAddParameter(":vin_moneda_postor2", $checked2Moneda);
+        $this->commandAddParameter(":vin_moneda_postor3", $checked3Moneda);
         return $this->commandGetData();
     }
 
