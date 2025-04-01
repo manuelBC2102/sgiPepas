@@ -2843,10 +2843,9 @@ function validarFormularioDetalleTablas(indice) {
                     objDetalle.bienId = valor;
 
                     objDetalle.bienDesc = select2.obtenerText("cboBien_" + indice);
-                    if(doc_TipoId == GENERAR_COTIZACION || doc_TipoId == ORDEN_COMPRA || doc_TipoId == REQUERIMIENTO_AREA || doc_TipoId == ORDEN_SERVICIO){
-                        valormovimiento_bien_ids = $("#txtmovimiento_bien_ids_" + indice).val();
-                        objDetalle.movimiento_bien_ids = valormovimiento_bien_ids;
-                    }
+                    
+                    var valormovimiento_bien_ids = $("#txtmovimiento_bien_ids_" + indice).val();
+                    objDetalle.movimiento_bien_ids = valormovimiento_bien_ids;
                     break;
                 case 13:// UNIDAD DE MEDIDA
                     valor = select2.obtenerValor("cboUnidadMedida_" + indice);
@@ -4315,7 +4314,7 @@ function insertarAgrupadorBien(index) {
         }
 }
 function cargarPantallaListarCompraServicio() {
-    cargarDiv("#window", "vistas/com/movimiento/movimiento_listar.php?tipoInterfaz=" + tipoInterfaz);
+    cargarDiv("#window", "vistas/com/compraServicio/compra_servicio_listar.php?tipoInterfaz=" + tipoInterfaz);
 }
 
 function enviar(accion) {
@@ -8219,11 +8218,13 @@ function dibujarBotonesDeEnvio(data) {
 
         $.each(accion, function (index, item) {
             estilo = '';
-            if (!isEmpty(item.color)) {
-                estilo = 'style="color: ' + item.color + '"';
+            if(doc_TipoId == GENERAR_COTIZACION && item.funcion != "generar"){
+                if (!isEmpty(item.color)) {
+                    estilo = 'style="color: ' + item.color + '"';
+                }
+    
+                html += '<li><a href="#" onclick="enviar(\'' + item.funcion + '\')"><i class="' + item.icono + '" ' + estilo + '></i>&nbsp;&nbsp; ' + item.descripcion + '</a></li>';
             }
-
-            html += '<li><a href="#" onclick="enviar(\'' + item.funcion + '\')"><i class="' + item.icono + '" ' + estilo + '></i>&nbsp;&nbsp; ' + item.descripcion + '</a></li>';
         });
 
         html += '</ul></div>';

@@ -565,6 +565,20 @@ function onResponsevisualizarConsolidado(data) {
                     }, 0);
                     $(api.column(9).footer()).html(total3.toFixed(2));
                 }
+            },
+            "rowCallback": function (row, data, index) {
+                debugger;
+                switch (parseInt(data.postor_ganador_id)) {
+                    case 1:
+                        $('td:eq(5)', row).css('background-color', '#febf00').css('color', 'white');
+                        break;
+                    case 2:
+                        $('td:eq(7)', row).css('background-color', '#febf00').css('color', 'white');
+                        break;
+                    case 3:
+                        $('td:eq(9)', row).css('background-color', '#febf00').css('color', 'white');
+                        break;
+                }
             }
         });
         loaderClose();

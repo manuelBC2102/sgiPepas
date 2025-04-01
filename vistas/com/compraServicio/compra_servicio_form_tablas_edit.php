@@ -1029,7 +1029,7 @@
                                             </label>                             
                                         </div>                                 
                                         <!--<div class="input-group" style="float: right">-->         
-                                        <input type="text" style="float: right;width: 124.156px;" class="form-control fecha" placeholder="dd/mm/yyyy" id="fechaPago" disabled>
+                                        <input type="text" style="float: right;width: 124.156px;" class="form-control fecha" placeholder="dd/mm/yyyy" id="fechaPago">
                                         <!--    
                                         <span class="input-group-addon">                       
                                         <i class="glyphicon glyphicon-calendar"></i>           
@@ -1044,7 +1044,7 @@
                                                 Importe                                       
                                             </label>                                  
                                         </div>                                
-                                        <input  style="float: right;width: inherit;text-align: right;" type="number" id="txtImportePago" name="txtImportePago" class="form-control" required="" aria-required="true" value="0"   onkeyup="actualizarPorcentajePago()" onchange="actualizarPorcentajePago()" disabled/>       
+                                        <input  style="float: right;width: inherit;text-align: right;" type="number" id="txtImportePago" name="txtImportePago" class="form-control" required="" aria-required="true" value="0"   onkeyup="actualizarPorcentajePago()" onchange="actualizarPorcentajePago()"/>       
                                     </div>                           
                                 </div>                
                             </div>                  

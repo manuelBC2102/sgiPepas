@@ -47,6 +47,7 @@ $(document).ready(function () {
   cargarTitulo("titulo", "Editar");
 
   datePiker.iniciarPorClase("fecha");
+  loaderShow();
   var documentoId = document.getElementById("documentoId").value;
   initSwitch();
   ax.setSuccess("onResponseMovimientoFormTablas");
@@ -2659,7 +2660,7 @@ function agregarCantidadDetalleTabla(i) {
     i +
     ");hallarStockSaldo(" +
     i +
-    ');"/></div>';
+    ');"/></div><input type=\'hidden\' id=\'txtmovimiento_bien_ids_' + i + '\' name=\'txtmovimiento_bien_ids_' + i + '\' />';
 
   return $html;
 }
@@ -2769,7 +2770,7 @@ function agregarSubTotalPDetalleTabla(i,  numero) {
 
 function agregarCantidadAprobadaDetalleTabla(i) {
   var $html = "<div class=\"input-group col-lg-12 col-md-12 col-sm-12 col-xs-12\">" +
-          "<input type=\"number\" id=\"txtCantidadAprobada_" + i + "\" name=\"txtCantidadAprobada_" + i + "\" class=\"form-control\" required=\"\" aria-required=\"true\" value=\"1\" style=\"text-align: right;\" onchange=\"hallarSubTotalDetalle(" + i + ");hallarStockSaldo(" + i + ");\" onkeyup =\"hallarSubTotalDetalle(" + i + ");hallarStockSaldo(" + i + ");\" /></div><input type=\"hidden\" id=\"txtmovimiento_bien_ids_" + i + "\" name=\"txtmovimiento_bien_ids_" + i + "\" />";
+          "<input type=\"number\" id=\"txtCantidadAprobada_" + i + "\" name=\"txtCantidadAprobada_" + i + "\" class=\"form-control\" required=\"\" aria-required=\"true\" value=\"1\" style=\"text-align: right;\" onchange=\"hallarSubTotalDetalle(" + i + ");hallarStockSaldo(" + i + ");\" onkeyup =\"hallarSubTotalDetalle(" + i + ");hallarStockSaldo(" + i + ");\" /></div>";
 
   return $html;
 }
@@ -3037,10 +3038,8 @@ function validarFormularioDetalleTablas(indice) {
           objDetalle.bienId = valor;
 
           objDetalle.bienDesc = select2.obtenerText("cboBien_" + indice);
-          if(doc_TipoId == GENERAR_COTIZACION || doc_TipoId == ORDEN_COMPRA || doc_TipoId == REQUERIMIENTO_AREA || doc_TipoId == ORDEN_SERVICIO){
-              valormovimiento_bien_ids = $("#txtmovimiento_bien_ids_" + indice).val();
-              objDetalle.movimiento_bien_ids = valormovimiento_bien_ids;
-          }
+          var valormovimiento_bien_ids = $("#txtmovimiento_bien_ids_" + indice).val();
+          objDetalle.movimiento_bien_ids = valormovimiento_bien_ids;
           break;
         case 13: // UNIDAD DE MEDIDA
           valor = select2.obtenerValor("cboUnidadMedida_" + indice);
@@ -5252,8 +5251,27 @@ function obtenerValoresCamposDinamicos() {
             return false;
           }
         }
+        var dtdTipoFechaEmision = obtenerDocumentoTipoDatoIdXTipo(9);
+        var fechaEmision = document.getElementById("datepicker_" + dtdTipoFechaEmision).value;
+        var fechaVencimientoCotizacion = document.getElementById("datepicker_" + item.id).value;
+        if(item.tipo == 49 && doc_TipoId == GENERAR_COTIZACION && boton.accion == 'guardar'){
+          //validamos
+          if (!isEmpty(camposDinamicos[index]["valor"])) {
+            if (restarFechas(fechaEmision, fechaVencimientoCotizacion) < 0) {
+              mostrarValidacionLoaderClose("La fecha de vencimiento de la cotización, tiene que ser mayor  o igual que la fecha de emisión ");
+              isOk = false;
+              return false;
+            }
+          }
+        }
         if(item.tipo == 49 && doc_TipoId == GENERAR_COTIZACION && boton.accion == 'generar'){
           //validamos
+          if (restarFechas(fechaEmision, fechaVencimientoCotizacion) < 0) {
+            mostrarValidacionLoaderClose("La fecha de vencimiento de la cotización, tiene que ser mayor  o igual que la fecha de emisión ");
+            isOk = false;
+            return false;
+          }
+          
           if (isEmpty(camposDinamicos[index]["valor"])) {
             mostrarValidacionLoaderClose("Debe ingresar " + item.descripcion);
             isOk = false;
@@ -7517,7 +7535,7 @@ function cargarDetalleDocumentoRelacion(data) {
           item.agrupador_descripcion,
           item.ticket,
           item.centro_costo_id,
-          null, 
+          item.movimiento_bien_ids, 
           item.precio_postor1, 
           item.precio_postor2, 
           item.precio_postor3,
@@ -7879,6 +7897,8 @@ function cargarFormularioDetalleACopiar(
         case 11: // PRODUCTO
           objDetalle.bienId = bienId;
           objDetalle.bienDesc = bienDesc;
+
+          objDetalle.movimiento_bien_ids = movimiento_bien_ids;
           break;
         case 13: // UNIDAD DE MEDIDA
           objDetalle.unidadMedidaId = unidadMedidaId;
