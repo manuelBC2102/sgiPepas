@@ -590,7 +590,10 @@ class MovimientoControlador extends AlmacenIndexControlador
           $stringAcciones .= '';    
         } elseif ((($data[$i]['documento_estado_id'] == 17) && ($responseAcciones[$j]['id'] == 33))) {
           //
-          $stringAcciones .= '';                  
+          $stringAcciones .= '';
+        } elseif ($responseAcciones[$j]['id'] == 30 && ObjectUtil::isEmpty($data[$i]['orden_compra_serie_numero'])) {
+          //
+          $stringAcciones .= '';                        
         }else {
           if ($responseAcciones[$j]['id'] == 1 || $responseAcciones[$j]['id'] == 22 || $responseAcciones[$j]['id'] == 28 || $responseAcciones[$j]['id'] == 29 || $responseAcciones[$j]['id'] == 30 || $responseAcciones[$j]['id'] == 31) {
             $datoPivot = $data[$i]['documento_tipo_id'];

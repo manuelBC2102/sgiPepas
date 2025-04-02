@@ -1372,6 +1372,9 @@ function onResponseObtenerConfiguracionesIniciales(data) {
               select2.asignarValor("cbo_"+dtdTipoPosto2.id, 0);
               select2.asignarValor("cbo_"+dtdTipoPosto3.id, 0);
           }else{
+              $('#selectPostor1').prop('checked', true);
+              $('#selectPostor2').prop('checked', false);
+              $('#selectPostor3').prop('checked', false);
               $("#id_" + dtdTipoPosto3.id).show();
               $("#id_" + dtdTipoPosto2.id).show();
               $("#tb_postor_457").show();
@@ -4892,7 +4895,12 @@ function eliminar(index) {
     asignarImporteDocumento();
     obtenerUtilidadesGenerales();
   }
-
+  if(doc_TipoId == GENERAR_COTIZACION){
+    var dtdTipoCotizacion = obtenerDocumentoTipoDatoXTipoXCodigo(4, "01");
+    var postores = select2.obtenerValor("cbo_" + dtdTipoCotizacion.id);
+    habilitarPostores(postores);
+  
+  }
   loaderClose();
 }
 
@@ -7373,7 +7381,7 @@ function cargarDataDocumentoACopiar(
           case 41:
             select2.asignarValor("cbo_" + item.otro_documento_id, item.valor);
             if(doc_TipoId == GENERAR_COTIZACION && item.descripcion == "Varios Postores"){
-              variosPostores(item.valor);
+              habilitarPostores(item.valor);
             }
             break;
           case 25:
@@ -9267,6 +9275,7 @@ function dibujarBotonesDeEnvio(data) {
   $("#divAccionesEnvio").empty();
 
   var htmlPredet = "";
+  var htmlPredetGenerar = "";
   if (!isEmpty(data.accionEnvioPredeterminado)) {
     accion = data.accionEnvioPredeterminado[0];
     if (!isEmpty(accion.color)) {
@@ -9299,20 +9308,34 @@ function dibujarBotonesDeEnvio(data) {
       if (!isEmpty(item.color)) {
         estilo = 'style="color: ' + item.color + '"';
       }
+      if(doc_TipoId == GENERAR_COTIZACION && item.funcion != "generar"){
+        html +=
+          '<li><a href="#" onclick="enviar(\'' +
+          item.funcion +
+          '\')"><i class="' +
+          item.icono +
+          '" ' +
+          estilo +
+          "></i>&nbsp;&nbsp; " +
+          item.descripcion +
+          "</a></li>";
+      }
 
-      html +=
-        '<li><a href="#" onclick="enviar(\'' +
-        item.funcion +
-        '\')"><i class="' +
-        item.icono +
-        '" ' +
-        estilo +
-        "></i>&nbsp;&nbsp; " +
-        item.descripcion +
-        "</a></li>";
+        if(doc_TipoId == GENERAR_COTIZACION && item.funcion == "generar"){
+          htmlPredetGenerar =
+          '&nbsp;&nbsp;<button type="button" class="btn btn-primary" onclick="enviar(\'' +
+          item.funcion +
+          '\')" name="env" id="env"><i class="' +
+          item.icono +
+          '" ' +
+          estilo +
+          "></i> " +
+          item.descripcion +
+          "</button>";
+        }
     });
 
-    html += "</ul></div>";
+    html += "</ul></div>" + htmlPredetGenerar;
   }
 
   $("#divAccionesEnvio").append(html);
@@ -12776,7 +12799,7 @@ function onResponseobtenerDetalleBienRequerimiento(data){
   }
 }
 
-function variosPostores(valor){
+function habilitarPostores(valor){
     // 281 = Generar Cotización
     var dtdTipoPosto1 = obtenerDocumentoTipoDatoXTipoXCodigo(23, "01");
     var dtdTipoPosto2 = obtenerDocumentoTipoDatoXTipoXCodigo(23, "02");

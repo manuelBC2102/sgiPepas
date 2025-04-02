@@ -2320,7 +2320,7 @@ class MovimientoNegocio extends ModeloNegocioBase
           throw new WarningException("No se pudo guardar un detalle del movimiento");
         }
 
-        if ($documentoTipoId == Configuraciones::GENERAR_COTIZACION || $documentoTipoId == Configuraciones::REQUERIMIENTO_AREA) {
+        if ($documentoTipoId == Configuraciones::GENERAR_COTIZACION || $documentoTipoId == Configuraciones::REQUERIMIENTO_AREA || $documentoTipoId == Configuraciones::ORDEN_COMPRA) {
           $arrayIds = explode(',', $item["movimiento_bien_ids"]);
           foreach ($arrayIds as $itemarrayIds) {
             $resDetalle = MovimientoNegocio::create()->movimientoBienDetalleGuardarCadena($movimientoBienId, 35, $itemarrayIds, $usuarioId);
@@ -11069,7 +11069,6 @@ class MovimientoNegocio extends ModeloNegocioBase
     $ubigeoProveedor = PersonaNegocio::create()->obtenerUbigeoXId($dataDocumento[0]["ubigeo_id"]);
 
     $referencia = null;
-    $requerimiento = null;
     $cotizacion = null;
     $terminos_de_pago = null;
     $entrega_en_destino = null;
@@ -11082,8 +11081,6 @@ class MovimientoNegocio extends ModeloNegocioBase
         case 2:
           if ($item['descripcion'] == "Referencia") {
             $referencia = $item['valor'];
-          } else if ($item['descripcion'] == "Requerimiento") {
-            $requerimiento = $item['valor'];
           } else if ($item['descripcion'] == "Cotización") {
             $cotizacion = $item['valor'];
           }
@@ -11254,7 +11251,7 @@ class MovimientoNegocio extends ModeloNegocioBase
 
     $cont = 0;
     $pdf->Ln(8);
-    $pdf->SetFont('helvetica', '', 7);
+    $pdf->SetFont('helvetica', '', 6);
     $tabla = '<table cellspacing="0" cellpadding="1" border="1">
         <tr style="background-color:rgb(254, 191, 0);">
             <th style="text-align:center;vertical-align:middle;" width="5%"><b>Item</b></th>
@@ -11510,7 +11507,6 @@ class MovimientoNegocio extends ModeloNegocioBase
     $tabla_distribucionPagos = '<table cellspacing="0" cellpadding="1" border="1">
         <tr style="background-color:rgb(254, 191, 0);">
             <th style="text-align:center;vertical-align:middle;" width="5%"><b>Item</b></th>
-            <th style="text-align:center;vertical-align:middle;" width="35%"><b>Fecha pago</b></th>
             <th style="text-align:center;vertical-align:middle;" width="30%"><b>Importe</b></th>
             <th style="text-align:center;vertical-align:middle;" width="30%"><b>Porcentaje</b></th>
         </tr>
@@ -11521,9 +11517,8 @@ class MovimientoNegocio extends ModeloNegocioBase
 
         $tabla_distribucionPagos = $tabla_distribucionPagos . '<tr>'
           . '<td style="text-align:center"  width="5%">' . ($index + 1) . '</td>'
-          . '<td align="center" width="35%">' . $item['fecha_pago'] . '</td>'
-          . '<td style="text-align:center"  width="30%">' . number_format($item['importe'], 2) . '</td>'
-          . '<td style="text-align:center"  width="30%">' . number_format($item['porcentaje'], 2) . '</td>'
+          . '<td style="text-align:center"  width="45%">' . number_format($item['importe'], 2) . '</td>'
+          . '<td style="text-align:center"  width="50%">' . number_format($item['porcentaje'], 2) . '</td>'
           . '</tr>';
       }
     }
@@ -11984,6 +11979,7 @@ class MovimientoNegocio extends ModeloNegocioBase
 
 
       $detalleCotizacion = [];
+      $$movimiento_bien_ids = null;
       foreach ($detalle as $i => $itemDetalle) {
         $precioItem = 0;
         $texto1 = stripos($itemTipo23['descripcion'], "1");
@@ -11999,12 +11995,13 @@ class MovimientoNegocio extends ModeloNegocioBase
           }
         }else{
           $precioItem = $itemDetalle['precio'];
+          $movimiento_bien_ids = $itemDetalle['movimiento_bien_ids'];
         }
 
         $arrayItem = array(
           "bienId" => $itemDetalle['bienId'],
           "bienDesc" => $itemDetalle['bienDesc'],
-          "movimiento_bien_ids" => "",
+          "movimiento_bien_ids" => $movimiento_bien_ids,
           "cantidadAceptada" => null,
           "cantidad" => $itemDetalle['cantidad'],
           "unidadMedidaId" => $itemDetalle['unidadMedidaId'],

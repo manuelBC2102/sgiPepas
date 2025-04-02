@@ -40,12 +40,16 @@ class RequerimientoControlador extends AlmacenIndexControlador
         for ($i = 0; $i < $tamanio; $i++) {
             $stringAcciones = "";
             $matrizUsuario = null;
+            $areaId = null;
 
             if($data[$i]['documento_tipo_id'] == 280){
                 $dataDocumento = DocumentoNegocio::create()->obtenerDetalleDocumento($data[$i]['id']);
                 foreach ($dataDocumento as $key => $value) {
                     if($value['descripcion'] == "Urgencia" && $value['valor'] == "Si") {
                         $matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXDocumentoTipoUrgente($data[$i]['documento_tipo_id']);
+                    }
+                    if($value['tipo'] == "43") {
+                        $areaId = $value['valorid'];
                     }
                 }
                 if($matrizUsuario == null){
@@ -54,6 +58,9 @@ class RequerimientoControlador extends AlmacenIndexControlador
                             case '43':
                                 $matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXDocumentoTipoXArea($data[$i]['documento_tipo_id'], $value['valorid']);
                                 break;
+                        }
+                        if($value['descripcion'] == "Tipo de requerimiento" && $value['valor'] == "Servicio") {
+                            $matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXRequerimientoServicio($data[$i]['documento_tipo_id'], 2, $areaId);
                         }
                     }
                 }

@@ -899,6 +899,8 @@ function onResponseObtenerConfiguracionesIniciales(data) {
         llenarTablaDetalle(data);
         if(doc_TipoId == GENERAR_COTIZACION){
             llenarTablatfoot();
+            var dtdTipoVariosPostores = obtenerDocumentoTipoDatoXTipoXCodigo(4, "01");
+            $("#cbo_"+ dtdTipoVariosPostores.id).prop('disabled', true);
         }
 
         if(doc_TipoId == REQUERIMIENTO_AREA || doc_TipoId == GENERAR_COTIZACION){
@@ -1311,6 +1313,9 @@ function onResponseObtenerConfiguracionesIniciales(data) {
                 ax.addParamTmp("tipoRequerimiento", select2.obtenerValor("cboTipoRequerimiento_" + dtdTipoTipoRequerimiento));
                 ax.addParamTmp("urgencia", "No");
                 ax.consumir();
+            }else{
+                var dtdTipoVariosPostores = obtenerDocumentoTipoDatoXTipoXCodigo(4, "01");
+                $("#cbo_"+ dtdTipoVariosPostores.id).prop('disabled', true);
             }
 
         });
@@ -1330,93 +1335,7 @@ function onResponseObtenerConfiguracionesIniciales(data) {
         $("#cbo_" + dtdTipoCotizacion.id).select2({
             width: "100%"
         }).on("change", function (e) {
-            if(e.val == 467){
-                $("#id_" + dtdTipoPosto3.id).hide();
-                $("#id_" + dtdTipoPosto2.id).hide();
-                $("#tb_postor_457").hide();
-                $("#tb_postor_458").hide();
-                var dtdetalle_postor2 = document.querySelectorAll('.dtdetalle_postor2');
-                dtdetalle_postor2.forEach(function (columna) {
-                    columna.classList.add('hidden');
-                });
-                var dtdetalle_postor3 = document.querySelectorAll('.dtdetalle_postor3');
-                dtdetalle_postor3.forEach(function (columna) {
-                    columna.classList.add('hidden');
-                });
-
-                //Cantidad
-                var dtdetalle_postor_cantidad2 = document.querySelectorAll('.dtdetalle_postor_cantidad2');
-                dtdetalle_postor_cantidad2.forEach(function (columna) {
-                    columna.classList.add('hidden');
-                });
-                var dtdetalle_postor_cantidad3 = document.querySelectorAll('.dtdetalle_postor_cantidad3');
-                dtdetalle_postor_cantidad3.forEach(function (columna) {
-                    columna.classList.add('hidden');
-                });
-                //precio
-                var dtdetalle_postor_precio = document.querySelectorAll('.postor_precio');
-                dtdetalle_postor_precio.forEach(function (columna) {
-                    columna.classList.add('hidden');
-                });
-                var dtdetalle_postor_subtotal = document.querySelectorAll('.postor_subtotal');
-                dtdetalle_postor_subtotal.forEach(function (columna) {
-                    columna.classList.add('hidden');
-                });
-                
-                var tfootpostor2_class = document.querySelectorAll('.tfootpostor2_class');
-                tfootpostor2_class.forEach(function (columna) {
-                    columna.classList.add('hidden');
-                });
-                var tfootpostor3_class = document.querySelectorAll('.tfootpostor3_class');
-                tfootpostor3_class.forEach(function (columna) {
-                    columna.classList.add('hidden');
-                });
-
-                $("#datatable").resize();
-                select2.asignarValor("cbo_"+dtdTipoPosto2.id, 0);
-                select2.asignarValor("cbo_"+dtdTipoPosto3.id, 0);
-            }else{
-                $("#id_" + dtdTipoPosto3.id).show();
-                $("#id_" + dtdTipoPosto2.id).show();
-                $("#tb_postor_457").show();
-                $("#tb_postor_458").show();
-                var dtdetalle_postor2 = document.querySelectorAll('.dtdetalle_postor2');
-                dtdetalle_postor2.forEach(function (columna) {
-                    columna.classList.remove('hidden');
-                });
-                var dtdetalle_postor3 = document.querySelectorAll('.dtdetalle_postor3');
-                dtdetalle_postor3.forEach(function (columna) {
-                    columna.classList.remove('hidden');
-                });
-                //Cantidad
-                var dtdetalle_postor_cantidad2 = document.querySelectorAll('.dtdetalle_postor_cantidad2');
-                dtdetalle_postor_cantidad2.forEach(function (columna) {
-                    columna.classList.remove('hidden');
-                });
-                var dtdetalle_postor_cantidad3 = document.querySelectorAll('.dtdetalle_postor_cantidad3');
-                dtdetalle_postor_cantidad3.forEach(function (columna) {
-                    columna.classList.remove('hidden');
-                });
-                //precio
-                var dtdetalle_postor_precio = document.querySelectorAll('.postor_precio');
-                dtdetalle_postor_precio.forEach(function (columna) {
-                    columna.classList.remove('hidden');
-                });
-                var dtdetalle_postor_subtotal = document.querySelectorAll('.postor_subtotal');
-                dtdetalle_postor_subtotal.forEach(function (columna) {
-                    columna.classList.remove('hidden');
-                });
-
-                var tfootpostor2_class = document.querySelectorAll('.tfootpostor2_class');
-                tfootpostor2_class.forEach(function (columna) {
-                    columna.classList.remove('hidden');
-                });
-                var tfootpostor3_class = document.querySelectorAll('.tfootpostor3_class');
-                tfootpostor3_class.forEach(function (columna) {
-                    columna.classList.remove('hidden');
-                });
-                $("#datatable").resize();
-            }
+            habilitarPostores(e.val);
         });
     }
 
@@ -4221,6 +4140,12 @@ function eliminar(index) {
         obtenerUtilidadesGenerales();
     }
 
+    if(doc_TipoId == GENERAR_COTIZACION){
+        var dtdTipoCotizacion = obtenerDocumentoTipoDatoXTipoXCodigo(4, "01");
+        var postores = select2.obtenerValor("cbo_" + dtdTipoCotizacion.id);
+        habilitarPostores(postores);
+    }
+
     loaderClose();
 }
 function confirmarEliminar(index) {
@@ -6305,9 +6230,11 @@ function onResponseObtenerDocumentoRelacion(data) {
         $("#chkIncluyeIGV").prop("checked", "");
     }
 
-    if (data.documentoACopiar[0].documento_tipo_descripcion == "Solicitud requerimiento") {
+    if (data.documentoACopiar[0].documento_tipo_descripcion == "Solicitud requerimiento" && doc_TipoId == GENERAR_COTIZACION) {
         var dtdTipoGrupo_producto = obtenerDocumentoTipoDatoIdXTipo(44);
         $("#cbo_"+ dtdTipoGrupo_producto).prop('disabled', true);
+        var dtdTipoVariosPostores = obtenerDocumentoTipoDatoXTipoXCodigo(4, "01");
+        $("#cbo_"+ dtdTipoVariosPostores.id).prop('disabled', false);
     }
 
     select2.asignarValorQuitarBuscador("cboMoneda", data.documentoACopiar[0].moneda_id);
@@ -6604,7 +6531,7 @@ function cargarDetalleDocumentoRelacion(data)
                             item.unidad_medida_id, item.valor_monetario, item.organizador_descripcion,
                             ((!isEmpty(item.bien_codigo) ? item.bien_codigo + " | " : "") + item.bien_descripcion), item.unidad_medida_descripcion, item.precio_tipo_id,
                             item.movimiento_bien_detalle, item.dataUnidadMedida, item.movimiento_bien_comentario, item.agencia_id, item.agencia_descripcion, item.agrupador_id, item.agrupador_descripcion, item.ticket, item.ceco_id,
-                            null, item.precio_postor1, item.precio_postor2, item.precio_postor3,item.postor_ganador_id,item.movimiento_bien_ids, item.cantidad_atendida 
+                            item.movimiento_bien_ids, item.precio_postor1, item.precio_postor2, item.precio_postor3,item.postor_ganador_id, item.cantidad_atendida 
                             )
                     );
 
@@ -6913,7 +6840,7 @@ function cargarFormularioDetalleACopiar(organizadorId, bienId, cantidad, unidadM
                     break;
                 case 12:// CANTIDAD
                     if(doc_TipoId == GENERAR_COTIZACION){
-                        objDetalle.cantidad = parseFloat(cantidad) - parseFloat(cantidad_atendida);
+                        objDetalle.cantidad = parseFloat(cantidad);
                     }else{
                         objDetalle.cantidad = cantidad;
                     }
@@ -10891,6 +10818,11 @@ function validarDistribucion() {
 
 function onResponseObtenerDetalle(data){
     if (!isEmpty(data.detalleRequerimientos)) {
+        if(doc_TipoId == GENERAR_COTIZACION){
+            var dtdTipoVariosPostores = obtenerDocumentoTipoDatoXTipoXCodigo(4, "01");
+            $("#cbo_"+ dtdTipoVariosPostores.id).prop('disabled', false);
+        }
+
         dataCofiguracionInicial.bien = data.dataBien;
         cargarDataDocumentoACopiar(null, data.dataDocumentoRelacionada);
         nroFilasReducida = parseInt(data.detalleRequerimientos.length);
@@ -11354,4 +11286,96 @@ function limpiarBuscadores_movimiento_form_tablas(){
     
     select2.asignarValor('cboDocumentoTipoM', -1);
     select2.asignarValor('cboPersonaM', -1);
+}
+
+function habilitarPostores(dato){
+    var dtdTipoPosto2 = obtenerDocumentoTipoDatoXTipoXCodigo(23, "02");
+    var dtdTipoPosto3 = obtenerDocumentoTipoDatoXTipoXCodigo(23, "03");
+    if(dato == 467){
+        $("#id_" + dtdTipoPosto3.id).hide();
+        $("#id_" + dtdTipoPosto2.id).hide();
+        $("#tb_postor_457").hide();
+        $("#tb_postor_458").hide();
+        var dtdetalle_postor2 = document.querySelectorAll('.dtdetalle_postor2');
+        dtdetalle_postor2.forEach(function (columna) {
+            columna.classList.add('hidden');
+        });
+        var dtdetalle_postor3 = document.querySelectorAll('.dtdetalle_postor3');
+        dtdetalle_postor3.forEach(function (columna) {
+            columna.classList.add('hidden');
+        });
+
+        //Cantidad
+        var dtdetalle_postor_cantidad2 = document.querySelectorAll('.dtdetalle_postor_cantidad2');
+        dtdetalle_postor_cantidad2.forEach(function (columna) {
+            columna.classList.add('hidden');
+        });
+        var dtdetalle_postor_cantidad3 = document.querySelectorAll('.dtdetalle_postor_cantidad3');
+        dtdetalle_postor_cantidad3.forEach(function (columna) {
+            columna.classList.add('hidden');
+        });
+        //precio
+        var dtdetalle_postor_precio = document.querySelectorAll('.postor_precio');
+        dtdetalle_postor_precio.forEach(function (columna) {
+            columna.classList.add('hidden');
+        });
+        var dtdetalle_postor_subtotal = document.querySelectorAll('.postor_subtotal');
+        dtdetalle_postor_subtotal.forEach(function (columna) {
+            columna.classList.add('hidden');
+        });
+        
+        var tfootpostor2_class = document.querySelectorAll('.tfootpostor2_class');
+        tfootpostor2_class.forEach(function (columna) {
+            columna.classList.add('hidden');
+        });
+        var tfootpostor3_class = document.querySelectorAll('.tfootpostor3_class');
+        tfootpostor3_class.forEach(function (columna) {
+            columna.classList.add('hidden');
+        });
+
+        $("#datatable").resize();
+        select2.asignarValor("cbo_"+dtdTipoPosto2.id, 0);
+        select2.asignarValor("cbo_"+dtdTipoPosto3.id, 0);
+    }else{
+        $("#id_" + dtdTipoPosto3.id).show();
+        $("#id_" + dtdTipoPosto2.id).show();
+        $("#tb_postor_457").show();
+        $("#tb_postor_458").show();
+        var dtdetalle_postor2 = document.querySelectorAll('.dtdetalle_postor2');
+        dtdetalle_postor2.forEach(function (columna) {
+            columna.classList.remove('hidden');
+        });
+        var dtdetalle_postor3 = document.querySelectorAll('.dtdetalle_postor3');
+        dtdetalle_postor3.forEach(function (columna) {
+            columna.classList.remove('hidden');
+        });
+        //Cantidad
+        var dtdetalle_postor_cantidad2 = document.querySelectorAll('.dtdetalle_postor_cantidad2');
+        dtdetalle_postor_cantidad2.forEach(function (columna) {
+            columna.classList.remove('hidden');
+        });
+        var dtdetalle_postor_cantidad3 = document.querySelectorAll('.dtdetalle_postor_cantidad3');
+        dtdetalle_postor_cantidad3.forEach(function (columna) {
+            columna.classList.remove('hidden');
+        });
+        //precio
+        var dtdetalle_postor_precio = document.querySelectorAll('.postor_precio');
+        dtdetalle_postor_precio.forEach(function (columna) {
+            columna.classList.remove('hidden');
+        });
+        var dtdetalle_postor_subtotal = document.querySelectorAll('.postor_subtotal');
+        dtdetalle_postor_subtotal.forEach(function (columna) {
+            columna.classList.remove('hidden');
+        });
+
+        var tfootpostor2_class = document.querySelectorAll('.tfootpostor2_class');
+        tfootpostor2_class.forEach(function (columna) {
+            columna.classList.remove('hidden');
+        });
+        var tfootpostor3_class = document.querySelectorAll('.tfootpostor3_class');
+        tfootpostor3_class.forEach(function (columna) {
+            columna.classList.remove('hidden');
+        });
+        $("#datatable").resize();
+    }
 }
