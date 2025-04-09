@@ -305,7 +305,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     }
   }
 
-  public function validarGenerarDocumentoAdicional($opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $documentoARelacionar, $valorCheck, $comentario = NULL, $checkIgv = 1, $monedaId = null, $accionEnvio, $tipoPago, $listaPagoProgramacion, $anticiposAAplicar = null, $periodoId = null, $percepcion = null, $origen_destino = null, $importeTotalInafectas = null, $datosExtras = null, $detalleDistribucion = null, $contOperacionTipoId = null, $distribucionObligatoria = null, $igv_porcentaje = null, $dataStockReservaOk = null)
+  public function validarGenerarDocumentoAdicional($opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $documentoARelacionar, $valorCheck, $comentario = NULL, $checkIgv = 1, $monedaId = null, $accionEnvio, $tipoPago, $listaPagoProgramacion, $anticiposAAplicar = null, $periodoId = null, $percepcion = null, $origen_destino = null, $importeTotalInafectas = null, $datosExtras = null, $detalleDistribucion = null, $contOperacionTipoId = null, $distribucionObligatoria = null, $igv_porcentaje = null, $dataStockReservaOk = null, $dataPostorProveedor = null, $listaPagoProgramacionPostores = null)
   {
     // validacion en caso de bienes faltantes
     $documentoTipo = DocumentoTipoNegocio::create()->obtenerDocumentoTipoXId($documentoTipoId);
@@ -506,6 +506,24 @@ class MovimientoNegocio extends ModeloNegocioBase
       $respuestaValidarDistribucion = ContDistribucionContableNegocio::create()->validarDistribucionContable($respuesta->documentoId, $detalleDistribucion, $contOperacionTipoId);
     }
     // }
+
+    //Validacion de postores
+    if(!ObjectUtil::isEmpty($dataPostorProveedor)){
+      foreach($dataPostorProveedor as $itemPostor){
+        $respuestaDataPostorProveedor = Documento::create()->guardar_documento_detalle($respuesta->documentoId, $itemPostor['proveedor_id'], $itemPostor['monedaId'], $itemPostor['tipoCambio'], $itemPostor['igv'], $itemPostor['tiempoEntrega'], $itemPostor['tiempo'], $itemPostor['condicionPago'], $itemPostor['sumilla'], $usuarioId);
+        
+        $pagoProgramacion = $listaPagoProgramacionPostores[intval($itemPostor['indice'])];
+        foreach($pagoProgramacion as $itemPagoProgramacionPostores){
+          $fechaPago = DateUtil::formatearCadenaACadenaBD($itemPagoProgramacionPostores[0]);
+          $importePago = $itemPagoProgramacionPostores[1];
+          $dias = $itemPagoProgramacionPostores[2];
+          $porcentaje = $itemPagoProgramacionPostores[3];
+          $glosa = $itemPagoProgramacionPostores[4];
+          $res = Documento::create()->guardarDocumentoDetalleDistribucionPagos($respuestaDataPostorProveedor[0]['vout_id'], $fechaPago, $importePago, $dias, $porcentaje, $glosa, $usuarioId);
+        }
+      }
+    }
+
     //Reservar stock
     if (!ObjectUtil::isEmpty($dataStockReservaOk) && $documentoTipoId == Configuraciones::REQUERIMIENTO_AREA) {
       //generar salida
@@ -2297,24 +2315,7 @@ class MovimientoNegocio extends ModeloNegocioBase
           $itemPrecio = 0.0;
         }
 
-        if ($documentoTipoId == Configuraciones::GENERAR_COTIZACION) {
-          $postor_ganador_id = null;
-          if ($item["checked1"] == "true") {
-            $postor_ganador_id = 1;
-          }
-          if ($item["checked2"] == "true") {
-            $postor_ganador_id = 2;
-          }
-          if ($item["checked3"] == "true") {
-            $postor_ganador_id = 3;
-          }
-
-          $checked1Moneda = $item["checked1Moneda"] == "true"? 4: 2;
-          $checked2Moneda = $item["checked2Moneda"] == "true"? 4: 2;
-          $checked3Moneda = $item["checked3Moneda"] == "true"? 4: 2;
-
-        }
-        $movimientoBien = MovimientoBien::create()->guardar($movimientoId, $item["organizadorId"], $item["bienId"], $item["unidadMedidaId"], $item["cantidad"], $itemPrecio, 1, $usuarioId, $item["precioTipoId"], $item["utilidad"], $item["utilidadPorcentaje"], $checkIgv, $item["adValorem"], $item["comentarioBien"], $item["agenciaId"], $agrupadorDetalle, $ticket, $item["CeCoId"], ($item["precioPostor1"] == "" ? null : $item["precioPostor1"]), ($item["precioPostor2"] == "" ? null : $item["precioPostor2"]), ($item["precioPostor3"] == "" ? null : $item["precioPostor3"]), $item["esCompra"], $item["cantidadAceptada"], $postor_ganador_id, $checked1Moneda, $checked2Moneda, $checked3Moneda);
+        $movimientoBien = MovimientoBien::create()->guardar($movimientoId, $item["organizadorId"], $item["bienId"], $item["unidadMedidaId"], $item["cantidad"], $itemPrecio, 1, $usuarioId, $item["precioTipoId"], $item["utilidad"], $item["utilidadPorcentaje"], $checkIgv, $item["adValorem"], $item["comentarioBien"], $item["agenciaId"], $agrupadorDetalle, $ticket, $item["CeCoId"], ($item["precioPostor1"] == "" ? null : $item["precioPostor1"]), ($item["precioPostor2"] == "" ? null : $item["precioPostor2"]), ($item["precioPostor3"] == "" ? null : $item["precioPostor3"]), $item["esCompra"], $item["cantidadAceptada"], $item["postor_ganador_id"]);
         $movimientoBienId = $this->validateResponse($movimientoBien);
         if (ObjectUtil::isEmpty($movimientoBienId) || $movimientoBienId < 1) {
           throw new WarningException("No se pudo guardar un detalle del movimiento");
@@ -2355,6 +2356,12 @@ class MovimientoNegocio extends ModeloNegocioBase
     
                 file_put_contents($url, $decode);
                 $resDetalle = MovimientoNegocio::create()->movimientoBienDetalleGuardarCadena($movimientoBienId, $valor['columnaCodigo'], $nombreGenerado, $usuarioId);
+              }
+
+              if($documentoTipoId == Configuraciones::GENERAR_COTIZACION){
+                if ($valor['columnaCodigo'] == 37) {
+                  $resDetalle = MovimientoNegocio::create()->movimientoBienDetalleGuardarCadena($movimientoBienId, $valor['columnaCodigo'], $valor['valorDet'], $usuarioId, $valor['valorExtra']);
+                }
               }
             }
           }
@@ -2439,9 +2446,14 @@ class MovimientoNegocio extends ModeloNegocioBase
     return $documento;
   }
 
-  public function movimientoBienDetalleGuardarCadena($movimientoBienId, $columnaCodigo, $valorCadena, $usuarioId)
+  public function movimientoBienDetalleGuardarCadena($movimientoBienId, $columnaCodigo, $valorCadena, $usuarioId, $valorExtra = null)
   {
-    return MovimientoBien::create()->movimientoBienDetalleGuardar($movimientoBienId, $columnaCodigo, $valorCadena, null, $usuarioId);
+    return MovimientoBien::create()->movimientoBienDetalleGuardar($movimientoBienId, $columnaCodigo, $valorCadena, null, $usuarioId, $valorExtra);
+  }
+
+  public function movimientoBienDetalleEditarCadena($movimientoBienId, $columnaCodigo, $valorCadena, $usuarioId, $valorExtra = null)
+  {
+    return MovimientoBien::create()->movimientoBienDetalleEditarCadena($movimientoBienId, $columnaCodigo, $valorCadena, null, $usuarioId, $valorExtra);
   }
 
   public function movimientoBienDetalleGuardarFecha($movimientoBienId, $columnaCodigo, $valorFecha, $usuarioId)
@@ -2785,7 +2797,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     foreach ($documentoDetalle as $detalle) {
       $subTotal = $detalle['cantidad'] * $detalle['valor_monetario'];
       $descripcionEditada = $detalle['bien_descripcion_editada'];
-      array_push($arrayDetalle, $this->getDetalle($detalle['movimiento_bien_id'],"", $detalle['cantidad'], (!ObjectUtil::isEmpty($descripcionEditada)) ? $descripcionEditada : $detalle['bien_descripcion'], $detalle['valor_monetario'], $subTotal, $detalle['unidad_medida_descripcion'], $detalle['simbolo'], $detalle['bien_codigo'], $detalle['unidad_medida_id'], $detalle['bien_id'], $detalle['ad_valorem'], $detalle['movimiento_bien_comentario'], $detalle["bien_tipo_descripcion"], $detalle["codigo_contable"], $detalle["agencia_descripcion"], $detalle['ticket'], $detalle['centro_costo_descripcion'], $detalle['precio_postor1'], $detalle['precio_postor2'], $detalle['precio_postor3'], $detalle['postor_ganador_id'], $detalle['es_compra'], $detalle['cantidad_solicitada'], null, null, $detalle['moneda_postor1'], $detalle['moneda_postor2'], $detalle['moneda_postor3']));
+      array_push($arrayDetalle, $this->getDetalle($detalle['movimiento_bien_id'],"", $detalle['cantidad'], (!ObjectUtil::isEmpty($descripcionEditada)) ? $descripcionEditada : $detalle['bien_descripcion'], $detalle['valor_monetario'], $subTotal, $detalle['unidad_medida_descripcion'], $detalle['simbolo'], $detalle['bien_codigo'], $detalle['unidad_medida_id'], $detalle['bien_id'], $detalle['ad_valorem'], $detalle['movimiento_bien_comentario'], $detalle["bien_tipo_descripcion"], $detalle["codigo_contable"], $detalle["agencia_descripcion"], $detalle['ticket'], $detalle['centro_costo_descripcion'], $detalle['precio_postor1'], $detalle['precio_postor2'], $detalle['precio_postor3'], $detalle['postor_ganador_id'], $detalle['es_compra'], $detalle['cantidad_solicitada'], null, null));
       $total += $subTotal;
     }
 
@@ -3198,6 +3210,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     // if (ObjectUtil::isEmpty($documentoDetalle)) {
     //   throw new WarningException("No se encontró detalles de este documento");
     // }
+    $respuesta->dataPostores = Documento::create()->obtenerDocumentoDetalleDatos($documentoId);
 
     if (!ObjectUtil::isEmpty($documentoDetalle)) {
       $total = 0.00;
@@ -3205,7 +3218,7 @@ class MovimientoNegocio extends ModeloNegocioBase
         $resMovimientoBienDetalleReverva = MovimientoBien::create()->movimientoBienDetalleObtenerReservaRequerimientoXMovimientoBienId($detalle['movimiento_bien_id']);
         $resMovimientoBienDetalle = MovimientoBien::create()->obtenerMovimientoBienDetalleXMovimientoBienId($detalle['movimiento_bien_id']);
         $subTotal = $detalle['cantidad'] * $detalle['valor_monetario']; // + $detalle['ad_valorem']
-        array_push($arrayDetalle, $this->getDetalle($detalle['movimiento_bien_id'] ,$detalle['organizador_descripcion'], $detalle['cantidad'], $detalle['bien_descripcion'], $detalle['valor_monetario'], $subTotal, $detalle['unidad_medida_descripcion'], $detalle['simbolo'], $detalle['bien_codigo'], $detalle['unidad_medida_id'], $detalle["bien_id"], $detalle["ad_valorem"], $detalle["movimiento_bien_comentario"], $detalle["bien_tipo_descripcion"], $detalle["codigo_contable"], $detalle["agencia_descripcion"], $detalle["ticket"], $detalle["centro_costo_descripcion"], $detalle["precio_postor1"], $detalle["precio_postor2"], $detalle["precio_postor3"], $detalle["postor_ganador_id"], $detalle["es_compra"], $detalle["cantidad_solicitada"], $resMovimientoBienDetalle, $resMovimientoBienDetalleReverva, $detalle["moneda_postor1"], $detalle["moneda_postor2"], $detalle["moneda_postor3"]));
+        array_push($arrayDetalle, $this->getDetalle($detalle['movimiento_bien_id'] ,$detalle['organizador_descripcion'], $detalle['cantidad'], $detalle['bien_descripcion'], $detalle['valor_monetario'], $subTotal, $detalle['unidad_medida_descripcion'], $detalle['simbolo'], $detalle['bien_codigo'], $detalle['unidad_medida_id'], $detalle["bien_id"], $detalle["ad_valorem"], $detalle["movimiento_bien_comentario"], $detalle["bien_tipo_descripcion"], $detalle["codigo_contable"], $detalle["agencia_descripcion"], $detalle["ticket"], $detalle["centro_costo_descripcion"], $detalle["precio_postor1"], $detalle["precio_postor2"], $detalle["precio_postor3"], $detalle["postor_ganador_id"], $detalle["es_compra"], $detalle["cantidad_solicitada"], $resMovimientoBienDetalle, $resMovimientoBienDetalleReverva));
         $total += $subTotal;
       }
     }
@@ -3214,7 +3227,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     return $respuesta;
   }
 
-  private function getDetalle($movimientoBienId ,$organizador, $cantidad, $descripcion, $precioUnitario, $importe, $unidadMedida, $simbolo, $bien_codigo, $unidadMedidaID, $bienId, $adValorem = 0, $movimientoBienComentario = '', $bienTipoDescripcion = '', $codigoContable = '', $agenciaDescripcion = '', $ticket = '', $centro_costo_descripcion = '', $precio_postor1 = '', $precio_postor2 = '', $precio_postor3 = null, $postor_ganador_id = null, $es_compra = '', $cantidad_solicitada = '', $movimientoBienDetalle = null, $estadoReserva = null, $moneda_postor1 = null, $moneda_postor2 = null, $moneda_postor3 = null)
+  private function getDetalle($movimientoBienId ,$organizador, $cantidad, $descripcion, $precioUnitario, $importe, $unidadMedida, $simbolo, $bien_codigo, $unidadMedidaID, $bienId, $adValorem = 0, $movimientoBienComentario = '', $bienTipoDescripcion = '', $codigoContable = '', $agenciaDescripcion = '', $ticket = '', $centro_costo_descripcion = '', $precio_postor1 = '', $precio_postor2 = '', $precio_postor3 = null, $postor_ganador_id = null, $es_compra = '', $cantidad_solicitada = '', $movimientoBienDetalle = null, $estadoReserva = null)
   {
     $detalle = new stdClass();
     $detalle->movimientoBienId = $movimientoBienId;
@@ -3243,9 +3256,6 @@ class MovimientoNegocio extends ModeloNegocioBase
     $detalle->cantidad_solicitada  = $cantidad_solicitada;
     $detalle->movimiento_bien_detalle = $movimientoBienDetalle;
     $detalle->estadoReserva = $estadoReserva;
-    $detalle->moneda_postor1 = $moneda_postor1;
-    $detalle->moneda_postor2 = $moneda_postor2;
-    $detalle->moneda_postor3 = $moneda_postor3;
     return $detalle;
   }
 
@@ -8089,6 +8099,24 @@ class MovimientoNegocio extends ModeloNegocioBase
     $respuesta->dataBien = $arrayDataBien;
     // FIN OBTENER DATA UNIDAD MEDIDA
 
+    $respuesta->dataPostores = null;
+    $respuesta->listaPagoProgramacionPostores = null;
+    $listaPagoProgramacionPostores = [];
+    if($documentoTipoDestinoId == Configuraciones::GENERAR_COTIZACION){
+      $respuesta->dataPostores = Documento::create()->obtenerDocumentoDetalleDatos($documentoId);
+      foreach($respuesta->dataPostores as $index => $item ){
+        $res = Documento::create()->obtenerDocumentoDetalledistribucionPagoxId($item['id']);
+        $arrayPagos = [];
+        foreach($res as $itemRes){
+          array_push($arrayPagos, array($itemRes['fecha_pago'], $itemRes['importe'], $itemRes['dias'], $itemRes['porcentaje'], $itemRes['glosa'], $itemRes['id']));
+        }
+        if(!ObjectUtil::isEmpty($arrayPagos)){
+          $listaPagoProgramacionPostores[$index] = $arrayPagos;
+        }
+      }
+      $respuesta->listaPagoProgramacionPostores = $listaPagoProgramacionPostores;
+    }
+
     return $respuesta;
   }
   // TODO: Fin Obtener para Editar
@@ -8109,7 +8137,7 @@ class MovimientoNegocio extends ModeloNegocioBase
   }
 
   // TODO: Inicio Guardar Edicion
-  public function guardarXAccionEnvioEdicion($documentoId, $opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $listaDetalleEliminar, $documentoARelacionar, $valorCheck, $comentario, $checkIgv, $monedaId, $accionEnvio, $tipoPago, $listaPagoProgramacion, $anticiposAAplicar = null, $periodoId = null, $percepcion = null, $datosExtras = null, $detalleDistribucion = null, $contOperacionTipoId = null, $distribucionObligatoria = null, $igv_porcentaje = null, $dataStockReservaOk = null)
+  public function guardarXAccionEnvioEdicion($documentoId, $opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $listaDetalleEliminar, $documentoARelacionar, $valorCheck, $comentario, $checkIgv, $monedaId, $accionEnvio, $tipoPago, $listaPagoProgramacion, $anticiposAAplicar = null, $periodoId = null, $percepcion = null, $datosExtras = null, $detalleDistribucion = null, $contOperacionTipoId = null, $distribucionObligatoria = null, $igv_porcentaje = null, $dataStockReservaOk = null, $dataPostorProveedor = null, $listaPagoProgramacionPostores = null)
   {
     $resEdicion = $this->guardarEdicion($documentoId, $opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $listaDetalleEliminar, $documentoARelacionar, $valorCheck, $comentario, $checkIgv, $monedaId, $tipoPago, $periodoId, $datosExtras, $detalleDistribucion, $contOperacionTipoId, $distribucionObligatoria, $igv_porcentaje);
 
@@ -8135,15 +8163,75 @@ class MovimientoNegocio extends ModeloNegocioBase
     $dataMovimientoDocumento = MovimientoBien::create()->obtenerMovimientoIdXDocumentoId($documentoId);
     $respuesta->movimientoId = $dataMovimientoDocumento[0]['movimiento_id'];
 
+
+    //Validacion de postores
+    if(!ObjectUtil::isEmpty($dataPostorProveedor)){
+      foreach($dataPostorProveedor as $itemPostor){
+        $respuestaDataPostorProveedor = Documento::create()->editar_documento_detalle($documentoId, $itemPostor['proveedor_id'], $itemPostor['monedaId'], $itemPostor['tipoCambio'], $itemPostor['igv'], $itemPostor['tiempoEntrega'], $itemPostor['tiempo'], $itemPostor['condicionPago'], $itemPostor['sumilla'], $usuarioId);
+        
+        $pagoProgramacion = $listaPagoProgramacionPostores[intval($itemPostor['indice'])];
+        foreach($pagoProgramacion as $itemPagoProgramacionPostores){
+          if (strpos($itemPagoProgramacionPostores[0], '/') !== false) {
+            $fechaPago = DateUtil::formatearCadenaACadenaBD($itemPagoProgramacionPostores[0]);
+          }else{
+            $fechaPago = $itemPagoProgramacionPostores[0];
+          }
+
+          $importePago = $itemPagoProgramacionPostores[1];
+          $dias = $itemPagoProgramacionPostores[2];
+          $porcentaje = $itemPagoProgramacionPostores[3];
+          $glosa = $itemPagoProgramacionPostores[4];
+          $id = $itemPagoProgramacionPostores[5];
+          $res = Documento::create()->editarDocumentoDetalleDistribucionPagos($respuestaDataPostorProveedor[0]['vout_id'], $fechaPago, $importePago, $dias, $porcentaje, $glosa, $usuarioId, $id);
+        }
+      }
+    }
+    
     if($accionEnvio == 'generar'){
       $respuesta->documentoId = $documentoId;
       //se usa para compras
+      $arraydetalleXpostor = [];
       if ($documentoTipoId == Configuraciones::GENERAR_COTIZACION) {
-        $respuestaCotizacion = $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::COTIZACIONES,$detalle, $respuesta, $periodoId, 160, 1);
-        //generamos OC
-        $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::ORDEN_COMPRA,$detalle, $respuesta, $periodoId, 395, 2, $listaPagoProgramacion, $respuestaCotizacion);
+        foreach($dataPostorProveedor as $index => $itemPostores){
+          $proveedor_id = $itemPostores['proveedor_id'];
+          $filtrados = array_values(array_filter($detalle, function($item) use($proveedor_id){
+            return $item['postor_ganador_id'] === $proveedor_id;
+          }));
+          $arraydetalleXpostor[$index] = array($filtrados, $proveedor_id, $itemPostores['monedaId'], $itemPostores['tipoCambio'], $itemPostores['igv'], $itemPostores['tiempoEntrega'], $itemPostores['tiempo'], $itemPostores['condicionPago']);
+        }
+
+        $cont = count($camposDinamicos);
+        foreach($arraydetalleXpostor as $indexPostor => $itemPostor){
+          $camposDinamicos [$cont] = array(
+            "id" =>"",
+            "tipo" => "23",
+            "opcional" => "1",
+            "descripcion" => "Adjuntar archivos",
+            "codigo" => "",
+            "valor" => $itemPostor[1]);
+          $camposDinamicos [$cont + 2] = array(
+            "id" =>"",
+            "tipo" => "2",
+            "opcional" => "1",
+            "descripcion" => "Tiempo de entrega",
+            "codigo" => "",
+            "valor" => $itemPostor[5]);
+          $camposDinamicos [$cont + 3] = array(
+            "id" =>"",
+            "tipo" => "50",
+            "opcional" => "1",
+            "descripcion" => "Condición de pago",
+            "codigo" => "",
+            "valor" => $itemPostor[7] == 1? 501:502); 
+
+          $respuestaCotizacion = $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::COTIZACIONES,$itemPostor[0], $respuesta, $periodoId, 160, 1, null, null, null,$arraydetalleXpostor[$indexPostor]);
+          //generamos OC
+          $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::ORDEN_COMPRA,$itemPostor[0], $respuesta, $periodoId, 395, 2, $listaPagoProgramacionPostores[$indexPostor], $respuestaCotizacion, null,$arraydetalleXpostor[$indexPostor]);
         
-        DocumentoNegocio::create()->ActualizarDocumentoEstadoId($documentoId, 17, $usuarioId);
+          DocumentoNegocio::create()->ActualizarDocumentoEstadoId($documentoId, 17, $usuarioId);
+        }
+
+
       }
       return $respuesta;
     }
@@ -8238,26 +8326,10 @@ class MovimientoNegocio extends ModeloNegocioBase
           $ticket = $item["ticket"];
         }
       }
-      if ($documentoTipoId == Configuraciones::GENERAR_COTIZACION) {
-        $postor_ganador_id = null;
-        if ($item["checked1"] == "true") {
-          $postor_ganador_id = 1;
-        }
-        if ($item["checked2"] == "true") {
-          $postor_ganador_id = 2;
-        }
-        if ($item["checked3"] == "true") {
-          $postor_ganador_id = 3;
-        }
 
-        $checked1Moneda = $item["checked1Moneda"] == "true"? 4: 2;
-        $checked2Moneda = $item["checked2Moneda"] == "true"? 4: 2;
-        $checked3Moneda = $item["checked3Moneda"] == "true"? 4: 2;
-
-      }
       //REGISTRAR LA EDICION DEL DETALLE
       if (!ObjectUtil::isEmpty($item['movimientoBienId'])) {
-        $movimientoBien = MovimientoBien::create()->editar($item['movimientoBienId'], $dataDocumento[0]['movimiento_id'], $item["organizadorId"], $item["bienId"], $item["unidadMedidaId"], $item["cantidad"], $item["precio"], 1, $usuarioId, $item["precioTipoId"], $item["utilidad"], $item["utilidadPorcentaje"], $checkIgv, $item["adValorem"], $item["comentarioBien"], $item["agenciaId"], $agrupadorDetalle, $ticket, $item["CeCoId"], ($item["precioPostor1"] == "" ? null : $item["precioPostor1"]), ($item["precioPostor2"] == "" ? null : $item["precioPostor2"]), ($item["precioPostor3"] == "" ? null : $item["precioPostor3"]), $item["esCompra"], $item["cantidadAceptada"], $postor_ganador_id, $checked1Moneda, $checked2Moneda, $checked3Moneda);
+        $movimientoBien = MovimientoBien::create()->editar($item['movimientoBienId'], $dataDocumento[0]['movimiento_id'], $item["organizadorId"], $item["bienId"], $item["unidadMedidaId"], $item["cantidad"], $item["precio"], 1, $usuarioId, $item["precioTipoId"], $item["utilidad"], $item["utilidadPorcentaje"], $checkIgv, $item["adValorem"], $item["comentarioBien"], $item["agenciaId"], $agrupadorDetalle, $ticket, $item["CeCoId"], ($item["precioPostor1"] == "" ? null : $item["precioPostor1"]), ($item["precioPostor2"] == "" ? null : $item["precioPostor2"]), ($item["precioPostor3"] == "" ? null : $item["precioPostor3"]), $item["esCompra"], $item["cantidadAceptada"], $item['postor_ganador_id']);
       } else {
         $movimientoBien = MovimientoBien::create()->guardar($dataDocumento[0]['movimiento_id'], $item["organizadorId"], $item["bienId"], $item["unidadMedidaId"], $item["cantidad"], $item["precio"], 1, $usuarioId, $item["precioTipoId"], $item["utilidad"], $item["utilidadPorcentaje"], $checkIgv, $item["adValorem"], $item["comentarioBien"], $item["agenciaId"], $agrupadorDetalle, $ticket);
       }
@@ -8274,6 +8346,9 @@ class MovimientoNegocio extends ModeloNegocioBase
             $fechaVencimiento = DateUtil::formatearCadenaACadenaBD($valor['valorDet']);
             //EDITA SI YA EXISTE LA FECHA DE VENCIMIENTO SINO REGISTRA
             $resDetalle = MovimientoNegocio::create()->movimientoBienDetalleEditarFecha($movimientoBienId, $valor['columnaCodigo'], $fechaVencimiento, $usuarioId);
+          }
+          if($documentoTipoId == Configuraciones::GENERAR_COTIZACION && $valor['columnaCodigo'] == 37){
+            $resDetalle = MovimientoNegocio::create()->movimientoBienDetalleEditarCadena($movimientoBienId, $valor['columnaCodigo'], $valor['valorDet'], $usuarioId, $valor['valorExtra']);
           }
         }
       }
@@ -11245,26 +11320,28 @@ class MovimientoNegocio extends ModeloNegocioBase
     $pdf->SetFont('helvetica', 'B', 8);
     $pdf->MultiCell(45, 5, 'CUENTA:', 1, 'L', 1, 0, '', 114, true, 0, false, true, 5, 'M');
     $pdf->SetFont('helvetica', '', 7);
-    $pdf->MultiCell(90, 5, $cuenta, 1, 'L', 1, 0, 60, 114, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(90, 5, 'PEPAS', 1, 'L', 1, 0, 60, 114, true, 0, false, true, 5, 'M');
 
 
 
     $cont = 0;
     $pdf->Ln(8);
-    $pdf->SetFont('helvetica', '', 6);
+    $pdf->SetFont('helvetica', '', 5);
     $tabla = '<table cellspacing="0" cellpadding="1" border="1">
         <tr style="background-color:rgb(254, 191, 0);">
             <th style="text-align:center;vertical-align:middle;" width="5%"><b>Item</b></th>
             <th style="text-align:center;vertical-align:middle;" width="10%"><b>Codigo</b></th>
-            <th style="text-align:center;vertical-align:middle;" width="45%"><b>Descripcion</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="35%"><b>Descripcion</b></th>
             <th style="text-align:center;vertical-align:middle;" width="10%"><b>Cantidad</b></th>
             <th style="text-align:center;vertical-align:middle;" width="6%"><b>U.m</b></th>
             <th style="text-align:center;vertical-align:middle;" width="12%"><b>Valor Unitario</b></th>
-            <th style="text-align:center;vertical-align:middle;" width="12%"><b>Totales</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="10%"><b>Totales</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="12%"><b>Unidad Minera</b></th>
         </tr>
     ';
     if (!ObjectUtil::isEmpty($detalle)) {
       foreach ($detalle as $index => $item) {
+        $resMovimientoBienDetalle = MovimientoBien::create()->obtenerMovimientoBienDetalleObtenerUnidadMinera($item->movimientoBienId);
         $cont++;
         // if (strlen($item->descripcion) > 39) {
         //   $cont++;
@@ -11273,11 +11350,12 @@ class MovimientoNegocio extends ModeloNegocioBase
         $tabla = $tabla . '<tr>'
           . '<td style="text-align:center"  width="5%">' . ($index + 1) . '</td>'
           . '<td align="center" width="10%">' . $item->bien_codigo . '</td>'
-          . '<td style="text-align:left; vertical-align:middle; display: table-cell;" width="45%">' . $item->descripcion . '</td>'
+          . '<td style="text-align:left; vertical-align:middle; display: table-cell;" width="35%">' . $item->descripcion . '</td>'
           . '<td style="text-align:center"  width="10%">' . number_format($item->cantidad, 2) . '</td>'
           . '<td style="text-align:center"  width="6%">' . $item->simbolo . '</td>'
           . '<td style="text-align:center"  width="12%">' . number_format($item->precioUnitario, 2) . '</td>'
-          . '<td style="text-align:center"  width="12%">' . number_format($item->importe, 2) . '</td>'
+          . '<td style="text-align:center"  width="10%">' . number_format($item->importe, 2) . '</td>'
+          . '<td style="text-align:center"  width="12%">' . $resMovimientoBienDetalle[0]['cantidad_requerimiento'] . '</td>'
           . '</tr>';
       }
     }
@@ -11286,10 +11364,11 @@ class MovimientoNegocio extends ModeloNegocioBase
       $tabla = $tabla . '<tr>'
         . '<td style="text-align:center"  width="5%">' . ($i + 1) . '</td>'
         . '<td style="text-align:left"  width="10%"></td>'
-        . '<td style="text-align:left"  width="45%"></td>'
+        . '<td style="text-align:left"  width="35%"></td>'
         . '<td style="text-align:center"  width="10%"></td>'
         . '<td style="text-align:center"  width="6%"></td>'
         . '<td style="text-align:center"  width="12%"></td>'
+        . '<td style="text-align:center"  width="10%"></td>'
         . '<td style="text-align:center"  width="12%"></td>'
         . '</tr>';
     }
@@ -11507,8 +11586,8 @@ class MovimientoNegocio extends ModeloNegocioBase
     $tabla_distribucionPagos = '<table cellspacing="0" cellpadding="1" border="1">
         <tr style="background-color:rgb(254, 191, 0);">
             <th style="text-align:center;vertical-align:middle;" width="5%"><b>Item</b></th>
-            <th style="text-align:center;vertical-align:middle;" width="30%"><b>Importe</b></th>
-            <th style="text-align:center;vertical-align:middle;" width="30%"><b>Porcentaje</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="45%"><b>Importe</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="50%"><b>Porcentaje</b></th>
         </tr>
     ';
     if (!ObjectUtil::isEmpty($distribucionPagos)) {
@@ -11692,7 +11771,7 @@ class MovimientoNegocio extends ModeloNegocioBase
   
   }
 
-  public function guardarDocumentoCotizacion($camposDinamicosConsolidado,$usuarioId, $documentoTipoId, $detalle, $respuesta, $periodoId, $opcionId, $banderaCotizacon, $listaPagoProgramacion = null, $respuestaCotizacion = null, $monedaIdExt = null)
+  public function guardarDocumentoCotizacion($camposDinamicosConsolidado,$usuarioId, $documentoTipoId, $detalle, $respuesta, $periodoId, $opcionId, $banderaCotizacon, $listaPagoProgramacion = null, $respuestaCotizacion = null, $monedaIdExt = null, $arraydetalleXpostor = null)
   {
     //generar cotizacion
     $checkedOC = ($detalle[0]['checked1'] == "true") ? "1" : 
@@ -11713,7 +11792,7 @@ class MovimientoNegocio extends ModeloNegocioBase
       });
     }else if($banderaCotizacon == 2){
       $filtradosTipo23 = array_filter($camposDinamicosConsolidado, function($item) use ($checkedOC){
-        return $item['tipo'] === "23" && !empty($item['valor']) && stripos($item['descripcion'], $checkedOC) == true;
+        return $item['tipo'] === "23" && !empty($item['valor']);
       });
     }else if($banderaCotizacon == 3){
       $filtradosTipo23 = array_filter($camposDinamicosConsolidado, function($item) use ($checkedOC){
@@ -11754,20 +11833,31 @@ class MovimientoNegocio extends ModeloNegocioBase
     }));    
 
     $sumaMontosprecioPostor1  = array_reduce($detalle, function ($acumulador, $seleccion) {
-      return $acumulador + ($seleccion['precioPostor1'] * $seleccion['cantidad']);
+      $postor_ganador = $seleccion['postor_ganador_id'];
+      $precio = array_values(array_filter($seleccion['detalle'], function($item) use($postor_ganador){
+        return $item['valorExtra'] === $postor_ganador;
+      }));
+      return $acumulador + ($precio[0]['valorDet'] * $seleccion['cantidad']);
     }, 0);
-    $subTotalPostor1 = $sumaMontosprecioPostor1 / 1.18;
-    $igvPostor1 = $sumaMontosprecioPostor1 - $subTotalPostor1;
-    $sumaMontosprecioPostor2  = array_reduce($detalle, function ($acumulador, $seleccion) {
-      return $acumulador + ($seleccion['precioPostor2'] * $seleccion['cantidad']);
-    }, 0);
-    $subTotalPostor2 = $sumaMontosprecioPostor2 / 1.18;
-    $igvPostor2 = $sumaMontosprecioPostor2 - $subTotalPostor2;
-    $sumaMontosprecioPostor3  = array_reduce($detalle, function ($acumulador, $seleccion) {
-      return $acumulador + ($seleccion['precioPostor3'] * $seleccion['cantidad']);
-    }, 0);
-    $subTotalPostor3 = $sumaMontosprecioPostor3 / 1.18;
-    $igvPostor3 = $sumaMontosprecioPostor3 - $subTotalPostor3;
+
+    if($arraydetalleXpostor[0][4] == 1){
+      $subTotalPostor1 = $sumaMontosprecioPostor1 /1.18;
+      $igvPostor1 = $sumaMontosprecioPostor1 - $subTotalPostor1;
+    }else{
+      $subTotalPostor1 = $sumaMontosprecioPostor1;
+      $sumaMontosprecioPostor1 = $sumaMontosprecioPostor1 * 1.18;
+      $igvPostor1 = $sumaMontosprecioPostor1 - $subTotalPostor1;
+    }
+    // $sumaMontosprecioPostor2  = array_reduce($detalle, function ($acumulador, $seleccion) {
+    //   return $acumulador + ($seleccion['precioPostor2'] * $seleccion['cantidad']);
+    // }, 0);
+    // $subTotalPostor2 = $sumaMontosprecioPostor2 / 1.18;
+    // $igvPostor2 = $sumaMontosprecioPostor2 - $subTotalPostor2;
+    // $sumaMontosprecioPostor3  = array_reduce($detalle, function ($acumulador, $seleccion) {
+    //   return $acumulador + ($seleccion['precioPostor3'] * $seleccion['cantidad']);
+    // }, 0);
+    // $subTotalPostor3 = $sumaMontosprecioPostor3 / 1.18;
+    // $igvPostor3 = $sumaMontosprecioPostor3 - $subTotalPostor3;
 
 
     $documentosIdCotizaciones = []; //revisar
@@ -11785,22 +11875,22 @@ class MovimientoNegocio extends ModeloNegocioBase
       $texto3 = stripos($itemTipo23['descripcion'], "3");
 
       if($banderaCotizacon != 3){
-        if($texto1 == true){
+        // if($texto1 == true){
           $importeTotal = $sumaMontosprecioPostor1;
           $igv = $igvPostor1;
           $monedaId = $checkeMoneda1;
           $subTotal = $subTotalPostor1;
-        }else if($texto2 == true){
-          $importeTotal = $sumaMontosprecioPostor2;
-          $subTotal = $subTotalPostor2;
-          $igv = $igvPostor2;
-          $monedaId = $checkeMoneda2;
-        }else if($texto3 == true){
-          $importeTotal = $sumaMontosprecioPostor3;
-          $igv = $igvPostor3;
-          $subTotal = $subTotalPostor3;
-          $monedaId = $checkeMoneda3;
-        }
+        // }else if($texto2 == true){
+        //   $importeTotal = $sumaMontosprecioPostor2;
+        //   $subTotal = $subTotalPostor2;
+        //   $igv = $igvPostor2;
+        //   $monedaId = $checkeMoneda2;
+        // }else if($texto3 == true){
+        //   $importeTotal = $sumaMontosprecioPostor3;
+        //   $igv = $igvPostor3;
+        //   $subTotal = $subTotalPostor3;
+        //   $monedaId = $checkeMoneda3;
+        // }
       }else{
         $importeTotal = $filtradosTipo14[0]['valor'];
         $igv = $filtradosTipo15[0]['valor'];
@@ -11985,18 +12075,22 @@ class MovimientoNegocio extends ModeloNegocioBase
         $texto1 = stripos($itemTipo23['descripcion'], "1");
         $texto2 = stripos($itemTipo23['descripcion'], "2");
         $texto3 = stripos($itemTipo23['descripcion'], "3");
-        if($banderaCotizacon != 3){
-          if($texto1 == true){
-            $precioItem = $itemDetalle['precioPostor1'];
-          }else if($texto2 == true){
-            $precioItem = $itemDetalle['precioPostor2'];
-          }else if($texto3 == true){
-            $precioItem = $itemDetalle['precioPostor3'];
-          }
-        }else{
-          $precioItem = $itemDetalle['precio'];
+        // if($banderaCotizacon != 3){
+          // if($texto1 == true){
+          //   $precioItem = $itemDetalle['precioPostor1'];
+          // }else if($texto2 == true){
+          //   $precioItem = $itemDetalle['precioPostor2'];
+          // }else if($texto3 == true){
+          //   $precioItem = $itemDetalle['precioPostor3'];
+          // }
+          $postor_ganador = $itemDetalle['postor_ganador_id'];
+          $precioItem = array_values(array_filter($itemDetalle['detalle'], function($item) use($postor_ganador){
+            return $item['valorExtra'] === $postor_ganador;
+          }))[0]['valorDet'];
           $movimiento_bien_ids = $itemDetalle['movimiento_bien_ids'];
-        }
+        // }else{
+        //   $precioItem = $itemDetalle['precio'];
+        // }
 
         $arrayItem = array(
           "bienId" => $itemDetalle['bienId'],
@@ -12043,9 +12137,9 @@ class MovimientoNegocio extends ModeloNegocioBase
         (($detalle[0]['checked2'] == "true") ? "2" : 
         (($detalle[0]['checked3'] == "true") ? "3" : null));
       }
-      $filtradosTipo23 = array_filter($camposDinamicosCotizacion, function($item) use ($checkedOC){
-        return $item['tipo'] === "23" && !empty($item['valor']) && stripos($item['descripcion'], $checkedOC) == true;
-      });
+      // $filtradosTipo23 = array_filter($camposDinamicosCotizacion, function($item) use ($checkedOC){
+      //   return $item['tipo'] === "23" && !empty($item['valor']) && stripos($item['descripcion'], $checkedOC) == true;
+      // });
 
       if(!ObjectUtil::isEmpty($filtradosTipo23)){
         $respuestaActualizarDocumentoEstado = DocumentoNegocio::create()->ActualizarDocumentoEstadoId($documento[0]['vout_id'], 16, $usuarioId);
@@ -12056,7 +12150,11 @@ class MovimientoNegocio extends ModeloNegocioBase
     if($documentoTipoId == Configuraciones::ORDEN_COMPRA || $documentoTipoId == Configuraciones::ORDEN_SERVICIO){
       if (!ObjectUtil::isEmpty($listaPagoProgramacion)) {
         foreach ($listaPagoProgramacion as $ind => $item) {
-          $fechaPago = DateUtil::formatearCadenaACadenaBD($item[0]);
+          if (strpos($itemPagoProgramacionPostores[0], '/') !== false) {
+            $fechaPago = DateUtil::formatearCadenaACadenaBD($itemPagoProgramacionPostores[0]);
+          }else{
+            $fechaPago = $itemPagoProgramacionPostores[0];
+          }
           $importePago = $item[1];
           $dias = $item[2];
           $porcentaje = $item[3];
@@ -12089,22 +12187,6 @@ class MovimientoNegocio extends ModeloNegocioBase
     $dataTipoCambio = TipoCambioNegocio::create()->obtenerTipoCambioXfecha(substr($dataDocumento[0]["fecha_emision"], 0, 10))[0]['equivalencia_venta'];
 
 
-    $razon_social1 = '';
-    $razon_social2 = '';
-    $razon_social3 = '';
-    foreach ($documentoDatoValor as $index => $item) {
-      switch ($item['tipo'] * 1) {
-        case 23:
-          if ($item['descripcion'] == "Postor N° 1") {
-            $razon_social1 = $item['valor'];
-          } else if ($item['descripcion'] == "Postor N° 2") {
-            $razon_social2 = $item['valor'];
-          } else if ($item['descripcion'] == "Postor N° 3") {
-            $razon_social3 = $item['valor'];
-          }
-          break;
-      }
-    }
     $pdf = new TCPDF('L', PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
 
     // set document information
@@ -12156,22 +12238,24 @@ class MovimientoNegocio extends ModeloNegocioBase
     $pdf->MultiCell(150, 40, 'CUADRO COMPARATIVO', 0, 'C', 1, 0, 90, 25, true, 0, false, true, 5, 'M');
 
 
+    $documento_detalle = Documento::create()->obtenerDocumentoDetalleDatos($documentoId);
+    $colspan = count($documento_detalle);
+    $cantidadPostores = $colspan * 11;
+    $alturaTabla = 5;
+
     $pdf->SetFont('helvetica', 'B', 8);
 
-    $pdf->SetFillColor(254, 191, 0);
-    $pdf->MultiCell(30, 5, 'Postor N° 1', 1, 'C', 1, 0, 15, 35, true, 0, false, true, 5, 'M');
-    $pdf->SetFillColor(255, 255, 255);
-    $pdf->MultiCell(100, 5, $razon_social1, 1, 'C', 1, 0, 45, 35, true, 0, false, true, 5, 'M');
-
-    $pdf->SetFillColor(254, 191, 0);
-    $pdf->MultiCell(30, 5, 'Postor N° 2', 1, 'C', 1, 0, 15, 42, true, 0, false, true, 5, 'M');
-    $pdf->SetFillColor(255, 255, 255);
-    $pdf->MultiCell(100, 5, $razon_social2, 1, 'C', 1, 0, 45, 42, true, 0, false, true, 5, 'M');
-
-    $pdf->SetFillColor(254, 191, 0);
-    $pdf->MultiCell(30, 5, 'Postor N° 3', 1, 'C', 1, 0, 15, 49, true, 0, false, true, 5, 'M');
-    $pdf->SetFillColor(255, 255, 255);
-    $pdf->MultiCell(100, 5, $razon_social3, 1, 'C', 1, 0, 45, 49, true, 0, false, true, 5, 'M');
+    $alturaBase = 25;
+    foreach($documento_detalle as $index => $item){
+      $alturaBase = $alturaBase + 7;
+      $textoReducido = strlen($item['persona']) > 50 ? substr($item['persona'], 0, 50) . '...': $item['persona'];
+      $pdf->SetFillColor(254, 191, 0);
+      $pdf->MultiCell(30, 5, 'Postor N° '.($index + 1), 1, 'C', 1, 0, 15, ($alturaBase), true, 0, false, true, 5, 'M');
+      $pdf->SetFillColor(255, 255, 255);
+      $pdf->MultiCell(100, 5, $textoReducido, 1, 'C', 1, 0, 45, ($alturaBase), true, 0, false, true, 5, 'M');
+      
+      $alturaTabla = $alturaTabla + 5;
+    }
 
     $pdf->SetFillColor(254, 191, 0);
     $pdf->MultiCell(30, 5, 'Nro', 1, 'C', 1, 0, 190, 35, true, 0, false, true, 5, 'M');
@@ -12186,97 +12270,79 @@ class MovimientoNegocio extends ModeloNegocioBase
 
     //
 
-    //detalle
-    // $pdf->SetFillColor(254, 191, 0);
-    // $pdf->MultiCell(10, 5, 'N°', 1, 'C', 1, 0, '', 59, true, 0, false, true, 5, 'M');
-    // $pdf->MultiCell(10, 5, 'TIPO DE REQUERIMIENTO', 1, 'C', 1, 0, '', 59, true, 0, false, true, 5, 'M');
-
     $color_ganador1 = "";
-    $color_ganador2 = "";
-    $color_ganador3 = "";
-    if($detalle[0]->postor_ganador_id == 1){
-      $color_ganador1 = "background-color:rgb(0, 254, 127);";
-    }else if($detalle[0]->postor_ganador_id == 2){
-      $color_ganador2 = "background-color:rgb(0, 254, 127);";
-    }else if($detalle[0]->postor_ganador_id == 3){
-      $color_ganador3 = "background-color:rgb(0, 254, 127);";
-    }
-
-    $monedaPostor1 = $detalle[0]->moneda_postor1 == "2"? "S/":"$";
-    $monedaPostor2 = $detalle[0]->moneda_postor2 == "2"? "S/":"$";
-    $monedaPostor3 = $detalle[0]->moneda_postor3 == "2"? "S/":"$";
-
 
     $cont = 0;
     $pdf->SetFont('helvetica', 'B', 7);
 
-    $pdf->Ln(15);
+    $pdf->Ln($alturaTabla);
     $tabla = '<table cellspacing="0" cellpadding="1" border="1">
         <tr style="background-color:rgb(254, 191, 0);">
             <th style="text-align:center;vertical-align:middle;" width="3%" rowspan="3"><b>N°</b></th>
-            <th style="text-align:center;vertical-align:middle;" width="35%" rowspan="3"><b>DESCRIPCION</b></th>
-            <th style="text-align:center;vertical-align:middle;" width="8%" rowspan="3"><b>CANTIDAD</b></th>
-            <th style="text-align:center;vertical-align:middle;" width="8%" rowspan="3"><b>UNIDAD DE MEDIDA</b></th>
-            <th style="text-align:center;vertical-align:middle;" width="45%" colspan="3"><b>COTIZACION DE PROVEEDORES</b></th>
-        </tr>
-        <tr style="background-color:rgb(254, 191, 0);">
-            <th style="text-align:center;vertical-align:middle;" width="15%" colspan="2"><b>POSTOR N° 1 <br>'. $monedaPostor1 .'</b></th>
-            <th style="text-align:center;vertical-align:middle;" width="15%" colspan="2"><b>POSTOR N° 2 <br>'. $monedaPostor2 .'</b></th>
-            <th style="text-align:center;vertical-align:middle;" width="15%" colspan="2"><b>POSTOR N° 3 <br>'. $monedaPostor3 .'</b></th>
-        </tr>
-        <tr style="background-color:rgb(254, 191, 0);">
-            <th style="text-align:center;vertical-align:middle;" width="7.5%" ><b>P.U </b></th>
-            <th style="text-align:center;vertical-align:middle;" width="7.5%" ><b>P.T </b></th>
-            <th style="text-align:center;vertical-align:middle;" width="7.5%" ><b>P.U </b></th>
-            <th style="text-align:center;vertical-align:middle;" width="7.5%" ><b>P.T </b></th>
-            <th style="text-align:center;vertical-align:middle;" width="7.5%" ><b>P.U </b></th>
-            <th style="text-align:center;vertical-align:middle;" width="7.5%" ><b>P.T </b></th>
-        </tr> 
-    ';
+            <th style="text-align:center;vertical-align:middle;" width="27%" rowspan="3"><b>DESCRIPCION</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="7%" rowspan="3"><b>CANTIDAD</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="7%" rowspan="3"><b>UNIDAD DE MEDIDA</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="'.$cantidadPostores.'%" colspan="'.$colspan.'"><b>COTIZACION DE PROVEEDORES</b></th>
+        </tr>';
+
+    $tabla .='<tr style="background-color:rgb(254, 191, 0);">';
+    foreach($documento_detalle as $index => $item){
+      $textoReducido = strlen($item['persona']) > 30 ? substr($item['persona'], 0, 30) . '...': $item['persona'];
+      $tabla .='<th style="text-align:center;vertical-align:middle;" width="11%" colspan="2"><b>'.$textoReducido.'<br></b></th>';
+    }
+    $tabla .='</tr>';
+
+    $tabla .='<tr style="background-color:rgb(254, 191, 0);">';
+    foreach($documento_detalle as $index => $item){
+      $tabla .='<th style="text-align:center;vertical-align:middle;" width="5.5%" ><b>P.U </b></th>
+      <th style="text-align:center;vertical-align:middle;" width="5.5%" ><b>P.T </b></th>';
+    }
+    $tabla .='</tr>';
+
 
     $total1 = 0;
     $total2 = 0;
     $total3 = 0;
+    $totales = [];
     if (!ObjectUtil::isEmpty($detalle)) {
       foreach ($detalle as $index => $item) {
         $cont++;
-        // if (strlen($item->descripcion) > 39) {
-        //   $cont++;
-        // }
+        $resMovimientoBienDetalle = MovimientoBien::create()->obtenerMovimientoBienDetalleXMovimientoBienId($item->movimientoBienId);
 
+        $filtrados = array_values(array_filter($resMovimientoBienDetalle, function($item) {
+          return $item['columna_codigo'] === "37" ;
+        }));
 
-        $total1 = $total1 + ($item->cantidad * $item->precio_postor1);
-        $total2 = $total2 + ($item->cantidad * $item->precio_postor2);
-        $total3 = $total3 + ($item->cantidad * $item->precio_postor3);
-
-        $tabla = $tabla . '<tr>'
-          . '<td style="text-align:center"  width="3%">' . ($index + 1) . '</td>'
-          . '<td style="text-align:left; vertical-align:middle; display: table-cell;" width="35%">' .  $item->bien_codigo .' | '. $item->descripcion . '</td>'
-          . '<td style="text-align:right"  width="8%">' . number_format($item->cantidad, 2) . '</td>'
-          . '<td style="text-align:center"  width="8%">' . $item->simbolo . '</td>'
-          . '<td style="text-align:right;'. $color_ganador1 .'"  width="7.5%">' . number_format($item->precio_postor1, 2) . '</td>'
-          . '<td style="text-align:right;'. $color_ganador1 .'"  width="7.5%">' . number_format(($item->cantidad * $item->precio_postor1), 2) . '</td>'
-          . '<td style="text-align:right;'. $color_ganador2 .'"  width="7.5%">' . number_format($item->precio_postor2, 2) . '</td>'
-          . '<td style="text-align:right;'. $color_ganador2 .'"  width="7.5%">' . number_format(($item->cantidad * $item->precio_postor2), 2) . '</td>'    
-          . '<td style="text-align:right;'. $color_ganador3 .'"  width="7.5%">' . number_format($item->precio_postor3, 2) . '</td>'
-          . '<td style="text-align:right;'. $color_ganador3 .'"  width="7.5%">' . number_format(($item->cantidad * $item->precio_postor3), 2) . '</td>'
-          . '</tr>';
+        $tabla = $tabla . '<tr>';
+        $tabla  .= '<td style="text-align:center"  width="3%">' . ($index + 1) . '</td>'
+        . '<td style="text-align:left; vertical-align:middle; display: table-cell;" width="27%">' .  $item->bien_codigo .' | '. $item->descripcion . '</td>'
+        . '<td style="text-align:right"  width="7%">' . number_format($item->cantidad, 2) . '</td>'
+        . '<td style="text-align:center"  width="7%">' . $item->simbolo . '</td>';
+        foreach($filtrados as $index => $itemFiltrados){
+          $total_ = (($itemFiltrados['valor_detalle'] * $item->cantidad));
+          $totales [$index] = $totales [$index] + $total_;
+          $color_ganador = "";
+          if($itemFiltrados['valor_extra'] == $item->postor_ganador_id){
+            $color_ganador = "background-color:rgb(0, 254, 127);";
+          }
+          $tabla  .= '<td style="text-align:right;'. $color_ganador .'"  width="5.5%">' . number_format($itemFiltrados['valor_detalle'], 2) . '</td>'
+            . '<td style="text-align:right;'. $color_ganador .'"  width="5.5%">' . number_format(($itemFiltrados['valor_detalle'] * $item->cantidad), 2) . '</td>';
+        }
+        $tabla .= '</tr>';
       }
     }
 
     for ($i = count($detalle); $i < 10; $i++) {
       $tabla = $tabla . '<tr>'
         . '<td style="text-align:center"  width="3%">' . ($i + 1) . '</td>'
-        . '<td style="text-align:left"  width="35%"></td>'
-        . '<td style="text-align:center"  width="8%"></td>'
-        . '<td style="text-align:center"  width="8%"></td>'
-        . '<td style="text-align:center;'. $color_ganador1 .'"  width="7.5%"></td>'
-        . '<td style="text-align:center;'. $color_ganador1 .'"  width="7.5%"></td>'
-        . '<td style="text-align:center;'. $color_ganador2 .'"  width="7.5%"></td>'
-        . '<td style="text-align:center;'. $color_ganador2 .'"  width="7.5%"></td>'
-        . '<td style="text-align:center;'. $color_ganador3 .'"  width="7.5%"></td>'    
-        . '<td style="text-align:center;'. $color_ganador3 .'"  width="7.5%"></td>'
-        . '</tr>';
+        . '<td style="text-align:left"  width="27%"></td>'
+        . '<td style="text-align:center"  width="7%"></td>'
+        . '<td style="text-align:center"  width="7%"></td>';
+        foreach($filtrados as $index => $item){
+          $tabla  .= '<td style="text-align:center;'. $color_ganador1 .'"  width="5.5%"></td>'
+          . '<td style="text-align:center;'. $color_ganador1 .'"  width="5.5%"></td>';
+        }
+        $tabla  .= '</tr>';
     }
 
     $moneda_tipo1 = $detalle[0]->moneda_postor1;
@@ -12297,32 +12363,51 @@ class MovimientoNegocio extends ModeloNegocioBase
     $subtotal2 = $total2 /1.18;
     $subtotal3 = $total3 /1.18;
 
-    $tabla .= '<tfoot>
-              <tr>
-                  <th colspan="4" style="text-align:right"></th>
-                  <th style="text-align:right" colspan="2" >'. number_format(($total1 /1.18), 2).'</th>
-                  <th style="text-align:right" colspan="2" >'. number_format(($total2 /1.18), 2) .'</th>
-                  <th style="text-align:right" colspan="2" >'. number_format(($total3 /1.18), 2) .'</th>
-              </tr>
-              <tr>
-                  <th colspan="4" style="text-align:right">Igv (18 %):</th>
-                  <th style="text-align:right" colspan="2" >'. number_format(($total1 - $subtotal1), 2).'</th>
-                  <th style="text-align:right" colspan="2" >'. number_format(($total2 - $subtotal2), 2) .'</th>
-                  <th style="text-align:right" colspan="2" >'. number_format(($total3 - $subtotal3), 2) .'</th>
-              </tr>
-              <tr>
-                  <th colspan="4" style="text-align:right">Total Dolares:</th>
-                  <th style="text-align:right" colspan="2" >'. number_format($totalDolaresSoles1, 2).'</th>
-                  <th style="text-align:right" colspan="2" >'. number_format($totalDolaresSoles2, 2) .'</th>
-                  <th style="text-align:right" colspan="2" >'. number_format($totalDolaresSoles3, 2) .'</th>
-              </tr>
-              <tr>
-                  <th colspan="4" style="text-align:right">Total Soles:</th>
-                  <th style="text-align:right" colspan="2" >'. number_format($total1, 2).'</th>
-                  <th style="text-align:right" colspan="2" >'. number_format($total2, 2) .'</th>
-                  <th style="text-align:right" colspan="2" >'. number_format($total3, 2) .'</th>
-              </tr>              
-          </tfoot>';
+    $tabla .= '<tfoot>';
+    $tabla .= '<tr>'
+                  .'<th colspan="4" style="text-align:right"></th>';
+        foreach($documento_detalle as $index => $item){
+          $subTotal = 0;
+          if($item['igv'] == "1"){
+            $subTotal = $totales[$index] /1.18;
+          }else{
+            $subTotal = $totales[$index];
+          }
+          $tabla .= '<th style="text-align:right" colspan="2" >'. number_format($subTotal, 2).'</th>';
+        }
+
+    $tabla .= '</tr>'; 
+    $tabla .= '<tr>'
+                  .'<th colspan="4" style="text-align:right">Igv (18 %):</th>';
+                  foreach($documento_detalle as $index => $item){
+                    $igv = 0;
+                    if($item['igv'] == "1"){
+                      $subTotal = $totales[$index] /1.18;
+                      $igv = $totales[$index] - $subTotal;
+                    }else{
+                      $subTotal = $totales[$index];
+                      $valorTotal = $totales[$index] * 1.18;
+                      $igv = $valorTotal - $subTotal;
+                    }
+                    $tabla .= '<th style="text-align:right" colspan="2" >'. number_format($igv, 2).'</th>';
+                  }
+    $tabla .= '</tr>'; 
+    // $tabla .= '<tr>'
+    //               .'<th colspan="4" style="text-align:right">Total Dolares:</th>';
+    //               $tabla .= '<th style="text-align:right" colspan="2" >'. number_format($totalDolaresSoles1, 2).'</th>';
+    // $tabla .= '</tr>'; 
+    $tabla .= '<tr>'
+                  .'<th colspan="4" style="text-align:right">Total:</th>';
+                  foreach($documento_detalle as $index => $item){
+                    if($item['igv'] == "1"){
+                      $valorTotal = $totales[$index];
+                    }else{
+                      $valorTotal = $totales[$index] * 1.18;
+                    }
+                    $tabla .= '<th style="text-align:right" colspan="2" >'. number_format($valorTotal, 2).'</th>';
+                  }
+    $tabla .= '</tr>'            
+          .'</tfoot>';
 
     $tabla = $tabla . '</table>';
 
@@ -12341,14 +12426,7 @@ class MovimientoNegocio extends ModeloNegocioBase
       $pdf->AddPage();
       $espacio = 15;  // Nuevo espacio al inicio de la nueva página
     }
-    // Establecer la marca de agua de texto
-    // $pdf->SetAlpha(0.3); // Opcional: Ajusta la opacidad (0 es totalmente transparente, 1 es opaco)
-    // $pdf->SetFont('helvetica', 'B', 50); // Fuente, estilo y tamaño
-    // $pdf->SetTextColor(150, 150, 150); // Color de la marca de agua (gris claro)
-    // $pdf->Rotate(45, 105, 150); // Rotar el texto para la marca de agua (45 grados)
-    // $pdf->SetDrawColor(255, 255, 255); // Establecer el color de dibujo (blanco, para evitar cualquier borde)
-    // $pdf->SetLineWidth(0); // Establecer el grosor del borde a 0
-    // $pdf->Text(50, 120, 'Sin aprobar', false, false, true, ''); // Especifica la posición del texto
+
 
     $persona = Persona::create()->obtenerPersonaXUsuarioId($dataDocumento[0]["usuario_creacion"]);
 
@@ -12369,5 +12447,142 @@ class MovimientoNegocio extends ModeloNegocioBase
     }
 
     return $titulo;
+  }
+
+  public function exportarPdfCotizacion($grupoProductoId, $tipoRequerimiento, $urgencia, $usuarioId)
+  {
+    require_once __DIR__ . '/../../controlador/commons/tcpdf/config/lang/eng.php';
+    require_once __DIR__ . '/../../controlador/commons/tcpdf/tcpdf.php';
+
+    $respuesta = new stdClass();
+    $detalleRequerimientos = MovimientoBien::create()->obtenerMovimientoBienXRequerimientoXGrupoProductoxId($grupoProductoId, $tipoRequerimiento, $urgencia);
+
+    //$tipoSalidaPDF: F-> guarda local
+    $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+
+    // set document information
+    $pdf->SetCreator('Soluciones Mineras S.A.C.');
+    $pdf->SetAuthor('Soluciones Mineras S.A.C.');
+    $pdf->SetTitle(strtoupper("Solicitud de Cotización"));
+
+
+    $pdf->setFooterData(array(0, 0, 0), array(0, 0, 0)); // 0,0,0
+    // set header and footer fonts
+    $PDF_FONT_SIZE_MAIN = 9;
+    $pdf->setHeaderFont(array(PDF_FONT_NAME_MAIN, '', $PDF_FONT_SIZE_MAIN));
+    $pdf->setFooterFont(array(PDF_FONT_NAME_DATA, '', PDF_FONT_SIZE_DATA));
+
+    // set default monospaced font
+    $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
+
+    // set margins
+    $pdf->SetMargins(PDF_MARGIN_LEFT, PDF_MARGIN_TOP, PDF_MARGIN_RIGHT);
+    $pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
+    $pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
+
+    // set auto page breaks
+    $pdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
+
+    // set image scale factor
+    $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
+
+    // --------------GENERAR PDF-------------------------------------------
+    $pdf->SetFont('helvetica', 'B', 6);
+    $pdf->SetPrintHeader(false);
+    $pdf->SetPrintFooter(false);
+    $pdf->AddPage();
+
+
+    $titulo = "Solicitud de Cotización";
+
+    $pdf->SetFillColor(255, 255, 255);
+    $pdf->Image(__DIR__ . '/../../vistas/images/logo_pepas_de_oro.png', 15, 10, 45, 20, '', '', '', false, 300, '', false, false, 1);
+    $pdf->MultiCell(90, 5, 'FORMATO', 1, 'C', 1, 0, 60, 10, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(90, 5, 'SOLICITUD DE COTIZACIÓN', 1, 'C', 1, 0, 60, 15, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(45, 5, 'CODIGO: F-COR-LOG-ALM-01', 1, 'L', 1, 0, 60, 20, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(45, 5, 'VERSION: 01', 1, 'L', 1, 0, 105, 20, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(45, 5, 'AREA: LOGISTICA', 1, 'L', 1, 0, 60, 25, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(45, 5, 'PAGINA: 01 de 01', 1, 'L', 1, 0, 105, 25, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(45, 20, 'CORPORATIVO', 1, 'C', 1, 0, 150, 10, true, 0, false, true, 20, 'M');
+
+
+    $cont = 0;
+    $pdf->SetFont('helvetica', 'B', 5);
+
+    $pdf->Ln(30);
+    $tabla = '<table cellspacing="0" cellpadding="1" border="1">
+        <tr style="background-color:rgb(254, 191, 0);">
+            <th style="text-align:center;vertical-align:middle;" width="3%"><b>N°</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="16%"><b>CODIGO</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="45%"><b>DESCRIPCION</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="8%"><b>MARCA</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="8%"><b>MODELO</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="10%"><b>CANTIDAD</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="10%"><b>UNIDAD DE MEDIDA</b></th>
+        </tr>
+    ';
+    if (!ObjectUtil::isEmpty($detalleRequerimientos)) {
+      foreach ($detalleRequerimientos as $index => $item) {
+        $cont++;
+
+        $tabla = $tabla . '<tr>'
+          . '<td style="text-align:center"  width="3%">' . ($index + 1) . '</td>'
+          . '<td align="center" width="16%">' . $item['bien_codigo'] . '</td>'
+          . '<td style="text-align:left; vertical-align:middle; display: table-cell;" width="45%">' . $item['bien_descripcion']  . '</td>'
+          . '<td style="text-align:center"  width="8%"></td>'
+          . '<td style="text-align:center"  width="8%"></td>'
+          . '<td style="text-align:center"  width="10%">' . number_format($item['cantidad'], 2) . '</td>'
+          . '<td style="text-align:center"  width="10%">' . $item['simbolo'] . '</td>'
+          . '</tr>';
+      }
+    }
+
+    for ($i = count($detalleRequerimientos); $i < 20; $i++) {
+      $tabla = $tabla . '<tr>'
+        . '<td style="text-align:center"  width="3%">' . ($i + 1) . '</td>'
+        . '<td style="text-align:left"  width="16%"></td>'
+        . '<td style="text-align:left"  width="45%"></td>'
+        . '<td style="text-align:center"  width="8%"></td>'
+        . '<td style="text-align:center"  width="8%"></td>'
+        . '<td style="text-align:center"  width="10%"></td>'
+        . '<td style="text-align:center"  width="10%"></td>'
+        . '</tr>';
+    }
+
+
+    $tabla = $tabla . '</table>';
+    $pdf->writeHTML($tabla, true, false, true, false, '');
+
+
+    $tablaHeight = $pdf->GetY(); 
+    $espacio = 0;  // Inicializar el espacio
+    $paginaAltura = $pdf->getPageHeight();  // Altura total de la página
+    $alturaDisponible = $paginaAltura - $tablaHeight - 20; 
+    // Ahora puedes ajustar el valor de $espacio basado en el espacio disponible
+    if ($alturaDisponible > 50) {
+      // Si hay mucho espacio, usa ese espacio
+      $espacio = $tablaHeight + 10;  // Ajusta un pequeño margen después de la tabla
+    } else {
+      // Si el espacio es limitado, podrías agregar una nueva página
+      $pdf->AddPage();
+      $espacio = 15;  // Nuevo espacio al inicio de la nueva página
+    }
+
+    $pdf->writeHTMLCell(180, 5, '', $espacio + 41, 'El usuario es responsable de asegurar el uso de los documentos vigentes disponibles en la <strong>plataforma documentaria</strong> o en consulta con el <strong>Coordinador SGI o Analista SGI</strong>', 0, 1, 1, true, 'C', true);
+
+    ob_clean();
+
+    $hoy = date("Y_m_d_H_i_s");
+    $pdf_ = 'documento_' . $hoy . '_' . $usuarioId . '.pdf';
+    $url = __DIR__ . '/../../vistas/com/movimiento/documentos/documento_' . $hoy . '_' . $usuarioId . '.pdf';
+    $pdf->Output($url, 'F');
+
+
+    $url = Configuraciones::url_base() . 'vistas/com/movimiento/documentos/' . $pdf_;
+
+    $respuesta->url = $url;
+    $respuesta->nombre = $titulo;
+    $respuesta->pdf = $pdf_;
+    return $respuesta;
   }
 }
