@@ -257,6 +257,12 @@ class DocumentoNegocio extends ModeloNegocioBase
               case DocumentoTipoNegocio::CONDICION_PAGO:
                   array_push($listas, $valorDtd);
                 break;
+              case DocumentoTipoNegocio::UNIDAD_MINERA:
+                  array_push($listas, $valorDtd);
+                break;
+              case DocumentoTipoNegocio::CUENTA_GASTOS:
+                  array_push($listas, $valorDtd);
+                break;                              
               default:
             }
             break;

@@ -197,4 +197,8 @@ class OrganizadorNegocio extends ModeloNegocioBase {
     public function obtenerEmpresaXOrganizadorId($organizadorId){
         return Organizador::create()->obtenerEmpresaXOrganizadorId($organizadorId);        
     }
+
+    public function getDataUnidadMinera($organizadorId){
+        return Organizador::create()->getDataUnidadMinera($organizadorId);        
+    }
 }

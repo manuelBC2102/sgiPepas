@@ -206,37 +206,39 @@
                     </table>
                 </div>                
                 <div class="row" id="tableConsolidado" name="tableConsolidado" hidden>
+                    <h3>Cuadro comparativo</h3>
                     <table id="dtmodalDetalleConsolidado" class="table table-striped table-bordered" style="width: 100%">
-                        <thead>
-                            <tr>
-                                <th style='text-align:center;' rowspan='2'>#</th>
-                                <th style='text-align:center;' rowspan='2'>Producto</th>
-                                <th style='text-align:center;' rowspan='2'>Cantidad</th>
-                                <th style='text-align:center;' rowspan='2'>U. Medida</th>
-                                <th style='text-align:center;' colspan='2'>Postor N° 1 &nbsp;<input type='checkbox' id='selectPostor1'></th>
-                                <th style='text-align:center;' colspan='2'>Postor N° 2 &nbsp;<input type='checkbox' id='selectPostor2'></th>
-                                <th style='text-align:center;' colspan='2'>Postor N° 3 &nbsp;<input type='checkbox' id='selectPostor3'></th>
-                            </tr>
-                            <tr>
-                                <th style='text-align:center;' class='postor_precio'>Precio</th>
-                                <th style='text-align:center;' class='postor_subtotal'>Sub. Total</th>
-                                <th style='text-align:center;' class='postor_precio'>Precio</th>
-                                <th style='text-align:center;' class='postor_subtotal'>Sub. Total</th>
-                                <th style='text-align:center;' class='postor_precio'>Precio</th>
-                                <th style='text-align:center;' class='postor_subtotal'>Sub. Total</th>
-                            </tr>
+                        <thead id="theadConsolidado">
+
                         </thead>
-                        <tfoot>
-                            <tr>
-                                <th colspan='4' style='text-align:right'>Totales:</th>
-                                <th style='text-align:right' colspan='2' class='tfootpostor1_class' id='tfootpostor1'>0.00</th>
-                                <th style='text-align:right' colspan='2' class='tfootpostor2_class' id='tfootpostor2'>0.00</th>
-                                <th style='text-align:right' colspan='2' class='tfootpostor3_class' id='tfootpostor3'>0.00</th>
-                            </tr>
+                        <tbody id="tbodyDetalle">
+
+                        </tbody>
+                        <tfoot id="tfootDetalle">
+
                         </tfoot>
                     </table>
                 </div>
+                <br>
+                <div class="row" id="tableDistribucionPagos" name="tableDistribucionPagos" hidden>
+                    <h3> Detalle de pagos</h3>
+                    <table id="dtmodalDetalleDistribucionPagos" class="table table-striped table-bordered" style="width: 100%">
+                        <thead>
+                            <tr>
+                                <th style='text-align:center;'>#</th>
+                                <th style='text-align:center;'>Fecha pago</th>
+                                <th style='text-align:center;'>Glosa</th>
+                                <th style='text-align:center;'>Importe</th>
+                                <th style='text-align:center;'>Porcentaje (%)</th>
+                                <th style='text-align:center;'>Estado</th>
+                                <th style='text-align:center;'>Acciones</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+                <br>
                 <div class="row" id="tableOrdenCompraServicio" name="tableOrdenCompraServicio" hidden>
+                    <h3 id="tituloOrden"></h3>
                     <table id="dtmodalDetalletableOrdenCompraServicio" class="table table-striped table-bordered" style="width: 100%">
                         <thead>
                             <tr>
@@ -249,7 +251,7 @@
                             </tr>
                         </thead>
                     </table>
-                </div>                  
+                </div>                 
             </div>
             <div class="modal-footer" style="padding-bottom:  0px;padding-top: 10px;clear:left">
                 <div class="form-group">
@@ -271,7 +273,7 @@
     <div class="modal-dialog">            
         <div class="modal-content">               
             <div class="modal-header">                      
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>         
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true" onclick="limpiarFormularioRechazo()">×</button>         
                 <h4 class="modal-title text-dark text-uppercase" id="tituloModalAnulacion"></h4> 
             </div>                     
             <div class="modal-body">                 
@@ -367,43 +369,7 @@
         </div>
     </div>
 </div>
-<!--modal para detalle distribucion pagos -->
-<div id="modalDetalleDistribucionPagos" class="modal fade" role="dialog" aria-labelledby="myModalLabel2" aria-hidden="true" style="display: none;">
-    <div class="modal-dialog modal-full">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                <h4 class="modal-title">Detalle de distribución de Pagos</h4>
-            </div>
-            <div class="modal-body">
-                <div class="row">
-                    <table id="dtmodalDetalleDistribucionPagos" class="table table-striped table-bordered" style="width: 100%">
-                        <thead>
-                            <tr>
-                                <th style='text-align:center;'>#</th>
-                                <th style='text-align:center;'>Fecha pago</th>
-                                <th style='text-align:center;'>Glosa</th>
-                                <th style='text-align:center;'>Importe</th>
-                                <th style='text-align:center;'>Porcentaje (%)</th>
-                                <th style='text-align:center;'>Estado</th>
-                                <th style='text-align:center;'>Acciones</th>
-                            </tr>
-                        </thead>
-                    </table>
-                </div>
-            </div>
-            <div class="modal-footer" style="padding-bottom:  0px;padding-top: 10px;clear:left">
-                <div class="form-group">
-                    <div class="col-md-6" style="text-align: left;">
-                    </div>
-                    <div class="col-md-6">
-                        <button type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-close"></i> Cerrar</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+
 <div id="modalDetalleArchivosDistribucionPagos" class="modal fade" role="dialog" aria-labelledby="myModalLabel2" aria-hidden="true" style="display: none;">
     <div class="modal-dialog modal-full">
         <div class="modal-content">

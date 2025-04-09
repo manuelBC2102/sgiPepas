@@ -18,34 +18,36 @@ function onResponseAprobacionConsolidado(response) {
                 break;
             case 'visualizarSolicitudRequerimiento':
                 onResponsevisualizarSolicitudRequerimiento(response.data, response.tag);
-                if(response.tag == "Por Aprobar"){
+                if (response.tag == "Por Aprobar") {
                     var btn_aprobar_rechazar = '<button type="button" class="btn btn-danger " data-dismiss="modal" onclick="rechazar()" id="btn_rechazar"><i class="fa fa-ban"></i> Rechazar</button>';
                     btn_aprobar_rechazar += '<button type="button" class="btn btn-primary " data-dismiss="modal" onclick="aprobar()" id="btn_aprobador"><i class="fa fa-check"></i> Aprobar</button>';
-                    $("#div_btn_aprobar").html(btn_aprobar_rechazar);                        
-                }else{
-                    $("#div_btn_aprobar").html("");                        
+                    $("#div_btn_aprobar").html(btn_aprobar_rechazar);
+                } else {
+                    $("#div_btn_aprobar").html("");
                 }
                 break;
             case 'visualizarRequerimiento':
                 onResponsevisualizarRequerimiento(response.data, response.tag);
-                if(response.tag == "Por Aprobar"){
+                if (response.tag == "Por Aprobar") {
                     var btn_aprobar_rechazar = '<button type="button" class="btn btn-danger " data-dismiss="modal" onclick="rechazar()" id="btn_rechazar"><i class="fa fa-ban"></i> Rechazar</button>';
                     btn_aprobar_rechazar += '<button type="button" class="btn btn-primary " data-dismiss="modal" onclick="aprobar()" id="btn_aprobador"><i class="fa fa-check"></i> Aprobar</button>';
-                    $("#div_btn_aprobar").html(btn_aprobar_rechazar);                        
-                }else{
-                    $("#div_btn_aprobar").html("");                        
+                    $("#div_btn_aprobar").html(btn_aprobar_rechazar);
+                } else {
+                    $("#div_btn_aprobar").html("");
                 }
                 break;
             case 'visualizarOrdenCompraServicio':
                 onResponseVisualizarOrdenCompraServicio(response.data, response.tag);
-                if(response.tag == "Por Aprobar"){
+                if (response.tag == "Por Aprobar") {
                     var btn_aprobar_rechazar = '<button type="button" class="btn btn-danger " data-dismiss="modal" onclick="rechazar()" id="btn_rechazar"><i class="fa fa-ban"></i> Rechazar</button>';
                     btn_aprobar_rechazar += '<button type="button" class="btn btn-primary " data-dismiss="modal" onclick="aprobar()" id="btn_aprobador"><i class="fa fa-check"></i> Aprobar</button>';
-                    $("#div_btn_aprobar").html(btn_aprobar_rechazar);                        
-                }else{
-                    $("#div_btn_aprobar").html("");                        
+                    $("#div_btn_aprobar").html(btn_aprobar_rechazar);
+                } else {
+                    $("#div_btn_aprobar").html("");
                 }
-                break;                               
+                visualizarCuadroComparativo(response.data.documentoId);
+                visualizarDistribucionPagos(response.data.documentoId);
+                break;
             case 'aprobarRequerimiento':
                 swal({
                     title: "Aprobación correcta",
@@ -57,7 +59,7 @@ function onResponseAprobacionConsolidado(response) {
                 });
                 var btnEnviar = document.getElementsByClassName('confirm')[0];
                 btnEnviar.disabled = false;
-                btnEnviar.innerHTML = 'Si!';                
+                btnEnviar.innerHTML = 'Si!';
                 buscarRequerimientos();
                 break;
             case 'visualizarConsolidado':
@@ -74,8 +76,8 @@ function onResponseAprobacionConsolidado(response) {
                 });
                 var btnEnviar = document.getElementsByClassName('confirm')[0];
                 btnEnviar.disabled = false;
-                btnEnviar.innerHTML = 'Si!';  
-                $("#div_btn_aprobar").html(""); 
+                btnEnviar.innerHTML = 'Si!';
+                $("#div_btn_aprobar").html("");
                 buscarRequerimientos();
                 break;
             case 'aprobarOrdenCompraServicio':
@@ -94,7 +96,7 @@ function onResponseAprobacionConsolidado(response) {
                 $("#div_btn_aprobar").html("");
                 loaderClose();
                 buscarRequerimientos();
-                break;                
+                break;
             case 'rechazar':
                 swal({
                     title: "Rechazo correcto",
@@ -112,7 +114,7 @@ function onResponseAprobacionConsolidado(response) {
                 buscarRequerimientos();
                 break;
             case 'obtenerDocumentoAdjuntoXDocumentoId':
-                if(!isEmpty(response.data)){
+                if (!isEmpty(response.data)) {
                     lstDocumentoArchivos = response.data;
                 }
                 onResponseListarArchivosDocumento(response.data);
@@ -122,17 +124,17 @@ function onResponseAprobacionConsolidado(response) {
                 onResponseListarDistribucionPagos(response.data);
                 break;
             case 'obtenerDocumentoAdjuntoXDistribucionPagos':
-                if(!isEmpty(response.data)){
+                if (!isEmpty(response.data)) {
                     lstDocumentoArchivos = response.data;
                 }
                 onResponseListarArchivosDistribucionPago(response.data);
-                break;       
+                break;
             case 'abrirPdfCuadroComparativoCotizacion':
                 loaderClose();
                 abrirDocumentoPDF(response.data, 'vistas/com/movimiento/documentos/');
-                break;                                               
+                break;
         }
-    }else{
+    } else {
         switch (response[PARAM_ACCION_NAME]) {
             case 'aprobarConsolidado':
                 var btnEnviar = document.getElementsByClassName('confirm')[0];
@@ -226,7 +228,7 @@ function buscarRequerimientos() {
         columnDefs: [
             {
                 "render": function (data, type, row) {
-                    return "<strong>"+row.documento_tipo_descripcion +" </strong>"+ (isEmpty(data)? "": "<strong> : </strong> "+ data + (row.urgencia == "Si"? " (Urgencia)":"") );
+                    return "<strong>" + row.documento_tipo_descripcion + " </strong>" + (isEmpty(data) ? "" : "<strong> : </strong> " + data + (row.urgencia == "Si" ? " (Urgencia)" : ""));
                 },
                 "targets": 1
             },
@@ -239,11 +241,9 @@ function buscarRequerimientos() {
             {
                 "render": function (data, type, row) {
                     var acciones = "";
-                    if(documento_tipo == ORDEN_COMPRA){
-                        acciones += "<a href='#' onclick='visualizarCuadroComparativo(" + row.id + ")'><i class='fa fa-eye' style='color:blue;' title='Ver detalle cuadro comparativo'></i></a>&nbsp;";
+                    if (documento_tipo == ORDEN_COMPRA) {
                         acciones += "<a href='#' onclick='abrirPdfCuadroComparativoCotizacion(" + row.id + ")'><i class='fa fa-print' style='color:black;' title='Ver pdf de cuadro comparativo'></i></a>&nbsp;";
-                        acciones += "<a href='#' onclick='visualizarDistribucionPagos(" + row.id + ")'><i class='fa fa-eye' style='color:black;' title='Ver detalle distribución pagos'></i></a>&nbsp;";
-                    }   
+                    }
                     return data + "" + acciones;
                 },
                 "targets": 8
@@ -291,14 +291,14 @@ function onResponseObtenerConfiguracionInicial(data) {
         $.each(data.tipo_requerimiento, function (index, item) {
             $('#cboTipoRequerimiento').append('<option value="' + item['descripcion'] + '">' + item['descripcion'] + '</option>');
         });
-    }else{
+    } else {
         $('#liarea_tipo').hide();
     }
     select2.asignarValor('cboTipoRequerimiento', 0);
-    if(!isEmpty(data.getarea)){
+    if (!isEmpty(data.getarea)) {
         select2.asignarValor('cboArea', data.getarea);
         $("#cboArea").attr('disabled', 'disabled');
-    }else{
+    } else {
         select2.asignarValor('cboArea', 0);
     }
 
@@ -345,8 +345,8 @@ function limpiarBuscadores() {
 
 function onResponsevisualizarSolicitudRequerimiento(data, documento_estado) {
     var cont = 0;
-    if(documento_estado == "Aprobado" || documento_estado == "Rechazado"){
-        $("#div_btn_aprobar").html("");                        
+    if (documento_estado == "Aprobado" || documento_estado == "Rechazado") {
+        $("#div_btn_aprobar").html("");
     }
 
     cargarDataDocumento(data.dataDocumento);
@@ -402,8 +402,8 @@ function onResponsevisualizarSolicitudRequerimiento(data, documento_estado) {
 
 function onResponsevisualizarRequerimiento(data, documento_estado) {
     var cont = 0;
-    if(documento_estado == "Aprobado" || documento_estado == "Rechazado"){
-        $("#div_btn_aprobar").html("");                        
+    if (documento_estado == "Aprobado" || documento_estado == "Rechazado") {
+        $("#div_btn_aprobar").html("");
     }
 
     cargarDataDocumento(data.dataDocumento);
@@ -454,11 +454,11 @@ function onResponsevisualizarRequerimiento(data, documento_estado) {
                     "render": function (data, type, row) {
                         return devolverDosDecimales(data);
                     },
-                    "targets": [2,4]
+                    "targets": [2, 4]
                 },
                 {
                     "render": function (data, type, row) {
-                        return data == 1?"Si":"No";
+                        return data == 1 ? "Si" : "No";
                     },
                     "targets": 6
                 }
@@ -473,127 +473,128 @@ function onResponsevisualizarRequerimiento(data, documento_estado) {
 
 function onResponsevisualizarConsolidado(data) {
     var cont = 0;
-    $('#selectPostor1').prop('checked', false);
-    $('#selectPostor2').prop('checked', false);
-    $('#selectPostor3').prop('checked', false);
 
-    $("#div_btn_aprobar").html("");
-    $("#selectPostor1").prop("disabled", true);
-    $("#selectPostor2").prop("disabled", true);
-    $("#selectPostor3").prop("disabled", true);
+    var htmlTable = "";
+    htmlTable += "<tr>" +
+        "<th style='text-align:center;' rowspan='2'>#</th>" +
+        "<th style='text-align:center;' rowspan='2'>Producto</th>" +
+        "<th style='text-align:center;' rowspan='2'>Cantidad</th>" +
+        "<th style='text-align:center;' rowspan='2'>U. Medida</th>";
+    data.documento_detalle.forEach(function (proveedorID, idx) {
+        var textoOriginal = (proveedorID.persona).split("|");
+        var textProveedor = textoOriginal[1].length > 30
+            ? textoOriginal[1].substring(0, 30) + '…'
+            : textoOriginal[1];
+        htmlTable += "<th style='text-align:center;' colspan='2'>" + textoOriginal[0] + "<br>" + textProveedor + "</th>";
+    });
+    htmlTable += "</tr>";
+
+    htmlTable += "<tr>";
+    data.documento_detalle.forEach(function (proveedorID, idx) {
+        htmlTable += "<th style='text-align:center;' class='postor_precio'>Precio</th>" +
+            "<th style='text-align:center;' class='postor_subtotal'>Sub. Total</th>";
+    });
+    htmlTable += "</tr>";
+    $("#theadConsolidado").append(htmlTable);
+
+    var tbodyDetalle = "";
+    var totalPostores = [];
+
+    data.detalle.forEach(function (detalleID, idx) {
+        tbodyDetalle += "<tr>";
+
+        tbodyDetalle += "<td style='text-align:right;'>" + (idx + 1) + "</td>";
+        tbodyDetalle += "<td>" + detalleID.bien_codigo + " | " + detalleID.bien_descripcion + "</td> ";
+        tbodyDetalle += "<td style='text-align:right;'>" + devolverDosDecimales(detalleID.cantidad) + "</td>";
+        tbodyDetalle += "<td style='text-align:center;'>" + detalleID.simbolo + "</td>";
+
+        data.documento_detalle.forEach(function (proveedorID, idx) {
+            var total_ = 0;
+            $.each(detalleID.movimiento_bien_detalle, function (indexBD, itemBD) {
+                if (itemBD.columna_codigo == 37) {
+                    if (proveedorID.persona_id == itemBD.valor_extra) {
+                        var color_ganador = "";
+                        if (detalleID.postor_ganador_id == proveedorID.persona_id) {
+                            color_ganador = "background-color:rgb(0, 254, 127);";
+                        }
+                        tbodyDetalle += "<td style='text-align:center;" + color_ganador + "'>" + devolverDosDecimales(itemBD.valor_detalle, 2) + "</td>";
+                        tbodyDetalle += "<td style='text-align:center;" + color_ganador + "'>" + devolverDosDecimales((detalleID.cantidad * itemBD.valor_detalle), 2) + "</td>";
+                        total_ = total_ + (detalleID.cantidad * itemBD.valor_detalle);
+                        totalPostores[idx] = (isEmpty(totalPostores[idx]) ? 0 : totalPostores[idx]) + total_;
+                    }
+                }
+            });
+        });
+
+        tbodyDetalle += "</tr>";
+    });
+
+    $("#tbodyDetalle").append(tbodyDetalle);
+
+    var filaExtratfoot = '';
+    $("#dtmodalDetalleConsolidado").css({ "overflow-x": "auto", "display": "block" });
+    var tfootDetalle = $('#tfootDetalle');
+    tfootDetalle.empty();
+
+    var textsubtotal = "";
+    var textigv = "";
+    var texttotal = "";
+    var monedaText = "";
+    var texttotalSoles = "";
+    data.documento_detalle.forEach((proveedor, idx) => {
+        var monto = totalPostores[idx];
+        var tipoCambio = proveedor.moneda_id == 4 ? proveedor.tipo_cambio : 1;
+
+        var esSinIGV = proveedor.igv === 0;
+        var subTotal = esSinIGV ? monto : monto / 1.18;
+        var total = esSinIGV ? subTotal * 1.18 : monto;
+        var igv = total - subTotal;
+        var totalSoles = total * tipoCambio;
+
+        textsubtotal += `<th style='text-align:right' colspan='2'> ${devolverDosDecimales(subTotal, 2)}</th>`;
+        textigv += `<th style='text-align:right' colspan='2'> ${devolverDosDecimales(igv, 2)}</th>`;
+        texttotal += `<th style='text-align:right' colspan='2'> $${proveedor.moneda_id == 2 ? 0 : devolverDosDecimales(total, 2)}</th>`;
+        texttotalSoles += `<th style='text-align:right' colspan='2'>S/ ${devolverDosDecimales(totalSoles, 2)}</th>`;
+    });
+
+    filaExtratfoot += '<tr >' +
+        '<th colspan="4" style="text-align:right">Sub Total:</th>' + textsubtotal;
+    filaExtratfoot += '</tr>';
+    filaExtratfoot += '<tr>' +
+        '<th colspan="4" style="text-align:right">IGV (18%):</th>' + textigv;
+    filaExtratfoot += '</tr>';
+    filaExtratfoot += '<tr>' +
+        '<th colspan="4" style="text-align:right">Totales Dolares:</th>' + texttotal;
+    filaExtratfoot += '</tr>';
+
+    filaExtratfoot += '<tr>' +
+        '<th colspan="4" style="text-align:right">Totales Soles:</th>' + texttotalSoles;
+    filaExtratfoot += '</tr>';
+
+    tfootDetalle.append(filaExtratfoot);
 
     cargarDataDocumento(data.dataDocumento);
     $("#tableConsolidado").show();
-    $("#tableOrdenCompraServicio").hide();
+    // $("#tableOrdenCompraServicio").hide();
     if (!isEmpty(data.detalle)) {
         $("#modalDetalle").modal('show');
-        $('#dtmodalDetalleConsolidado').dataTable({
-            "processing": true,
-            "ordering": false,
-            "data": data.detalle,
-            "order": [[0, "asc"]],
-            "columns": [
-                { "data": "movimiento_bien_id", "width": "5%", "sClass": "alignCenter" },
-                { "data": "bien_descripcion", "width": "24%", "sClass": "alignLeft" },
-                { "data": "cantidad", "width": "9%", "sClass": "alignCenter" },
-                { "data": "unidad_medida_descripcion", "width": "10%", "sClass": "alignCenter" },
-                { "data": "precio_postor1", "width": "4%", "sClass": "alignRight" },
-                { "data": "subTotal_precio_postor1", "width": "4%", "sClass": "alignRight" },
-                { "data": "precio_postor2", "width": "4%", "sClass": "alignRight" },
-                { "data": "subTotal_precio_postor2", "width": "4%", "sClass": "alignRight" },
-                { "data": "precio_postor3", "width": "4%", "sClass": "alignRight" },
-                { "data": "subTotal_precio_postor3", "width": "4%", "sClass": "alignRight" },
-            ],
-            columnDefs: [
-                {
-                    "render": function (data, type, row) {
-                        cont = 1 + cont;
 
-                        switch (parseInt(row.postor_ganador_id)) {
-                            case 1:
-                                $('#selectPostor1').prop('checked', true);
-                                break;
-                            case 2:
-                                $('#selectPostor2').prop('checked', true);
-                                break;
-                            case 3:
-                                $('#selectPostor3').prop('checked', true);
-                                break;
-                        }
-                        return cont;
-                    },
-                    "targets": 0
-                },
-                {
-                    "render": function (data, type, row) {
-                        var bien_descripcion = row.bien_codigo + " | " + row.bien_descripcion;
-                        if (!isEmpty(bien_descripcion)) {
-                            if (bien_descripcion.length > 60) {
-                                bien_descripcion = bien_descripcion.substring(0, 60) + '...';
-                            }
-                        }
-                        return bien_descripcion;
-                    },
-                    "targets": 1
-                },
-                {
-                    "render": function (data, type, row) {
-                        return devolverDosDecimales(data);
-                    },
-                    "targets": [2, 4, 5, 6, 7, 8, 9]
-                }
-
-            ],
-            "dom": '<"top">rt<"bottom"<"col-md-3"l><"col-md-9"p><"col-md-12"i>><"clear">',
-            destroy: true,
-            footerCallback: function (row, data, start, end, display) {
-                if (!isEmpty(data)) {
-                    var api = this.api(), data;
-
-                    var total1 = api.column(5).data().reduce(function (a, b) {
-                        return parseFloat(a) + parseFloat(b);
-                    }, 0);
-                    $(api.column(5).footer()).html(total1.toFixed(2));
-
-                    var total2 = api.column(7).data().reduce(function (a, b) {
-                        return parseFloat(a) + parseFloat(b);
-                    }, 0);
-                    $(api.column(7).footer()).html(total2.toFixed(2));
-
-                    var total3 = api.column(9).data().reduce(function (a, b) {
-                        return parseFloat(a) + parseFloat(b);
-                    }, 0);
-                    $(api.column(9).footer()).html(total3.toFixed(2));
-                }
-            },
-            "rowCallback": function (row, data, index) {
-                debugger;
-                switch (parseInt(data.postor_ganador_id)) {
-                    case 1:
-                        $('td:eq(5)', row).css('background-color', '#febf00').css('color', 'white');
-                        break;
-                    case 2:
-                        $('td:eq(7)', row).css('background-color', '#febf00').css('color', 'white');
-                        break;
-                    case 3:
-                        $('td:eq(9)', row).css('background-color', '#febf00').css('color', 'white');
-                        break;
-                }
-            }
-        });
         loaderClose();
+    } else {
+        var table = $('#dtmodalDetalleConsolidado').DataTable();
+        table.clear().draw();
     }
 }
 
 function onResponseVisualizarOrdenCompraServicio(data, documento_estado) {
     var cont = 0;
-    if(documento_estado == "Aprobado" || documento_estado == "Rechazado"){
-        $("#div_btn_aprobar").html("");                        
+    if (documento_estado == "Aprobado" || documento_estado == "Rechazado") {
+        $("#div_btn_aprobar").html("");
     }
 
     cargarDataDocumento(data.dataDocumento);
     $("#tableOrdenCompraServicio").show();
-    $("#tableConsolidado").hide();
+    // $("#tableConsolidado").hide();
     if (!isEmpty(data.detalle)) {
         $("#modalDetalle").modal('show');
         $('#dtmodalDetalletableOrdenCompraServicio').dataTable({
@@ -633,7 +634,7 @@ function onResponseVisualizarOrdenCompraServicio(data, documento_estado) {
                     "render": function (data, type, row) {
                         return devolverDosDecimales(data);
                     },
-                    "targets": [3,4,5]
+                    "targets": [3, 4, 5]
                 }
 
             ],
@@ -651,15 +652,15 @@ function visualizar(id, movimientoId, documento_estado_id, documento_estado, doc
     documento_tipo_descripcionText = documento_tipo_descripcion;
     loaderShow();
     documentoTipoId = documento_tipo_id;
-    if(documento_tipo_id == SOLICITUD_REQUERIMIENTO){ //Solicitud Requerimiento
+    if (documento_tipo_id == SOLICITUD_REQUERIMIENTO) { //Solicitud Requerimiento
         ax.setAccion("visualizarSolicitudRequerimiento");
         ax.setTag(documento_estado);
-    }else if(documento_tipo_id == REQUERIMIENTO_AREA){ //Consolidar Requerimientos Area
+    } else if (documento_tipo_id == REQUERIMIENTO_AREA) { //Consolidar Requerimientos Area
         ax.setAccion("visualizarRequerimiento");
         ax.setTag(documento_estado);
-    }else if(documento_tipo_id == ORDEN_COMPRA || documento_tipo_id == ORDEN_SERVICIO){ //Orden de Compra o Servicio
+    } else if (documento_tipo_id == ORDEN_COMPRA || documento_tipo_id == ORDEN_SERVICIO) { //Orden de Compra o Servicio
         ax.setAccion("visualizarOrdenCompraServicio");
-        ax.setTag(documento_estado);        
+        ax.setTag(documento_estado);
     }
     ax.addParamTmp("id", id);
     ax.addParamTmp("movimientoId", movimientoId);
@@ -677,6 +678,9 @@ function cargarDataDocumento(data, documento_estado_id) {
         $('#nombreDocumentoTipo').html(data[0]['nombre_documento']);
         // Mostraremos la data en filas de dos columnas
         $.each(data, function (index, item) {
+            if (item.tipo == 42) {
+                $("#tituloOrden").html("Detalle de Orden de " + item.valor);
+            }
 
             appendFormDetalle('</div>');
             appendFormDetalle('<div class="row">');
@@ -740,10 +744,10 @@ function fechaArmada(valor) {
 
 function aprobar() {
     id = $("#visualizarDocumentoId").val();
-    if(documentoTipoId == SOLICITUD_REQUERIMIENTO || documentoTipoId == ORDEN_SERVICIO || documentoTipoId == REQUERIMIENTO_AREA){ //Requerimiento
+    if (documentoTipoId == SOLICITUD_REQUERIMIENTO || documentoTipoId == ORDEN_SERVICIO || documentoTipoId == REQUERIMIENTO_AREA) { //Requerimiento
         swal({
             title: " ¿Desea continuar?",
-            text: "Se procede aprobar "+ documento_tipo_descripcionText,
+            text: "Se procede aprobar " + documento_tipo_descripcionText,
             type: "warning",
             showCancelButton: true,
             confirmButtonColor: "#33b86c",
@@ -765,12 +769,12 @@ function aprobar() {
                 loaderClose();
             }
         });
-    }else if(documentoTipoId == GENERAR_COTIZACION){ // Consolidado RQ
+    } else if (documentoTipoId == GENERAR_COTIZACION) { // Consolidado RQ
         var checked1 = $('#selectPostor1').is(":checked");
         var checked2 = $('#selectPostor2').is(":checked");
         var checked3 = $('#selectPostor3').is(":checked");
         var cantidad = seleccionados = $('input:checkbox:checked').length;
-    
+
         if (cantidad == 0) {
             mostrarAdvertencia('Debe seleccionar una cotización');
             return;
@@ -807,7 +811,7 @@ function aprobar() {
             loaderClose();
             return;
         }
-    }else if(documentoTipoId == ORDEN_COMPRA){ // Orden de compra o Servicio
+    } else if (documentoTipoId == ORDEN_COMPRA) { // Orden de compra o Servicio
         swal({
             title: " ¿Desea continuar?",
             text: "Se procede aprobar la " + documento_tipo_descripcionText,
@@ -850,11 +854,11 @@ function rechazar() {
         cancelButtonText: "No, cancelar !",
     }, function (isConfirm) {
         if (isConfirm) {
-            if(documentoTipoId == SOLICITUD_REQUERIMIENTO){
+            if (documentoTipoId == SOLICITUD_REQUERIMIENTO) {
                 $('#tituloModalAnulacion').html("Rechazar Solicitud requerimiento");
-            }else if(documentoTipoId == ORDEN_COMPRA){
+            } else if (documentoTipoId == ORDEN_COMPRA) {
                 $('#tituloModalAnulacion').html("Rechazar Orden de compra");
-            }else if(documentoTipoId == REQUERIMIENTO_AREA){
+            } else if (documentoTipoId == REQUERIMIENTO_AREA) {
                 $('#tituloModalAnulacion').html("Rechazar Requerimiento por área");
             }
             $('#txtMotivoRechazo').val('');
@@ -883,14 +887,14 @@ function rechazarComentario() {
     }
 }
 
-function limpiarFormularioRechazo(){
+function limpiarFormularioRechazo() {
     $('#txtMotivoRechazo').val("");
     loaderClose();
 }
 
-function fechasActuales(){
+function fechasActuales() {
     var fechaActual = new Date();
-    
+
     // Formatear la fecha en formato dd/mm/yyyy
     var dia = ('0' + fechaActual.getDate()).slice(-2);
     var mes = ('0' + (fechaActual.getMonth() + 1)).slice(-2);
@@ -917,7 +921,7 @@ function archivosAdjuntos(id, movimientoId) {
     $("#dataList2").empty();
     $("#modalDetalleArchivos").modal('show');
     $("#btn_agregarActualizar").val(id);
-    
+
     ax.setAccion("obtenerDocumentoAdjuntoXDocumentoId");
     ax.addParamTmp("documentoId", id);
     ax.consumir();
@@ -950,7 +954,7 @@ function onResponseListarArchivosDocumento(data) {
 
             cuerpo += "<td style='text-align:center;'>"
                 + "<a href='" + item.data + "' download='" + item.archivo + "' target='_blank'><i class='fa fa-cloud-download' style='color:#1ca8dd;'></i></a>&nbsp;\n"
-                // + "<a href='#' onclick='eliminarDocumento(\"" + item.id + "\")'><i class='fa fa-trash-o' style='color:#cb2a2a;'></i></a>&nbsp;\n";
+            // + "<a href='#' onclick='eliminarDocumento(\"" + item.id + "\")'><i class='fa fa-trash-o' style='color:#cb2a2a;'></i></a>&nbsp;\n";
             cuerpo += "</td>"
                 + "</tr>";
             cuerpo_total += cuerpo;
@@ -962,7 +966,7 @@ function onResponseListarArchivosDocumento(data) {
     $("#datatable3").DataTable();
 }
 
-function visualizarCuadroComparativo(documentoId){
+function visualizarCuadroComparativo(documentoId) {
     loaderShow();
     ax.setAccion("visualizarConsolidado");
     ax.addParamTmp("documentoId", documentoId);
@@ -980,7 +984,7 @@ function onResponseListarDistribucionPagos(data) {
     var cont = 0;
 
     if (!isEmpty(data)) {
-        $("#modalDetalleDistribucionPagos").modal('show');
+        // $("#modalDetalleDistribucionPagos").modal('show');
         $('#dtmodalDetalleDistribucionPagos').dataTable({
             "processing": true,
             "ordering": false,
@@ -1013,11 +1017,11 @@ function onResponseListarDistribucionPagos(data) {
                     "render": function (data, type, row) {
                         return devolverDosDecimales(data);
                     },
-                    "targets": [3,4]
+                    "targets": [3, 4]
                 },
                 {
                     "render": function (data, type, row) {
-                        switch(data){
+                        switch (data) {
                             case "1":
                                 return "Registrado";
                                 break;
@@ -1033,7 +1037,7 @@ function onResponseListarDistribucionPagos(data) {
                 },
                 {
                     "render": function (data, type, row) {
-                        $("#tituloDistribucionPagos").html("( Por un monto de: " + devolverDosDecimales(row.importe)+" )");
+                        $("#tituloDistribucionPagos").html("( Por un monto de: " + devolverDosDecimales(row.importe) + " )");
                         var acciones = "<a href='#' onclick='subirArchivosAdjuntosDistribucionPagos(" + row.id + ", " + row.documento_id + ")'><i class='fa fa-archive' style='color:blue;' title='Subir archivos adjuntos'></i></a>&nbsp;";
                         return acciones;
                     },
@@ -1050,11 +1054,11 @@ function onResponseListarDistribucionPagos(data) {
 function subirArchivosAdjuntosDistribucionPagos(id, documentoId) {
     loaderShow();
     $("#dataList2DistribucionPagos").empty();
-    $("#modalDetalleDistribucionPagos").modal('hide');
+    $("#modalDetalle").modal('hide');
     $("#modalDetalleArchivosDistribucionPagos").modal('show');
     distribucionPagosIdGlobal = id;
     documentoIdGlobal = documentoId;
-    
+
     ax.setAccion("obtenerDocumentoAdjuntoXDistribucionPagos");
     ax.addParamTmp("distribucionPagoId", id);
     ax.consumir();
@@ -1105,7 +1109,11 @@ function abrirPdfCuadroComparativoCotizacion(documentoId) {
     ax.consumir();
 }
 
-function ocultarModalDistribucionPagos(){
-    $("#modalDetalleDistribucionPagos").modal('show');
-    $("#modalDetalleArchivosDistribucionPagos").modal('hide');
+function ocultarModalDistribucionPagos() {
+    $("#modalDetalleArchivosDistribucionPagos").modal('hide'); // Oculta el modal actual
+    // Espera a que el modal termine de cerrarse antes de abrir el siguiente
+    $('#modalDetalleArchivosDistribucionPagos').on('hidden.bs.modal', function () {
+        $("#modalDetalle").modal('show');
+        $(this).off('hidden.bs.modal'); // Evita que se dispare varias veces
+    });
 }

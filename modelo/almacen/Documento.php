@@ -808,4 +808,72 @@ class Documento extends ModeloBase {
         $this->commandAddParameter(":vin_documento_id", $documentoId);
         return $this->commandGetData();
     }
+
+    function guardar_documento_detalle($documentoId, $personaId, $monedaId, $tipoCambio, $igv, $tiempoEntrega, $tiempo, $condicionPago, $sumilla, $usuarioId) {
+        $this->commandPrepare("sp_documento_detalle_guardar");
+        $this->commandAddParameter(":vin_documento_id", $documentoId);
+        $this->commandAddParameter(":vin_persona_id", $personaId);
+        $this->commandAddParameter(":vin_moneda_id", $monedaId);
+        $this->commandAddParameter(":vin_tipo_cambio", $tipoCambio);
+        $this->commandAddParameter(":vin_igv", $igv);
+        $this->commandAddParameter(":vin_tiempo_entrega", $tiempoEntrega);
+        $this->commandAddParameter(":vin_tiempo", $tiempo);
+        $this->commandAddParameter(":vin_condicion_pago", $condicionPago);
+        $this->commandAddParameter(":vin_sumilla", $sumilla);
+        $this->commandAddParameter(":vin_usuario_registro", $usuarioId);
+        return $this->commandGetData();
+    }
+
+    function obtenerDocumentoDetalleDatos($documentoId) {
+        $this->commandPrepare("sp_documento_detalle_obtener_datosxId");
+        $this->commandAddParameter(":vin_documento_id", $documentoId);
+        return $this->commandGetData();
+    }
+
+    function editar_documento_detalle($documentoId, $personaId, $monedaId, $tipoCambio, $igv, $tiempoEntrega, $tiempo, $condicionPago, $sumilla, $usuarioId) {
+        $this->commandPrepare("sp_documento_detalle_editar");
+        $this->commandAddParameter(":vin_documento_id", $documentoId);
+        $this->commandAddParameter(":vin_persona_id", $personaId);
+        $this->commandAddParameter(":vin_moneda_id", $monedaId);
+        $this->commandAddParameter(":vin_tipo_cambio", $tipoCambio);
+        $this->commandAddParameter(":vin_igv", $igv);
+        $this->commandAddParameter(":vin_tiempo_entrega", $tiempoEntrega);
+        $this->commandAddParameter(":vin_tiempo", $tiempo);
+        $this->commandAddParameter(":vin_condicion_pago", $condicionPago);
+        $this->commandAddParameter(":vin_sumilla", $sumilla);
+        $this->commandAddParameter(":vin_usuario_registro", $usuarioId);
+        return $this->commandGetData();
+    }
+
+    public function guardarDocumentoDetalleDistribucionPagos($documento_detalle_id, $fechaPago, $importePago, $dias, $porcentaje, $glosa, $usuarioId) {
+        $this->commandPrepare("sp_documento_detalle_distribucion_pago_guardar");
+        $this->commandAddParameter("vin_documento_detalle_id", $documento_detalle_id);
+        $this->commandAddParameter("vin_fecha_pago", $fechaPago);
+        $this->commandAddParameter("vin_importe_pago", $importePago);
+        $this->commandAddParameter("vin_dias", $dias);
+        $this->commandAddParameter("vin_porcentaje", $porcentaje);
+        $this->commandAddParameter("vin_glosa", $glosa);
+        $this->commandAddParameter("vin_usuario_creacion", $usuarioId);
+        return $this->commandGetData();
+    }
+
+    function obtenerDocumentoDetalledistribucionPagoxId($id) {
+        $this->commandPrepare("sp_documento_detalle_obtener_distribucion_pagoxId");
+        $this->commandAddParameter(":vin_id", $id);
+        return $this->commandGetData();
+    }
+
+    public function editarDocumentoDetalleDistribucionPagos($documento_detalle_id, $fechaPago, $importePago, $dias, $porcentaje, $glosa, $usuarioId, $id = null) {
+        $this->commandPrepare("sp_documento_detalle_distribucion_pago_editar");
+        $this->commandAddParameter("vin_documento_detalle_id", $documento_detalle_id);
+        $this->commandAddParameter("vin_fecha_pago", $fechaPago);
+        $this->commandAddParameter("vin_importe_pago", $importePago);
+        $this->commandAddParameter("vin_dias", $dias);
+        $this->commandAddParameter("vin_porcentaje", $porcentaje);
+        $this->commandAddParameter("vin_glosa", $glosa);
+        $this->commandAddParameter("vin_usuario_creacion", $usuarioId);
+        $this->commandAddParameter("vin_id", $id == ""?null:$id);
+        return $this->commandGetData();
+    }
+
 }

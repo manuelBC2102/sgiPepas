@@ -56,6 +56,8 @@ class DocumentoTipoNegocio extends ModeloNegocioBase
   const DATO_REQUERIMIENTOS = 47;
   const FECHA_VENCIMIENTO_COTIZACION = 49;
   const CONDICION_PAGO = 50;
+  const UNIDAD_MINERA = 51;
+  const CUENTA_GASTOS = 52;
 
   const DATO_FLETE_DOCUMENTO = 00;
   const DATO_SEGURO_DOCUMENTO = 33;
@@ -245,6 +247,41 @@ class DocumentoTipoNegocio extends ModeloNegocioBase
             $movimientoTipo = MovimientoTipoNegocio::create()->obtenerXDocumentoTipoId($documentoTipoId);
             $movimientoTipoId = $movimientoTipo[0]["movimiento_tipo_id"];
             $dtd[$index]["data"] = OrganizadorNegocio::create()->obtenerXMovimientoTipo($movimientoTipoId);
+            break;
+          case self::UNIDAD_MINERA:
+            $dtd[$index]["data"] = OrganizadorNegocio::create()->getDataUnidadMinera();
+            break;
+          case self::CUENTA_GASTOS:
+            $mostrarCuenta = 0;
+            $data = DocumentoTipoDatoListaNegocio::create()->obtenerXDocumentoTipoDato($itemDtd["id"]);;
+            $dataPerfil = PerfilNegocio::create()->obtenerPerfilXUsuarioId($usuarioId);
+            $filtrados = null;
+
+            $filtradosPerfil= array_values(array_filter($dataPerfil, function($itemPerfil){
+              return ($itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_TI_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_LOGISTA || $itemPerfil['id'] == PerfilNegocio::PERFIL_JEFE_LOGISTA);
+            }));
+
+            if(!ObjectUtil::isEmpty($filtradosPerfil)){
+              $filtrados = $data;
+            }else{
+              $filtradosPerfil= array_values(array_filter($dataPerfil, function($itemPerfil){
+                return ($itemPerfil['id'] == PerfilNegocio::PERFIL_DDH || $itemPerfil['id'] == PerfilNegocio::PERFIL_EQUIPOS);
+              }));
+
+              if(!ObjectUtil::isEmpty($filtradosPerfil)){
+                $filtrados= array_values(array_filter($data, function($item) use ($filtradosPerfil){
+                  return $item['descripcion'] === $filtradosPerfil[0]['nombre'];
+                }));
+                $dtd[$index]["lista_defecto"] = $filtrados[0]['id'];
+              }else{
+                $filtrados= array_values(array_filter($data, function($item){
+                  return $item['descripcion'] === "PEPAS";
+                }));
+                $dtd[$index]["lista_defecto"] = $filtrados[0]['id'];
+              }
+            }
+
+            $dtd[$index]["data"] = $filtrados;
             break;
         }
       }

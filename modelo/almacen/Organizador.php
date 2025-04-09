@@ -192,4 +192,9 @@ class Organizador extends ModeloBase {
         $this->commandAddParameter(":vin_organizador_id", $organizadorId);
         return $this->commandGetData();                
     }
+
+    public function getDataUnidadMinera() {
+        $this->commandPrepare("sp_unidad_minera_getCombo");
+        return $this->commandGetData();
+    }
 }

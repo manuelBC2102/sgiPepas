@@ -17,7 +17,7 @@ class MovimientoBien extends ModeloBase {
         return parent::create();
     }
 
-    public function guardar($movimientoId, $organizadorId, $bienId, $unidadMedidaId, $cantidad, $valorMonetario, $estado, $usuarioCreacionId,$precioTipoId=null,$utilidad=null,$utilidadPorcentaje=null,$checkIgv=1,$adValorem=0,$comentarioDetalle=null,$agenciaId=null, $agrupadorDetalle = null, $ticket = null, $CeCoId = null, $precioPostor1 = null, $precioPostor2 = null, $precioPostor3 = null, $esCompra = null, $cantidad_solicitada = null, $postor_ganador_id = null, $checked1Moneda = null, $checked2Moneda = null, $checked3Moneda = null) {
+    public function guardar($movimientoId, $organizadorId, $bienId, $unidadMedidaId, $cantidad, $valorMonetario, $estado, $usuarioCreacionId,$precioTipoId=null,$utilidad=null,$utilidadPorcentaje=null,$checkIgv=1,$adValorem=0,$comentarioDetalle=null,$agenciaId=null, $agrupadorDetalle = null, $ticket = null, $CeCoId = null, $precioPostor1 = null, $precioPostor2 = null, $precioPostor3 = null, $esCompra = null, $cantidad_solicitada = null, $postor_ganador_id = null) {
         $this->commandPrepare("sp_movimiento_bien_guardar");
         $this->commandAddParameter(":vin_movimiento_id", $movimientoId);
         $this->commandAddParameter(":vin_organizador_id", $organizadorId);
@@ -43,9 +43,6 @@ class MovimientoBien extends ModeloBase {
         $this->commandAddParameter(":vin_es_compra", $esCompra);
         $this->commandAddParameter(":vin_cantidad_solicitada", $cantidad_solicitada);
         $this->commandAddParameter(":vin_postor_ganador_id", $postor_ganador_id);
-        $this->commandAddParameter(":vin_moneda_postor1", $checked1Moneda);
-        $this->commandAddParameter(":vin_moneda_postor2", $checked2Moneda);
-        $this->commandAddParameter(":vin_moneda_postor3", $checked3Moneda);
         return $this->commandGetData();
     }
     
@@ -61,13 +58,14 @@ class MovimientoBien extends ModeloBase {
         return $this->commandGetData();
     }
     
-    public function movimientoBienDetalleGuardar($movimientoBienId,$columnaCodigo,$valorCadena,$valorFecha,$usuarioId){
+    public function movimientoBienDetalleGuardar($movimientoBienId,$columnaCodigo,$valorCadena,$valorFecha,$usuarioId, $valorExtra = null){
         $this->commandPrepare("sp_movimiento_bien_detalle_guardar");
         $this->commandAddParameter(":vin_movimiento_bien_id", $movimientoBienId);
         $this->commandAddParameter(":vin_columna_codigo", $columnaCodigo);
         $this->commandAddParameter(":vin_valor_cadena", $valorCadena);
         $this->commandAddParameter(":vin_valor_fecha", $valorFecha);
         $this->commandAddParameter(":vin_usuario_id", $usuarioId);
+        $this->commandAddParameter(":vin_valor_extra", $valorExtra);
         return $this->commandGetData();        
     }
     
@@ -138,7 +136,7 @@ class MovimientoBien extends ModeloBase {
         return $this->commandGetData();                         
     }
     
-    public function editar($movimientoBienId, $movimientoId,$organizadorId, $bienId, $unidadMedidaId, $cantidad, $valorMonetario, $estado, $usuarioCreacionId,$precioTipoId=null,$utilidad=null,$utilidadPorcentaje=null,$checkIgv=1,$adValorem=0,$comentarioDetalle=null,$agenciaId=null, $agrupadorDetalle = null, $ticket = null, $CeCoId = null, $precioPostor1 = null, $precioPostor2 = null, $precioPostor3 = null, $esCompra = null, $cantidad_solicitada = null, $postor_ganador_id = null, $checked1Moneda = null, $checked2Moneda = null, $checked3Moneda = null) {
+    public function editar($movimientoBienId, $movimientoId,$organizadorId, $bienId, $unidadMedidaId, $cantidad, $valorMonetario, $estado, $usuarioCreacionId,$precioTipoId=null,$utilidad=null,$utilidadPorcentaje=null,$checkIgv=1,$adValorem=0,$comentarioDetalle=null,$agenciaId=null, $agrupadorDetalle = null, $ticket = null, $CeCoId = null, $precioPostor1 = null, $precioPostor2 = null, $precioPostor3 = null, $esCompra = null, $cantidad_solicitada = null, $postor_ganador_id = null) {
         $this->commandPrepare("sp_movimiento_bien_editar");
         $this->commandAddParameter(":vin_movimiento_bien_id", $movimientoBienId);
         $this->commandAddParameter(":vin_movimiento_id", $movimientoId);
@@ -165,9 +163,6 @@ class MovimientoBien extends ModeloBase {
         $this->commandAddParameter(":vin_es_compra", $esCompra);
         $this->commandAddParameter(":vin_cantidad_solicitada", $cantidad_solicitada);
         $this->commandAddParameter(":vin_postor_ganador_id", $postor_ganador_id);
-        $this->commandAddParameter(":vin_moneda_postor1", $checked1Moneda);
-        $this->commandAddParameter(":vin_moneda_postor2", $checked2Moneda);
-        $this->commandAddParameter(":vin_moneda_postor3", $checked3Moneda);
         return $this->commandGetData();
     }
 
@@ -228,6 +223,23 @@ class MovimientoBien extends ModeloBase {
     public function obtenerMovimientoBienDetalleObtenerSolicitudR($movimientoBienId){
         $this->commandPrepare("sp_movimiento_bien_detalleObtenerSolicitudR");
         $this->commandAddParameter(":vin_movimiento_bien_id", $movimientoBienId);
+        return $this->commandGetData();        
+    }
+
+    public function obtenerMovimientoBienDetalleObtenerUnidadMinera($movimientoBienId){
+        $this->commandPrepare("sp_movimiento_bien_obtenerUnidadMineraXMovimientoBienId");
+        $this->commandAddParameter(":vin_movimiento_bien_id", $movimientoBienId);
+        return $this->commandGetData();        
+    }
+
+    public function movimientoBienDetalleEditarCadena($movimientoBienId,$columnaCodigo,$valorCadena,$valorFecha,$usuarioId, $valorExtra = null){
+        $this->commandPrepare("sp_movimiento_bien_detalle_editar");
+        $this->commandAddParameter(":vin_movimiento_bien_id", $movimientoBienId);
+        $this->commandAddParameter(":vin_columna_codigo", $columnaCodigo);
+        $this->commandAddParameter(":vin_valor_cadena", $valorCadena);
+        $this->commandAddParameter(":vin_valor_fecha", $valorFecha);
+        $this->commandAddParameter(":vin_usuario_id", $usuarioId);
+        $this->commandAddParameter(":vin_valor_extra", $valorExtra);
         return $this->commandGetData();        
     }
 }

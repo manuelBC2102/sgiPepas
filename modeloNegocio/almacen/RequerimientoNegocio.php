@@ -125,6 +125,7 @@ class RequerimientoNegocio extends ModeloNegocioBase
         $respuesta = new stdClass();
         $detalle =  MovimientoBien::create()->obtenerXIdMovimiento($movimientoId);
         $respuesta->dataDocumento = DocumentoNegocio::create()->obtenerDetalleDocumento($id);
+        $respuesta->documentoId = $id;
 
         $respuesta->detalle = $detalle;
         return $respuesta;
@@ -136,21 +137,23 @@ class RequerimientoNegocio extends ModeloNegocioBase
         
         $dataRelacionada = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoId($documentoId);
         foreach($dataRelacionada as $itemRelacion){
-          if($itemRelacion['documento_tipo_id'] == Configuraciones::GENERAR_COTIZACION){
-            $respuesta->dataDocumento = DocumentoNegocio::create()->obtenerDetalleDocumento($itemRelacion['documento_relacionado_id']);
-            $respuesta->dataDocumentoCabecera = DocumentoNegocio::create()->obtenerDocumentoXDocumentoId($itemRelacion['documento_relacionado_id']);
-            $detalle =  MovimientoBien::create()->obtenerXIdMovimiento($respuesta->dataDocumentoCabecera[0]['movimiento_id']);          }
+            if($itemRelacion['documento_tipo_id'] == Configuraciones::GENERAR_COTIZACION){
+                $respuesta->dataDocumento = DocumentoNegocio::create()->obtenerDetalleDocumento($itemRelacion['documento_relacionado_id']);
+                $respuesta->dataDocumentoCabecera = DocumentoNegocio::create()->obtenerDocumentoXDocumentoId($itemRelacion['documento_relacionado_id']);
+                $detalle =  MovimientoBien::create()->obtenerXIdMovimiento($respuesta->dataDocumentoCabecera[0]['movimiento_id']);         
+                $documento_detalle = Documento::create()->obtenerDocumentoDetalleDatos($itemRelacion['documento_relacionado_id']);
+            }        
         }
 
 
 
         foreach ($detalle as $index => $item) {
-            $detalle[$index]["subTotal_precio_postor1"] = $item["cantidad"] * $item["precio_postor1"];
-            $detalle[$index]["subTotal_precio_postor2"] = $item["cantidad"] * $item["precio_postor2"];
-            $detalle[$index]["subTotal_precio_postor3"] = $item["cantidad"] * $item["precio_postor3"];
+            $resMovimientoBienDetalle = MovimientoBien::create()->obtenerMovimientoBienDetalleXMovimientoBienId($item['movimiento_bien_id']);
+            $detalle[$index]["movimiento_bien_detalle"] = $resMovimientoBienDetalle;
         }
 
         $respuesta->detalle = $detalle;
+        $respuesta->documento_detalle = $documento_detalle;
 
         return $respuesta;
     }

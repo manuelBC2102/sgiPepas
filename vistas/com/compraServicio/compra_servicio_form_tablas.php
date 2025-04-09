@@ -110,6 +110,29 @@
                         <div class="portlet-body">               
                             <!--PARTE DINAMICA-->                
                             <div id="contenedorDocumentoTipo">       
+                                <div class="form-group col-md-12" id="contenedorProveedor" hidden>
+                                    <div class="row" style="height: auto;">          
+                                        <table id="datatableProveedor" class="table table-striped table-bordered">      
+                                        <thead>                                
+                                            <tr>                                   
+                                                <th style='text-align:center;'>#</th> 
+                                                <th style='text-align:center;'>Razón social</th>      
+                                                <th style='text-align:center;'>Moneda</th>  
+                                                <th style='text-align:center;'>Tipo cambio</th>             
+                                                <th style='text-align:center;'>IGV</th>
+                                                <th style='text-align:center;'>Tiempo de entrega</th>
+                                                <th style='text-align:center;'>Tiempo</th>
+                                                <th style='text-align:center;'>Condición de pago</th>
+                                                <th style='text-align:center;'>Sumilla</th>
+                                                <th style='text-align:center;'>Pdf Cotización</th>   
+                                                <th style='text-align:center;'>Distribución pagos</th>   
+                                            </tr>                              
+                                        </thead>                                       
+                                            <tbody id="dgDetalleProveedor">                                  
+                                            </tbody>                                      
+                                        </table>                               
+                                    </div>
+                                </div>
                                 <form  id="formularioDocumentoTipo"  method="post" class="form" enctype="multipart/form-data;charset=UTF-8">   
                                     <div class="row">                                  
                                         <div class="form-group col-md-12">              
@@ -191,6 +214,12 @@
                                             </li> -->
                                         </ul> 
                                         <div id="div_contenido_tab" class="tab-content">
+                                            <div id="exportarPdfCotizacion" hidden>
+                                                <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12" style="text-align:right;">
+                                                    <a href="#" onclick="exportarPdfCotizacion()"><i class="fa fa-print" style="color:red;" title="Exportar pdf cotización"></i> Exportar pdf cotización</a>
+                                                </div>
+                                                <br>
+                                            </div>
                                             <div class="tab-pane active" id="detalle" >
                                                 <div class="row" style="height: auto;">          
                                                     <table id="datatable" class="table table-striped table-bordered">      
@@ -1017,7 +1046,8 @@
                         <h4 class="modal-title"><b>Distribución de condición de pagos</b><label id="labelTotalDocumento" style="float: right; padding-right: 20px;"></label></h4>      
                     </div>            
                     <div class="modal-body">        
-                        <input type="hidden" id="idPagoProgramacion" value="" />         
+                        <input type="hidden" id="idPagoProgramacion" value="" />   
+                        <input type="hidden" id="indexProveedor" value="" />         
                         <div class="col-md-8">                         
                             <div class="row">                          
                                 <div class="col-md-12">                  
@@ -1396,7 +1426,31 @@
                     </div>           
                 </div>         
             </div>    
-        </div>       
+        </div>
+        <!--inicio modal de sumilla-->    
+        <div id="modalSumilla"  class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;"> 
+            <div class="modal-dialog">       
+                <div class="modal-content">      
+                    <input type="hidden" id="indiceSumilla" value="0">     
+                    <div class="modal-header">                   
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>         
+                        <h4 class="modal-title">Sumilla</h4>          
+                    </div>                    
+                    <div class="modal-body">     
+                        <div class="row">                
+                            <div class="col-sm-12" id="divSumilla">                                                    
+                            </div>
+                        </div>  <!--!--End row--> 
+                    </div>  
+
+                    <div class="modal-footer">  
+                        <a class="btn btn-danger" id="id" data-dismiss="modal"><i class="fa fa-close"></i>&ensp;Cancelar</a>           
+                        <a class="btn btn-success"  onclick="registrarSumilla()"  ><i class="fa fa-send-o"></i> Registrar</a>        
+                    </div>           
+                </div>         
+            </div>    
+        </div>
+        <!-- fin modal sumilla del item -->          
         <div id="datosImpresion" hidden="true"></div> 
         <script src="vistas/libs/imagina/js/jquery.btnswitch.js"></script>  
         <script src="vistas/com/compraServicio/compra_servicio_form_tablas.js"></script>

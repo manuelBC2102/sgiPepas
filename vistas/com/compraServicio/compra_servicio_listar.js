@@ -1727,7 +1727,7 @@ function cargarDetalleDocumento(data, dataMovimientoTipoColumna) {
         var html = '';
         html += "<tr>";
         var rowspan = '';
-        if (existeColumnaCodigo(27)) {
+        if (dataVisualizarDocumento.dataDocumentoGeneral[0]['documento_tipo_id'] == GENERAR_COTIZACION) {
             rowspan = "rowspan='2'";
         }
 //        if(existeColumnaCodigo(15)){
@@ -1762,25 +1762,24 @@ function cargarDetalleDocumento(data, dataMovimientoTipoColumna) {
             html += "<th style='text-align:center;'>Adjunto</th>";
             html += "<th style='text-align:center;'>Reserva</th>";
         }    
-        if (existeColumnaCodigo(27)) {
-            var moneda1 = data[0]['moneda_postor1'] == "2"? "S/":"$";
-            var moneda2 = data[0]['moneda_postor2'] == "2"? "S/":"$";;
-            var moneda3 = data[0]['moneda_postor3'] == "2"? "S/":"$";;
+        if (dataVisualizarDocumento.dataDocumentoGeneral[0]['documento_tipo_id'] == GENERAR_COTIZACION) {
+            dataVisualizarDocumento.dataPostores.forEach(function (proveedorID, idx) {
+                var textoOriginal = (proveedorID.persona).split("|");
+                var textProveedor = textoOriginal[1].length > 30 
+                    ? textoOriginal[1].substring(0, 30) + '…' 
+                    : textoOriginal[1];
+                html += "<th style='text-align:center;font-size:10px' colspan='2'>"+ textoOriginal[0] + "<br>" + textProveedor +"</th>";
 
-            html += "<th style='text-align:center;' colspan='2'>Postor N° 1 <br>"+ moneda1 +"</th>";
-            html += "<th style='text-align:center;' colspan='2'>Postor N° 2 <br>"+ moneda2 +"</th>";
-            html += "<th style='text-align:center;' colspan='2'>Postor N° 3 <br>"+ moneda3 +"</th>";
+            });
         }            
         html += "</tr>";
-        if (existeColumnaCodigo(27)) {
-            html += "<tr>"+
-            "<th style='text-align:center;' >Precio</th>"+
-            "<th style='text-align:center;' >Sub. Total</th>"+
-            "<th style='text-align:center;' >Precio</th>"+
-            "<th style='text-align:center;' >Sub. Total</th>"+
-            "<th style='text-align:center;' >Precio</th>"+
-            "<th style='text-align:center;' >Sub. Total</th>"+
-        "</tr>";
+        if (dataVisualizarDocumento.dataDocumentoGeneral[0]['documento_tipo_id'] == GENERAR_COTIZACION) {
+            html += "<tr>";
+            dataVisualizarDocumento.dataPostores.forEach(function (proveedorID, idx) {
+                html += "<th style='text-align:center;' >Precio</th>"+
+                "<th style='text-align:center;' >Sub. Total</th>";
+            });
+            html += "</tr>";
         }
         
         tHeadDetalle.append(html);
@@ -1789,6 +1788,7 @@ function cargarDetalleDocumento(data, dataMovimientoTipoColumna) {
         var tBodyDetalle = $('#tbodyDetalle');
         tBodyDetalle.empty();
 
+        var totalPostores = [];
         html = '';
         $.each(data, function (index, item) {
             html += "<tr>";
@@ -1830,18 +1830,76 @@ function cargarDetalleDocumento(data, dataMovimientoTipoColumna) {
                     html += "<td style='text-align:center;'>No</td>";
                 }
             }
-            if (existeColumnaCodigo(27)) {
-                html += "<td style='text-align:center;'>" + redondearNumerDecimales(item.precio_postor1, 2) + "</td>";
-                html += "<td style='text-align:center;'>"+ redondearNumerDecimales((item.cantidad * item.precio_postor1), 2) +"</td>";
-                html += "<td style='text-align:center;'>" + redondearNumerDecimales(item.precio_postor2, 2) + "</td>";
-                html += "<td style='text-align:center;'>"+ redondearNumerDecimales((item.cantidad * item.precio_postor2), 2) +"</td>";
-                html += "<td style='text-align:center;'>" + redondearNumerDecimales(item.precio_postor3, 2) + "</td>";
-                html += "<td style='text-align:center;'>"+ redondearNumerDecimales((item.cantidad * item.precio_postor3), 2) +"</td>";
+
+            if (dataVisualizarDocumento.dataDocumentoGeneral[0]['documento_tipo_id'] == GENERAR_COTIZACION) {
+                dataVisualizarDocumento.dataPostores.forEach(function (proveedorID, idx) {
+                    var total_ = 0;
+                    $.each(item.movimiento_bien_detalle, function (indexBD, itemBD) {
+                        if(itemBD.columna_codigo == 37){
+                            if (proveedorID.persona_id == itemBD.valor_extra) {
+                                var color_ganador = "";
+                                if(item.postor_ganador_id == proveedorID.persona_id){
+                                    color_ganador = "background-color:rgb(0, 254, 127);";
+                                }
+                                html += "<td style='text-align:center;"+ color_ganador +"'>" + devolverDosDecimales(itemBD.valor_detalle, 2) + "</td>";
+                                html += "<td style='text-align:center;"+ color_ganador +"'>"+ devolverDosDecimales((item.cantidad * itemBD.valor_detalle), 2) +"</td>";
+                                total_ = total_ + (item.cantidad * itemBD.valor_detalle);
+                                totalPostores[idx] = (isEmpty(totalPostores[idx])?0:totalPostores[idx]) + total_;
+                            }
+                        }
+                    });
+                });
             }
             html += "</tr>";
         });
 
         tBodyDetalle.append(html);
+
+        var tfootDetalle = $('#tfootDetalle');
+        tfootDetalle.empty();
+
+
+        var filaExtratfoot = '';
+        if (dataVisualizarDocumento.dataDocumentoGeneral[0]['documento_tipo_id'] == GENERAR_COTIZACION) {
+            $("#datatable2").css({ "overflow-x": "auto", "display": "block" });
+
+            var textsubtotal = "";
+            var textigv = "";
+            var texttotal = "";
+            var monedaText = "";
+            var texttotalSoles = "";
+            dataVisualizarDocumento.dataPostores.forEach((proveedor, idx) => {
+                var monto = totalPostores[idx];
+                var tipoCambio = proveedor.moneda_id == 4 ? proveedor.tipo_cambio : 1;
+            
+                var esSinIGV = proveedor.igv === 0;
+                var subTotal = esSinIGV ? monto : monto / 1.18;
+                var total = esSinIGV ? subTotal * 1.18 : monto;
+                var igv = total - subTotal;
+                var totalSoles = total * tipoCambio;
+            
+                textsubtotal += `<th style='text-align:right' colspan='2'> ${devolverDosDecimales(subTotal, 2)}</th>`;
+                textigv += `<th style='text-align:right' colspan='2'> ${devolverDosDecimales(igv, 2)}</th>`;
+                texttotal += `<th style='text-align:right' colspan='2'> $${proveedor.moneda_id == 2 ? 0 : devolverDosDecimales(total, 2)}</th>`;
+                texttotalSoles += `<th style='text-align:right' colspan='2'>S/ ${devolverDosDecimales(totalSoles, 2)}</th>`;
+            });
+            
+            filaExtratfoot += '<tr >'+
+                    '<th colspan="4" style="text-align:right">Sub Total dolares:</th>' + textsubtotal;
+            filaExtratfoot += '</tr>';
+            filaExtratfoot += '<tr>'+
+                    '<th colspan="4" style="text-align:right">IGV (18%):</th>' + textigv;
+            filaExtratfoot += '</tr>';
+            filaExtratfoot += '<tr>'+                   
+                    '<th colspan="4" style="text-align:right">Totales Dolares:</th>' + texttotal;
+            filaExtratfoot += '</tr>';
+
+            filaExtratfoot += '<tr>'+                   
+            '<th colspan="4" style="text-align:right">Totales Soles:</th>' + texttotalSoles;
+            filaExtratfoot += '</tr>';
+            
+            tfootDetalle.append(filaExtratfoot);
+        }
     } else
     {
         var table = $('#datatable2').DataTable();
@@ -4816,4 +4874,8 @@ function imprimirOrdenServicio(documentoId, documentoTipo){
     ax.addParamTmp("documentoId", documentoId);
     ax.addParamTmp("documento_tipo_id", documentoTipo);
     ax.consumir();
+}
+
+function devolverDosDecimales(num) {
+        return redondearNumero(num).toFixed(2);
 }

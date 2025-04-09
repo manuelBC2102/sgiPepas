@@ -193,8 +193,10 @@ class MovimientoControlador extends AlmacenIndexControlador
     $detalleDistribucion = $this->getParametro("detalleDistribucion");
     $distribucionObligatoria = $this->getParametro("distribucionObligatoria");
     $dataStockReservaOk = $this->getParametro("dataStockReservaOk");
+    $dataPostorProveedor = $this->getParametro("dataPostorProveedor");
+    $listaPagoProgramacionPostores = $this->getParametro("listaPagoProgramacionPostores");
 
-    $respuestaGuardar = MovimientoNegocio::create()->validarGenerarDocumentoAdicional($opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $documentoARelacionar, $valorCheck, $comentario, $checkIgv, $monedaId, $accionEnvio, $tipoPago, $listaPagoProgramacion, $anticiposAAplicar, $periodoId, $percepcion, $origen_destino, $importeTotalInafectas, $datosExtras, $detalleDistribucion, $contOperacionTipoId, $distribucionObligatoria, $igv_porcentaje, $dataStockReservaOk);
+    $respuestaGuardar = MovimientoNegocio::create()->validarGenerarDocumentoAdicional($opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $documentoARelacionar, $valorCheck, $comentario, $checkIgv, $monedaId, $accionEnvio, $tipoPago, $listaPagoProgramacion, $anticiposAAplicar, $periodoId, $percepcion, $origen_destino, $importeTotalInafectas, $datosExtras, $detalleDistribucion, $contOperacionTipoId, $distribucionObligatoria, $igv_porcentaje, $dataStockReservaOk, $dataPostorProveedor, $listaPagoProgramacionPostores);
     if (isset($respuestaGuardar->bandera_historial) && !ObjectUtil::isEmpty($respuestaGuardar->bandera_historial)) {
       if ($respuestaGuardar->bandera_historial == 1) {
         $valoresActualizados = $this->eliminarParametrosJSON($this->params);
@@ -1714,8 +1716,10 @@ class MovimientoControlador extends AlmacenIndexControlador
     $datosExtras = $this->getParametro("datosExtras");
     $detalleDistribucion = $this->getParametro("detalleDistribucion");
     $distribucionObligatoria = $this->getParametro("distribucionObligatoria");
+    $dataPostorProveedor = $this->getParametro("dataPostorProveedor");
+    $listaPagoProgramacionPostores = $this->getParametro("listaPagoProgramacionPostores");
 
-    $respuestaGuardar = MovimientoNegocio::create()->guardarXAccionEnvioEdicion($documentoId, $opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $listaDetalleEliminar, $documentoARelacionar, $valorCheck, $comentario, $checkIgv, $monedaId, $accionEnvio, $tipoPago, $listaPagoProgramacion, $anticiposAAplicar, $periodoId, $percepcion, $datosExtras, $detalleDistribucion, $contOperacionTipoId, $distribucionObligatoria, $igv_porcentaje);
+    $respuestaGuardar = MovimientoNegocio::create()->guardarXAccionEnvioEdicion($documentoId, $opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $listaDetalleEliminar, $documentoARelacionar, $valorCheck, $comentario, $checkIgv, $monedaId, $accionEnvio, $tipoPago, $listaPagoProgramacion, $anticiposAAplicar, $periodoId, $percepcion, $datosExtras, $detalleDistribucion, $contOperacionTipoId, $distribucionObligatoria, $igv_porcentaje, null,$dataPostorProveedor, $listaPagoProgramacionPostores);
 
     if (isset($respuestaGuardar->bandera_historial) && !ObjectUtil::isEmpty($respuestaGuardar->bandera_historial)) {
       if ($respuestaGuardar->bandera_historial == 1) {
@@ -1996,5 +2000,13 @@ class MovimientoControlador extends AlmacenIndexControlador
         return MovimientoNegocio::create()->imprimirExportarPDFDocumento($documentoTipoId, $itemRelacion['documento_relacionado_id'], $usuarioId);
       }
     }
+  }
+
+  public function exportarPdfCotizacion(){
+    $grupoProductoId = $this->getParametro("grupoProductoId");
+    $tipoRequerimiento = $this->getParametro("tipoRequerimiento");
+    $urgencia = $this->getParametro("urgencia");
+    $usuarioId = $this->getUsuarioId();
+    return MovimientoNegocio::create()->exportarPdfCotizacion($grupoProductoId, $tipoRequerimiento, $urgencia, $usuarioId);
   }
 }

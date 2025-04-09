@@ -414,6 +414,9 @@
                                                                     <tbody id="tbodyDetalle">
 
                                                                     </tbody>
+                                                                    <tfoot id="tfootDetalle">
+
+                                                                    </tfoot>
                                                                 </table>
                                                                 <div id="lblComentario" class="form-group col-lg-12 col-md-12">
                                                                     <label>COMENTARIO </label>

@@ -79,7 +79,7 @@ class RequerimientoControlador extends AlmacenIndexControlador
             //         return $item['nivel'] <= $nivelM;
             //     });
             // }
-            if($data[$i]['documento_tipo_id'] == "282" && 30000 > $sumaDetalle){
+            if($data[$i]['documento_tipo_id'] == Configuraciones::ORDEN_COMPRA && 30000 > $sumaDetalle){
                 $nivelM=1;
                 $matrizUsuario = array_filter($matrizUsuario, function($item) use ($nivelM) {
                     return $item['nivel'] <= $nivelM;
@@ -286,4 +286,13 @@ class RequerimientoControlador extends AlmacenIndexControlador
           }
         }
     }
+
+    public function eliminarPDF()
+    {
+      /** @var string */
+      $url = __DIR__. '/../../'.$this->getParametro("url");
+      unlink($url);
+      return 1;
+    }
+  
 }
