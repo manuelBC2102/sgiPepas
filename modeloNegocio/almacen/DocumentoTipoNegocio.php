@@ -252,35 +252,35 @@ class DocumentoTipoNegocio extends ModeloNegocioBase
             $dtd[$index]["data"] = OrganizadorNegocio::create()->getDataUnidadMinera();
             break;
           case self::CUENTA_GASTOS:
-            $mostrarCuenta = 0;
+            $filtrados = [];
             $data = DocumentoTipoDatoListaNegocio::create()->obtenerXDocumentoTipoDato($itemDtd["id"]);;
             $dataPerfil = PerfilNegocio::create()->obtenerPerfilXUsuarioId($usuarioId);
-            $filtrados = null;
 
             $filtradosPerfil= array_values(array_filter($dataPerfil, function($itemPerfil){
               return ($itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_TI_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_LOGISTA || $itemPerfil['id'] == PerfilNegocio::PERFIL_JEFE_LOGISTA);
             }));
 
-            if(!ObjectUtil::isEmpty($filtradosPerfil)){
-              $filtrados = $data;
-            }else{
-              $filtradosPerfil= array_values(array_filter($dataPerfil, function($itemPerfil){
-                return ($itemPerfil['id'] == PerfilNegocio::PERFIL_DDH || $itemPerfil['id'] == PerfilNegocio::PERFIL_EQUIPOS);
-              }));
+            $dataArea = PersonaNegocio::create()->getAllAreaXUsuarioId($usuarioId);
+            $filtradosArea = array_values(array_filter($dataArea, function($itemArea){
+              return ($itemArea['id'] == PerfilNegocio::AREA_GEOLOGIA || $itemArea['id'] == PerfilNegocio::AREA_MANTENIMIENTO);
+            }));
 
-              if(!ObjectUtil::isEmpty($filtradosPerfil)){
-                $filtrados= array_values(array_filter($data, function($item) use ($filtradosPerfil){
-                  return $item['descripcion'] === $filtradosPerfil[0]['nombre'];
-                }));
-                $dtd[$index]["lista_defecto"] = $filtrados[0]['id'];
+            if(ObjectUtil::isEmpty($filtradosArea)){
+              if($dataArea[0]['id'] == PerfilNegocio::AREA_LOGISTICA || !ObjectUtil::isEmpty($filtradosPerfil)){
+                $filtrados = $data;
               }else{
-                $filtrados= array_values(array_filter($data, function($item){
-                  return $item['descripcion'] === "PEPAS";
-                }));
-                $dtd[$index]["lista_defecto"] = $filtrados[0]['id'];
+                array_push($filtrados, array("id" => "506", "descripcion" => "PEPAS", "valor" => ""));
+                $dtd[$index]["lista_defecto"] = "506";
+              }
+            }else{
+              if($dataArea[0]['id'] == PerfilNegocio::AREA_GEOLOGIA){
+                array_push($filtrados, array("id" => "504", "descripcion" => "DDH", "valor" => ""));
+                $dtd[$index]["lista_defecto"] = "504";
+              }else if($dataArea[0]['id'] == PerfilNegocio::AREA_MANTENIMIENTO){
+                array_push($filtrados, array("id" => "503", "descripcion" => "PEPAS", "valor" => ""));
+                $dtd[$index]["lista_defecto"] = "503";
               }
             }
-
             $dtd[$index]["data"] = $filtrados;
             break;
         }

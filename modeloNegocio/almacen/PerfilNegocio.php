@@ -21,6 +21,11 @@ class PerfilNegocio extends ModeloNegocioBase {
 
     const PERFIL_DDH = 156;
     const PERFIL_EQUIPOS = 157;
+
+    const AREA_GEOLOGIA = 9;
+    const AREA_LOGISTICA = 12;
+    const AREA_MANTENIMIENTO = 13;
+
     /**
      * 
      * @return PerfilNegocio
