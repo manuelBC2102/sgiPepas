@@ -12581,7 +12581,7 @@ function hallarSubTotalPostorDetalle(indice, numero, bandera) {
 
       var igv = $('#selectIGV_' + idx).is(":checked");
       var tipoCambio = proveedorID.monedaId == 4 ? proveedorID.tipoCambio : 1;
-            
+
       var subTotal = igv ? valorTotal / 1.18 : valorTotal;
       var total = igv ? valorTotal : subTotal * 1.18;
       var IGV = total - subTotal;
@@ -12589,8 +12589,8 @@ function hallarSubTotalPostorDetalle(indice, numero, bandera) {
       // Actualizar el footer
       $('#tfootpostorSolesSubTotal' + proveedorID.indice).html(devolverDosDecimales(subTotal));
       $('#tfootpostorSolesIgv' + proveedorID.indice).html(devolverDosDecimales(IGV));
-      $('#tfootpostorSoles' + proveedorID.indice).html("S/"+ devolverDosDecimales(totalSoles));
-      $('#tfootpostorDolares' + proveedorID.indice).html("$ "+ devolverDosDecimales(proveedorID.monedaId == 2 ? 0 : devolverDosDecimales(total, 2)));
+      $('#tfootpostorSoles' + proveedorID.indice).html("S/" + devolverDosDecimales(totalSoles));
+      $('#tfootpostorDolares' + proveedorID.indice).html("$ " + devolverDosDecimales(proveedorID.monedaId == 2 ? 0 : devolverDosDecimales(total, 2)));
 
       totalesPostores[idx] = { indice: proveedorID.indice, total: valorTotal };
     });
@@ -12754,18 +12754,26 @@ var widthMoneda = "100";
 var widtIGV = "50";
 var widtTiempo = "150";
 var arrayProveedor = [];
+var theadOriginal = "";
 function cargarProveedorDetalleCombo(data, indice) {
+  var dataMapped = [
+    { id: '', text: '' }, // 👈 opción vacía
+    ...data.map(function (item) {
+      return {
+        id: item.id,
+        text: item.codigo_identificacion + ' | ' + item.persona_nombre
+      };
+    })
+  ];
   $("#cboProveedor_" + indice).select2({
-    width: widthProveedor + "px"
+    width: widthProveedor + "px",
+    allowClear: true,
+    placeholder: "Buscar proveedor",
+    data: dataMapped
   }).on("change", function (e) {
     agregarProverdorTabla(e.val, indice);
   });
 
-  if (!isEmpty(data)) {
-    select2.cargar("cboProveedor_" + indice, data, "id", ["codigo_identificacion", "persona_nombre"]);
-    select2.asignarValor("cboProveedor_" + indice, "");
-  }
-  $("#cboProveedor_" + indice).select2({ width: widthProveedor + "px" });
 }
 
 function cargarMonedaDetalleCombo(data, indice) {
@@ -12798,8 +12806,8 @@ function cargarTiempoEntrega(indice) {
 
 function agregarRazonSocialProveedor(i) {
   var $html = "<div class=\"input-group col-lg-12 col-md-12 col-sm-12 col-xs-12\">" +
-    "<select name=\"cboProveedor_" + i + "\" id=\"cboProveedor_" + i + "\" class=\"select2\" onchange=\"\">" +
-    "</select></div>";
+    "<input name=\"cboProveedor_" + i + "\" id=\"cboProveedor_" + i + "\" class=\"select2\" onchange=\"\"/>" +
+    "</div>";
   return $html;
 }
 
@@ -13009,7 +13017,7 @@ function abrirDocumentoPDF2(data, contenedor) {
 var sumillas = [];
 function asignarValoresPostor(data) {
   data.forEach(function (proveedorID, idx) {
-    select2.asignarValor("cboProveedor_" + idx, proveedorID.persona_id);
+    $("#cboProveedor_" + idx).val(proveedorID.persona_id).trigger("change");
     select2.asignarValor("cboMonedaP_" + idx, proveedorID.moneda_id);
     $("#txtTipoCambio_" + idx).val(devolverDosDecimales(proveedorID.tipo_cambio))
     if (proveedorID.moneda_id == 1) {
@@ -13032,6 +13040,26 @@ function asignarValoresPostor(data) {
 }
 
 function agregarProverdorTabla(valor, indice) {
+  var selectedValue = valor;
+  if (isEmpty(selectedValue)) {
+    swal({
+      title: "¿Desea continuar?",
+      text: "Se eliminaran los registros del proveedor seleccionado.",
+      type: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#33b86c",
+      confirmButtonText: "Si!",
+      cancelButtonColor: '#d33',
+      cancelButtonText: "No!",
+      closeOnConfirm: true,
+      closeOnCancel: true
+    }, function (isConfirm) {
+      if (isConfirm) {
+        eliminarEncabezador(indice);
+      }
+    });
+    return;
+  }
   // Agregar nuevo proveedor al array
   var textoOriginal = (select2.obtenerText("cboProveedor_" + indice)).split("|");
   var textProveedor = textoOriginal[1].length > 30
@@ -13064,6 +13092,8 @@ function agregarProverdorTabla(valor, indice) {
       select2.asignarValor("cbo_" + dtdTipoGrupo_producto, 0);
     }
 
+    theadOriginal = $('#datatable thead').html(); // Guardar copia original
+    $('#datatable thead').html(theadOriginal);
     // Agregar nueva columna antes de la última en la fila principal
     $('#datatable thead tr:first').each(function () {
       var $ths = $(this).find('th');
@@ -13090,8 +13120,8 @@ function agregarProverdorTabla(valor, indice) {
     // Agregar celdas en cada fila del tbody antes de la última celda
     $('#datatable tbody tr').each(function (index) {
       var $tds = $(this).find('td');
-      $(`<td class='td_precio_${index}'>${agregarPrecioUnitarioPDetalleTabla(index, indice)}</td>`).insertBefore($tds.last());
-      $(`<td class='td_subTotal_${index}'>${agregarSubTotalPDetalleTabla(index, indice)}</td>`).insertBefore($tds.last());
+      $(`<td class='td_precio_${index}_${indice}'>${agregarPrecioUnitarioPDetalleTabla(index, indice)}</td>`).insertBefore($tds.last());
+      $(`<td class='td_subTotal_${index}_${indice}'>${agregarSubTotalPDetalleTabla(index, indice)}</td>`).insertBefore($tds.last());
     });
 
     $("#datatable").css({ "overflow-x": "auto", "display": "block" });
@@ -13101,7 +13131,7 @@ function agregarProverdorTabla(valor, indice) {
       var filaExtratfoot = `
                     <tfoot>
                         <tr id='tfoot_proveedorSubTotal'>
-                            <th colspan='4' style='text-align:right'>Sub Total Soles:</th>
+                            <th colspan='4' style='text-align:right'>Sub Total:</th>
                             <th style='text-align:right' colspan='2' class='tfootpostorSubtTotal${indice}_class' id='tfootpostorSolesSubTotal${indice}'>0.00</th>
                         </tr>
                         <tr id='tfoot_proveedorIgv'>
@@ -13127,7 +13157,7 @@ function agregarProverdorTabla(valor, indice) {
                 `);
       $('#datatable tfoot #tfoot_proveedorDolares').append(`
                   <th style='text-align:right' colspan='2' class='tfootpostorDolares${indice}_class' id='tfootpostorDolares${indice}'>0.00</th>
-              `);                
+              `);
       $('#datatable tfoot #tfoot_proveedor').append(`
                     <th style='text-align:right' colspan='2' class='tfootpostor${indice}_class' id='tfootpostorSoles${indice}'>0.00</th>
                 `);
@@ -13183,4 +13213,39 @@ function mostrarModalDistribucionPago(indice) {
     mostrarAdvertencia('Seleccione un proveedor');
     return;
   }
+}
+
+function eliminarEncabezador(indice) {
+  // Eliminar encabezado principal
+  $(`#th_proveedor_${indice}`).remove();
+
+  // Eliminar encabezados de precio y subtotal en la fila adicional
+  $(`#tr_proveedor .th_precio_${indice}`).remove();
+  $(`#tr_proveedor .th_subTotal_${indice}`).remove();
+
+  // Eliminar las celdas del tbody asociadas a este índice
+  $('#datatable tbody tr').each(function (index) {
+      $(this).find(`.td_precio_${index}_${indice}`).remove();
+      $(this).find(`.td_subTotal_${index}_${indice}`).remove();
+  });
+
+  $('#tfootpostorSolesSubTotal' + indice).remove();
+  $('#tfootpostorSolesIgv' + indice).remove();
+  $('#tfootpostorDolares' + indice).remove();
+  $('#tfootpostorSoles' + indice).remove();
+
+  arrayProveedor.splice(indice, 1);
+  lstDocumentoArchivos.splice(indice, 1);
+  listaPagoProgramacionPostores.splice(indice, 1);
+  totalesPostores.splice(indice, 1);
+  $("#text_archivo_" + indice).html("");
+
+  if (indice == 0) {
+      $('#headDetalleCabecera #th_proveedor_' + indice).remove();
+      $('#headDetalleCabecera #tr_proveedor').remove();
+      $('#datatable thead tr:first th').attr('rowspan', '1');
+  }
+  theadOriginal = $('#datatable thead').html(); // Guardar copia original
+
+  return false;
 }
