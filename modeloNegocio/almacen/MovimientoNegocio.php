@@ -10549,7 +10549,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     $pdf->MultiCell(7, 3, $tipo_x3, 1, 'C', 1, 0, 140, 80, true, 0, false, true, 3, 'M'); //VALIDAR
     $pdf->MultiCell(75, 5, 'Otros (Detallar)', 1, 'L', 1, 0, 120, 84, true, 0, false, true, 5, 'M');
     $pdf->MultiCell(7, 3, $tipo_x4, 1, 'C', 1, 0, 140, 85, true, 0, false, true, 3, 'M'); //VALIDAR
-    $pdf->MultiCell(7, 3, $otros, 1, 'L', 1, 0, 150, 85, true, 0, false, true, 3, 'M'); //VALIDAR
+    $pdf->MultiCell(40, 3, $otros, 1, 'L', 1, 0, 150, 85, true, 0, false, true, 3, 'M'); //VALIDAR
 
 
     //detalle

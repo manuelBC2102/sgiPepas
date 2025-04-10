@@ -89,7 +89,13 @@ class RequerimientoControlador extends AlmacenIndexControlador
             $usuario_estado = DocumentoNegocio::create()->obtenerDocumentoDocumentoEstadoXdocumentoId($data[$i]['id'], "0,1");
 
             $tamanioMatriz = count($matrizUsuario);
-            $porcentajeDividido = 100 / $tamanioMatriz;
+            $porcentajeDividido = 100 / ($tamanioMatriz == 1 ? 2 : $tamanioMatriz);
+
+            if($tamanioMatriz == 1){
+                $arrayMatriz = array(
+                    "usuario_aprobador_id" => $data[$i]["usuario_id"],  "nivel" => 1, "nombre" => $usuario_estado[0]['nombre']);
+                array_push($matrizUsuario, $arrayMatriz);
+            }
             $stringProgressBar = "<div class='progress'>";
             $arrayAprobadores = [];
             $arrayAprobaciones = [];
