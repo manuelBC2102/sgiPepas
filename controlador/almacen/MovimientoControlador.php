@@ -2009,4 +2009,12 @@ class MovimientoControlador extends AlmacenIndexControlador
     $usuarioId = $this->getUsuarioId();
     return MovimientoNegocio::create()->exportarPdfCotizacion($grupoProductoId, $tipoRequerimiento, $urgencia, $usuarioId);
   }
+
+  public function exportarExcelCotizacion(){
+    $grupoProductoId = $this->getParametro("grupoProductoId");
+    $tipoRequerimiento = $this->getParametro("tipoRequerimiento");
+    $urgencia = $this->getParametro("urgencia");
+    $usuarioId = $this->getUsuarioId();
+    return MovimientoNegocio::create()->exportarExcelCotizacion($grupoProductoId, $tipoRequerimiento, $urgencia, $usuarioId);
+  }
 }

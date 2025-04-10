@@ -12585,4 +12585,110 @@ class MovimientoNegocio extends ModeloNegocioBase
     $respuesta->pdf = $pdf_;
     return $respuesta;
   }
+
+  public function exportarExcelCotizacion($grupoProductoId, $tipoRequerimiento, $urgencia, $usuarioId)
+  {
+
+    $detalleRequerimientos = MovimientoBien::create()->obtenerMovimientoBienXRequerimientoXGrupoProductoxId($grupoProductoId, $tipoRequerimiento, $urgencia);
+    
+    $objPHPExcel = new PHPExcel();
+    $i = 1;
+
+    $estilos_tabla = array('font' => array(
+          'name' => 'Arial',
+          'bold' => true,
+          'italic' => false,
+          'strike' => false,
+          'size' => 11,
+          'color' => array('rgb' => 'FFFFFF'),
+      ), 'borders' => array(
+          'allborders' => array(
+              'style' => PHPExcel_Style_Border::BORDER_THIN
+          )
+      ),'fill' => array('type' => PHPExcel_Style_Fill::FILL_SOLID, 'color' => array('rgb' => 'febf00'))
+    );
+
+    $estilos_filas = array('fill' => array(
+          'type' => PHPExcel_Style_Fill::FILL_SOLID,
+          'color' => array('rgb' => 'FFFBE5'),
+      ), 'borders' => array(
+          'allborders' => array(
+              'style' => PHPExcel_Style_Border::BORDER_THIN
+          )
+      )
+    );
+
+    $estiloDetCabecera = array(
+      'font' => array(
+          'name' => 'Arial',
+          'bold' => true,
+          'size' => 17,
+          'color' => array('rgb' => '000000'),
+      ),
+      'alignment' => array(
+          'horizontal' => PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
+          'vertical' => PHPExcel_Style_Alignment::VERTICAL_CENTER,
+          'wrap' => FALSE
+      )
+    );
+    
+    $i++;
+
+    // Insertar una imagen en la celda A$i
+    $drawing = new PHPExcel_Worksheet_Drawing();
+    $drawing->setName('Logo');
+    $drawing->setDescription('Logo');
+    $drawing->setPath(__DIR__ . '/../../vistas/images/logo_pepas_de_oro.png'); // Ruta a la imagen
+    $drawing->setHeight(70); // Altura en píxeles
+    $drawing->setCoordinates('H' . $i); // Celda donde se insertará
+    $drawing->setWorksheet($objPHPExcel->getActiveSheet());
+
+
+    $objPHPExcel->setActiveSheetIndex()->setCellValue('B' . $i, 'Solicitud de cotización');
+    $objPHPExcel->getActiveSheet()->mergeCells("B$i:G$i");
+    $objPHPExcel->getActiveSheet()->getStyle('B' . $i . ':B' . $i)->applyFromArray($estiloDetCabecera);
+    $i++;
+
+    //ANCHOS DE COLUMNAS        
+    $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('B')->setWidth(5.7);
+    $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('C')->setWidth(15);
+    $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('D')->setWidth(100);
+    $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('E')->setWidth(12.14);
+    $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('F')->setWidth(24.29);
+    $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('G')->setWidth(20);
+    $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('h')->setWidth(30);
+
+
+    $i = $i + 3;
+    $objPHPExcel->setActiveSheetIndex()->setCellValue('B' . $i, '#');
+    $objPHPExcel->setActiveSheetIndex()->setCellValue('C' . $i, 'CODIGO');
+    $objPHPExcel->setActiveSheetIndex()->setCellValue('D' . $i, 'DESCRIPCION');
+    $objPHPExcel->setActiveSheetIndex()->setCellValue('E' . $i, 'MARCA');
+    $objPHPExcel->setActiveSheetIndex()->setCellValue('F' . $i, 'MODELO');
+    $objPHPExcel->setActiveSheetIndex()->setCellValue('G' . $i, 'CANTIDAD');
+    $objPHPExcel->setActiveSheetIndex()->setCellValue('H' . $i, 'UNIDAD MEDIDA');
+
+    $objPHPExcel->getActiveSheet()->getStyle('B' . $i . ':H' . $i)->applyFromArray($estilos_tabla);
+    $objPHPExcel->getActiveSheet()->getStyle("B$i:H$i")->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER)->setVertical(PHPExcel_Style_Alignment::VERTICAL_CENTER);
+
+    $i++;
+
+    foreach ($detalleRequerimientos as $index => $item) {
+      $objPHPExcel->setActiveSheetIndex()->setCellValue('B' . $i, ($index + 1));
+      $objPHPExcel->setActiveSheetIndex()->setCellValue('C' . $i, $item['bien_codigo']);
+      $objPHPExcel->setActiveSheetIndex()->setCellValue('D' . $i, $item['bien_descripcion']);
+      $objPHPExcel->setActiveSheetIndex()->setCellValue('E' . $i, "");
+      $objPHPExcel->setActiveSheetIndex()->setCellValue('F' . $i, "");
+      $objPHPExcel->setActiveSheetIndex()->setCellValue('G' . $i, $item['cantidad']);
+      $objPHPExcel->setActiveSheetIndex()->setCellValue('H' . $i, $item['simbolo']);
+
+      $objPHPExcel->getActiveSheet()->getStyle('B' . $i . ':H' . $i)->applyFromArray($estilos_filas);
+
+      $i++;
+    }
+
+    $objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
+    $objWriter->save(__DIR__ . '/../../util/formatos/SolicitudCotizacion.xlsx');
+    return 1;
+  }
 }

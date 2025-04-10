@@ -216,7 +216,8 @@
                                         <div id="div_contenido_tab" class="tab-content">
                                             <div id="exportarPdfCotizacion" hidden>
                                                 <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12" style="text-align:right;">
-                                                    <a href="#" onclick="exportarPdfCotizacion()"><i class="fa fa-print" style="color:red;" title="Exportar pdf cotización"></i> Exportar pdf cotización</a>
+                                                    <a href="#" onclick="exportarExcelCotizacion()"><i class="fa fa-file-excel-o" style="color:red;" title="Exportar excel cotización"></i> Exportar excel cotización</a>
+                                                    &nbsp;&nbsp;<a href="#" onclick="exportarPdfCotizacion()"><i class="fa fa-print" style="color:red;" title="Exportar pdf cotización"></i> Exportar pdf cotización</a>
                                                 </div>
                                                 <br>
                                             </div>
