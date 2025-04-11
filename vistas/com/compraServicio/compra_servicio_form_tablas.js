@@ -1148,7 +1148,7 @@ function onResponseObtenerConfiguracionesIniciales(data) {
             if (arrayCuenta.includes(dtdTipoCuentaText)) {
                 var dtdTipoTipoRequerimiento = obtenerDocumentoTipoDatoIdXTipo(42);
                 if (select2.obtenerValor("cboTipoRequerimiento_" + dtdTipoTipoRequerimiento) != 455) {
-                    select2.asignarValor("cbo_" + dtdTipoUrgencia.id, 0);
+                    select2.asignarValor("cbo_" + dtdTipoUrgencia.id, 473);
                 }else{
                     select2.asignarValor("cbo_" + dtdTipoUrgencia.id, 474);
                 }
@@ -11241,6 +11241,8 @@ function cargarProveedorDetalleCombo(data, indice) {
             }, function (isConfirm) {
                 if (isConfirm) {
                     eliminarEncabezador(indice);
+                }else{
+                    $("#cboProveedor_" + indice).val(arrayProveedor[indice].proveedor_id).trigger("change");
                 }
             });
             return;

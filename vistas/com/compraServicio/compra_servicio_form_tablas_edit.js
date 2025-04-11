@@ -13042,23 +13042,27 @@ function asignarValoresPostor(data) {
 function agregarProverdorTabla(valor, indice) {
   var selectedValue = valor;
   if (isEmpty(selectedValue)) {
-    swal({
-      title: "¿Desea continuar?",
-      text: "Se eliminaran los registros del proveedor seleccionado.",
-      type: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#33b86c",
-      confirmButtonText: "Si!",
-      cancelButtonColor: '#d33',
-      cancelButtonText: "No!",
-      closeOnConfirm: true,
-      closeOnCancel: true
-    }, function (isConfirm) {
-      if (isConfirm) {
-        eliminarEncabezador(indice);
-      }
-    });
-    return;
+    if (!isEmpty(totalesPostores)) {
+      swal({
+        title: "¿Desea continuar?",
+        text: "Se eliminaran los registros del proveedor seleccionado.",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#33b86c",
+        confirmButtonText: "Si!",
+        cancelButtonColor: '#d33',
+        cancelButtonText: "No!",
+        closeOnConfirm: true,
+        closeOnCancel: true
+      }, function (isConfirm) {
+        if (isConfirm) {
+          eliminarEncabezador(indice);
+        }else{
+          $("#cboProveedor_" + indice).val(arrayProveedor[indice].proveedor_id).trigger("change");
+        }
+      });
+      return;
+    }
   }
   // Agregar nuevo proveedor al array
   var textoOriginal = (select2.obtenerText("cboProveedor_" + indice)).split("|");

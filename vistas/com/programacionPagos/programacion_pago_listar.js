@@ -17,6 +17,7 @@ $(document).ready(function () {
         if (filasSeleccionadas.length <= 0) {
             $.Notification.autoHideNotify('warning', 'top right', 'Validación', " Seleccione uno o más comprobantes, para realizar el proceso");
             bandera_copia = false;
+            loaderClose();
         }
 
         if (bandera_copia) {
