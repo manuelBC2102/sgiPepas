@@ -220,23 +220,6 @@
                     </table>
                 </div>
                 <br>
-                <div class="row" id="tableDistribucionPagos" name="tableDistribucionPagos" hidden>
-                    <h3> Detalle de pagos</h3>
-                    <table id="dtmodalDetalleDistribucionPagos" class="table table-striped table-bordered" style="width: 100%">
-                        <thead>
-                            <tr>
-                                <th style='text-align:center;'>#</th>
-                                <th style='text-align:center;'>Fecha pago</th>
-                                <th style='text-align:center;'>Glosa</th>
-                                <th style='text-align:center;'>Importe</th>
-                                <th style='text-align:center;'>Porcentaje (%)</th>
-                                <th style='text-align:center;'>Estado</th>
-                                <th style='text-align:center;'>Acciones</th>
-                            </tr>
-                        </thead>
-                    </table>
-                </div>
-                <br>
                 <div class="row" id="tableOrdenCompraServicio" name="tableOrdenCompraServicio" hidden>
                     <h3 id="tituloOrden"></h3>
                     <table id="dtmodalDetalletableOrdenCompraServicio" class="table table-striped table-bordered" style="width: 100%">

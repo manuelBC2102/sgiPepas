@@ -46,7 +46,6 @@ function onResponseAprobacionConsolidado(response) {
                     $("#div_btn_aprobar").html("");
                 }
                 visualizarCuadroComparativo(response.data.documentoId);
-                visualizarDistribucionPagos(response.data.documentoId);
                 break;
             case 'aprobarRequerimiento':
                 swal({
@@ -119,9 +118,6 @@ function onResponseAprobacionConsolidado(response) {
                 }
                 onResponseListarArchivosDocumento(response.data);
                 loaderClose();
-                break;
-            case 'visualizarDistribucionPagos':
-                onResponseListarDistribucionPagos(response.data);
                 break;
             case 'obtenerDocumentoAdjuntoXDistribucionPagos':
                 if (!isEmpty(response.data)) {
@@ -474,6 +470,9 @@ function onResponsevisualizarRequerimiento(data, documento_estado) {
 function onResponsevisualizarConsolidado(data) {
     var cont = 0;
 
+    $("#theadConsolidado").empty();
+    $("#tbodyDetalle").empty();
+
     var htmlTable = "";
     htmlTable += "<tr>" +
         "<th style='text-align:center;' rowspan='2'>#</th>" +
@@ -544,10 +543,9 @@ function onResponsevisualizarConsolidado(data) {
     data.documento_detalle.forEach((proveedor, idx) => {
         var monto = totalPostores[idx];
         var tipoCambio = proveedor.moneda_id == 4 ? proveedor.tipo_cambio : 1;
-
         var esSinIGV = proveedor.igv === 0;
-        var subTotal = esSinIGV ? monto : monto / 1.18;
-        var total = esSinIGV ? subTotal * 1.18 : monto;
+        var subTotal = esSinIGV ? monto / 1.18:monto;
+        var total = esSinIGV ? monto : subTotal * 1.18;
         var igv = total - subTotal;
         var totalSoles = total * tipoCambio;
 
@@ -971,84 +969,6 @@ function visualizarCuadroComparativo(documentoId) {
     ax.setAccion("visualizarConsolidado");
     ax.addParamTmp("documentoId", documentoId);
     ax.consumir();
-}
-
-function visualizarDistribucionPagos(documentoId) {
-    loaderShow();
-    ax.setAccion("visualizarDistribucionPagos");
-    ax.addParamTmp("documentoId", documentoId);
-    ax.consumir();
-}
-
-function onResponseListarDistribucionPagos(data) {
-    var cont = 0;
-
-    if (!isEmpty(data)) {
-        // $("#modalDetalleDistribucionPagos").modal('show');
-        $('#dtmodalDetalleDistribucionPagos').dataTable({
-            "processing": true,
-            "ordering": false,
-            "data": data,
-            "order": [[1, "desc"]],
-            "columns": [
-                { "data": "id", "width": "5%", "sClass": "alignCenter" },
-                { "data": "fecha_pago", "width": "10%", "sClass": "alignCenter" },
-                { "data": "glosa", "width": "25%", "sClass": "alignLeft" },
-                { "data": "importe", "width": "10%", "sClass": "alignRight" },
-                { "data": "porcentaje", "width": "10%", "sClass": "alignRight" },
-                { "data": "estado", "width": "4%", "sClass": "alignCenter" },
-                { "data": "documento_id", "width": "4%", "sClass": "alignCenter" },
-            ],
-            columnDefs: [
-                {
-                    "render": function (data, type, row) {
-                        cont = 1 + cont;
-                        return cont;
-                    },
-                    "targets": 0
-                },
-                {
-                    "render": function (data, type, row) {
-                        return data.substring(0, 10);
-                    },
-                    "targets": 1
-                },
-                {
-                    "render": function (data, type, row) {
-                        return devolverDosDecimales(data);
-                    },
-                    "targets": [3, 4]
-                },
-                {
-                    "render": function (data, type, row) {
-                        switch (data) {
-                            case "1":
-                                return "Registrado";
-                                break;
-                            case "2":
-                                return "Programado";
-                                break;
-                            case "3":
-                                return "Pägado";
-                                break;
-                        }
-                    },
-                    "targets": 5
-                },
-                {
-                    "render": function (data, type, row) {
-                        $("#tituloDistribucionPagos").html("( Por un monto de: " + devolverDosDecimales(row.importe) + " )");
-                        var acciones = "<a href='#' onclick='subirArchivosAdjuntosDistribucionPagos(" + row.id + ", " + row.documento_id + ")'><i class='fa fa-archive' style='color:blue;' title='Subir archivos adjuntos'></i></a>&nbsp;";
-                        return acciones;
-                    },
-                    "targets": 6
-                }
-            ],
-            "dom": '<"top">rt<"bottom"<"col-md-3"l><"col-md-9"p><"col-md-12"i>><"clear">',
-            destroy: true
-        });
-        loaderClose();
-    }
 }
 
 function subirArchivosAdjuntosDistribucionPagos(id, documentoId) {

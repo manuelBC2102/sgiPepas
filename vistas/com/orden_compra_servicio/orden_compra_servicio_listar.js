@@ -40,29 +40,6 @@ function onResponseAprobacionOrdenCompraServicio(response) {
                 lstDocumentoArchivos = response.data.data;
                 onResponseListarArchivosDocumento(response.data.data);
                 break;
-            case 'visualizarDistribucionPagos':
-                onResponseListarDistribucionPagos(response.data);
-                break;
-            case 'obtenerDocumentoAdjuntoXDistribucionPagos':
-                if(!isEmpty(response.data)){
-                    lstDocumentoArchivos = response.data;
-                }
-                onResponseListarArchivosDistribucionPago(response.data);
-                break;
-            case 'cargarArchivosAdjuntosDistribucionPagos':
-                swal({
-                    title: "Documentos actualizados",
-                    text: response.data.mensaje,
-                    type: "success",
-                    showCancelButton: false,
-                    confirmButtonColor: "#33b86c",
-                    confirmButtonText: "Aceptar",
-                    closeOnConfirm: false,
-                    closeOnCancel: false
-                });
-                lstDocumentoArchivos = response.data.data;
-                onResponseListarArchivosDistribucionPago(response.data.data);
-                break;
         }
     }else{
         switch (response[PARAM_ACCION_NAME]) {
@@ -70,10 +47,7 @@ function onResponseAprobacionOrdenCompraServicio(response) {
                 subirArchivosAdjuntos(documentoIdGlobal);
                 lstDocumentoArchivos = [];
                 break;
-            case 'cargarArchivosAdjuntosDistribucionPagos':
-                subirArchivosAdjuntosDistribucionPagos(distribucionPagosIdGlobal);
-                lstDocumentoArchivos = [];
-                break;            
+        
         }
     }
 }
@@ -156,7 +130,7 @@ function buscarOrdenCompraServicio() {
                 "render": function (data, type, row) {
                     var acciones = "";
                     acciones += "<a href='#' onclick='visualizarOrdenCompraServicio(" + row.id + ", " + row.movimiento_id + ", " + row.documento_estado_id + ")'><i class='fa fa-eye' style='color:green;' title='Ver detalle programación'></i></a>&nbsp;&nbsp;";
-                    acciones += "<a href='#' onclick='visualizarDistribucionPagos(" + row.id + ")'><i class='fa fa-eye' style='color:black;' title='Ver detalle distribución pagos'></i></a>&nbsp;";
+                    acciones += "<a href='#' onclick='subirArchivosAdjuntos(" + row.id + ", " + row.documento_id + ")'><i class='fa fa-cloud-upload' style='color:blue;' title='Subir archivos adjuntos'></i></a>&nbsp;";
                     return acciones;
                 },
                 "targets": 6
@@ -384,22 +358,6 @@ function iniciarArchivoAdjuntoMultiple() {
             reader.readAsDataURL(this.files[0]);
         }
     });
-
-    $("#archivoAdjuntoMultiDistribucionPagos").change(function () {
-        $("#nombreArchivoMultiDistribucionPagos").html($('#archivoAdjuntoMultiDistribucionPagos').val().slice(12));
-
-        //llenado del popover
-        $('#idPopoverMultiDistribucionPagos').attr("data-content", $('#archivoAdjuntoMultiDistribucionPagos').val().slice(12));
-        $('[data-toggle="popover"]').popover('show');
-        $('.popover-content').css('color', 'black');
-        $('[class="popover fade top in"]').css('z-index', '0');
-
-        if (this.files && this.files[0]) {
-            var reader = new FileReader();
-            reader.onload = imageIsLoadedMultiDistribucionPagos;
-            reader.readAsDataURL(this.files[0]);
-        }
-    });
 }
 
 var documentoIdGlobal = null;
@@ -511,86 +469,9 @@ $("#btnAgregarDoc").click(function fileIsLoaded(e) {
 
 });
 
-
-$("#btnAgregarDocDistribucionPagos").click(function fileIsLoaded(e) {
-    if (!isEmpty($("#archivoAdjuntoMultiDistribucionPagos").val())) {
-        var filePath = $("#dataArchivoMultiDistribucionPagos").val();
-        var cboTipoArchivo = parseInt(select2.obtenerValor('cboTipoArchivoDistribucionPagos'));
-        switch(cboTipoArchivo){
-            case 1 : //pdf
-            case 3 : //pdf factura
-                var mimeType = filePath.match(/^data:(.*?);base64/);
-                if(mimeType[1] != "application/pdf"){
-                    mostrarAdvertencia('El archivo tiene que ser de extensión .pdf o .PDF');
-                    loaderClose();
-                    return;
-                }
-            break;
-            case 2 : //excel
-                var mimeType = filePath.match(/^data:(.*?);base64/);
-                if(mimeType[1] != "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"){
-                    mostrarAdvertencia('El archivo tiene que ser de extensión .xlsx');
-                    loaderClose();
-                    return;
-                }
-            break;
-            case 4 : //Xml factura y Cdr factura
-            var mimeType = filePath.match(/^data:(.*?);base64/);
-                if(mimeType[1] != "text/xml"){
-                    mostrarAdvertencia('El archivo tiene que ser de extensión .xlsx o .xls');
-                    loaderClose();
-                    return;
-                }
-            break;
-        }
-
-        var esUnico = false;
-        if (!isEmpty(lstDocumentoArchivos)) {
-            for (let i = 0; i < lstDocumentoArchivos.length; i++) {
-                if (lstDocumentoArchivos[i].tipo_archivoId == select2.obtenerValor('cboTipoArchivoDistribucionPagos')) {
-                    esUnico = true;
-                    break;
-                }
-            }
-        }
-
-        if (esUnico) {
-            mostrarAdvertencia('Existe un tipo archivo ' + select2.obtenerText('cboTipoArchivoDistribucionPagos') + ' ');
-            loaderClose();
-            return;
-        }else{
-            if ($("#archivoAdjuntoMultiDistribucionPagos").val().slice(12).length > 0) {
-                var documento = {};
-                documento.data = $("#dataArchivoMultiDistribucionPagos").val();
-                documento.archivo = $("#archivoAdjuntoMultiDistribucionPagos").val().slice(12);
-                documento.tipo_archivoId = select2.obtenerValor('cboTipoArchivoDistribucionPagos');
-                documento.tipo_archivo = select2.obtenerText('cboTipoArchivoDistribucionPagos');
-                documento.id = "t" + cont++;
-                lstDocumentoArchivos.push(documento);
-                onResponseListarArchivosDistribucionPago(lstDocumentoArchivos);
-                $("#archivoAdjuntoMultiDistribucionPagos").val("");
-                $("#dataArchivoMultiDistribucionPagos").val("");
-                $('[data-toggle="popover"]').popover('hide');
-                $('#idPopoverMulti').attr("data-content", "");
-                $("#msjDocumentoDistribucionPagos").html("");
-                $("#msjDocumentoDistribucionPagos").hide();
-            } else {
-                onResponseListarArchivosDistribucionPago(lstDocumentoArchivos);
-            }
-        }
-
-        AgregarActualizarDistribucionPagos();
-    } else {
-        $("#msjDocumentoDistribucionPagos").html("Debe adjuntar un archivo primero para agregarlo a la lista");
-        $("#msjDocumentoDistribucionPagos").show();
-    }
-
-});
-
 function imageIsLoadedMulti(e) {
     $('#dataArchivoMulti').attr('value', e.target.result);
 }
-
 
 function onResponseListarArchivosDocumento(data) {
 
@@ -673,88 +554,9 @@ function fechasActuales(){
     $('#inicioFechaEmision').val(fechaInicioFormateada);
 }
 
-function visualizarDistribucionPagos(documentoId) {
-    loaderShow();
-    ax.setAccion("visualizarDistribucionPagos");
-    ax.addParamTmp("documentoId", documentoId);
-    ax.consumir();
-}
-
-function onResponseListarDistribucionPagos(data) {
-    var cont = 0;
-
-    if (!isEmpty(data)) {
-        $("#modalDetalleDistribucionPagos").modal('show');
-        $('#dtmodalDetalleDistribucionPagos').dataTable({
-            "processing": true,
-            "ordering": false,
-            "data": data,
-            "order": [[1, "desc"]],
-            "columns": [
-                { "data": "id", "width": "5%", "sClass": "alignCenter" },
-                { "data": "fecha_pago", "width": "10%", "sClass": "alignCenter" },
-                { "data": "glosa", "width": "25%", "sClass": "alignLeft" },
-                { "data": "importe", "width": "10%", "sClass": "alignRight" },
-                { "data": "porcentaje", "width": "10%", "sClass": "alignRight" },
-                { "data": "estado", "width": "4%", "sClass": "alignCenter" },
-                { "data": "documento_id", "width": "4%", "sClass": "alignCenter" },
-            ],
-            columnDefs: [
-                {
-                    "render": function (data, type, row) {
-                        cont = 1 + cont;
-                        return cont;
-                    },
-                    "targets": 0
-                },
-                {
-                    "render": function (data, type, row) {
-                        return data.substring(0, 10);
-                    },
-                    "targets": 1
-                },
-                {
-                    "render": function (data, type, row) {
-                        return devolverDosDecimales(data);
-                    },
-                    "targets": [3,4]
-                },
-                {
-                    "render": function (data, type, row) {
-                        switch(data){
-                            case "1":
-                                return "Registrado";
-                                break;
-                            case "2":
-                                return "Programado";
-                                break;
-                            case "3":
-                                return "Pägado";
-                                break;
-                        }
-                    },
-                    "targets": 5
-                },
-                {
-                    "render": function (data, type, row) {
-                        $("#tituloDistribucionPagos").html("( Por un monto de: " + devolverDosDecimales(row.importe)+" )");
-                        var acciones = "<a href='#' onclick='subirArchivosAdjuntosDistribucionPagos(" + row.id + ", " + row.documento_id + ")'><i class='fa fa-cloud-upload' style='color:blue;' title='Subir archivos adjuntos'></i></a>&nbsp;";
-                        return acciones;
-                    },
-                    "targets": 6
-                }
-            ],
-            "dom": '<"top">rt<"bottom"<"col-md-3"l><"col-md-9"p><"col-md-12"i>><"clear">',
-            destroy: true
-        });
-        loaderClose();
-    }
-}
-
 function subirArchivosAdjuntosDistribucionPagos(id, documentoId) {
     loaderShow();
     $("#dataList2DistribucionPagos").empty();
-    $("#modalDetalleDistribucionPagos").modal('hide');
     $("#modalDetalleArchivosDistribucionPagos").modal('show');
     distribucionPagosIdGlobal = id;
     documentoIdGlobal = documentoId;
@@ -806,43 +608,3 @@ function onResponseListarArchivosDistribucionPago(data) {
     $("#datatable3DistribucionPagos").DataTable();
 }
 
-function AgregarActualizarDistribucionPagos(){
-    loaderShow();
-    var distribucionPagoId = distribucionPagosIdGlobal;
-    var documentoId = documentoIdGlobal;
-    if(isEmpty(documentoId)){
-        mostrarAdvertencia('Debe seleccionar una Orden de compra o servicio');
-        loaderClose();
-        return;
-    }
-    ax.setAccion("cargarArchivosAdjuntosDistribucionPagos");
-    ax.addParamTmp("distribucionPagoId", distribucionPagoId);
-    ax.addParamTmp("documentoId", documentoId);
-    ax.addParamTmp("lstDocumentoArchivos", lstDocumentoArchivos);
-    ax.addParamTmp("lstDocEliminado", lstDocEliminado);
-    ax.addParamTmp("lstDocRechazado", lstDocRechazado);
-    ax.consumir();
-}
-
-function imageIsLoadedMultiDistribucionPagos(e) {
-    $('#dataArchivoMultiDistribucionPagos').attr('value', e.target.result);
-}
-
-function ocultarModalDistribucionPagos(){
-    $("#modalDetalleDistribucionPagos").modal('show');
-    $("#modalDetalleArchivosDistribucionPagos").modal('hide');
-}
-
-function eliminarAdjuntoDistribucionPagos(docId) {
-    ordenEdicion = 0;
-    lstDocumentoArchivos.some(function (item) {
-        if (item.id == docId) {
-            lstDocumentoArchivos.splice(ordenEdicion, 1);
-            lstDocEliminado.push([{ id: docId, archivo: item.archivo }])
-            onResponseListarArchivosDistribucionPago(lstDocumentoArchivos);
-            return item.id === docId;
-        }
-        ordenEdicion++;
-    });
-    AgregarActualizarDistribucionPagos();
-}

@@ -737,7 +737,7 @@ class MovimientoControlador extends AlmacenIndexControlador
       $mostrarAccNuevo = 0;
       $dataPerfil = PerfilNegocio::create()->obtenerPerfilXUsuarioId($usuarioId);
       foreach ($dataPerfil as $itemPerfil) {
-        if ($itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_TI_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_JEFE_LOGISTA || $itemPerfil['id'] == PerfilNegocio::PERFIL_SOLICITANTE_REQUERIMIENTO) {
+        if ($itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_TI_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_JEFE_LOGISTA) {
           $mostrarAccNuevo = 1;
         }
       }
@@ -794,8 +794,15 @@ class MovimientoControlador extends AlmacenIndexControlador
       if($dataDocumentoTipo[0]['id'] == Configuraciones::GENERAR_COTIZACION){
         $dataRelacionada = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoId($documentoId);
         foreach($dataRelacionada as $itemRelacion){
-          if($itemRelacion['documento_tipo_id'] == Configuraciones::COTIZACIONES || $itemRelacion['documento_tipo_id'] == Configuraciones::ORDEN_COMPRA){
+          if($itemRelacion['documento_tipo_id'] == Configuraciones::COTIZACIONES){
             $respuestaAnular = MovimientoNegocio::create()->anularDocumento($itemRelacion['documento_relacionado_id'], $documentoEstadoId, $usuarioId, $idNegocio, $serie);
+            $dataRelacionada2 = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoId($itemRelacion['documento_relacionado_id']);
+            foreach($dataRelacionada2 as $itemRelacion2){
+              if($itemRelacion2['documento_tipo_id'] == Configuraciones::ORDEN_COMPRA){
+                $respuestaAnular = MovimientoNegocio::create()->anularDocumento($itemRelacion2['documento_relacionado_id'], $documentoEstadoId, $usuarioId, $idNegocio, $serie);
+              }
+            }
+
           }
         }
       }
@@ -2007,7 +2014,8 @@ class MovimientoControlador extends AlmacenIndexControlador
     $tipoRequerimiento = $this->getParametro("tipoRequerimiento");
     $urgencia = $this->getParametro("urgencia");
     $usuarioId = $this->getUsuarioId();
-    return MovimientoNegocio::create()->exportarPdfCotizacion($grupoProductoId, $tipoRequerimiento, $urgencia, $usuarioId);
+    $documentoId = $this->getParametro("documentoId");
+    return MovimientoNegocio::create()->exportarPdfCotizacion($grupoProductoId, $tipoRequerimiento, $urgencia, $usuarioId, $documentoId);
   }
 
   public function exportarExcelCotizacion(){
@@ -2015,6 +2023,21 @@ class MovimientoControlador extends AlmacenIndexControlador
     $tipoRequerimiento = $this->getParametro("tipoRequerimiento");
     $urgencia = $this->getParametro("urgencia");
     $usuarioId = $this->getUsuarioId();
-    return MovimientoNegocio::create()->exportarExcelCotizacion($grupoProductoId, $tipoRequerimiento, $urgencia, $usuarioId);
+    $documentoId = $this->getParametro("documentoId");
+    return MovimientoNegocio::create()->exportarExcelCotizacion($grupoProductoId, $tipoRequerimiento, $urgencia, $usuarioId, $documentoId);
+  }
+
+  public function exportarPdfCotizacionEdit(){
+    $documentoId = $this->getParametro("documentoId");
+    $usuarioId = $this->getUsuarioId();
+    $opcionId = $this->getOpcionId();
+    return MovimientoNegocio::create()->exportarPdfCotizacion(null, null, null, $usuarioId, $documentoId, $opcionId);
+  }
+
+  public function exportarExcelCotizacionEdit(){
+    $documentoId = $this->getParametro("documentoId");
+    $usuarioId = $this->getUsuarioId();
+    $opcionId = $this->getOpcionId();
+    return MovimientoNegocio::create()->exportarExcelCotizacion(null, null, null, $usuarioId, $documentoId, $opcionId);
   }
 }

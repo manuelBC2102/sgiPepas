@@ -809,16 +809,18 @@ class Documento extends ModeloBase {
         return $this->commandGetData();
     }
 
-    function guardar_documento_detalle($documentoId, $personaId, $monedaId, $tipoCambio, $igv, $tiempoEntrega, $tiempo, $condicionPago, $sumilla, $usuarioId) {
+    function guardar_documento_detalle($documentoId, $personaId, $monedaId, $tipoCambio, $igv, $uoId, $tiempoEntrega, $tiempo, $condicionPago, $diasPago, $sumilla, $usuarioId) {
         $this->commandPrepare("sp_documento_detalle_guardar");
         $this->commandAddParameter(":vin_documento_id", $documentoId);
         $this->commandAddParameter(":vin_persona_id", $personaId);
         $this->commandAddParameter(":vin_moneda_id", $monedaId);
         $this->commandAddParameter(":vin_tipo_cambio", $tipoCambio);
         $this->commandAddParameter(":vin_igv", $igv);
+        $this->commandAddParameter(":vin_uoId", $uoId);
         $this->commandAddParameter(":vin_tiempo_entrega", $tiempoEntrega);
         $this->commandAddParameter(":vin_tiempo", $tiempo);
         $this->commandAddParameter(":vin_condicion_pago", $condicionPago);
+        $this->commandAddParameter(":vin_dias_pago", $diasPago);
         $this->commandAddParameter(":vin_sumilla", $sumilla);
         $this->commandAddParameter(":vin_usuario_registro", $usuarioId);
         return $this->commandGetData();
@@ -830,16 +832,18 @@ class Documento extends ModeloBase {
         return $this->commandGetData();
     }
 
-    function editar_documento_detalle($documentoId, $personaId, $monedaId, $tipoCambio, $igv, $tiempoEntrega, $tiempo, $condicionPago, $sumilla, $usuarioId) {
+    function editar_documento_detalle($documentoId, $personaId, $monedaId, $tipoCambio, $igv, $uoId, $tiempoEntrega, $tiempo, $condicionPago, $diasPago, $sumilla, $usuarioId) {
         $this->commandPrepare("sp_documento_detalle_editar");
         $this->commandAddParameter(":vin_documento_id", $documentoId);
         $this->commandAddParameter(":vin_persona_id", $personaId);
         $this->commandAddParameter(":vin_moneda_id", $monedaId);
         $this->commandAddParameter(":vin_tipo_cambio", $tipoCambio);
         $this->commandAddParameter(":vin_igv", $igv);
+        $this->commandAddParameter(":vin_uoId", $uoId);
         $this->commandAddParameter(":vin_tiempo_entrega", $tiempoEntrega);
         $this->commandAddParameter(":vin_tiempo", $tiempo);
         $this->commandAddParameter(":vin_condicion_pago", $condicionPago);
+        $this->commandAddParameter(":vin_dias_pago", $diasPago);
         $this->commandAddParameter(":vin_sumilla", $sumilla);
         $this->commandAddParameter(":vin_usuario_registro", $usuarioId);
         return $this->commandGetData();
@@ -873,6 +877,12 @@ class Documento extends ModeloBase {
         $this->commandAddParameter("vin_glosa", $glosa);
         $this->commandAddParameter("vin_usuario_creacion", $usuarioId);
         $this->commandAddParameter("vin_id", $id == ""?null:$id);
+        return $this->commandGetData();
+    }
+
+    public function editar_documento_detalleEstado($documentoId) {
+        $this->commandPrepare("sp_documento_detalleCambiarEstado");
+        $this->commandAddParameter(":vin_documento_id", $documentoId);
         return $this->commandGetData();
     }
 

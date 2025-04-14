@@ -126,9 +126,11 @@
                                                 <th style='text-align:center;'>Moneda</th>  
                                                 <th style='text-align:center;'>Tipo cambio</th>             
                                                 <th style='text-align:center;'>IGV</th>
+                                                <th style='text-align:center;'>U.O</th>
                                                 <th style='text-align:center;'>Tiempo de entrega</th>
                                                 <th style='text-align:center;'>Tiempo</th>
                                                 <th style='text-align:center;'>Condición de pago</th>
+                                                <th style='text-align:center;'>Días de pago</th>
                                                 <th style='text-align:center;'>Sumilla</th>
                                                 <th style='text-align:center;'>Pdf Cotización</th>   
                                                 <th style='text-align:center;'>Distribución pagos</th>   
@@ -218,6 +220,13 @@
                                             </li> -->
                                         </ul> 
                                         <div id="div_contenido_tab" class="tab-content">
+                                            <div id="exportarPdfCotizacion" hidden>
+                                                <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12" style="text-align:right;">
+                                                    <a href="#" onclick="exportarExcelCotizacion()"><i class="fa fa-file-excel-o" style="color:red;" title="Exportar excel cotización"></i> Exportar excel cotización</a>
+                                                    &nbsp;&nbsp;<a href="#" onclick="exportarPdfCotizacion()"><i class="fa fa-print" style="color:red;" title="Exportar pdf cotización"></i> Exportar pdf cotización</a>
+                                                </div>
+                                                <br>
+                                            </div>
                                             <div class="tab-pane active" id="detalle" >
                                                 <div class="row" style="height: auto;">          
                                                     <table id="datatable" class="table table-striped table-bordered">      

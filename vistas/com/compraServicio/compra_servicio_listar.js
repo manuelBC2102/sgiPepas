@@ -1871,10 +1871,9 @@ function cargarDetalleDocumento(data, dataMovimientoTipoColumna) {
             dataVisualizarDocumento.dataPostores.forEach((proveedor, idx) => {
                 var monto = totalPostores[idx];
                 var tipoCambio = proveedor.moneda_id == 4 ? proveedor.tipo_cambio : 1;
-            
                 var esSinIGV = proveedor.igv === 0;
-                var subTotal = esSinIGV ? monto : monto / 1.18;
-                var total = esSinIGV ? subTotal * 1.18 : monto;
+                var subTotal = esSinIGV ? monto / 1.18:monto;
+                var total = esSinIGV ? monto : subTotal * 1.18;
                 var igv = total - subTotal;
                 var totalSoles = total * tipoCambio;
             

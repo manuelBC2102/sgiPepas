@@ -90,45 +90,51 @@ class OrdenCompraServicioNegocio extends ModeloNegocioBase
         foreach($lstDocumentoArchivos as $index => $item){
             if($item['tipo_archivoId'] == 4){
                 if (strpos($item['id'], 't') == 0) {
-                        $decode = Util::base64ToImage($item['data']);
-                        $xml = simplexml_load_string($decode);
-                        if ($xml === false) {
-                            throw new WarningException("Error al leer archivo XML");
-                        }else{
-                            // Buscar el RUC del emisor (Proveedor) en el XML
-                            $ruc_emisor = (string) $xml->children('cac', true)->AccountingSupplierParty->children('cac', true)->Party->children('cac', true)->PartyIdentification->children('cbc', true)->ID;
-
-                            //validar ruc
-                            $mensaje = '';
-                            if(trim($ruc_emisor) != trim($documento[0]['persona_ruc'])){
-                                $mensaje = 'El ruc no coicide con la orden de compra';
-                            }
-                            //falta validar monto total con la Orden de compra
-                        }
-
-                        if(!ObjectUtil::isEmpty($mensaje)){
-                            throw new WarningException($mensaje);
-                        }
-
-                }else{
-                    $xml = simplexml_load_file(__DIR__ . '/../../'.$item['data']);
+                    $decode = Util::base64ToImage($item['data']);
+                    $xml = simplexml_load_string($decode);
                     if ($xml === false) {
-                        throw new WarningException("Error al leer archivo XML");
+                            throw new WarningException("Error al leer archivo XML");
                     }else{
-                        $ruc_emisor = (string)$xml->xpath("//cac:AccountingSupplierParty/cac:Party/cac:PartyTaxScheme/cbc:CompanyID")[0];
-                            //validar ruc
+                        // Buscar el RUC del emisor (Proveedor) en el XML
+                        $ruc_emisor = (string) $xml->children('cac', true)->AccountingSupplierParty->children('cac', true)->Party->children('cac', true)->PartyIdentification->children('cbc', true)->ID;
+                        //validar ruc
                         $mensaje = '';
                         if(trim($ruc_emisor) != trim($documento[0]['persona_ruc'])){
-                            $mensaje = 'El ruc no coicide con la orden de compra';
+                                $mensaje = 'El ruc no coicide con la orden de compra';
                         }
-
                         //falta validar monto total con la Orden de compra
+                        $montoTotalFactura = (string) $xml->children('cac', true)->TaxTotal->children('cbc', true)->TaxAmount;
 
-                        if(!ObjectUtil::isEmpty($mensaje)){
-                            throw new WarningException($mensaje);
-                        }
+                        Documento::create()->obtenerDocumentoAdjuntoXDocumentoId($documentoId);
+                        $total = $documento[0]["total"];
+
+                        $lstDocumentoArchivos[$index]["contenido_archivo"] = $montoTotalFactura;
+
+                    }
+
+                    if(!ObjectUtil::isEmpty($mensaje)){
+                        throw new WarningException($mensaje);
                     }
                 }
+                // }else{
+                //     $xml = simplexml_load_file(__DIR__ . '/../../'.$item['data']);
+                //     if ($xml === false) {
+                //         throw new WarningException("Error al leer archivo XML");
+                //     }else{
+                //         $ruc_emisor = (string)$xml->xpath("//cac:AccountingSupplierParty/cac:Party/cac:PartyTaxScheme/cbc:CompanyID")[0];
+                //             //validar ruc
+                //         $mensaje = '';
+                //         if(trim($ruc_emisor) != trim($documento[0]['persona_ruc'])){
+                //             $mensaje = 'El ruc no coicide con la orden de compra';
+                //         }
+
+                //         //falta validar monto total con la Orden de compra
+
+                //         if(!ObjectUtil::isEmpty($mensaje)){
+                //             throw new WarningException($mensaje);
+                //         }
+                //     }
+                // }
             }
 
         }
@@ -145,130 +151,130 @@ class OrdenCompraServicioNegocio extends ModeloNegocioBase
         return  $respuesta;
     }
  
-    public function visualizarDistribucionPagos($documentoId){
-        return OrdenCompraServicio::create()->obtenerDistribucionPagos($documentoId);
-    }
+    // public function visualizarDistribucionPagos($documentoId){
+    //     return OrdenCompraServicio::create()->obtenerDistribucionPagos($documentoId);
+    // }
 
-    public function obtenerDocumentoAdjuntoXDistribucionPagos($distribucionPagoId){
-        return OrdenCompraServicio::create()->obtenerDocumentoAdjuntoXDistribucionPagos($distribucionPagoId);
-    }
+    // public function obtenerDocumentoAdjuntoXDistribucionPagos($distribucionPagoId){
+    //     return OrdenCompraServicio::create()->obtenerDocumentoAdjuntoXDistribucionPagos($distribucionPagoId);
+    // }
 
-    public function cargarArchivosAdjuntosDistribucionPagos($distribucionPagoId ,$documentoId, $lstDocumentoArchivos, $lstDocEliminado,$usuarioId){
-        $respuesta =  new stdClass();
+    // public function cargarArchivosAdjuntosDistribucionPagos($distribucionPagoId ,$documentoId, $lstDocumentoArchivos, $lstDocEliminado,$usuarioId){
+    //     $respuesta =  new stdClass();
 
-        $detalleDistribucionPagos = OrdenCompraServicio::create()->obtenerDistribucionPagos($documentoId, $distribucionPagoId);
-        $documento = Documento::create()->obtenerDocumentoDatos($detalleDistribucionPagos[0]['documento_id']);
+    //     $detalleDistribucionPagos = OrdenCompraServicio::create()->obtenerDistribucionPagos($documentoId, $distribucionPagoId);
+    //     $documento = Documento::create()->obtenerDocumentoDatos($detalleDistribucionPagos[0]['documento_id']);
 
-        foreach($lstDocumentoArchivos as $index => $item){
-            if($item['tipo_archivoId'] == 4){
-                if (strpos($item['id'], 't') == 0) {
-                        $decode = Util::base64ToImage($item['data']);
-                        $xml = simplexml_load_string($decode);
-                        if ($xml === false) {
-                            throw new WarningException("Error al leer archivo XML");
-                        }else{
-                            // Buscar el RUC del emisor (Proveedor) en el XML
-                            $ruc_emisor = (string) $xml->children('cac', true)->AccountingSupplierParty->children('cac', true)->Party->children('cac', true)->PartyIdentification->children('cbc', true)->ID;
-                            //validar ruc
-                            $mensaje = '';
-                            if(trim($ruc_emisor) != trim($documento[0]['persona_ruc'])){
-                                $mensaje = 'El ruc no coicide con la orden de compra';
-                            }
-                            $montoTotal = (string) $xml->children('cac', true)->TaxTotal->children('cbc', true)->TaxAmount;
+    //     foreach($lstDocumentoArchivos as $index => $item){
+    //         if($item['tipo_archivoId'] == 4){
+    //             if (strpos($item['id'], 't') == 0) {
+    //                     $decode = Util::base64ToImage($item['data']);
+    //                     $xml = simplexml_load_string($decode);
+    //                     if ($xml === false) {
+    //                         throw new WarningException("Error al leer archivo XML");
+    //                     }else{
+    //                         // Buscar el RUC del emisor (Proveedor) en el XML
+    //                         $ruc_emisor = (string) $xml->children('cac', true)->AccountingSupplierParty->children('cac', true)->Party->children('cac', true)->PartyIdentification->children('cbc', true)->ID;
+    //                         //validar ruc
+    //                         $mensaje = '';
+    //                         if(trim($ruc_emisor) != trim($documento[0]['persona_ruc'])){
+    //                             $mensaje = 'El ruc no coicide con la orden de compra';
+    //                         }
+    //                         $montoTotal = (string) $xml->children('cac', true)->TaxTotal->children('cbc', true)->TaxAmount;
 
-                            if($detalleDistribucionPagos[0]['importe'] != $montoTotal){
-                                $salto = "";
-                                if($mensaje != null){
-                                    $salto = "<br>";
-                                }
-                                $mensaje .= $salto.'El importe de la factura no coicide con el monto de la distribución de pagos';
-                            }
-                            //falta validar monto total con la Orden de compra
-                        }
+    //                         if($detalleDistribucionPagos[0]['importe'] != $montoTotal){
+    //                             $salto = "";
+    //                             if($mensaje != null){
+    //                                 $salto = "<br>";
+    //                             }
+    //                             $mensaje .= $salto.'El importe de la factura no coicide con el monto de la distribución de pagos';
+    //                         }
+    //                         //falta validar monto total con la Orden de compra
+    //                     }
 
-                        if(!ObjectUtil::isEmpty($mensaje)){
-                            throw new WarningException($mensaje);
-                        }
+    //                     if(!ObjectUtil::isEmpty($mensaje)){
+    //                         throw new WarningException($mensaje);
+    //                     }
 
-                }else{
-                    $xml = simplexml_load_file(__DIR__ . '/../../'.$item['data']);
-                    if ($xml === false) {
-                        throw new WarningException("Error al leer archivo XML");
-                    }else{
-                        $ruc_emisor = (string)$xml->xpath("//cac:AccountingSupplierParty/cac:Party/cac:PartyTaxScheme/cbc:CompanyID")[0];
-                            //validar ruc
-                        $mensaje = '';
-                        if(trim($ruc_emisor) != trim($documento[0]['persona_ruc'])){
-                            $mensaje = 'El ruc no coicide con la orden de compra';
-                        }
+    //             }else{
+    //                 $xml = simplexml_load_file(__DIR__ . '/../../'.$item['data']);
+    //                 if ($xml === false) {
+    //                     throw new WarningException("Error al leer archivo XML");
+    //                 }else{
+    //                     $ruc_emisor = (string)$xml->xpath("//cac:AccountingSupplierParty/cac:Party/cac:PartyTaxScheme/cbc:CompanyID")[0];
+    //                         //validar ruc
+    //                     $mensaje = '';
+    //                     if(trim($ruc_emisor) != trim($documento[0]['persona_ruc'])){
+    //                         $mensaje = 'El ruc no coicide con la orden de compra';
+    //                     }
 
-                        //falta validar monto total con la Orden de compra
+    //                     //falta validar monto total con la Orden de compra
 
-                        if(!ObjectUtil::isEmpty($mensaje)){
-                            throw new WarningException($mensaje);
-                        }
-                    }
-                }
-            }
+    //                     if(!ObjectUtil::isEmpty($mensaje)){
+    //                         throw new WarningException($mensaje);
+    //                     }
+    //                 }
+    //             }
+    //         }
 
-        }
+    //     }
         
-        $resAdjunto = $this->guardarArchivosXDistribucionPagoID($distribucionPagoId, $lstDocumentoArchivos, $lstDocEliminado, $usuarioId);
+    //     $resAdjunto = $this->guardarArchivosXDistribucionPagoID($distribucionPagoId, $lstDocumentoArchivos, $lstDocEliminado, $usuarioId);
 
-        if ($resAdjunto[0]['vout_exito'] != 1) {
-            throw new WarningException($resAdjunto[0]['vout_mensaje']);
-        }
+    //     if ($resAdjunto[0]['vout_exito'] != 1) {
+    //         throw new WarningException($resAdjunto[0]['vout_mensaje']);
+    //     }
         
-        $respuesta->mensaje = $resAdjunto[0]['vout_mensaje'];
-        $respuesta->data = OrdenCompraServicio::create()->obtenerDocumentoAdjuntoXDistribucionPagos($distribucionPagoId);
-        return  $respuesta;
-    }
+    //     $respuesta->mensaje = $resAdjunto[0]['vout_mensaje'];
+    //     $respuesta->data = OrdenCompraServicio::create()->obtenerDocumentoAdjuntoXDistribucionPagos($distribucionPagoId);
+    //     return  $respuesta;
+    // }
 
-    function guardarArchivosXDistribucionPagoID($distribucionPagoId, $lstDocumento, $lstDocEliminado, $usuCreacion)
-    {
-      if ($distribucionPagoId != null) {
-        //Eliminando archivos
-        foreach ($lstDocEliminado as $d) {
-          //Dando de baja en documento_adjunto
-          if (!strpos($d[0]['id'], 't')) {
-            $resAdjunto = OrdenCompraServicio::create()->insertarActualizarDocumentoAdjunto($d[0]['id'], null, null, null, null, 0);
-            if ($resAdjunto[0]['vout_exito'] != 1) {
-              throw new WarningException($resAdjunto[0]['vout_mensaje']);
-            }
-          }
-        }
-        //Insertando documento_adjunto
-        foreach ($lstDocumento as $d) {
-          //Se valida que el ID contenga el prefijo temporal "t" para que se opere, si no lo encuentra ya estaría registrado
+    // function guardarArchivosXDistribucionPagoID($distribucionPagoId, $lstDocumento, $lstDocEliminado, $usuCreacion)
+    // {
+    //   if ($distribucionPagoId != null) {
+    //     //Eliminando archivos
+    //     foreach ($lstDocEliminado as $d) {
+    //       //Dando de baja en documento_adjunto
+    //       if (!strpos($d[0]['id'], 't')) {
+    //         $resAdjunto = OrdenCompraServicio::create()->insertarActualizarDocumentoAdjunto($d[0]['id'], null, null, null, null, 0);
+    //         if ($resAdjunto[0]['vout_exito'] != 1) {
+    //           throw new WarningException($resAdjunto[0]['vout_mensaje']);
+    //         }
+    //       }
+    //     }
+    //     //Insertando documento_adjunto
+    //     foreach ($lstDocumento as $d) {
+    //       //Se valida que el ID contenga el prefijo temporal "t" para que se opere, si no lo encuentra ya estaría registrado
   
-          if (strpos($d['id'], 't') !== false) {
+    //       if (strpos($d['id'], 't') !== false) {
   
-            //DOCUMENTO ADJUNTO
-            if (!ObjectUtil::isEmpty($d['data'])) {
+    //         //DOCUMENTO ADJUNTO
+    //         if (!ObjectUtil::isEmpty($d['data'])) {
   
-              $decode = Util::base64ToImage($d['data']);
-              $nombreArchivo = $d['archivo'];
-              $pos = strripos($nombreArchivo, '.');
-              $ext = substr($nombreArchivo, $pos);
+    //           $decode = Util::base64ToImage($d['data']);
+    //           $nombreArchivo = $d['archivo'];
+    //           $pos = strripos($nombreArchivo, '.');
+    //           $ext = substr($nombreArchivo, $pos);
   
-              $hoy = date("YmdHis").substr((string)microtime(), 2, 3);;
-              $nombreGenerado = $distribucionPagoId . $hoy . $usuCreacion . $ext;
-              $url = __DIR__ . '/../../util/uploads/documentoAdjunto/' . $nombreGenerado;
+    //           $hoy = date("YmdHis").substr((string)microtime(), 2, 3);;
+    //           $nombreGenerado = $distribucionPagoId . $hoy . $usuCreacion . $ext;
+    //           $url = __DIR__ . '/../../util/uploads/documentoAdjunto/' . $nombreGenerado;
   
-              file_put_contents($url, $decode);
-              $tipo_archivoId = $d["tipo_archivoId"];
+    //           file_put_contents($url, $decode);
+    //           $tipo_archivoId = $d["tipo_archivoId"];
   
-              $contenido_archivo = $d["contenido_archivo"];
-              $resAdjunto = OrdenCompraServicio::create()->insertarActualizarDocumentoAdjunto(null, $distribucionPagoId, $nombreArchivo, $nombreGenerado, $usuCreacion, null,$tipo_archivoId, $contenido_archivo);
-              if ($resAdjunto[0]['vout_exito'] != 1) {
-                throw new WarningException($resAdjunto[0]['vout_mensaje']);
-              }
-            }
-          }
-        }
-      } else {
-        throw new WarningException("No existe documento para relacionar con el archivo adjunto");
-      }
-      return $resAdjunto;
-    }
+    //           $contenido_archivo = $d["contenido_archivo"];
+    //           $resAdjunto = OrdenCompraServicio::create()->insertarActualizarDocumentoAdjunto(null, $distribucionPagoId, $nombreArchivo, $nombreGenerado, $usuCreacion, null,$tipo_archivoId, $contenido_archivo);
+    //           if ($resAdjunto[0]['vout_exito'] != 1) {
+    //             throw new WarningException($resAdjunto[0]['vout_mensaje']);
+    //           }
+    //         }
+    //       }
+    //     }
+    //   } else {
+    //     throw new WarningException("No existe documento para relacionar con el archivo adjunto");
+    //   }
+    //   return $resAdjunto;
+    // }
 }

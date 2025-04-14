@@ -1149,7 +1149,7 @@ function onResponseObtenerConfiguracionesIniciales(data) {
                 var dtdTipoTipoRequerimiento = obtenerDocumentoTipoDatoIdXTipo(42);
                 if (select2.obtenerValor("cboTipoRequerimiento_" + dtdTipoTipoRequerimiento) != 455) {
                     select2.asignarValor("cbo_" + dtdTipoUrgencia.id, 473);
-                }else{
+                } else {
                     select2.asignarValor("cbo_" + dtdTipoUrgencia.id, 474);
                 }
                 $("#cbo_" + dtdTipoUrgencia.id).prop('disabled', true);
@@ -1325,6 +1325,12 @@ function onResponseObtenerConfiguracionesIniciales(data) {
         $("#cbo_" + dtdTipoGrupo_producto).select2({
             width: "100%"
         }).on("change", function (e) {
+            // if(isEmpty(arrayProveedor)){
+            //     mostrarAdvertencia("Debe seleecionar primero un proveedor");
+            //     select2.asignarValor("cbo_" + dtdTipoGrupo_producto, 0);
+            //     return false;
+            //     return;
+            // }else{
             if (e.val != 0) {
                 var dtdTipoTipoRequerimiento = obtenerDocumentoTipoDatoIdXTipo(42);
                 if (isEmpty(select2.obtenerValor("cboTipoRequerimiento_" + dtdTipoTipoRequerimiento))) {
@@ -1345,7 +1351,7 @@ function onResponseObtenerConfiguracionesIniciales(data) {
                 ax.addParamTmp("urgencia", "No");
                 ax.consumir();
             }
-
+            // }
         });
     }
 
@@ -4651,26 +4657,31 @@ function guardar(accion) {
         }
         var bandera_pagos = false;
         arrayProveedor.forEach(function (proveedorID, idx) {//revisar
-            if (isEmpty(listaPagoProgramacionPostores[idx])) {
-                mostrarAdvertencia("Falta realizar la distribución de pagos para:" + select2.obtenerText("cboProveedor_" + idx));
+            calcularFooterTipoCambio(proveedorID.indice);
+
+            if (isEmpty(listaPagoProgramacionPostores[idx]) && totalesPostores[idx].total > 0) {
+                mostrarAdvertencia("Falta realizar la distribución de pagos para: " + select2.obtenerText("cboProveedor_" + idx));
                 bandera_pagos = true;
                 return;
             } else {
                 var total = 0;
-                listaPagoProgramacionPostores[idx].forEach(function (proveedorID, index) {//revisar
-                    total = total + proveedorID[1];
-                });
-                if (total != totalesPostores[idx].total) {
-                    $('#txtImportePago').val(calculoTotal);
-                    $('#txtPorcentaje').val(100);
+                if (totalesPostores[idx].total > 0) {
+                    listaPagoProgramacionPostores[idx].forEach(function (listaPago, index) {//revisar
+                        total = total + parseFloat(listaPago[1]);
+                    });
+                    if (devolverDosDecimales(total) != devolverDosDecimales(totalesPostores[idx].total)) {
 
-                    mostrarValidacionLoaderClose('Total de pago no coincide con el total del documento, monto total por programar ' + formatearNumero(calculoTotal));
-                    $('#modalProgramacionPagos').modal('show');
-                    return;
+                        mostrarValidacionLoaderClose('Total de pago no coincide con el total del documento, monto total por programar ' + formatearNumero(calculoTotal));
+                        $('#modalProgramacionPagos').modal('show');
+                        onListarPagoProgramacion(listaPagoProgramacionPostores[idx]);
+                        $('#indexProveedor').val(idx);
+                        bandera_pagos = true;
+                        return;
+                    }
                 }
             }
 
-            if (isEmpty(lstDocumentoArchivos[idx])) {
+            if (isEmpty(lstDocumentoArchivos[idx]) && totalesPostores[idx].total > 0) {
                 mostrarAdvertencia("Falta registrar pdf Cotización para:" + select2.obtenerText("cboProveedor_" + idx));
                 bandera_pagos = true;
                 return;
@@ -4903,6 +4914,9 @@ function guardar(accion) {
         }
     }
 
+    if (doc_TipoId == GENERAR_COTIZACION) {
+        detalle = detalle.filter(item => item.postor_ganador_id != null && item.postor_ganador_id !== "");
+    }
 
     // if (dataCofiguracionInicial.movimientoTipo[0]["codigo"] == 20) {// validar transferencia interna
     //   if (validarDetalleFormularioContenidoEnDocumentoRelacion()) {
@@ -5973,7 +5987,7 @@ function obtenerParametrosBusquedaDocumentoACopiar() {
         fecha_emision_fin: null,
         fecha_vencimiento_inicio: null,
         fecha_vencimiento_fin: null,
-        movimiento_tipo_id: dataCofiguracionInicial.movimientoTipo[0].id
+        movimiento_tipo_id: dataCofiguracionInicial.movimientoTipo[0].movimiento_tipo_id
     };
 
     if (dataCofiguracionInicial.movimientoTipo[0]["codigo"] == 20) { //Transferencia interna
@@ -6127,7 +6141,10 @@ function reinicializarDataTableDetalle() {
 
 var detalleDocumentoRelacion = [];
 var documentoTipoDescripcionCopia = null;
+var documentoRelacionId = null;
+var dataDocumentoCopia = [];
 function onResponseObtenerDocumentoRelacion(data) {
+    dataDocumentoCopia = data;
     variable.documentoIdCopia = data.datosDocumento.documentoIdCopia;
     variable.movimientoIdCopia = data.datosDocumento.movimientoIdCopia;
     $('#modalDocumentoRelacion').modal('hide');
@@ -6142,6 +6159,7 @@ function onResponseObtenerDocumentoRelacion(data) {
         documentoTipoDescripcionCopia = data.documentoACopiar[0].documento_tipo_descripcion;
         var dtdTipoGrupo_producto = obtenerDocumentoTipoDatoIdXTipo(44);
         $("#cbo_" + dtdTipoGrupo_producto).prop('disabled', true);
+        documentoRelacionId = variable.documentoIdCopia;
     }
 
     select2.asignarValorQuitarBuscador("cboMoneda", data.documentoACopiar[0].moneda_id);
@@ -8345,6 +8363,9 @@ function cancelarProgramacion() {
                 $('#tipoPagoDescripcion').html('Forma de pago: Crédito');
                 $('#tipoPagoDescripcion').css({ 'color': '#cb2a2a' });
                 $('#idFormaPagoContado').hide();
+                if (doc_TipoId == GENERAR_COTIZACION) {
+                    listaPagoProgramacionPostores[$("#indexProveedor").val()] = [];
+                }
             } else {
                 aceptarProgramacion(false);
             }
@@ -8359,7 +8380,7 @@ function cancelarProgramacion() {
 }
 
 function aceptarProgramacion(muestraMensaje) {
-    if (!isEmpty(listaPagoProgramacion)) {
+    if (!isEmpty(listaPagoProgramacion) || !isEmpty(listaPagoProgramacionPostores)) {
 
         var programacionTexto = '';
         var totalPago = 0;
@@ -8395,7 +8416,7 @@ function aceptarProgramacion(muestraMensaje) {
             calculoTotal = totalesPostores[$("#indexProveedor").val()].total;
         }
 
-        if (totalPago != calculoTotal) {
+        if (devolverDosDecimales(totalPago) != devolverDosDecimales(calculoTotal)) {
             if (muestraMensaje) {
                 mensajeValidacion('Total de pago no coincide con el total del documento');
                 return;
@@ -8700,6 +8721,7 @@ function agregarPagoProgramacion() {
         $('#txtDias').val(0);
         $('#txtPorcentaje').val(0);
         $('#txtGlosa').val("");
+        $('#fechaPago').val("");
     }
 
 }
@@ -8737,12 +8759,24 @@ function validarFormularioPagoProgramacion(fechaPago, importePago, dias, porcent
         bandera = false;
     }
 
-    if (pagoProgramacionTotalImporte != 0) {
-        var pagoRestante = calculoTotal - pagoProgramacionTotalImporte;
+    if (doc_TipoId == GENERAR_COTIZACION) {
+        if (pagoProgramacionTotalImporte != 0) {
+            var provedorIndex = $("#indexProveedor").val();
+            var pagoRestante = totalesPostores[provedorIndex].total - pagoProgramacionTotalImporte;
 
-        if (pagoRestante - importePago < 0) {
-            mensajeValidacion('Total de pago excedido. Importe de pago restante: ' + devolverDosDecimales(pagoRestante));
-            bandera = false;
+            if (pagoRestante - importePago < 0) {
+                mensajeValidacion('Total de pago excedido. Importe de pago restante: ' + devolverDosDecimales(pagoRestante));
+                bandera = false;
+            }
+        }
+    } else {
+        if (pagoProgramacionTotalImporte != 0) {
+            var pagoRestante = calculoTotal - pagoProgramacionTotalImporte;
+
+            if (pagoRestante - importePago < 0) {
+                mensajeValidacion('Total de pago excedido. Importe de pago restante: ' + devolverDosDecimales(pagoRestante));
+                bandera = false;
+            }
         }
     }
 
@@ -8851,9 +8885,27 @@ function onListarPagoProgramacion(data) {
 function limpiarCamposPagoProgramacion() {
     $('#txtGlosa').val('');
     $('#idPagoProgramacion').val('');
+    $('#txtImportePago').val("");
+    $('#txtDias').val(0);
+    $('#txtPorcentaje').val(0);
+    $('#fechaPago').val("");
 }
 
 function buscarPagoProgramacion(fechaPago, importePago, dias, porcentaje) {
+    if (doc_TipoId == GENERAR_COTIZACION) {
+        arrayFechaPago = [];
+        var proveedor_index = $("#indexProveedor").val();
+        if (listaPagoProgramacionPostores.length > 0) {
+            listaPagoProgramacionPostores.forEach(function (programacionPostores, idx) {
+                if (proveedor_index == idx) {
+                    programacionPostores.forEach(function (programacion, idx) {
+                        arrayFechaPago.push(programacion[0]);
+                    });
+                }
+            });
+        }
+    }
+
     var tam = arrayFechaPago.length;
     var ind = -1;
     for (var i = 0; i < tam; i++) {
@@ -8866,14 +8918,25 @@ function buscarPagoProgramacion(fechaPago, importePago, dias, porcentaje) {
 }
 
 function editarPagoProgramacion(indice) {
-    $('#fechaPago').datepicker('setDate', arrayFechaPago[indice]);
-    $('#txtImportePago').val(arrayImportePago[indice]);
-    $('#txtPorcentaje').val(arrayPorcentaje[indice]);
-    $('#txtGlosa').val(arrayGlosa[indice]);
+    if (isEmpty(arrayProveedor)) {
+        $('#fechaPago').datepicker('setDate', arrayFechaPago[indice]);
+        $('#txtImportePago').val(arrayImportePago[indice]);
+        $('#txtPorcentaje').val(arrayPorcentaje[indice]);
+        $('#txtGlosa').val(arrayGlosa[indice]);
 
-    pagoProgramacionTotalImporte = pagoProgramacionTotalImporte - arrayImportePago[indice] * 1;
+        pagoProgramacionTotalImporte = pagoProgramacionTotalImporte - arrayImportePago[indice] * 1;
 
-    $('#idPagoProgramacion').val(indice);
+        $('#idPagoProgramacion').val(indice);
+    } else {
+        var indice_proveedor = $("#indexProveedor").val();
+        pagoProgramacionTotalImporte = totalesPostores[indice_proveedor].total - devolverDosDecimales(listaPagoProgramacionPostores[indice_proveedor][indice][1]);
+
+        $('#fechaPago').datepicker('setDate', listaPagoProgramacionPostores[indice_proveedor][indice][0]);
+        $('#txtPorcentaje').val(listaPagoProgramacionPostores[indice_proveedor][indice][3]);
+        $('#txtImportePago').val(devolverDosDecimales(listaPagoProgramacionPostores[indice_proveedor][indice][1])).change();
+        $('#txtGlosa').val(listaPagoProgramacionPostores[indice_proveedor][indice][4]);
+        $('#idPagoProgramacion').val(indice);
+    }
 }
 
 var listaPagoProgramacionEliminado = [];
@@ -8960,20 +9023,34 @@ function cargarPagoProgramacion(data) {
 }
 
 function asignarImportePago() {
+    if (doc_TipoId == GENERAR_COTIZACION) {
+        if (!isEmpty(listaPagoProgramacionPostores)) {
+            var porcentaje;
+            var importePago;
+            arrayProveedor.forEach(function (proveedorID, idx) {
+                $.each(listaPagoProgramacionPostores[proveedorID.indice], function (index, item) {
+                    porcentaje = item[3];
+                    importePago = (totalesPostores[proveedorID.indice].total * porcentaje) / 100;
+                    listaPagoProgramacionPostores[proveedorID.indice][index][1] = importePago;
+                });
+            });
+            aceptarProgramacion(false);
+        }
+    } else {
+        var dtdTipoPago = obtenerDocumentoTipoDatoIdXTipo(25);
+        if (!isEmpty(dtdTipoPago) && !isEmpty(listaPagoProgramacion)) {
+            var porcentaje;
+            var importePago;
+            $.each(listaPagoProgramacion, function (index, item) {
+                porcentaje = item[3];
+                importePago = (calculoTotal * porcentaje) / 100;
+                listaPagoProgramacion[index][1] = importePago;
+            });
 
-    var dtdTipoPago = obtenerDocumentoTipoDatoIdXTipo(25);
-    if (!isEmpty(dtdTipoPago) && !isEmpty(listaPagoProgramacion)) {
-
-        var porcentaje;
-        var importePago;
-        $.each(listaPagoProgramacion, function (index, item) {
-            porcentaje = item[3];
-            importePago = (calculoTotal * porcentaje) / 100;
-            listaPagoProgramacion[index][1] = importePago;
-        });
-
-        aceptarProgramacion(false);
+            aceptarProgramacion(false);
+        }
     }
+
 }
 
 //seccion PAGOS
@@ -10789,6 +10866,8 @@ function hallarSubTotalPostorDetalle(indice, numero, bandera) {
 
             totalesPostores[idx] = { indice: proveedorID.indice, total: proveedorID.monedaId == 2 ? totalSoles : total };
         });
+
+        asignarImportePago();
     }
 }
 
@@ -11080,11 +11159,15 @@ function onResponseobtenerDetalleBienRequerimiento(data) {
             columnDefs: [
                 {
                     "render": function (data, type, row) {
-                        var archivo = data.split(".");
-                        if (archivo[1] == "pdf" || archivo[1] == "PDF") {
-                            return "<a href='" + URL_BASE + "util/uploads/documentoAdjunto/" + data + "' target='_blank' style='color:blue;'>" + data + "</a>";
+                        if (!isEmpty(data)) {
+                            var archivo = data.split(".");
+                            if (archivo[1] == "pdf" || archivo[1] == "PDF") {
+                                return "<a href='" + URL_BASE + "util/uploads/documentoAdjunto/" + data + "' target='_blank' style='color:blue;'>" + data + "</a>";
+                            } else {
+                                return "<a href='" + URL_BASE + "util/uploads/imagenAdjunto/" + data + "' target='_blank' style='color:blue;'>" + data + "</a>";
+                            }
                         } else {
-                            return "<a href='" + URL_BASE + "util/uploads/imagenAdjunto/" + data + "' target='_blank' style='color:blue;'>" + data + "</a>";
+                            return "";
                         }
                     },
                     "targets": 2
@@ -11111,142 +11194,19 @@ function limpiarBuscadores_movimiento_form_tablas() {
     select2.asignarValor('cboPersonaM', -1);
 }
 
-// function habilitarPostores(dato){
-//     var dtdTipoPosto2 = obtenerDocumentoTipoDatoXTipoXCodigo(23, "02");
-//     var dtdTipoPosto3 = obtenerDocumentoTipoDatoXTipoXCodigo(23, "03");
-//     if(dato == 467){
-//         $("#id_" + dtdTipoPosto3.id).hide();
-//         $("#id_" + dtdTipoPosto2.id).hide();
-//         $("#tb_postor_457").hide();
-//         $("#tb_postor_458").hide();
-//         var dtdetalle_postor2 = document.querySelectorAll('.dtdetalle_postor2');
-//         dtdetalle_postor2.forEach(function (columna) {
-//             columna.classList.add('hidden');
-//         });
-//         var dtdetalle_postor3 = document.querySelectorAll('.dtdetalle_postor3');
-//         dtdetalle_postor3.forEach(function (columna) {
-//             columna.classList.add('hidden');
-//         });
-
-//         //Cantidad
-//         var dtdetalle_postor_cantidad2 = document.querySelectorAll('.dtdetalle_postor_cantidad2');
-//         dtdetalle_postor_cantidad2.forEach(function (columna) {
-//             columna.classList.add('hidden');
-//         });
-//         var dtdetalle_postor_cantidad3 = document.querySelectorAll('.dtdetalle_postor_cantidad3');
-//         dtdetalle_postor_cantidad3.forEach(function (columna) {
-//             columna.classList.add('hidden');
-//         });
-//         //precio
-//         var dtdetalle_postor_precio = document.querySelectorAll('.postor_precio');
-//         dtdetalle_postor_precio.forEach(function (columna) {
-//             columna.classList.add('hidden');
-//         });
-//         var dtdetalle_postor_subtotal = document.querySelectorAll('.postor_subtotal');
-//         dtdetalle_postor_subtotal.forEach(function (columna) {
-//             columna.classList.add('hidden');
-//         });
-
-//         var tfootpostor2_class = document.querySelectorAll('.tfootpostor2_class');
-//         tfootpostor2_class.forEach(function (columna) {
-//             columna.classList.add('hidden');
-//         });
-//         var tfootpostor3_class = document.querySelectorAll('.tfootpostor3_class');
-//         tfootpostor3_class.forEach(function (columna) {
-//             columna.classList.add('hidden');
-//         });
-
-//         $("#datatable").resize();
-//         select2.asignarValor("cbo_"+dtdTipoPosto2.id, 0);
-//         select2.asignarValor("cbo_"+dtdTipoPosto3.id, 0);
-//     }else{
-//         $("#id_" + dtdTipoPosto3.id).show();
-//         $("#id_" + dtdTipoPosto2.id).show();
-//         $("#tb_postor_457").show();
-//         $("#tb_postor_458").show();
-//         var dtdetalle_postor2 = document.querySelectorAll('.dtdetalle_postor2');
-//         dtdetalle_postor2.forEach(function (columna) {
-//             columna.classList.remove('hidden');
-//         });
-//         var dtdetalle_postor3 = document.querySelectorAll('.dtdetalle_postor3');
-//         dtdetalle_postor3.forEach(function (columna) {
-//             columna.classList.remove('hidden');
-//         });
-//         //Cantidad
-//         var dtdetalle_postor_cantidad2 = document.querySelectorAll('.dtdetalle_postor_cantidad2');
-//         dtdetalle_postor_cantidad2.forEach(function (columna) {
-//             columna.classList.remove('hidden');
-//         });
-//         var dtdetalle_postor_cantidad3 = document.querySelectorAll('.dtdetalle_postor_cantidad3');
-//         dtdetalle_postor_cantidad3.forEach(function (columna) {
-//             columna.classList.remove('hidden');
-//         });
-//         //precio
-//         var dtdetalle_postor_precio = document.querySelectorAll('.postor_precio');
-//         dtdetalle_postor_precio.forEach(function (columna) {
-//             columna.classList.remove('hidden');
-//         });
-//         var dtdetalle_postor_subtotal = document.querySelectorAll('.postor_subtotal');
-//         dtdetalle_postor_subtotal.forEach(function (columna) {
-//             columna.classList.remove('hidden');
-//         });
-
-//         var tfootpostor2_class = document.querySelectorAll('.tfootpostor2_class');
-//         tfootpostor2_class.forEach(function (columna) {
-//             columna.classList.remove('hidden');
-//         });
-//         var tfootpostor3_class = document.querySelectorAll('.tfootpostor3_class');
-//         tfootpostor3_class.forEach(function (columna) {
-//             columna.classList.remove('hidden');
-//         });
-//         $("#datatable").resize();
-//     }
-// }
-
 var widthProveedor = "500";
 var widthMoneda = "100";
+var widthUO = "150";
 var widtIGV = "50";
 var widtTiempo = "150";
 var arrayProveedor = [];
 var theadOriginal = "";
 function cargarProveedorDetalleCombo(data, indice) {
-    var dataMapped = [
-        { id: '', text: '' }, // 👈 opción vacía
-        ...data.map(function (item) {
-            return {
-                id: item.id,
-                text: item.codigo_identificacion + ' | ' + item.persona_nombre
-            };
-        })
-    ];
     $("#cboProveedor_" + indice).select2({
         width: widthProveedor + "px",
         allowClear: true,
         placeholder: "Buscar proveedor",
-        data: dataMapped
     }).on("change", function (e) {
-        var selectedValue = $(this).val();
-        if (isEmpty(selectedValue)) {
-            swal({
-                title: "¿Desea continuar?",
-                text: "Se eliminaran los registros del proveedor seleccionado.",
-                type: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#33b86c",
-                confirmButtonText: "Si!",
-                cancelButtonColor: '#d33',
-                cancelButtonText: "No!",
-                closeOnConfirm: true,
-                closeOnCancel: true
-            }, function (isConfirm) {
-                if (isConfirm) {
-                    eliminarEncabezador(indice);
-                }else{
-                    $("#cboProveedor_" + indice).val(arrayProveedor[indice].proveedor_id).trigger("change");
-                }
-            });
-            return;
-        }
         // Agregar nuevo proveedor al array
         var textoOriginal = (select2.obtenerText("cboProveedor_" + indice)).split("|");
         var textProveedor = textoOriginal[1].length > 30
@@ -11257,17 +11217,20 @@ function cargarProveedorDetalleCombo(data, indice) {
         var proveedorExistente = arrayProveedor.findIndex(item => item.proveedor_id === e.val);
 
         if (proveedorExistenteIndex == -1 && proveedorExistente == -1) {
+            $("#btn_EliminarProveedor_" + indice).show();
             var sumilla = (isEmpty(arrayProveedor[indice])) ? null : arrayProveedor[indice].sumilla;
             arrayProveedor.push({
                 "indice": indice,
                 "proveedor_id": e.val,
                 "proveedorText": select2.obtenerText("cboProveedor_" + indice),
                 "monedaId": select2.obtenerValor("cboMonedaP_" + indice),
+                "uoId": select2.obtenerValor("cboUO_" + indice),
                 "tipoCambio": $("#txtTipoCambio_" + indice).val(),
                 "igv": ($('#selectIGV_').is(":checked") == true ? 1 : 0),
                 "tiempoEntrega": $("#cboTiempoEntrega_" + indice).val(),
                 "tiempo": $("#txtTiempoEntrega_" + indice).val(),
                 "condicionPago": select2.obtenerValor("cboCondicionPago_" + indice),
+                "diasPago": $("#txtDiasPago_" + indice).val(),
                 "sumilla": sumilla
             });
 
@@ -11276,7 +11239,6 @@ function cargarProveedorDetalleCombo(data, indice) {
             if ($('#datatable thead #tr_proveedor').length === 0) {
                 $('#datatable thead tr:first th').attr('rowspan', '2');
                 var dtdTipoGrupo_producto = obtenerDocumentoTipoDatoIdXTipo(44);
-                select2.asignarValor("cbo_" + dtdTipoGrupo_producto, 0);
             }
 
             theadOriginal = $('#datatable thead').html(); // Guardar copia original
@@ -11336,6 +11298,14 @@ function cargarProveedorDetalleCombo(data, indice) {
                         </tr>
                     </tfoot>`;
                 $('#datatable').append(filaExtratfoot);
+                if (!isEmpty(dataDocumentoCopia)) {
+                    detalle = [];
+                    onResponseObtenerDocumentoRelacion(dataDocumentoCopia);
+                }
+                if (!isEmpty(dataGrupoProducto)) {
+                    detalle = [];
+                    onResponseObtenerDetalle(dataGrupoProducto);
+                }
             } else {
                 $('#datatable tfoot #tfoot_proveedorSubTotal').append(`
                     <th style='text-align:right' colspan='2' class='tfootpostorSubtTotal${indice}_class' id='tfootpostorSolesSubTotal${indice}'>0.00</th>
@@ -11367,10 +11337,12 @@ function cargarProveedorDetalleCombo(data, indice) {
                     "proveedor_id": e.val,
                     "proveedorText": select2.obtenerText("cboProveedor_" + indice),
                     "monedaId": select2.obtenerValor("cboMonedaP_" + indice),
+                    "uoId": select2.obtenerValor("cboUO_" + indice),
                     "tipoCambio": $("#txtTipoCambio_" + indice).val(),
                     "tiempoEntrega": $("#cboTiempoEntrega_" + indice).val(),
                     "tiempo": $("#txtTiempoEntrega_" + indice).val(),
                     "condicionPago": select2.obtenerValor("cboCondicionPago_" + indice),
+                    "diasPago": $("#txtDiasPago_" + indice).val(),
                     "sumilla": sumilla
                 };
                 $('#th_proveedor_' + indice).html(textoOriginal[0] + " <br>" + textProveedor);
@@ -11378,11 +11350,17 @@ function cargarProveedorDetalleCombo(data, indice) {
         }
     });
 
+    if (!isEmpty(data)) {
+        select2.cargar("cboProveedor_" + indice, data, "id", ["codigo_identificacion", "persona_nombre"]);
+        select2.asignarValor("cboProveedor_" + indice, "");
+    }
+    $("#cboProveedor_" + indice).select2({ width: widthProveedor + "px" });
 }
 
 function cargarMonedaDetalleCombo(data, indice) {
     $("#cboMonedaP_" + indice).select2({
-        width: widthMoneda + "px"
+        width: widthMoneda + "px",
+        allowClear: true
     }).on("change", function (e) {
         if (!isEmpty(arrayProveedor[indice])) {
             calcularFooterTipoCambio(indice);
@@ -11396,6 +11374,21 @@ function cargarMonedaDetalleCombo(data, indice) {
     $("#cboMonedaP_" + indice).select2({ width: widthMoneda + "px" });
 }
 
+function cargarUODetalleCombo(data, indice) {
+    $("#cboUO_" + indice).select2({
+        width: widthUO + "px"
+    }).on("change", function (e) {
+        if (!isEmpty(arrayProveedor[indice])) {
+            calcularFooterTipoCambio(indice);
+        }
+    });
+
+    if (!isEmpty(data)) {
+        select2.cargar("cboUO_" + indice, data, "id", "descripcion");
+    }
+    $("#cboUO_" + indice).select2({ width: widthUO + "px" });
+}
+
 function cargarTiempoEntrega(indice) {
     $("#cboTiempoEntrega_" + indice).select2({
         width: widtTiempo + "px"
@@ -11405,12 +11398,30 @@ function cargarTiempoEntrega(indice) {
         } else {
             $("#txtTiempoEntrega_" + indice).prop('disabled', true);
         }
+        if (!isEmpty(arrayProveedor[indice])) {
+            calcularFooterTipoCambio(indice);
+        }
+    });
+}
+
+function cargarCondicionpago(indice) {
+    $("#cboCondicionPago_" + indice).select2({
+        width: widtTiempo + "px"
+    }).on("change", function (e) {
+        if (e.val == 2) {
+            $("#txtDiasPago_" + indice).prop('disabled', false);
+        } else {
+            $("#txtDiasPago_" + indice).prop('disabled', true);
+        }
+        if (!isEmpty(arrayProveedor[indice])) {
+            calcularFooterTipoCambio(indice);
+        }
     });
 }
 
 function agregarRazonSocialProveedor(i) {
     var $html = "<div class=\"input-group col-lg-12 col-md-12 col-sm-12 col-xs-12\">" +
-        "<input name=\"cboProveedor_" + i + "\" id=\"cboProveedor_" + i + "\" class=\"select2\" onchange=\"\"/>" +
+        "<select name=\"cboProveedor_" + i + "\" id=\"cboProveedor_" + i + "\" class=\"select2\" onchange=\"\"></select>" +
         "</div>";
     return $html;
 }
@@ -11433,6 +11444,13 @@ function agregarChkIGV(i) {
     var $html = "<div class=\"input-group col-lg-12 col-md-12 col-sm-12 col-xs-12\" style=\"text-align:center;\">" +
         "<input type='checkbox' id=\"selectIGV_" + i + "\" onchange=\"calcularFooterTipoCambio(" + i + ")\">" +
         "</div>";
+    return $html;
+}
+
+function agregarUO(i) {
+    var $html = "<div class=\"input-group col-lg-12 col-md-12 col-sm-12 col-xs-12\">" +
+        "<select name=\"cboUO_" + i + "\" id=\"cboUO_" + i + "\" class=\"select2\" >" +
+        "</select></div>";
     return $html;
 }
 
@@ -11467,6 +11485,12 @@ function agregarCondicionPago(i) {
     return $html;
 }
 
+function agregarDiasPago(i) {
+    var $html = "<div class=\"input-group col-lg-12 col-md-12 col-sm-12 col-xs-12\" style=\"text-align:center;\">" +
+        "<input type=\"text\" id=\"txtDiasPago_" + i + "\" name=\"txtDiasPago_" + i + "\" class=\"form-control\" required=\"\" aria-required=\"true\" value=\"\" style=\"text-align: right; width:" + widtTiempo + "px;\" disabled/></div>";
+    return $html;
+}
+
 function agregarPdfCotizacion(i) {
     var $html = "<div class=\"input-group col-lg-12 col-md-12 col-sm-12 col-xs-12\" style=\"text-align:center;\">";
 
@@ -11485,8 +11509,13 @@ function agregarDistribucionPagosCotizacion(i) {
 }
 
 function llenarFilaDetalleTablaProveedor(indice) {
+    document.getElementById("th_Nro").style.width = "50px";
+    var boton_eliminarProveedor = "";
+    if (indice != 0) {
+        boton_eliminarProveedor = "&nbsp;&nbsp;<a id='btn_EliminarProveedor_" + indice + "' onclick='confirmarEliminarProveedor(" + indice + ");' hidden><i class='fa fa-trash-o' style='color:#cb2a2a;' title='Eliminar'></i></a>";
+    }
     var fila = "<tr id=\"trDetalleProveedor_" + indice + "\">";
-    fila = fila + "<td style='border:0; width: 15px; vertical-align: middle; padding-right: 10px;'id=\"txtNumItem_" + indice + "\" name=\"txtNumItem_" + indice + "\" align='right'>" + (indice + 1) + "</td>";
+    fila = fila + "<td style='border:0; width: 200px; vertical-align: middle; padding-right: 10px;'id=\"txtNumItem_" + indice + "\" name=\"txtNumItem_" + indice + "\" align='right'><div class'input-group col-lg-12 col-md-12 col-sm-12 col-xs-12' style='text-align: center;'>" + (indice + 1) + boton_eliminarProveedor + "</div></td>";
     //Razón social
     fila += "<td style='border:0; width: " + widthProveedor + "px; vertical-align: middle; padding: " + KPADINGTD + "px;' id=\"tdProveedor_" + indice + "\">" + agregarRazonSocialProveedor(indice) + "</td>";
     //Moneda
@@ -11495,12 +11524,16 @@ function llenarFilaDetalleTablaProveedor(indice) {
     fila += "<td style='border:0; width: " + widthMoneda + "px; vertical-align: middle; padding: " + KPADINGTD + "px;' id=\"tdMoneda_" + indice + "\">" + agregarTipoCambio(indice) + "</td>";
     //IGV
     fila += "<td style='border:0; width: " + widtIGV + "px; vertical-align: middle; padding: " + KPADINGTD + "px;' id=\"tdIgv_" + indice + "\">" + agregarChkIGV(indice) + "</td>";
+    //U.O
+    fila += "<td style='border:0; width: " + widthUO + "px; vertical-align: middle; padding: " + KPADINGTD + "px;' id=\"tdTiempoEntrega_" + indice + "\">" + agregarUO(indice) + "</td>";
     //Tiempo entrega
     fila += "<td style='border:0; width: " + widtTiempo + "px; vertical-align: middle; padding: " + KPADINGTD + "px;' id=\"tdTiempoEntrega_" + indice + "\">" + agregarTiempoEntrega(indice) + "</td>";
     //Tiempo
     fila += "<td style='border:0; width: " + widtTiempo + "px; vertical-align: middle; padding: " + KPADINGTD + "px;' id=\"tdTiempoEntrega_" + indice + "\">" + agregarTiempo(indice) + "</td>";
     //Condicion pago
     fila += "<td style='border:0; width: " + widtTiempo + "px; vertical-align: middle; padding: " + KPADINGTD + "px;' id=\"tdCondicionPago_" + indice + "\">" + agregarCondicionPago(indice) + "</td>";
+    //Días de pago
+    fila += "<td style='border:0; width: " + widtTiempo + "px; vertical-align: middle; padding: " + KPADINGTD + "px;' id=\"tdDiasPago_" + indice + "\">" + agregarDiasPago(indice) + "</td>";
     //Sumilla
     fila += "<td style='border:0; width: " + widtIGV + "px; vertical-align: middle; padding: " + KPADINGTD + "px;' id=\"tdSumilla_" + indice + "\">" + agregarSumilla(indice) + "</td>";
     //pdf cotización
@@ -11525,9 +11558,8 @@ function llenarTablaDetalleProveedor(data) {
     for (var i = 0; i < nroFilas; i++) {
         cargarProveedorDetalleCombo(data.postores, i);
         cargarMonedaDetalleCombo(data.moneda, i);
-        $("#cboCondicionPago_" + i).select2({
-            width: widtTiempo + "px"
-        });
+        cargarUODetalleCombo(data.uo, i);
+        cargarCondicionpago(i);
         cargarTiempoEntrega(i);
     }
 }
@@ -11540,11 +11572,13 @@ function calcularFooterTipoCambio(indice) {
             "proveedor_id": select2.obtenerValor("cboProveedor_" + indice),
             "proveedorText": select2.obtenerText("cboProveedor_" + indice),
             "monedaId": select2.obtenerValor("cboMonedaP_" + indice),
+            "uoId": select2.obtenerValor("cboUO_" + indice),
             "tipoCambio": $("#txtTipoCambio_" + indice).val(),
             "igv": ($('#selectIGV_').is(":checked") == true ? 1 : 0),
             "tiempoEntrega": $("#cboTiempoEntrega_" + indice).val(),
             "tiempo": $("#txtTiempoEntrega_" + indice).val(),
             "condicionPago": select2.obtenerValor("cboCondicionPago_" + indice),
+            "diasPago": $("#txtDiasPago_" + indice).val(),
             "sumilla": sumilla
         };
         $('#datatable tbody tr').each(function (index) {
@@ -11597,6 +11631,7 @@ function exportarPdfCotizacion() {
         ax.addParamTmp("grupoProductoId", select2.obtenerValor("cbo_" + dtdTipoGrupo_producto));
         ax.addParamTmp("tipoRequerimiento", select2.obtenerValor("cboTipoRequerimiento_" + dtdTipoTipoRequerimiento));
         ax.addParamTmp("urgencia", "No");
+        ax.addParamTmp("documentoId", documentoRelacionId);
         ax.consumir();
     } else {
         mostrarAdvertencia("No hay registros para exportar");
@@ -11633,7 +11668,7 @@ function mostrarModalDistribucionPago(indice) {
             listaPagoProgramacion = listaPagoProgramacionPostores[indice];
             onListarPagoProgramacion(listaPagoProgramacionPostores[indice]);
         } else {
-            $("#txtImportePago").val(totalesPostores[indice].total);
+            $("#txtImportePago").val(devolverDosDecimales(totalesPostores[indice].total));
             $("#txtPorcentaje").val(100);
             onListarPagoProgramacion(null);
         }
@@ -11647,11 +11682,19 @@ function exportarExcelCotizacion() {
     if (!isEmpty(detalle)) {
         var dtdTipoGrupo_producto = obtenerDocumentoTipoDatoIdXTipo(44);
         var dtdTipoTipoRequerimiento = obtenerDocumentoTipoDatoIdXTipo(42);
+        var grupoProducto = select2.obtenerValor("cbo_" + dtdTipoGrupo_producto);
+        if (!isEmpty(dataGrupoProducto) && (isEmpty(grupoProducto) || grupoProducto == 0)) {
+            mostrarAdvertencia("Seleccionar grupo de productos");
+            loaderClose();
+            return;
+        }
+
         loaderShow();
         ax.setAccion("exportarExcelCotizacion");
         ax.addParamTmp("grupoProductoId", select2.obtenerValor("cbo_" + dtdTipoGrupo_producto));
         ax.addParamTmp("tipoRequerimiento", select2.obtenerValor("cboTipoRequerimiento_" + dtdTipoTipoRequerimiento));
         ax.addParamTmp("urgencia", "No");
+        ax.addParamTmp("documentoId", documentoRelacionId);
         ax.consumir();
     } else {
         mostrarAdvertencia("No hay registros para exportar");
@@ -11660,10 +11703,32 @@ function exportarExcelCotizacion() {
     }
 }
 
+function confirmarEliminarProveedor(indice) {
+    swal({
+        title: "¿Desea continuar?",
+        text: "Se eliminaran los registros del proveedor seleccionado.",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#33b86c",
+        confirmButtonText: "Si!",
+        cancelButtonColor: '#d33',
+        cancelButtonText: "No!",
+        closeOnConfirm: true,
+        closeOnCancel: true
+    }, function (isConfirm) {
+        if (isConfirm) {
+            eliminarEncabezador(indice);
+        }
+    });
+    return;
+}
+
 function eliminarEncabezador(indice) {
     // Eliminar encabezado principal
-    $(`#th_proveedor_${indice}`).remove();
+    $("#btn_EliminarProveedor_" + indice).hide();
+    select2.asignarValor("cboProveedor_" + indice, 0);
 
+    $(`#th_proveedor_${indice}`).remove();
     // Eliminar encabezados de precio y subtotal en la fila adicional
     $(`#tr_proveedor .th_precio_${indice}`).remove();
     $(`#tr_proveedor .th_subTotal_${indice}`).remove();

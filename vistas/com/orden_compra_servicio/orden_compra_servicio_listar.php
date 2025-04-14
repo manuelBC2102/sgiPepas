@@ -173,7 +173,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                <h4 class="modal-title">Detalle de OC / OS</h4>
+                <h4 class="modal-title">Detalle documentos</h4>
             </div>
             <div class="modal-body">
                 <div class="row">
@@ -240,113 +240,4 @@
     </div>
 </div>
 
-<!--modal para detalle distribucion pagos -->
-<div id="modalDetalleDistribucionPagos" class="modal fade" role="dialog" aria-labelledby="myModalLabel2" aria-hidden="true" style="display: none;">
-    <div class="modal-dialog modal-full">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                <h4 class="modal-title">Detalle de distribución de Pagos</h4>
-            </div>
-            <div class="modal-body">
-                <div class="row">
-                    <table id="dtmodalDetalleDistribucionPagos" class="table table-striped table-bordered" style="width: 100%">
-                        <thead>
-                            <tr>
-                                <th style='text-align:center;'>#</th>
-                                <th style='text-align:center;'>Fecha pago</th>
-                                <th style='text-align:center;'>Glosa</th>
-                                <th style='text-align:center;'>Importe</th>
-                                <th style='text-align:center;'>Porcentaje (%)</th>
-                                <th style='text-align:center;'>Estado</th>
-                                <th style='text-align:center;'>Acciones</th>
-                            </tr>
-                        </thead>
-                    </table>
-                </div>
-            </div>
-            <div class="modal-footer" style="padding-bottom:  0px;padding-top: 10px;clear:left">
-                <div class="form-group">
-                    <div class="col-md-6" style="text-align: left;">
-                    </div>
-                    <div class="col-md-6">
-                        <button type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-close"></i> Cerrar</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<!--modal para archivos adjuntos -->
-<div id="modalDetalleArchivosDistribucionPagos" class="modal fade" role="dialog" aria-labelledby="myModalLabel2" aria-hidden="true" style="display: none;">
-    <div class="modal-dialog modal-full">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                <h4 class="modal-title">Documentos de distribución de Pagos  <span id="tituloDistribucionPagos"></span></h4>
-            </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="form-group col-md-1">
-                        <label style="color: #141719;">Tipo Archivo</label>
-                    </div>
-                    <div class="form-group col-md-2">
-                        <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                            <select name="cboTipoArchivoDistribucionPagos" id="cboTipoArchivoDistribucionPagos" class="select2">
-                                <option value="3">Pdf factura</option>
-                                <option value="4">Xml factura</option>
-                                <option value="5">Cdr factura</option>
-                                <option value="6">Otros</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div id="divContenedorAdjuntoMultiDistribucionPagos" class="form-group col-md-2">
-                        <div class="fileUpload btn btn-purple" style="border-radius: 0px;"
-                            id="idPopoverMultiDistribucionPagos"
-                            title=""
-                            data-toggle="popover"
-                            data-placement="top"
-                            data-content="">
-                            <i class="ion-upload" style="font-size: 16px;"></i>
-                            Cargar documento
-                            <input name="archivoAdjuntoMultiDistribucionPagos" id="archivoAdjuntoMultiDistribucionPagos" type="file" accept="*" class="upload">
-                            <input type="hidden" id="dataArchivoMultiDistribucionPagos" name ="dataArchivoMultiDistribucionPagos" />
-                        </div>
-                    </div>
-                    <div class="form-group col-md-2">
-                        <button id="btnAgregarDocDistribucionPagos" name="btnAgregarDocDistribucionPagos" type="button" class="btn btn-info w-sm m-b-5" style="border-radius: 0px;">
-                            <i class="fa fa-plus-circle"></i>&nbsp;&nbsp;Agregar archivo
-                        </button>
-                    </div>
-                </div>
-                <span id="msjDocumentoDistribucionPagos" style="color:#cb2a2a;font-style: normal;"></span>
-                <br>
-                <div class="row" id="scroll">
-                    <div class="form-group col-md-12">
-                        <div class="table">
-                            <div id="dataList2DistribucionPagos">
-
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div id="divLeyenda">
-                    <b>Leyenda:</b>&nbsp;&nbsp;
-                    <i class="fa fa-cloud-download" style="color:#1ca8dd;"></i>&nbsp;Descargar &nbsp;&nbsp;&nbsp;
-                    <i class="fa fa-trash-o" style="color:#cb2a2a;"></i>&nbsp;Eliminar &nbsp;&nbsp;&nbsp;
-                    <!-- <i class='fa fa-times' style='color:red;'></i> Rechazar Documento &nbsp;&nbsp;&nbsp; -->
-                </div>
-            </div>
-            <div class="modal-footer" style="padding-bottom:  0px;padding-top: 10px;clear:left">
-                <div class="form-group">
-                    <div class="col-md-6" style="text-align: left;">
-                    </div>
-                    <div class="col-md-6">
-                        <button type="button" class="btn btn-danger" onclick="ocultarModalDistribucionPagos()"><i class="fa fa-close"></i> Cerrar</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 <script src="vistas/com/orden_compra_servicio/orden_compra_servicio_listar.js"></script>

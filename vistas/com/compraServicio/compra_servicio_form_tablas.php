@@ -115,14 +115,16 @@
                                         <table id="datatableProveedor" class="table table-striped table-bordered">      
                                         <thead>                                
                                             <tr>                                   
-                                                <th style='text-align:center;'>#</th> 
+                                                <th style='text-align:center;' id='th_Nro'>#</th> 
                                                 <th style='text-align:center;'>Razón social</th>      
                                                 <th style='text-align:center;'>Moneda</th>  
                                                 <th style='text-align:center;'>Tipo cambio</th>             
                                                 <th style='text-align:center;'>IGV</th>
+                                                <th style='text-align:center;'>U.O</th>
                                                 <th style='text-align:center;'>Tiempo de entrega</th>
                                                 <th style='text-align:center;'>Tiempo</th>
                                                 <th style='text-align:center;'>Condición de pago</th>
+                                                <th style='text-align:center;'>Días de pago</th>
                                                 <th style='text-align:center;'>Sumilla</th>
                                                 <th style='text-align:center;'>Pdf Cotización</th>   
                                                 <th style='text-align:center;'>Distribución pagos</th>   
@@ -1423,7 +1425,6 @@
 
                     <div class="modal-footer">  
                         <a class="btn btn-danger" id="id" data-dismiss="modal"><i class="fa fa-close"></i>&ensp;Cancelar</a>           
-                        <a class="btn btn-success"  onclick="registrarImagenPdfBien()"  ><i class="fa fa-send-o"></i> Guardar</a>        
                     </div>           
                 </div>         
             </div>    

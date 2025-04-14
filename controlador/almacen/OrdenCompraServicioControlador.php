@@ -51,23 +51,23 @@ class OrdenCompraServicioControlador extends AlmacenIndexControlador {
         return OrdenCompraServicioNegocio::create()->cargarArchivosAdjuntos($documentoId, $lstDocumentoArchivos, $lstDocEliminado,$usuarioId);
     } 
 
-    public function visualizarDistribucionPagos(){
-        $documentoId = $this->getParametro("documentoId");
-        return OrdenCompraServicioNegocio::create()->visualizarDistribucionPagos($documentoId);
-    }
+    // public function visualizarDistribucionPagos(){
+    //     $documentoId = $this->getParametro("documentoId");
+    //     return OrdenCompraServicioNegocio::create()->visualizarDistribucionPagos($documentoId);
+    // }
 
-    public function obtenerDocumentoAdjuntoXDistribucionPagos(){
-        $distribucionPagoId = $this->getParametro("distribucionPagoId");
-        return OrdenCompraServicioNegocio::create()->obtenerDocumentoAdjuntoXDistribucionPagos($distribucionPagoId);
-    }
+    // public function obtenerDocumentoAdjuntoXDistribucionPagos(){
+    //     $distribucionPagoId = $this->getParametro("distribucionPagoId");
+    //     return OrdenCompraServicioNegocio::create()->obtenerDocumentoAdjuntoXDistribucionPagos($distribucionPagoId);
+    // }
 
-    public function cargarArchivosAdjuntosDistribucionPagos(){
-        $this->setTransaction();
-        $usuarioId = $this->getUsuarioId();
-        $lstDocumentoArchivos = $this->getParametro("lstDocumentoArchivos");
-        $lstDocEliminado = $this->getParametro("lstDocEliminado");
-        $distribucionPagoId = $this->getParametro("distribucionPagoId");
-        $documentoId = $this->getParametro("documentoId");
-        return OrdenCompraServicioNegocio::create()->cargarArchivosAdjuntosDistribucionPagos($distribucionPagoId, $documentoId, $lstDocumentoArchivos, $lstDocEliminado,$usuarioId);
-    } 
+    // public function cargarArchivosAdjuntosDistribucionPagos(){
+    //     $this->setTransaction();
+    //     $usuarioId = $this->getUsuarioId();
+    //     $lstDocumentoArchivos = $this->getParametro("lstDocumentoArchivos");
+    //     $lstDocEliminado = $this->getParametro("lstDocEliminado");
+    //     $distribucionPagoId = $this->getParametro("distribucionPagoId");
+    //     $documentoId = $this->getParametro("documentoId");
+    //     return OrdenCompraServicioNegocio::create()->cargarArchivosAdjuntosDistribucionPagos($distribucionPagoId, $documentoId, $lstDocumentoArchivos, $lstDocEliminado,$usuarioId);
+    // } 
 }

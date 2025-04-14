@@ -242,4 +242,11 @@ class MovimientoBien extends ModeloBase {
         $this->commandAddParameter(":vin_valor_extra", $valorExtra);
         return $this->commandGetData();        
     }
+
+    public function movimientoBienDetalleEditarEstado($movimientoBienId, $columnaCodigo){
+        $this->commandPrepare("sp_movimiento_bien_detalle_editarEstado");
+        $this->commandAddParameter(":vin_movimiento_bien_id", $movimientoBienId);
+        $this->commandAddParameter(":vin_columna_codigo", $columnaCodigo);
+        return $this->commandGetData();        
+    }
 }

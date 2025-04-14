@@ -135,6 +135,13 @@ class MovimientoNegocio extends ModeloNegocioBase
         $respuesta->organizador = OrganizadorNegocio::create()->obtenerXMovimientoTipo($movimientoTipoId);
       }
     }
+
+    $respuesta->uo = null;
+    if($respuesta->documento_tipo[0]["id"] == Configuraciones::GENERAR_COTIZACION){
+      $movimientoTipo = MovimientoTipoNegocio::create()->obtenerXDocumentoTipoId($respuesta->documento_tipo[0]["id"] );
+      $movimientoTipoId = $movimientoTipo[0]["movimiento_tipo_id"];
+      $respuesta->uo = OrganizadorNegocio::create()->obtenerXMovimientoTipo($movimientoTipoId);
+    }
     $respuesta->dataAgencia = AgenciaNegocio::create()->listarAgenciaActiva($empresaId);
     $respuesta->dataAgrupador = Tabla::create()->obtenerXPadreId(88);
     $respuesta->movimientoTipo = $movimientoTipo;
@@ -510,7 +517,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     //Validacion de postores
     if(!ObjectUtil::isEmpty($dataPostorProveedor)){
       foreach($dataPostorProveedor as $itemPostor){
-        $respuestaDataPostorProveedor = Documento::create()->guardar_documento_detalle($respuesta->documentoId, $itemPostor['proveedor_id'], $itemPostor['monedaId'], $itemPostor['tipoCambio'], $itemPostor['igv'], $itemPostor['tiempoEntrega'], $itemPostor['tiempo'], $itemPostor['condicionPago'], $itemPostor['sumilla'], $usuarioId);
+        $respuestaDataPostorProveedor = Documento::create()->guardar_documento_detalle($respuesta->documentoId, $itemPostor['proveedor_id'], $itemPostor['monedaId'], $itemPostor['tipoCambio'], $itemPostor['igv'], $itemPostor['uoId'], $itemPostor['tiempoEntrega'], $itemPostor['tiempo'], $itemPostor['condicionPago'], $itemPostor['diasPago'],$itemPostor['sumilla'], $usuarioId);
         
         $pagoProgramacion = $listaPagoProgramacionPostores[intval($itemPostor['indice'])];
         foreach($pagoProgramacion as $itemPagoProgramacionPostores){
@@ -3663,6 +3670,15 @@ class MovimientoNegocio extends ModeloNegocioBase
     $respuesta->dataDocumentoRelacionada = DocumentoNegocio::create()->obtenerDataDocumentoACopiarRelacionada($documentoTipoOrigenId, $documentoTipoDestinoId, $documentoId);
     $respuesta->detalleDocumento = $this->obtenerDocumentoRelacionDetalle($movimientoId, $documentoId, $opcionId, $documentoRelacionados);
 
+    if($documentoTipoDestinoId == Configuraciones::GENERAR_COTIZACION){
+      $filtrados = [];
+      foreach ($respuesta->detalleDocumento as $item) {
+        if ((float)$item['cantidad_atendida'] < $item['cantidad']) {
+            $filtrados[] = $item;
+        }
+      }
+      $respuesta->detalleDocumento = $filtrados;
+    }
     $valorProveedor = null;
     if($documentoTipoDestinoId == Configuraciones::COTIZACIONES || $documentoTipoDestinoId == Configuraciones::ORDEN_COMPRA){
       $valores = DocumentoDatoValorNegocio::create()->obtenerXIdDocumentoXTipo($documentoId, 23);
@@ -8108,7 +8124,7 @@ class MovimientoNegocio extends ModeloNegocioBase
         $res = Documento::create()->obtenerDocumentoDetalledistribucionPagoxId($item['id']);
         $arrayPagos = [];
         foreach($res as $itemRes){
-          array_push($arrayPagos, array($itemRes['fecha_pago'], $itemRes['importe'], $itemRes['dias'], $itemRes['porcentaje'], $itemRes['glosa'], $itemRes['id']));
+          array_push($arrayPagos, array(DateUtil::formatearBDACadena($itemRes['fecha_pago']), $itemRes['importe'], $itemRes['dias'], $itemRes['porcentaje'], $itemRes['glosa'], $itemRes['id']));
         }
         if(!ObjectUtil::isEmpty($arrayPagos)){
           $listaPagoProgramacionPostores[$index] = $arrayPagos;
@@ -8166,8 +8182,9 @@ class MovimientoNegocio extends ModeloNegocioBase
 
     //Validacion de postores
     if(!ObjectUtil::isEmpty($dataPostorProveedor)){
+      $respuestaDataPostorProveedorEstado = Documento::create()->editar_documento_detalleEstado($documentoId);
       foreach($dataPostorProveedor as $itemPostor){
-        $respuestaDataPostorProveedor = Documento::create()->editar_documento_detalle($documentoId, $itemPostor['proveedor_id'], $itemPostor['monedaId'], $itemPostor['tipoCambio'], $itemPostor['igv'], $itemPostor['tiempoEntrega'], $itemPostor['tiempo'], $itemPostor['condicionPago'], $itemPostor['sumilla'], $usuarioId);
+        $respuestaDataPostorProveedor = Documento::create()->editar_documento_detalle($documentoId, $itemPostor['proveedor_id'], $itemPostor['monedaId'], $itemPostor['tipoCambio'], $itemPostor['igv'], $itemPostor['uoId'],$itemPostor['tiempoEntrega'], $itemPostor['tiempo'], $itemPostor['condicionPago'], $itemPostor['diasPago'],$itemPostor['sumilla'], $usuarioId);
         
         $pagoProgramacion = $listaPagoProgramacionPostores[intval($itemPostor['indice'])];
         foreach($pagoProgramacion as $itemPagoProgramacionPostores){
@@ -8184,6 +8201,15 @@ class MovimientoNegocio extends ModeloNegocioBase
           $id = $itemPagoProgramacionPostores[5];
           $res = Documento::create()->editarDocumentoDetalleDistribucionPagos($respuestaDataPostorProveedor[0]['vout_id'], $fechaPago, $importePago, $dias, $porcentaje, $glosa, $usuarioId, $id);
         }
+        foreach ($detalle as $item) {
+          $resspuestaEstado = MovimientoBien::create()->movimientoBienDetalleEditarEstado($item['movimientoBienId'], 37);
+          foreach ($item["detalle"] as $valor) {
+            if($documentoTipoId == Configuraciones::GENERAR_COTIZACION && $valor['columnaCodigo'] == 37 && $valor['valorExtra'] == $itemPostor['proveedor_id']){
+              $resDetalle = MovimientoNegocio::create()->movimientoBienDetalleEditarCadena($item['movimientoBienId'], $valor['columnaCodigo'], $valor['valorDet'], $usuarioId, $valor['valorExtra']);
+            }
+          }
+        }
+
       }
     }
     
@@ -8197,7 +8223,7 @@ class MovimientoNegocio extends ModeloNegocioBase
           $filtrados = array_values(array_filter($detalle, function($item) use($proveedor_id){
             return $item['postor_ganador_id'] === $proveedor_id;
           }));
-          $arraydetalleXpostor[$index] = array($filtrados, $proveedor_id, $itemPostores['monedaId'], $itemPostores['tipoCambio'], $itemPostores['igv'], $itemPostores['tiempoEntrega'], $itemPostores['tiempo'], $itemPostores['condicionPago']);
+          $arraydetalleXpostor[$index] = array($filtrados, "proveedor_id" => $proveedor_id, "monedaId" => $itemPostores['monedaId'], "tipoCambio" => $itemPostores['tipoCambio'], "igv" => $itemPostores['igv'], "uoId" => $itemPostores['uoId'], "tiempoEntrega" => $itemPostores['tiempoEntrega'], "tiempo" => $itemPostores['tiempo'], "condicionPago" => $itemPostores['condicionPago'],"diasPago" => $itemPostores['diasPago'], "sumilla" => $itemPostores['sumilla']);
         }
 
         $cont = count($camposDinamicos);
@@ -8206,28 +8232,37 @@ class MovimientoNegocio extends ModeloNegocioBase
             "id" =>"",
             "tipo" => "23",
             "opcional" => "1",
-            "descripcion" => "Adjuntar archivos",
+            "descripcion" => "Proveedor",
             "codigo" => "",
-            "valor" => $itemPostor[1]);
-          $camposDinamicos [$cont + 2] = array(
+            "valor" => $itemPostor["proveedor_id"]);
+          $camposDinamicos [$cont + 1] = array(
             "id" =>"",
             "tipo" => "2",
             "opcional" => "1",
             "descripcion" => "Tiempo de entrega",
             "codigo" => "",
-            "valor" => $itemPostor[5]);
+            "valor" => $itemPostor["tiempoEntrega"]);
+          $camposDinamicos [$cont + 1] = array(
+              "id" =>"",
+              "tipo" => "46",
+              "opcional" => "1",
+              "descripcion" => "U.O",
+              "codigo" => "",
+              "valor" => $itemPostor["uoId"]);            
           $camposDinamicos [$cont + 3] = array(
             "id" =>"",
             "tipo" => "50",
             "opcional" => "1",
             "descripcion" => "Condición de pago",
             "codigo" => "",
-            "valor" => $itemPostor[7] == 1? 501:502); 
+            "valor" => $itemPostor["condicionPago"] == 1? 501:502); 
 
-          $respuestaCotizacion = $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::COTIZACIONES,$itemPostor[0], $respuesta, $periodoId, 160, 1, null, null, null,$arraydetalleXpostor[$indexPostor]);
-          //generamos OC
-          $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::ORDEN_COMPRA,$itemPostor[0], $respuesta, $periodoId, 395, 2, $listaPagoProgramacionPostores[$indexPostor], $respuestaCotizacion, null,$arraydetalleXpostor[$indexPostor]);
-        
+          if(!ObjectUtil::isEmpty($itemPostor[0])){
+            $respuestaCotizacion = $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::COTIZACIONES,$itemPostor[0], $respuesta, $periodoId, 160, 1, null, null, null,$arraydetalleXpostor[$indexPostor]);
+            //generamos OC
+            $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::ORDEN_COMPRA,$itemPostor[0], $respuesta, $periodoId, 395, 2, $listaPagoProgramacionPostores[$indexPostor], $respuestaCotizacion, null,$arraydetalleXpostor[$indexPostor]);
+          }
+
           DocumentoNegocio::create()->ActualizarDocumentoEstadoId($documentoId, 17, $usuarioId);
         }
 
@@ -8341,6 +8376,7 @@ class MovimientoNegocio extends ModeloNegocioBase
 
       // guardar el detalle del detalle del movimiento en movimiento_bien_detalle
       if (!ObjectUtil::isEmpty($item["detalle"])) {
+        $resspuestaEstado = MovimientoBien::create()->movimientoBienDetalleEditarEstado($movimientoBienId, 37);
         foreach ($item["detalle"] as $valor) {
           if ($valor['columnaCodigo'] == 18) {
             $fechaVencimiento = DateUtil::formatearCadenaACadenaBD($valor['valorDet']);
@@ -10351,8 +10387,6 @@ class MovimientoNegocio extends ModeloNegocioBase
             $clase = $item['valor_codigo'];
           } else if ($item['descripcion'] == "Tipo") {
             $tipo = $item['valor_codigo'];
-          } else if ($item['descripcion'] == "Unidad Minera") {
-            $unidad_minera = $item['valor'];
           } else if ($item['descripcion'] == "Urgencia") {
             $urgencia = $item['valor_codigo'];
           }
@@ -10364,6 +10398,9 @@ class MovimientoNegocio extends ModeloNegocioBase
           $area = $item['valor'];
           $areaId = $item['valor_codigo'];
           break;
+        case 51:
+          $unidad_minera = $item['valor'];
+          break;          
       }
     }
     $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
@@ -11144,7 +11181,6 @@ class MovimientoNegocio extends ModeloNegocioBase
     $ubigeoProveedor = PersonaNegocio::create()->obtenerUbigeoXId($dataDocumento[0]["ubigeo_id"]);
 
     $referencia = null;
-    $cotizacion = null;
     $terminos_de_pago = null;
     $entrega_en_destino = null;
     $entrega_en_destino_id = null;
@@ -11156,8 +11192,6 @@ class MovimientoNegocio extends ModeloNegocioBase
         case 2:
           if ($item['descripcion'] == "Referencia") {
             $referencia = $item['valor'];
-          } else if ($item['descripcion'] == "Cotización") {
-            $cotizacion = $item['valor'];
           }
           break;
         case 50:
@@ -11169,9 +11203,6 @@ class MovimientoNegocio extends ModeloNegocioBase
           break;
         case 46:
           $U_O = $item['valor'];
-          break;
-        case 47:
-          $cuenta = $item['valor'];
           break;
       }
     }
@@ -11282,11 +11313,12 @@ class MovimientoNegocio extends ModeloNegocioBase
     $pdf->MultiCell(45, 5, 'Solicitado por', 1, 'C', 1, 0, 105, 74, true, 0, false, true, 5, 'M');
     $pdf->SetFillColor(255, 255, 255);
     $pdf->SetFont('helvetica', '', 7);
-    $pdf->MultiCell(45, 10, '', 1, 'C', 1, 0, 105, 79, true, 0, false, true, 10, 'M'); //verificar
+    $pdf->MultiCell(45, 10, $dataDocumento[0]['usuario'], 1, 'C', 1, 0, 105, 79, true, 0, false, true, 10, 'M'); //verificar
 
 
     $serieNumeroCotizacion = '';
     $serieNumeroSolicitudRequerimiento = '';
+    $cuenta = '';
     $dataRelacionada = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoId($documentoId);
     foreach($dataRelacionada as $itemRelacion){
       if($itemRelacion['documento_tipo_id'] == Configuraciones::COTIZACIONES){
@@ -11294,8 +11326,22 @@ class MovimientoNegocio extends ModeloNegocioBase
       }
       if($itemRelacion['documento_tipo_id'] == Configuraciones::SOLICITUD_REQUERIMIENTO){
         $serieNumeroSolicitudRequerimiento .= $itemRelacion['serie_numero']. ", ";
+
+        $documentoDatoValor = DocumentoDatoValorNegocio::create()->obtenerXIdDocumento($itemRelacion["documento_relacionado_id"]);
+        foreach ($documentoDatoValor as $index => $item) {
+          switch ($item['tipo'] * 1) {
+            case 52:
+              $cuenta .= $item['valor']. ", ";
+              break;
+          }
+        }
       }
     }
+  // Separar por comas y eliminar espacios, eliminar repetidos
+  $cuenta = array_unique(array_filter(array_map('trim', explode(',', $cuenta))));
+  // Volver a unir en un string
+  $cuenta = implode(', ', $cuenta);
+
 
     $pdf->SetFont('helvetica', 'B', 8);
     $pdf->MultiCell(45, 5, 'REQUERIMIENTO:', 1, 'L', 1, 0, '', 89, true, 0, false, true, 5, 'M');
@@ -11320,7 +11366,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     $pdf->SetFont('helvetica', 'B', 8);
     $pdf->MultiCell(45, 5, 'CUENTA:', 1, 'L', 1, 0, '', 114, true, 0, false, true, 5, 'M');
     $pdf->SetFont('helvetica', '', 7);
-    $pdf->MultiCell(90, 5, 'PEPAS', 1, 'L', 1, 0, 60, 114, true, 0, false, true, 5, 'M');
+    $pdf->MultiCell(90, 5, $cuenta, 1, 'L', 1, 0, 60, 114, true, 0, false, true, 5, 'M');
 
 
 
@@ -11578,35 +11624,35 @@ class MovimientoNegocio extends ModeloNegocioBase
     12.3. Las obligaciones de esta Cláusula 12 continuarán en vigor por un período de 5 (cinco) años a partir de la fecha de terminación del último período de garantía de calidad. <br>
     12.4. Excepto cuando se disponga algo diferente en la OC, el PROVEEDOR deberá devolver o destruir, según le indique el COMPRADOR, toda la información confidencial del COMPRADOR que tuviera en su poder. <br><br>';
 
-    $pdf->AddPage();
+    // $pdf->AddPage();
 
-    $distribucionPagos = OrdenCompraServicio::create()->obtenerDistribucionPagos($documentoId);
-    $cont_distribucionPagos = 0;
-    $pdf->SetFont('helvetica', '', 7);
-    $tabla_distribucionPagos = '<table cellspacing="0" cellpadding="1" border="1">
-        <tr style="background-color:rgb(254, 191, 0);">
-            <th style="text-align:center;vertical-align:middle;" width="5%"><b>Item</b></th>
-            <th style="text-align:center;vertical-align:middle;" width="45%"><b>Importe</b></th>
-            <th style="text-align:center;vertical-align:middle;" width="50%"><b>Porcentaje</b></th>
-        </tr>
-    ';
-    if (!ObjectUtil::isEmpty($distribucionPagos)) {
-      foreach ($distribucionPagos as $index => $item) {
-        $cont_distribucionPagos++;
+    // $distribucionPagos = OrdenCompraServicio::create()->obtenerDistribucionPagos($documentoId);
+    // $cont_distribucionPagos = 0;
+    // $pdf->SetFont('helvetica', '', 7);
+    // $tabla_distribucionPagos = '<table cellspacing="0" cellpadding="1" border="1">
+    //     <tr style="background-color:rgb(254, 191, 0);">
+    //         <th style="text-align:center;vertical-align:middle;" width="5%"><b>Item</b></th>
+    //         <th style="text-align:center;vertical-align:middle;" width="45%"><b>Importe</b></th>
+    //         <th style="text-align:center;vertical-align:middle;" width="50%"><b>Porcentaje</b></th>
+    //     </tr>
+    // ';
+    // if (!ObjectUtil::isEmpty($distribucionPagos)) {
+    //   foreach ($distribucionPagos as $index => $item) {
+    //     $cont_distribucionPagos++;
 
-        $tabla_distribucionPagos = $tabla_distribucionPagos . '<tr>'
-          . '<td style="text-align:center"  width="5%">' . ($index + 1) . '</td>'
-          . '<td style="text-align:center"  width="45%">' . number_format($item['importe'], 2) . '</td>'
-          . '<td style="text-align:center"  width="50%">' . number_format($item['porcentaje'], 2) . '</td>'
-          . '</tr>';
-      }
-    }
-    $tabla_distribucionPagos = $tabla_distribucionPagos . '</table>';
+    //     $tabla_distribucionPagos = $tabla_distribucionPagos . '<tr>'
+    //       . '<td style="text-align:center"  width="5%">' . ($index + 1) . '</td>'
+    //       . '<td style="text-align:center"  width="45%">' . number_format($item['importe'], 2) . '</td>'
+    //       . '<td style="text-align:center"  width="50%">' . number_format($item['porcentaje'], 2) . '</td>'
+    //       . '</tr>';
+    //   }
+    // }
+    // $tabla_distribucionPagos = $tabla_distribucionPagos . '</table>';
 
-    $tabla_distribucionPagosTitulo = '<div style="text-align: center;"> <h3>DISTRIBUCIÓN DE PAGOS</h3></div> <div style="text-align: justify;"></div>';
-    $pdf->writeHTML($tabla_distribucionPagosTitulo, true, false, true, false, '');
+    // $tabla_distribucionPagosTitulo = '<div style="text-align: center;"> <h3>DISTRIBUCIÓN DE PAGOS</h3></div> <div style="text-align: justify;"></div>';
+    // $pdf->writeHTML($tabla_distribucionPagosTitulo, true, false, true, false, '');
 
-    $pdf->writeHTML($tabla_distribucionPagos, true, false, true, false, '');
+    // $pdf->writeHTML($tabla_distribucionPagos, true, false, true, false, '');
 
     $html_total = '<div style="text-align: center;"> <h3>CONDICIONES GENERALES DE COMPRA</h3></div> <div style="text-align: justify;">' . $html1 . $html2 . $html3 . $html4 . $html5 . $html6 . $html7 . $html8 . $html9 . $html10 . $html11 . $html12 . '</div>';
     $pdf->AddPage();
@@ -11774,28 +11820,17 @@ class MovimientoNegocio extends ModeloNegocioBase
   public function guardarDocumentoCotizacion($camposDinamicosConsolidado,$usuarioId, $documentoTipoId, $detalle, $respuesta, $periodoId, $opcionId, $banderaCotizacon, $listaPagoProgramacion = null, $respuestaCotizacion = null, $monedaIdExt = null, $arraydetalleXpostor = null)
   {
     //generar cotizacion
-    $checkedOC = ($detalle[0]['checked1'] == "true") ? "1" : 
-    (($detalle[0]['checked2'] == "true") ? "2" : 
-    (($detalle[0]['checked3'] == "true") ? "3" : null));
-
-    $checked1Moneda = $detalle[0]['checked1Moneda'];
-    $checked2Moneda = $detalle[0]['checked2Moneda'];
-    $checked3Moneda = $detalle[0]['checked3Moneda'];
-
-    $checkeMoneda1 = $checked1Moneda == "true"? 4: 2;
-    $checkeMoneda2 = $checked2Moneda == "true"? 4: 2;
-    $checkeMoneda3 = $checked3Moneda == "true"? 4: 2;
 
     if($banderaCotizacon == 1){
       $filtradosTipo23 = array_filter($camposDinamicosConsolidado, function($item) {
         return $item['tipo'] === "23" && !empty($item['valor']);
       });
     }else if($banderaCotizacon == 2){
-      $filtradosTipo23 = array_filter($camposDinamicosConsolidado, function($item) use ($checkedOC){
+      $filtradosTipo23 = array_filter($camposDinamicosConsolidado, function($item){
         return $item['tipo'] === "23" && !empty($item['valor']);
       });
     }else if($banderaCotizacon == 3){
-      $filtradosTipo23 = array_filter($camposDinamicosConsolidado, function($item) use ($checkedOC){
+      $filtradosTipo23 = array_filter($camposDinamicosConsolidado, function($item){
         return $item['tipo'] === "5" && !empty($item['valor']);
       });
     }
@@ -11840,7 +11875,7 @@ class MovimientoNegocio extends ModeloNegocioBase
       return $acumulador + ($precio[0]['valorDet'] * $seleccion['cantidad']);
     }, 0);
 
-    if($arraydetalleXpostor[0][4] == 1){
+    if($arraydetalleXpostor[0]["igv"] == "1"){
       $subTotalPostor1 = $sumaMontosprecioPostor1 /1.18;
       $igvPostor1 = $sumaMontosprecioPostor1 - $subTotalPostor1;
     }else{
@@ -11848,17 +11883,6 @@ class MovimientoNegocio extends ModeloNegocioBase
       $sumaMontosprecioPostor1 = $sumaMontosprecioPostor1 * 1.18;
       $igvPostor1 = $sumaMontosprecioPostor1 - $subTotalPostor1;
     }
-    // $sumaMontosprecioPostor2  = array_reduce($detalle, function ($acumulador, $seleccion) {
-    //   return $acumulador + ($seleccion['precioPostor2'] * $seleccion['cantidad']);
-    // }, 0);
-    // $subTotalPostor2 = $sumaMontosprecioPostor2 / 1.18;
-    // $igvPostor2 = $sumaMontosprecioPostor2 - $subTotalPostor2;
-    // $sumaMontosprecioPostor3  = array_reduce($detalle, function ($acumulador, $seleccion) {
-    //   return $acumulador + ($seleccion['precioPostor3'] * $seleccion['cantidad']);
-    // }, 0);
-    // $subTotalPostor3 = $sumaMontosprecioPostor3 / 1.18;
-    // $igvPostor3 = $sumaMontosprecioPostor3 - $subTotalPostor3;
-
 
     $documentosIdCotizaciones = []; //revisar
     foreach ($filtradosTipo23 as $itemTipo23) {
@@ -11869,28 +11893,13 @@ class MovimientoNegocio extends ModeloNegocioBase
       $importeTotal = 0;
       $igv = 0;
       $subTotal = 0;
-      $monedaId = 2;
-      $texto1 = stripos($itemTipo23['descripcion'], "1");
-      $texto2 = stripos($itemTipo23['descripcion'], "2");
-      $texto3 = stripos($itemTipo23['descripcion'], "3");
+      $monedaId = $arraydetalleXpostor[0]["monedaId"];
 
       if($banderaCotizacon != 3){
-        // if($texto1 == true){
           $importeTotal = $sumaMontosprecioPostor1;
           $igv = $igvPostor1;
-          $monedaId = $checkeMoneda1;
+          $monedaId = $monedaId;
           $subTotal = $subTotalPostor1;
-        // }else if($texto2 == true){
-        //   $importeTotal = $sumaMontosprecioPostor2;
-        //   $subTotal = $subTotalPostor2;
-        //   $igv = $igvPostor2;
-        //   $monedaId = $checkeMoneda2;
-        // }else if($texto3 == true){
-        //   $importeTotal = $sumaMontosprecioPostor3;
-        //   $igv = $igvPostor3;
-        //   $subTotal = $subTotalPostor3;
-        //   $monedaId = $checkeMoneda3;
-        // }
       }else{
         $importeTotal = $filtradosTipo14[0]['valor'];
         $igv = $filtradosTipo15[0]['valor'];
@@ -12012,9 +12021,9 @@ class MovimientoNegocio extends ModeloNegocioBase
             break; 
           case 47: // CUenta
             $cuenta_persona = ProgramacionPagos::create()->obtenerCuentaPrincipalxPersonaId($itemTipo23['valor'], 1, $monedaId);
-            if(ObjectUtil::isEmpty($cuenta_persona)){
-              throw new WarningException("No existen registros de cuentas para el " . $itemTipo23['descripcion']);
-            }
+            // if(ObjectUtil::isEmpty($cuenta_persona)){
+            //   throw new WarningException("No existen registros de cuentas para el " . $itemTipo23['descripcion']);
+            // }
             $camposDinamicosCotizacion[] = array(
               "id" => $item['id'],
               "tipo" => $item['tipo'],
@@ -12072,25 +12081,12 @@ class MovimientoNegocio extends ModeloNegocioBase
       $$movimiento_bien_ids = null;
       foreach ($detalle as $i => $itemDetalle) {
         $precioItem = 0;
-        $texto1 = stripos($itemTipo23['descripcion'], "1");
-        $texto2 = stripos($itemTipo23['descripcion'], "2");
-        $texto3 = stripos($itemTipo23['descripcion'], "3");
-        // if($banderaCotizacon != 3){
-          // if($texto1 == true){
-          //   $precioItem = $itemDetalle['precioPostor1'];
-          // }else if($texto2 == true){
-          //   $precioItem = $itemDetalle['precioPostor2'];
-          // }else if($texto3 == true){
-          //   $precioItem = $itemDetalle['precioPostor3'];
-          // }
-          $postor_ganador = $itemDetalle['postor_ganador_id'];
-          $precioItem = array_values(array_filter($itemDetalle['detalle'], function($item) use($postor_ganador){
-            return $item['valorExtra'] === $postor_ganador;
-          }))[0]['valorDet'];
-          $movimiento_bien_ids = $itemDetalle['movimiento_bien_ids'];
-        // }else{
-        //   $precioItem = $itemDetalle['precio'];
-        // }
+
+        $postor_ganador = $itemDetalle['postor_ganador_id'];
+        $precioItem = array_values(array_filter($itemDetalle['detalle'], function($item) use($postor_ganador){
+          return $item['valorExtra'] === $postor_ganador;
+        }))[0]['valorDet'];
+        $movimiento_bien_ids = $itemDetalle['movimiento_bien_ids'];
 
         $arrayItem = array(
           "bienId" => $itemDetalle['bienId'],
@@ -12132,22 +12128,13 @@ class MovimientoNegocio extends ModeloNegocioBase
 
       $documento = $this->guardar($opcionId, $usuarioId, $documentoTipoId, $camposDinamicosCotizacion, $detalleCotizacion, $documentoARelacionarSalida, 1, "", 1, $monedaId, null, $periodoId, null, null, null, null);
     
-      if($banderaCotizacon == 1){
-        $checkedOC = ($detalle[0]['checked1'] == "true") ? "1" : 
-        (($detalle[0]['checked2'] == "true") ? "2" : 
-        (($detalle[0]['checked3'] == "true") ? "3" : null));
-      }
-      // $filtradosTipo23 = array_filter($camposDinamicosCotizacion, function($item) use ($checkedOC){
-      //   return $item['tipo'] === "23" && !empty($item['valor']) && stripos($item['descripcion'], $checkedOC) == true;
-      // });
-
-      if(!ObjectUtil::isEmpty($filtradosTipo23)){
+      if($documentoTipoId == Configuraciones::COTIZACIONES){
         $respuestaActualizarDocumentoEstado = DocumentoNegocio::create()->ActualizarDocumentoEstadoId($documento[0]['vout_id'], 16, $usuarioId);
         $documentosIdCotizaciones [] = $documento[0]['vout_id'];
       }
     }
   
-    if($documentoTipoId == Configuraciones::ORDEN_COMPRA || $documentoTipoId == Configuraciones::ORDEN_SERVICIO){
+    if($documentoTipoId == Configuraciones::ORDEN_SERVICIO){
       if (!ObjectUtil::isEmpty($listaPagoProgramacion)) {
         foreach ($listaPagoProgramacion as $ind => $item) {
           if (strpos($itemPagoProgramacionPostores[0], '/') !== false) {
@@ -12449,13 +12436,19 @@ class MovimientoNegocio extends ModeloNegocioBase
     return $titulo;
   }
 
-  public function exportarPdfCotizacion($grupoProductoId, $tipoRequerimiento, $urgencia, $usuarioId)
+  public function exportarPdfCotizacion($grupoProductoId, $tipoRequerimiento, $urgencia, $usuarioId, $documentoId = null, $opcionId = null)
   {
     require_once __DIR__ . '/../../controlador/commons/tcpdf/config/lang/eng.php';
     require_once __DIR__ . '/../../controlador/commons/tcpdf/tcpdf.php';
 
     $respuesta = new stdClass();
-    $detalleRequerimientos = MovimientoBien::create()->obtenerMovimientoBienXRequerimientoXGrupoProductoxId($grupoProductoId, $tipoRequerimiento, $urgencia);
+    if(ObjectUtil::isEmpty($documentoId)){
+      $detalleRequerimientos = MovimientoBien::create()->obtenerMovimientoBienXRequerimientoXGrupoProductoxId($grupoProductoId, $tipoRequerimiento, $urgencia);
+    }else{
+      $dataMovimientoDocumento = MovimientoBien::create()->obtenerMovimientoIdXDocumentoId($documentoId);
+      $movimientoId = $dataMovimientoDocumento[0]['movimiento_id'];
+      $detalleRequerimientos = $this->obtenerDocumentoRelacionDetalleEdicion($movimientoId, $documentoId, $opcionId, null);
+    }
 
     //$tipoSalidaPDF: F-> guarda local
     $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
@@ -12513,12 +12506,13 @@ class MovimientoNegocio extends ModeloNegocioBase
     $tabla = '<table cellspacing="0" cellpadding="1" border="1">
         <tr style="background-color:rgb(254, 191, 0);">
             <th style="text-align:center;vertical-align:middle;" width="3%"><b>N°</b></th>
-            <th style="text-align:center;vertical-align:middle;" width="16%"><b>CODIGO</b></th>
-            <th style="text-align:center;vertical-align:middle;" width="45%"><b>DESCRIPCION</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="12%"><b>CODIGO</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="30%"><b>DESCRIPCION</b></th>
             <th style="text-align:center;vertical-align:middle;" width="8%"><b>MARCA</b></th>
             <th style="text-align:center;vertical-align:middle;" width="8%"><b>MODELO</b></th>
             <th style="text-align:center;vertical-align:middle;" width="10%"><b>CANTIDAD</b></th>
             <th style="text-align:center;vertical-align:middle;" width="10%"><b>UNIDAD DE MEDIDA</b></th>
+            <th style="text-align:center;vertical-align:middle;" width="20%"><b>DATOS ADICIONALES</b></th>
         </tr>
     ';
     if (!ObjectUtil::isEmpty($detalleRequerimientos)) {
@@ -12527,25 +12521,35 @@ class MovimientoNegocio extends ModeloNegocioBase
 
         $tabla = $tabla . '<tr>'
           . '<td style="text-align:center"  width="3%">' . ($index + 1) . '</td>'
-          . '<td align="center" width="16%">' . $item['bien_codigo'] . '</td>'
-          . '<td style="text-align:left; vertical-align:middle; display: table-cell;" width="45%">' . $item['bien_descripcion']  . '</td>'
+          . '<td align="center" width="12%">' . $item['bien_codigo'] . '</td>'
+          . '<td style="text-align:left; vertical-align:middle; display: table-cell;" width="30%">' . $item['bien_descripcion']  . '</td>'
           . '<td style="text-align:center"  width="8%"></td>'
           . '<td style="text-align:center"  width="8%"></td>'
           . '<td style="text-align:center"  width="10%">' . number_format($item['cantidad'], 2) . '</td>'
-          . '<td style="text-align:center"  width="10%">' . $item['simbolo'] . '</td>'
-          . '</tr>';
+          . '<td style="text-align:center"  width="10%">' . $item['simbolo'] . '</td>';
+
+        $resDetalle = MovimientoBien::create()->movimientoBienDetalleobtenerDetalleXRequerimientoId($item['movimiento_bien_ids']);
+          $dataComentario = '';
+          if(!ObjectUtil::isEmpty($resDetalle)){
+            foreach($resDetalle as $itemDetalle){
+              $dataComentario .= $itemDetalle['comentario']."<br>";
+            }
+          }
+        $tabla .=  '<td style="text-align:center"  width="20%">' . $dataComentario . '</td>';
+        $tabla .=  '</tr>';
       }
     }
 
     for ($i = count($detalleRequerimientos); $i < 20; $i++) {
       $tabla = $tabla . '<tr>'
         . '<td style="text-align:center"  width="3%">' . ($i + 1) . '</td>'
-        . '<td style="text-align:left"  width="16%"></td>'
-        . '<td style="text-align:left"  width="45%"></td>'
+        . '<td style="text-align:left"  width="12%"></td>'
+        . '<td style="text-align:left"  width="30%"></td>'
         . '<td style="text-align:center"  width="8%"></td>'
         . '<td style="text-align:center"  width="8%"></td>'
         . '<td style="text-align:center"  width="10%"></td>'
         . '<td style="text-align:center"  width="10%"></td>'
+        . '<td style="text-align:center"  width="20%"></td>'
         . '</tr>';
     }
 
@@ -12586,11 +12590,17 @@ class MovimientoNegocio extends ModeloNegocioBase
     return $respuesta;
   }
 
-  public function exportarExcelCotizacion($grupoProductoId, $tipoRequerimiento, $urgencia, $usuarioId)
+  public function exportarExcelCotizacion($grupoProductoId, $tipoRequerimiento, $urgencia, $usuarioId, $documentoId = null, $opcionId = null)
   {
 
-    $detalleRequerimientos = MovimientoBien::create()->obtenerMovimientoBienXRequerimientoXGrupoProductoxId($grupoProductoId, $tipoRequerimiento, $urgencia);
-    
+    if(ObjectUtil::isEmpty($documentoId)){
+      $detalleRequerimientos = MovimientoBien::create()->obtenerMovimientoBienXRequerimientoXGrupoProductoxId($grupoProductoId, $tipoRequerimiento, $urgencia);
+    }else{
+      $dataMovimientoDocumento = MovimientoBien::create()->obtenerMovimientoIdXDocumentoId($documentoId);
+      $movimientoId = $dataMovimientoDocumento[0]['movimiento_id'];
+      $detalleRequerimientos = $this->obtenerDocumentoRelacionDetalleEdicion($movimientoId, $documentoId, $opcionId, null);
+    }
+
     $objPHPExcel = new PHPExcel();
     $i = 1;
 
@@ -12656,7 +12666,8 @@ class MovimientoNegocio extends ModeloNegocioBase
     $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('E')->setWidth(12.14);
     $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('F')->setWidth(24.29);
     $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('G')->setWidth(20);
-    $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('h')->setWidth(30);
+    $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('H')->setWidth(30);
+    $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('I')->setWidth(50);
 
 
     $i = $i + 3;
@@ -12667,8 +12678,9 @@ class MovimientoNegocio extends ModeloNegocioBase
     $objPHPExcel->setActiveSheetIndex()->setCellValue('F' . $i, 'MODELO');
     $objPHPExcel->setActiveSheetIndex()->setCellValue('G' . $i, 'CANTIDAD');
     $objPHPExcel->setActiveSheetIndex()->setCellValue('H' . $i, 'UNIDAD MEDIDA');
+    $objPHPExcel->setActiveSheetIndex()->setCellValue('I' . $i, 'DATOS ADICIONALES');
 
-    $objPHPExcel->getActiveSheet()->getStyle('B' . $i . ':H' . $i)->applyFromArray($estilos_tabla);
+    $objPHPExcel->getActiveSheet()->getStyle('B' . $i . ':I' . $i)->applyFromArray($estilos_tabla);
     $objPHPExcel->getActiveSheet()->getStyle("B$i:H$i")->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER)->setVertical(PHPExcel_Style_Alignment::VERTICAL_CENTER);
 
     $i++;
@@ -12681,8 +12693,17 @@ class MovimientoNegocio extends ModeloNegocioBase
       $objPHPExcel->setActiveSheetIndex()->setCellValue('F' . $i, "");
       $objPHPExcel->setActiveSheetIndex()->setCellValue('G' . $i, $item['cantidad']);
       $objPHPExcel->setActiveSheetIndex()->setCellValue('H' . $i, $item['simbolo']);
+      $resDetalle = MovimientoBien::create()->movimientoBienDetalleobtenerDetalleXRequerimientoId($item['movimiento_bien_ids']);
+      $dataComentario = '';
+      if(!ObjectUtil::isEmpty($resDetalle)){
+        foreach($resDetalle as $itemDetalle){
+          $dataComentario .= $itemDetalle['comentario']." (".number_format($itemDetalle['cantidad_requerimiento'], 2).")"."\n";
+        }
+      }
+      $objPHPExcel->setActiveSheetIndex()->setCellValue('I' . $i, $dataComentario);
+      $objPHPExcel->getActiveSheet()->getStyle('I' . $i)->getAlignment()->setWrapText(true);
 
-      $objPHPExcel->getActiveSheet()->getStyle('B' . $i . ':H' . $i)->applyFromArray($estilos_filas);
+      $objPHPExcel->getActiveSheet()->getStyle('B' . $i . ':I' . $i)->applyFromArray($estilos_filas);
 
       $i++;
     }
