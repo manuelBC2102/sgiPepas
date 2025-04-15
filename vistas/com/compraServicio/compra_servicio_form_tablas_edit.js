@@ -9697,9 +9697,14 @@ function actualizarImportePago() {
 }
 
 function calculoImportePago() {
-  var porcentaje = $("#txtPorcentaje").val();
-  var importePago = (calculoTotal * porcentaje) / 100;
-  $("#txtImportePago").val(devolverDosDecimales(importePago));
+  var porcentaje = $('#txtPorcentaje').val();
+  var importePago = 0;
+  if(doc_TipoId == GENERAR_COTIZACION){
+      importePago = (totalesPostores[$("#indexProveedor").val()].total * porcentaje) / 100;
+  }else{
+      importePago = (calculoTotal * porcentaje) / 100; 
+  }
+  $('#txtImportePago').val(devolverDosDecimales(importePago));
 }
 
 function restarFechas(f1, f2) {
@@ -12554,11 +12559,7 @@ function hallarSubTotalPostorDetalle(indice, numero, bandera) {
 
     arrayProveedor.forEach(function (proveedorID, idx) {
       let valorTotal = 0;
-      var tipo_cambio = 1;
       $.each(detalle, function (i, item) {
-        if (proveedorID.monedaId == "4") {
-          tipo_cambio = proveedorID.tipoCambio;
-        }
         let val = $('#txtSubtotalP' + idx + '_' + item.index).val();
         let subtotal = val === "" ? 0 : parseFloat(val);
         valorTotal += subtotal;

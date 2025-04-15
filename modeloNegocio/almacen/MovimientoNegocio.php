@@ -11300,7 +11300,7 @@ class MovimientoNegocio extends ModeloNegocioBase
       return $acumulador + ($precio[0]['valorDet'] * $seleccion['cantidad']);
     }, 0);
 
-    if($arraydetalleXpostor[0]["igv"] == "1"){
+    if($arraydetalleXpostor["igv"] == "1"){
       $subTotalPostor1 = $sumaMontosprecioPostor1 /1.18;
       $igvPostor1 = $sumaMontosprecioPostor1 - $subTotalPostor1;
     }else{
@@ -11318,18 +11318,16 @@ class MovimientoNegocio extends ModeloNegocioBase
       $importeTotal = 0;
       $igv = 0;
       $subTotal = 0;
-      $monedaId = $arraydetalleXpostor[0]["monedaId"];
+      $monedaId = $arraydetalleXpostor["monedaId"];
 
       if($banderaCotizacon != 3){
           $importeTotal = $sumaMontosprecioPostor1;
           $igv = $igvPostor1;
-          $monedaId = $monedaId;
           $subTotal = $subTotalPostor1;
       }else{
         $importeTotal = $filtradosTipo14[0]['valor'];
         $igv = $filtradosTipo15[0]['valor'];
         $subTotal = $filtradosTipo16[0]['valor'];
-        $monedaId = $monedaIdExt;
       }
 
       foreach ($configuraciones as $item) {
