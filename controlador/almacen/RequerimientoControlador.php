@@ -33,6 +33,7 @@ class RequerimientoControlador extends AlmacenIndexControlador
         $response_cantidad_total[0]['total'];
         $elementosFiltrados = $response_cantidad_total[0]['total'];
         $elementosTotales = $response_cantidad_total[0]['total'];
+        $estado = $criterios['estado'];
 
         $tamanio = count($data);
         $stringProgressBar = "";
@@ -73,12 +74,6 @@ class RequerimientoControlador extends AlmacenIndexControlador
                 return $acumulador + ($seleccion['cantidad'] * $seleccion['valor_monetario']);
             }, 0);
             
-            // if($data[$i]['urgencia'] != "Si" && $data[$i]['urgencia'] != ""){
-            //     $nivelM=1;
-            //     $matrizUsuario = array_filter($matrizUsuario, function($item) use ($nivelM) {
-            //         return $item['nivel'] <= $nivelM;
-            //     });
-            // }
             if($data[$i]['documento_tipo_id'] == Configuraciones::ORDEN_COMPRA && 30000 > $sumaDetalle){
                 $nivelM=1;
                 $matrizUsuario = array_filter($matrizUsuario, function($item) use ($nivelM) {
@@ -112,7 +107,9 @@ class RequerimientoControlador extends AlmacenIndexControlador
                     $mensaje = $usuario_estado[$key]["estado_descripcion"] .' por';
                 } else {
                     $arrayAprobadores[] = $value["usuario_aprobador_id"];
-                    $mensaje = "Por aprobar de,";
+                    if($data[$i]['estado_descripcion'] != "Rechazado"){
+                        $mensaje = "Por aprobar de,";
+                    }
                     switch ($value["nivel"]) {
                         case "1":
                             $andera_sinaprobar = true;
@@ -181,7 +178,7 @@ class RequerimientoControlador extends AlmacenIndexControlador
             });
 
             $icon_aprobacion = "<i class='fa fa-eye' style='color:green;' title='Ver detalle'></i>";
-            if (in_array($usuarioId, $arrayAprobadores) && !in_array($usuarioId, $arrayAprobaciones) && $filtrado[0]['usuario_aprobador_id'] == $usuarioId) {
+            if (in_array($usuarioId, $arrayAprobadores) && !in_array($usuarioId, $arrayAprobaciones) && $filtrado[0]['usuario_aprobador_id'] == $usuarioId && $data[$i]['estado_descripcion'] != "Rechazado") {
                 // $stringAcciones .= "<a href='#' onclick='aprobar(" . $data[$i]['id'] . ", " . $data[$i]['movimiento_id']. ", " . $data[$i]['documento_tipo_id']. ")'><i class='fa fa-check' style='color:blue;' title='Aprobar'></i></a>&nbsp;";
                 // $stringAcciones .= "<a href='#' onclick='rechazar(" . $data[$i]['id'] . ", " . $data[$i]['movimiento_id'].  ", " . $data[$i]['documento_tipo_id']. ")'><i class='fa fa-times' style='color:red;' title='Rechazar '></i></a>&nbsp;";
                 $data[$i]['uasurio_estado_descripcion'] = "Por Aprobar";
@@ -191,7 +188,7 @@ class RequerimientoControlador extends AlmacenIndexControlador
                 // }
             }
 
-            if(count($usuario_estado) < count($matrizUsuario)){
+            if(count($usuario_estado) < count($matrizUsuario) && $data[$i]['estado_descripcion'] != "Rechazado"){
                 $data[$i]['estado_descripcion'] = "Por Aprobar";
 
             }
@@ -200,7 +197,15 @@ class RequerimientoControlador extends AlmacenIndexControlador
             $data[$i]['acciones'] = $stringAcciones;
         }
 
-        return $this->obtenerRespuestaDataTable($data, $elementosFiltrados, $elementosTotales);
+        if($estado == "0"){
+            $filtrados = $data;
+        }else{
+            $filtrados = array_values(array_filter($data, function($item) use($estado){
+                return $item['estado_descripcion'] === $estado;
+            }));  
+        }
+
+        return $this->obtenerRespuestaDataTable($filtrados, $elementosFiltrados, $elementosTotales);
     }
 
 

@@ -100,6 +100,27 @@
                                                     </div>
                                                 </div>                                                
                                             </li>
+                                            <li id="liEstado">
+                                                <div class="form-group col-md-2">
+                                                    <label style="color: #141719;">Estado</label>
+                                                </div>
+                                                <div class="form-group col-md-4">
+                                                    <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                                        <div class="row">
+                                                            <div class="form-group col-md-12">
+                                                                <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                                                    <select name="cboEstado" id="cboEstado" class="select2">
+                                                                        <option value="0">Todos</option>
+                                                                        <option value="Por Aprobar" selected>Por Aprobar</option>    
+                                                                        <option value="Aprobado">Aprobado</option>   
+                                                                        <option value="Rechazado">Rechazado</option>    
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </li>
                                             <li>
                                                 <div style="float: right">
                                                     <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">

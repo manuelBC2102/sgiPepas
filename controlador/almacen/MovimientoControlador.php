@@ -1983,32 +1983,6 @@ class MovimientoControlador extends AlmacenIndexControlador
     return MovimientoNegocio::create()->obtenerDetalleBienRequerimiento($movimientoBienId);
   }
 
-  public function obtenerPdfOrdenCompra(){
-    $documentoId = $this->getParametro("documentoId");
-    $documentoTipoId = $this->getParametro("documento_tipo_id");
-
-    $usuarioId = $this->getUsuarioId();
-    $dataRelacionada = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoId($documentoId);
-    foreach($dataRelacionada as $itemRelacion){
-      if($itemRelacion['documento_tipo_id'] == Configuraciones::ORDEN_COMPRA){
-        return MovimientoNegocio::create()->imprimirExportarPDFDocumento($documentoTipoId, $itemRelacion['documento_relacionado_id'], $usuarioId);
-      }
-    }
-  }
-
-  public function obtenerPdfOrdenServicio(){
-    $documentoId = $this->getParametro("documentoId");
-    $documentoTipoId = $this->getParametro("documento_tipo_id");
-
-    $usuarioId = $this->getUsuarioId();
-    $dataRelacionada = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoId($documentoId);
-    foreach($dataRelacionada as $itemRelacion){
-      if($itemRelacion['documento_tipo_id'] == Configuraciones::ORDEN_SERVICIO){
-        return MovimientoNegocio::create()->imprimirExportarPDFDocumento($documentoTipoId, $itemRelacion['documento_relacionado_id'], $usuarioId);
-      }
-    }
-  }
-
   public function exportarPdfCotizacion(){
     $grupoProductoId = $this->getParametro("grupoProductoId");
     $tipoRequerimiento = $this->getParametro("tipoRequerimiento");

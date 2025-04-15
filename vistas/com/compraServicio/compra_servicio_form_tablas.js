@@ -1956,16 +1956,7 @@ function cargarBienDetalleCombo(data, indice, valorInicial) {
                     return { results: [] };
                 },
                 cache: true,
-            },    // Limitando el texto en las opciones desplegadas
-            formatResult: function (item) {
-                var shortenedText = item.text.length > 50 ? item.text.substring(0, 50) + '...' : item.text;
-                return shortenedText;
             },
-            // Limitando el texto en la opción seleccionada
-            formatSelection: function (item) {
-                var shortenedText = item.text.length > 50 ? item.text.substring(0, 50) + '...' : item.text;
-                return shortenedText;
-            }
         }).on("change", function (e) {
             if (!isEmpty(e) && !isEmpty(e.val) && !isEmpty(dataBienBusquedaOnchange)) {
                 var bienFiltradas = dataBienBusquedaOnchange.filter(function (bien) {
@@ -3133,9 +3124,7 @@ function onResponseObtenerDocumentoTipoDato(data) {
                 case 39:
                 case 38:
                 case 42:
-                case 46:
                 case 49:
-                case 50:
                     contadorEspeciales += 1;
                     escribirItem = false;
                     break;
@@ -3516,9 +3505,10 @@ function onResponseObtenerDocumentoTipoDato(data) {
                     html += '<select name="cbo_' + item.id + '" id="cbo_' + item.id + '" class="select2"></select>';
                     break;
                 case 45:
-                // case 46:
+                case 46:
                 case 47:
                 case 48:
+                case 50:
                 case 51:
                 case 52:
                     html += '<select name="cbo_' + item.id + '" id="cbo_' + item.id + '" class="select2"></select>';
@@ -3671,7 +3661,7 @@ function onResponseObtenerDocumentoTipoDato(data) {
                     select2.asignarValor("cbo_" + item.id, 0);
                     break;
                 case 45:
-                    // case 46:
+                case 46:
                     select2.cargar("cbo_" + item.id, item.data, "id", ["codigo", "descripcion"]);
                     $("#cbo_" + item.id).select2({
                         width: '100%'
@@ -3690,6 +3680,13 @@ function onResponseObtenerDocumentoTipoDato(data) {
                     break;
                 case 51:
                     select2.cargar("cbo_" + item.id, item.data, "id", ["codigo", "descripcion"]);
+                    $("#cbo_" + item.id).select2({
+                        width: '100%'
+                    });
+                    select2.asignarValor("cbo_" + item.id, 0);
+                    break;
+                case 50:
+                    select2.cargar("cbo_" + item.id, item.data, "id", "descripcion");
                     $("#cbo_" + item.id).select2({
                         width: '100%'
                     });
@@ -4478,7 +4475,7 @@ function obtenerValoresCamposDinamicos() {
             case 43:// Area
             case 44:// Grupo productos
             case 45:// Entrega en destino
-            // case 46:// U.O
+            case 46:// U.O
             case 47:// Cuenta
             case 48: //Requerimientos
             case 50: //Condicion pago
@@ -5987,7 +5984,7 @@ function obtenerParametrosBusquedaDocumentoACopiar() {
         fecha_emision_fin: null,
         fecha_vencimiento_inicio: null,
         fecha_vencimiento_fin: null,
-        movimiento_tipo_id: dataCofiguracionInicial.movimientoTipo[0].movimiento_tipo_id
+        movimiento_tipo_id: isEmpty(dataCofiguracionInicial.movimientoTipo[0].movimiento_tipo_id)?dataCofiguracionInicial.movimientoTipo[0].id : dataCofiguracionInicial.movimientoTipo[0].movimiento_tipo_id
     };
 
     if (dataCofiguracionInicial.movimientoTipo[0]["codigo"] == 20) { //Transferencia interna

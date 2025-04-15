@@ -4823,11 +4823,10 @@ function verImagenPdf(index){
 }
 
 function imprimirOrdenCompra(documentoId, documentoTipo){
-    loaderShow();
-    ax.setAccion("obtenerPdfOrdenCompra");
-    ax.addParamTmp("documentoId", documentoId);
-    ax.addParamTmp("documento_tipo_id", documentoTipo);
-    ax.consumir();
+    const link = document.createElement('a');
+    link.href = URL_BASE + "vistas/com/compraServicio/compra_servicio_pdf.php?id=" + documentoId;
+    link.target = '_blank';
+    link.click();
 }
 
 function cargarDataArchivoAdjuntos(data) {
@@ -4868,11 +4867,10 @@ function cargarDataArchivoAdjuntos(data) {
 }
 
 function imprimirOrdenServicio(documentoId, documentoTipo){
-    loaderShow();
-    ax.setAccion("obtenerPdfOrdenServicio");
-    ax.addParamTmp("documentoId", documentoId);
-    ax.addParamTmp("documento_tipo_id", documentoTipo);
-    ax.consumir();
+    const link = document.createElement('a');
+    link.href = URL_BASE + "vistas/com/compraServicio/compra_servicio_pdf.php?id=" + documentoId;
+    link.target = '_blank';
+    link.click();
 }
 
 function devolverDosDecimales(num) {

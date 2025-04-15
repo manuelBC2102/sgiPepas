@@ -310,20 +310,22 @@ function buscarPorCriterios() {
     var area = select2.obtenerValor('cboArea');
     var requerimiento_tipo = select2.obtenerValor('cboTipoRequerimiento');
     var tipo = select2.obtenerValor('cboTipo');
-    llenarParametrosBusqueda(fechaEmision, documento_tipo, area, requerimiento_tipo, tipo);
+    var estado = select2.obtenerValor('cboEstado');
+    llenarParametrosBusqueda(fechaEmision, documento_tipo, area, requerimiento_tipo, tipo, estado);
 
     buscarRequerimientos();
 }
 
 var criterioBusquedaDocumentos = {};
 
-function llenarParametrosBusqueda(fechaEmision, documento_tipo, area, requerimiento_tipo, tipo) {
+function llenarParametrosBusqueda(fechaEmision, documento_tipo, area, requerimiento_tipo, tipo, estado) {
     criterioBusquedaDocumentos = {};
     criterioBusquedaDocumentos.fechaEmision = fechaEmision;
     criterioBusquedaDocumentos.documento_tipo = documento_tipo;
     criterioBusquedaDocumentos.area = area;
     criterioBusquedaDocumentos.requerimiento_tipo = requerimiento_tipo;
     criterioBusquedaDocumentos.tipo = tipo;
+    criterioBusquedaDocumentos.estado = estado;
 }
 
 function cambiarAnchoBusquedaDesplegable() {
