@@ -1135,4 +1135,8 @@ class BienNegocio extends ModeloNegocioBase {
     {
       return Bien::create()->obtenerActivosXMovimientoTipoIdBienId($empresaId, $movimientoTipoId, $bienId);
     }
+
+    public function obtenerXIdPadre($id) {
+        return BienTipo::create()->obtenerXIdPadre($id);
+    }
 }

@@ -120,13 +120,15 @@ function validarFormulario() {
 
     if (commonVars.bienTipoId != -1) {
         var descripcion = document.getElementById('txt_descripcion').value;
-        var cant_minima = document.getElementById('txt_cant_minima').value;
+        var cant_minima = null;
+        // var cant_minima = document.getElementById('txt_cant_minima').value;
         var codigo = document.getElementById('txt_codigo').value;
         var tipo = document.getElementById('cboBienTipo').value;
         var empresa = document.getElementById("cboEmpresa").value;
         var estado = document.getElementById('cboEstado').value;
         var unidad_tipo = document.getElementById('cboUnidadTipo').value;
-        var codigoFabricante = document.getElementById('txtCodigoFabricante').value;
+        var codigoFabricante = null;
+        // var codigoFabricante = document.getElementById('txtCodigoFabricante').value;
         var unidad_control_id = document.getElementById('cboUnidadControl').value;
 //        var agregado_precio_venta = document.getElementById('txt_precio_venta').value;        
 //        var precioCompra = document.getElementById('txt_precio_compra').value;
@@ -625,7 +627,8 @@ function guardarBien(tipo_accion)
 {
     var usu_creacion = document.getElementById('usuario').value;
     var descripcion = document.getElementById('txt_descripcion').value;
-    var cant_minima = document.getElementById('txt_cant_minima').value;
+    var cant_minima = null;
+    // var cant_minima = document.getElementById('txt_cant_minima').value;
     var codigo = document.getElementById('txt_codigo').value;
     var tipo_bien = document.getElementById('cboBienTipo').value;
     var estado = document.getElementById('cboEstado').value;
@@ -650,7 +653,8 @@ function guardarBien(tipo_accion)
     var empresa = $('#cboEmpresa').val();
     var unidad_tipo = $('#cboUnidadTipo').val();
 
-    var codigoFabricante = document.getElementById('txtCodigoFabricante').value;
+    var codigoFabricante = null;
+    // var codigoFabricante = document.getElementById('txtCodigoFabricante').value;
     var marca = document.getElementById('txtMarca').value;
 
     if (isEmpty(marca)) {
@@ -658,13 +662,15 @@ function guardarBien(tipo_accion)
     }
 
     //maquinaria    
-    var maquinaria = document.getElementById('txtMaquinaria').value;
+    var maquinaria = null;
+    // var maquinaria = document.getElementById('txtMaquinaria').value;
 
-    if (isEmpty(maquinaria)) {
-        maquinaria = select2.obtenerText('cboMaquinaria');
-    }
+    // if (isEmpty(maquinaria)) {
+    //     maquinaria = select2.obtenerText('cboMaquinaria');
+    // }
 
-    var codigoBarras = document.getElementById('txtCodigoBarras').value;
+    var codigoBarras = null;
+    // var codigoBarras = document.getElementById('txtCodigoBarras').value;
 
     var file = document.getElementById('secretImg').value;
     if (file == '')
@@ -769,10 +775,10 @@ function llenarFormularioEditar(data)
     document.getElementById('myImg').src = dir;
     document.getElementById('txt_descripcion').value = data[0].descripcion;
     document.getElementById('txt_codigo').value = data[0].codigo;
-    document.getElementById('txt_cant_minima').value = data[0].cantidad_minima;
+    // document.getElementById('txt_cant_minima').value = data[0].cantidad_minima;
     document.getElementById('txt_comentario').value = data[0].comentario;
-    document.getElementById('txtCodigoFabricante').value = data[0].codigo_fabricante;
-    document.getElementById('txtCodigoBarras').value = data[0].codigo_barra;
+    // document.getElementById('txtCodigoFabricante').value = data[0].codigo_fabricante;
+    // document.getElementById('txtCodigoBarras').value = data[0].codigo_barra;
 
     document.getElementById('txt_serie_numero').value = data[0].serie_numero;
     document.getElementById('txt_modelo').value = data[0].modelo;
@@ -805,7 +811,7 @@ function llenarFormularioEditar(data)
     select2.asignarValor('cboCuentaContableVenta', data[0].plan_contable_venta);
 
     document.getElementById('txtCostoInicial').value = data[0].costo_inicial;
-    document.getElementById('txtCodigoCuenta').value = data[0].codigo_contable;
+    // document.getElementById('txtCodigoCuenta').value = data[0].codigo_contable;
 
     $('#txtCodigoInternacional').val(data[0].codigo_internacional);
 

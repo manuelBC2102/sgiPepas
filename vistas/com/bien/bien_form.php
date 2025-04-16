@@ -16,12 +16,12 @@
                                             <span class="hidden-xs">General</span>
                                         </a>
                                     </li>
-                                    <li class="">
+                                    <!-- <li class="">
                                         <a href="#tabProveedores" data-toggle="tab" aria-expanded="false">
                                             <span class="visible-xs"><i class="ion-person-stalker"></i></span>
                                             <span class="hidden-xs">Proveedores</span>
                                         </a>
-                                    </li>
+                                    </li> -->
                                     <li class="">
                                         <a href="#tabPrecios" data-toggle="tab" aria-expanded="false">
                                             <span class="visible-xs"><i class="ion-pricetags"></i></span>
@@ -102,8 +102,17 @@
                                                 <span id='msjMarca' class="control-label"
                                                       style='color:red;font-style: normal;' hidden></span>
                                             </div>
+                                            <div class="form-group col-md-6" id="contenedorBienTipo" hidden="true">
+                                                <label>Grupo de producto *</label>
+                                                <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                                    <select name="cboBienTipo" id="cboBienTipo" class="select2" onchange="onchangeTipoBien(this.value);">
+                                                    </select>
+                                                    <i id='msj_tipo'
+                                                       style='color:red;font-style: normal;' hidden></i>
+                                                </div>
 
-                                            <div class="form-group col-md-6" id="contenedorMaquinaria" hidden="true">
+                                            </div>
+                                            <!-- <div class="form-group col-md-6" id="contenedorMaquinaria" hidden="true">
                                                 <label>Maquinaria</label>
                                                 <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">                                                    
                                                     <div id="contenedorMaquinariaDivCombo">
@@ -126,9 +135,9 @@
                                                 </div>                                                
                                                 <span id='msjMaquinaria' class="control-label"
                                                       style='color:red;font-style: normal;' hidden></span>
-                                            </div>
+                                            </div> -->
                                         </div>
-                                        <div class="row">                                
+                                        <!-- <div class="row">                                
                                             <div class="form-group col-md-6" id="contenedorCodigoBarras" hidden="true">
                                                 <label>Código de barras</label>
                                                 <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
@@ -145,20 +154,8 @@
                                                 <span id='msjCodigoFabricante' class="control-label"
                                                       style='color:red;font-style: normal;' hidden></span>
                                             </div>
-                                        </div>
+                                        </div> -->
                                         <div class="row">
-
-                                            <div class="form-group col-md-6" id="contenedorBienTipo" hidden="true">
-                                                <label>Grupo de producto *</label>
-                                                <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                                                    <select name="cboBienTipo" id="cboBienTipo" class="select2" onchange="onchangeTipoBien(this.value);">
-                                                    </select>
-                                                    <i id='msj_tipo'
-                                                       style='color:red;font-style: normal;' hidden></i>
-                                                </div>
-
-                                            </div>
-
                                             <div class="form-group col-md-6" id="contenedorUnidadTipo" hidden="true">
                                                 <label id="lb_empresa">Tipo de unidades *</label>
                                                 <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
@@ -168,20 +165,6 @@
                                                           style='color:red;font-style: normal;' hidden></span>
                                                 </div>
                                             </div>
-                                        </div>
-
-                                        <div class="row">
-                                            <div class="form-group col-md-6" id="contenedorCantidadMinima" hidden="true">
-                                                <label>Cantidad Minima </label>
-                                                <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                                                    <input type="number" id="txt_cant_minima" name="txt_cant_minima" class="form-control" required="" aria-required="true" value="0"   onkeyup="if (this.value.length > 19) {
-                                                                this.value = this.value.substring(0, 19)
-                                                            }"/>
-                                                </div>
-                                                <span id='msj_cant_minima' class="control-label"
-                                                      style='color:red;font-style: normal;' hidden></span>
-                                            </div>
-
                                             <div class="form-group col-md-6" id="contenedorUnidadControl" hidden="true">
                                                 <label>Unidad Control *</label>
                                                 <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
@@ -192,6 +175,21 @@
                                                 </div>
 
                                             </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <!-- <div class="form-group col-md-6" id="contenedorCantidadMinima" hidden="true">
+                                                <label>Cantidad Minima </label>
+                                                <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                                    <input type="number" id="txt_cant_minima" name="txt_cant_minima" class="form-control" required="" aria-required="true" value="0"   onkeyup="if (this.value.length > 19) {
+                                                                this.value = this.value.substring(0, 19)
+                                                            }"/>
+                                                </div>
+                                                <span id='msj_cant_minima' class="control-label"
+                                                      style='color:red;font-style: normal;' hidden></span>
+                                            </div> -->
+
+
 
                                         </div>
 
@@ -229,7 +227,7 @@
                                                     <i id='msjCodigoSunat' style='color:red;font-style: normal;' hidden></i>
                                                 </div>
                                             </div>                                        
-                                            <div class="form-group col-md-6" id="contenedorCuentaContable" hidden="true">   
+                                            <!-- <div class="form-group col-md-6" id="contenedorCuentaContable" hidden="true">   
                                                 <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
                                                     <div class="row">
                                                         <div class="form-group col-md-6">
@@ -247,7 +245,7 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
+                                            </div> -->
                                         </div>
 
                                         <div class="row">
@@ -260,12 +258,12 @@
                                                 </div>
                                             </div>
 
-                                            <div class="form-group col-md-6" >
+                                            <!-- <div class="form-group col-md-6" >
                                                 <label>Código internacional </label>
                                                 <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
                                                     <input type="text" id="txtCodigoInternacional" name="txtCodigoInternacional" class="form-control" required="" aria-required="true" value="" maxlength="45"  />
                                                 </div>
-                                            </div>
+                                            </div> -->
 
                                         </div>
                                         <br>

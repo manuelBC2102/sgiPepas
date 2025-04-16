@@ -8,17 +8,17 @@
                 <button type="button" class="btn btn-info"  onclick="nuevoBien()"><i class=" fa fa-plus-square-o"></i>&nbsp; Nuevo producto</button>
                 <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown" aria-expanded="false"><i class="caret"></i></button>
                 <ul class="dropdown-menu" role="menu">
-                    <li><a href="#" onclick="nuevoServicio()">Nuevo servicio</a></li>
+                    <!-- <li><a href="#" onclick="nuevoServicio()">Nuevo servicio</a></li> -->
                 </ul>
             </div>
 
             <button type="button" onclick="exportarBienExcel();" value="Exportar" name="env" id="env" class="btn btn-success w-md" style="border-radius: 0px;"><i class="fa fa-file-excel-o" aria-hidden="true"></i>&ensp;Exportar</button>
 
-            <a href="#" style="border-radius: 0px;" class="btn btn-danger w-md" onclick="getFormatoImportar()"><i class=" fa fa-file-excel-o" style="font-size: 18px;"></i>&nbsp;Descargar formato</a>
+            <!-- <a href="#" style="border-radius: 0px;" class="btn btn-danger w-md" onclick="getFormatoImportar()"><i class=" fa fa-file-excel-o" style="font-size: 18px;"></i>&nbsp;Descargar formato</a> -->
 
-            <a href="#" style="border-radius: 0px;" class="fileUpload btn btn-success w-md" ><i class=" fa fa-download" style="font-size: 18px;"></i>
+            <!-- <a href="#" style="border-radius: 0px;" class="fileUpload btn btn-success w-md" ><i class=" fa fa-download" style="font-size: 18px;"></i>
                 <i><input name="file" id="file"  type="file" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" class="upload" onchange='' ></i>&ensp;Importar
-            </a>
+            </a> -->
 
 
             <input type="hidden"  id="secret" value="" />
@@ -65,9 +65,9 @@
                         <th style='text-align:center;'>Grupo Producto</th>
                         <th style='text-align:center;'>Descripción</th>
                         <th style='text-align:center;'>Tipo Unidad</th>
-                        <th style='text-align:center;'>Can. Min.</th>
-                        <th id="thPrecioTipo" style='text-align:center;'>Precio</th>
-                        <th style='text-align:center;'>Cuenta</th>
+                        <!-- <th style='text-align:center;'>Can. Min.</th> -->
+                        <!-- <th id="thPrecioTipo" style='text-align:center;'>Precio</th> -->
+                        <!-- <th style='text-align:center;'>Cuenta</th> -->
                         <th style='text-align:center;'>Estado</th>
                         <th style='text-align:center;'>Acc.</th>
                     </tr>

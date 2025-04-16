@@ -210,7 +210,7 @@ class BienControlador extends AlmacenIndexControlador {
         $respuesta->unidadMedidaTipo = ($bienTipoId == -1) ? UnidadNegocio::create()->obtenerUnidadMedidaTipoXId(-1) : UnidadNegocio::create()->obtenerUnidadMedidaTipo(); // UnidadMedidaTipo
         //$respuesta->empresa = EmpresaNegocio::create()->getAllEmpresaByUsuarioId($usuarioId); // Empresas
         $respuesta->empresa = EmpresaNegocio::create()->getEmpresaActivas(); //todas las empresas
-        $respuesta->bienTipo = ($bienTipoId == -1) ? BienNegocio::create()->obtenerBienTipoXId($bienTipoId) : BienNegocio::create()->obtenerBienTipo(); // BienTipo 
+        $respuesta->bienTipo = ($bienTipoId == -1) ? BienNegocio::create()->obtenerBienTipoXId($bienTipoId) : BienNegocio::create()->obtenerXIdPadre(-3); // BienTipo 
         $respuesta->bien = ($bienId > -2) ? BienNegocio::create()->getBien($bienId) : null; // > -2 , porque el id de comment = -1
         $respuesta->bienPrecio = ($bienId > 0) ? BienPrecioNegocio::create()->obtenerBienPrecioXBienId($bienId) : null;
 

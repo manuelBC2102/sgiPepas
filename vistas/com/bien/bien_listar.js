@@ -170,9 +170,9 @@ function onResponseAjaxpGetDataGridBien(dataRespuesta) {
                 {"data": "tb_descripcion"},
                 {"data": "b_descripcion"},
                 {"data": "unidad_medida_tipo_descripcion"},
-                {"data": "unidad_control_descripcion", "sClass": "alignRight"},
-                {"data": "bien_precios", "sClass": "alignRight"},
-                {"data": "plan_contable_codigo"},
+                // {"data": "unidad_control_descripcion", "sClass": "alignRight"},
+                // {"data": "bien_precios", "sClass": "alignRight"},
+                // {"data": "plan_contable_codigo"},
                 {"data": "estado_descripcion"},
                 {"data": "opciones", "sClass": "alignCenter"}
             ],

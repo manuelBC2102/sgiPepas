@@ -43,4 +43,10 @@ class BienTipo extends ModeloBase {
         $this->commandPrepare("sp_bien_tipo_obtenerXRequermientoXArea");
         return $this->commandGetData();
     }
+
+    public function obtenerXIdPadre($id) {
+        $this->commandPrepare("sp_bien_tipo_obtenerXIdPadre");
+        $this->commandAddParameter("vin_id", $id);
+        return $this->commandGetData();
+    }
 }
