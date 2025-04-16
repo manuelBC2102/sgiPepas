@@ -226,9 +226,10 @@ class MovimientoBien extends ModeloBase {
         return $this->commandGetData();        
     }
 
-    public function obtenerMovimientoBienDetalleObtenerUnidadMinera($movimientoBienId){
+    public function obtenerMovimientoBienDetalleObtenerUnidadMinera($movimientoBienId, $banderaUrgencia){
         $this->commandPrepare("sp_movimiento_bien_obtenerUnidadMineraXMovimientoBienId");
         $this->commandAddParameter(":vin_movimiento_bien_id", $movimientoBienId);
+        $this->commandAddParameter(":vin_bandera_urgencia", $banderaUrgencia);
         return $this->commandGetData();        
     }
 

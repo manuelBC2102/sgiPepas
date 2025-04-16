@@ -2920,7 +2920,7 @@ function validarFormularioDetalleTablas(indice) {
             detDetalle.push({ columnaCodigo: 37, valorDet: valor, valorExtra: proveedorID.proveedor_id });
         });
         var positivos = detDetalle.filter(item => Number(item.valorDet) > 0);
-        if (!isEmpty(positivos)) {
+        if (!isEmpty(positivos) && (isEmpty(boton.accion))) {
             var minimo = positivos.reduce((min, item) => {
                 return Number(item.valorDet) < Number(min.valorDet) ? item : min;
             }, positivos[0]); // solo si el array no está vacío
@@ -3915,7 +3915,7 @@ function asignarValoresDetalleFormulario() {
                     cargarBienDetalleCombo(dataCofiguracionInicial.bien, indexDetalle, valorInicial);
                     setearDescripcionProducto(indexDetalle);
                     setearObservacionProducto(indexDetalle);
-                    if (doc_TipoId == GENERAR_COTIZACION || doc_TipoId == ORDEN_COMPRA || doc_TipoId == REQUERIMIENTO_AREA || doc_TipoId == ORDEN_SERVICIO) {
+                    if (doc_TipoId == GENERAR_COTIZACION || doc_TipoId == REQUERIMIENTO_AREA || doc_TipoId == COTIZACION_SERVICIO) {
                         $('#txtmovimiento_bien_ids_' + indexDetalle).val(valoresFormularioDetalle.movimiento_bien_ids);
                     }
                     break;
@@ -6739,7 +6739,7 @@ function cargarFormularioDetalleACopiar(organizadorId, bienId, cantidad, unidadM
                     if (!isEmpty(movimientoBienComentario)) {
                         objDetalle.comentarioBien = movimientoBienComentario;
                     }
-                    if (doc_TipoId == GENERAR_COTIZACION || doc_TipoId == ORDEN_COMPRA || doc_TipoId == REQUERIMIENTO_AREA || doc_TipoId == ORDEN_SERVICIO || doc_TipoId == SOLICITUD_REQUERIMIENTO) {
+                    if (doc_TipoId == GENERAR_COTIZACION || doc_TipoId == REQUERIMIENTO_AREA || doc_TipoId == COTIZACION_SERVICIO || doc_TipoId == SOLICITUD_REQUERIMIENTO) {
                         objDetalle.movimiento_bien_ids = movimiento_bien_ids;
                     }
 
@@ -8937,6 +8937,16 @@ function editarPagoProgramacion(indice) {
         $('#txtPorcentaje').val(listaPagoProgramacionPostores[indice_proveedor][indice][3]);
         $('#txtImportePago').val(devolverDosDecimales(listaPagoProgramacionPostores[indice_proveedor][indice][1])).change();
         $('#txtGlosa').val(listaPagoProgramacionPostores[indice_proveedor][indice][4]);
+        $('#txtDias').val(listaPagoProgramacionPostores[indice_proveedor][indice][2]);
+        if(!isEmpty($('#txtDias').val()) || $('#txtDias').val() != 0){
+            $('input[name="rdTiempoPago"][value="rdDias"]').prop('checked', true);
+            $('#txtDias').prop("disabled", false);
+            $('#fechaPago').prop("disabled", true);
+        }else{
+            $('input[name="rdTiempoPago"][value="rdFechaPago"]').prop('checked', true);
+            $('#txtDias').prop("disabled", true);
+            $('#fechaPago').prop("disabled", false);
+        }
         $('#idPagoProgramacion').val(indice);
     }
 }
@@ -11573,7 +11583,7 @@ function calcularFooterTipoCambio(indice) {
             "monedaId": select2.obtenerValor("cboMonedaP_" + indice),
             "uoId": select2.obtenerValor("cboUO_" + indice),
             "tipoCambio": $("#txtTipoCambio_" + indice).val(),
-            "igv": ($('#selectIGV_').is(":checked") == true ? 1 : 0),
+            "igv": ($('#selectIGV_'+ indice).is(":checked") == true ? 1 : 0),
             "tiempoEntrega": $("#cboTiempoEntrega_" + indice).val(),
             "tiempo": $("#txtTiempoEntrega_" + indice).val(),
             "condicionPago": select2.obtenerValor("cboCondicionPago_" + indice),

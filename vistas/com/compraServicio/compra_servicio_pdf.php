@@ -250,7 +250,7 @@ $pdf->Cell(45, 5, utf8_decode('Términos de pago'), 1, 0, 'C', true);
 $pdf->SetFillColor(255, 255, 255);
 $pdf->SetFont('Arial', '', 7);
 $pdf->SetXY(55, 82);
-$pdf->MultiCell(45, 10, $terminos_de_pago, 1, 'C');
+$pdf->MultiCell(45, 10, utf8_decode($terminos_de_pago), 1, 'C');
 
 // Cuadro: Solicitado por
 $pdf->SetFillColor(217, 217, 217);
@@ -261,12 +261,13 @@ $pdf->Cell(45, 5, 'Solicitado por', 1, 0, 'C', true);
 $pdf->SetFillColor(255, 255, 255);
 $pdf->SetFont('Arial', '', 7);
 $pdf->SetXY(100, 82);
-$pdf->MultiCell(45, 5, $dataDocumento[0]['usuario'], 1, 'C');
+$pdf->MultiCell(45, 10, $dataDocumento[0]['usuario'], 1, 'C');
 
 $serieNumeroCotizacion = '';
 $serieNumeroSolicitudRequerimiento = '';
 $cuenta = '';
 $dataRelacionada = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoId($documentoId);
+$banderaUrgencia = 0;
 foreach ($dataRelacionada as $itemRelacion) {
     if ($itemRelacion['documento_tipo_id'] == Configuraciones::COTIZACIONES || $itemRelacion['documento_tipo_id'] == Configuraciones::COTIZACION_SERVICIO) {
         $serieNumeroCotizacion = $itemRelacion['serie_numero'];
@@ -280,8 +281,16 @@ foreach ($dataRelacionada as $itemRelacion) {
                 case 52:
                     $cuenta .= $item['valor'] . ", ";
                     break;
+                case 4:
+                    if ($item['descripcion'] == "Urgencia" && $item['valor'] == "Si") {
+                        $banderaUrgencia = 1;
+                    }
+                    break;
             }
         }
+    }
+    if ($itemRelacion['documento_tipo_id'] == Configuraciones::COTIZACION_SERVICIO) {
+        $banderaUrgencia = 2;
     }
 }
 
@@ -361,7 +370,7 @@ $pdf->Cell(25, 6, 'Unidad Minera', 1, 1, 'C', true);
 // Filas
 foreach ($detalle as $i => $item) {
     $pdf->SetFont('Arial', '', 6);
-    $resMovimientoBienDetalle = MovimientoBien::create()->obtenerMovimientoBienDetalleObtenerUnidadMinera($item->movimientoBienId);
+    $resMovimientoBienDetalle = MovimientoBien::create()->obtenerMovimientoBienDetalleObtenerUnidadMinera($item->movimientoBienId, $banderaUrgencia);
     $cantidadSaltos = (substr_count($resMovimientoBienDetalle[0]['cantidad_requerimiento'], "\n") + 1);
     $pdf->Cell(10, (4 * $cantidadSaltos), $i + 1, 1, 0, 'C');
     $pdf->Cell(20, (4 * $cantidadSaltos), $item->bien_codigo, 1);
@@ -407,7 +416,7 @@ $pdf->SetXY(100, $espacio);
 $pdf->MultiCell(18, 5, 'MONEDA:', 0, 'L', true);
 $pdf->SetXY(115, $espacio);
 $pdf->SetFont('Arial', '', 8);
-$pdf->MultiCell(11, 5, $dataDocumento[0]["moneda_descripcion"], 0, 'L', true);
+$pdf->MultiCell(15, 5, utf8_decode($dataDocumento[0]["moneda_descripcion"]), 0, 'L', true);
 
 $pdf->SetFont('Arial', 'B', 8);
 $pdf->SetXY(150, $espacio + 5);

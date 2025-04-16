@@ -3113,16 +3113,18 @@ function validarFormularioDetalleTablas(indice) {
       objDetalle.postor_ganador_id = postor_ganador_id;
       detDetalle.push({ columnaCodigo: 37, valorDet: valor, valorExtra: proveedorID.proveedor_id });
     });
-    var positivos = detDetalle.filter(item => Number(item.valorDet) > 0);
-    if (!isEmpty(positivos)) {
-      var minimo = positivos.reduce((min, item) => {
-        return Number(item.valorDet) < Number(min.valorDet) ? item : min;
-      }, positivos[0]); // solo si el array no está vacío
-      arrayProveedor.forEach(function (proveedorID, idx) {
-        if (proveedorID.proveedor_id == minimo.valorExtra) {
-          $('input[name="precioGanador_' + indice + '"][value="' + proveedorID.indice + '"]').prop('checked', true);
-        }
-      });
+    if(bandera_edicion != 1){
+      var positivos = detDetalle.filter(item => Number(item.valorDet) > 0);
+      if (!isEmpty(positivos) && (isEmpty(boton.accion))) {
+        var minimo = positivos.reduce((min, item) => {
+          return Number(item.valorDet) < Number(min.valorDet) ? item : min;
+        }, positivos[0]); // solo si el array no está vacío
+        arrayProveedor.forEach(function (proveedorID, idx) {
+          if (proveedorID.proveedor_id == minimo.valorExtra) {
+            $('input[name="precioGanador_' + indice + '"][value="' + proveedorID.indice + '"]').prop('checked', true);
+          }
+        });
+      }
     }
   }
 
@@ -4670,10 +4672,13 @@ function asignarValoresDetalleFormulario() {
   if (doc_TipoId == GENERAR_COTIZACION && !isEmpty(valoresFormularioDetalle.detalle)) {
     arrayProveedor.forEach(function (proveedorID, idx) {
       $.each(valoresFormularioDetalle.detalle, function (indexBD, itemBD) {
-        if (proveedorID.proveedor_id == itemBD.valor_extra) {
+        if (proveedorID.proveedor_id == itemBD.valor_extra && itemBD.columnaCodigo == 37) {
           $("#txtPrecioP" + idx + "_" + indexDetalle).val(itemBD.valorDet);
         }
       });
+      if (proveedorID.proveedor_id == valoresFormularioDetalle.postor_ganador_id) {
+        $('input[name="precioGanador_' + indexDetalle + '"][value="' + idx + '"]').prop('checked', true);
+      }
     });
     arrayProveedor.forEach(function (proveedorID, idx) {
       hallarSubTotalPostorDetalle(indexDetalle, idx, 1);
@@ -6914,6 +6919,7 @@ function reinicializarDataTableDetalle() {
 }
 
 var detalleDocumentoRelacion = [];
+var bandera_edicion = null;
 function onResponseObtenerDocumentoRelacion(data) {
   //    $('#modalDocumentoRelacion').modal('hide');
 
@@ -6967,6 +6973,7 @@ function onResponseObtenerDocumentoRelacion(data) {
     asignarValoresPostor(data.dataPostores);
     listaPagoProgramacionPostores = data.listaPagoProgramacionPostores;
     lstDocumentoArchivos = data.dataDocumentoAdjunto;
+    bandera_edicion = 1;
   }
 
   detalleDocumentoRelacion = data.detalleDocumento;
@@ -6983,6 +6990,7 @@ function onResponseObtenerDocumentoRelacion(data) {
 
   //cargar los datos copiados de programacion
   cargarPagoProgramacion(data.dataPagoProgramacion);
+  bandera_edicion = 0;
 }
 
 function cargarDocumentoRelacionadoDeCopia(data) {
@@ -7661,6 +7669,7 @@ function cargarFormularioDetalleACopiar(
   var dataColumna = dataCofiguracionInicial.movimientoTipoColumna;
   var objDetalle = {}; //Objeto para el detalle
   var detDetalle = [];
+  objDetalle.postor_ganador_id = postor_ganador_id;
 
   if (!isEmpty(dataColumna)) {
     $.each(dataColumna, function (index, item) {
@@ -7668,23 +7677,7 @@ function cargarFormularioDetalleACopiar(
       switch (parseInt(item.codigo)) {
         //numeros
         case 5: // PRECIO UNITARIO
-          if (doc_TipoId == 104) {
-            var precioPostor = 0;
-            switch (parseInt(postor_ganador_id)) {
-              case 1:
-                precioPostor = precio_postor1;
-                break;
-              case 2:
-                precioPostor = precio_postor2;
-                break;
-              case 3:
-                precioPostor = precio_postor3;
-                break;
-            }
-            objDetalle.precio = precioPostor;
-          } else {
             objDetalle.precio = precio;
-          }
           break;
         case 12: // CANTIDAD
           objDetalle.cantidad = cantidad;
@@ -10141,6 +10134,16 @@ function editarPagoProgramacion(indice) {
     $('#txtPorcentaje').val(listaPagoProgramacionPostores[indice_proveedor][indice][3]);
     $('#txtImportePago').val(devolverDosDecimales(listaPagoProgramacionPostores[indice_proveedor][indice][1])).change();
     $('#txtGlosa').val(listaPagoProgramacionPostores[indice_proveedor][indice][4]);
+    $('#txtDias').val(listaPagoProgramacionPostores[indice_proveedor][indice][2]);
+    if(!isEmpty($('#txtDias').val()) || $('#txtDias').val() != 0){
+      $('input[name="rdTiempoPago"][value="rdDias"]').prop('checked', true);
+      $('#txtDias').prop("disabled", false);
+      $('#fechaPago').prop("disabled", true);
+    }else{
+        $('input[name="rdTiempoPago"][value="rdFechaPago"]').prop('checked', true);
+        $('#txtDias').prop("disabled", true);
+        $('#fechaPago').prop("disabled", false);
+    }
     $('#idPagoProgramacion').val(indice);
   }
 }
@@ -12881,7 +12884,7 @@ function calcularFooterTipoCambio(indice) {
       "monedaId": select2.obtenerValor("cboMonedaP_" + indice),
       "uoId": select2.obtenerValor("cboUO_" + indice),
       "tipoCambio": $("#txtTipoCambio_" + indice).val(),
-      "igv": ($('#selectIGV_').is(":checked") == true ? 1 : 0),
+      "igv": ($('#selectIGV_'+ indice).is(":checked") == true ? 1 : 0),
       "tiempoEntrega": $("#cboTiempoEntrega_" + indice).val(),
       "tiempo": $("#txtTiempoEntrega_" + indice).val(),
       "condicionPago": select2.obtenerValor("cboCondicionPago_" + indice),
@@ -12965,8 +12968,8 @@ function asignarValoresPostor(data) {
     select2.asignarValor("cboProveedor_" + idx, proveedorID.persona_id);
     select2.asignarValor("cboMonedaP_" + idx, proveedorID.moneda_id);
     $("#txtTipoCambio_" + idx).val(devolverDosDecimales(proveedorID.tipo_cambio))
-    if (proveedorID.moneda_id == 1) {
-      $('#selectIGV_' + idx).is(":checked");
+    if (proveedorID.igv == 1) {
+      $('#selectIGV_' + idx).prop('checked', true);
     }
     select2.asignarValor("cboUO_" + idx, proveedorID.uoId);
     select2.asignarValor("cboTiempoEntrega_" + idx, proveedorID.tiempo_entrega);
