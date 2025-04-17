@@ -886,4 +886,10 @@ class Documento extends ModeloBase {
         return $this->commandGetData();
     }
 
+    public function cambiarEstadoArchivoAdjunto($documentoId, $proveedorId){
+        $this->commandPrepare("sp_documento_adjuntoCambiarEstadoXdocumnetoId");
+        $this->commandAddParameter(":vin_documento_id", $documentoId);
+        $this->commandAddParameter(":vin_proveedor_id", $proveedorId);
+        return $this->commandGetData();
+    }
 }

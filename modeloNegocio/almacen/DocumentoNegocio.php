@@ -918,6 +918,11 @@ class DocumentoNegocio extends ModeloNegocioBase
 
     // DOCUMENTO ADJUNTO MULTIPLE
     if (!ObjectUtil::isEmpty($archivoAdjuntoMulti)) {
+      foreach($archivoAdjuntoMulti  as $item){
+        if($dataDocumento[0]['documento_tipo_id'] ==  Configuraciones::GENERAR_COTIZACION && strpos($item['id'], 't') !== false){
+          $respuestaAdjunto = Documento::create()->cambiarEstadoArchivoAdjunto($documentoId, $item['contenido_archivo']);
+        }
+      }
       $resAdjunto = $this->guardarArchivosXDocumentoID($documentoId, $archivoAdjuntoMulti, null, $usuarioCreacionId);
     }
 

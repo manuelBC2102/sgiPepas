@@ -121,7 +121,7 @@
                                         <table id="datatableProveedor" class="table table-striped table-bordered">      
                                         <thead>                                
                                             <tr>                                   
-                                                <th style='text-align:center;'>#</th> 
+                                                <th style='text-align:center;' id="th_Nro">#</th> 
                                                 <th style='text-align:center;'>Razón social</th>      
                                                 <th style='text-align:center;'>Moneda</th>  
                                                 <th style='text-align:center;'>Tipo cambio</th>             

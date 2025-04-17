@@ -11767,23 +11767,6 @@ class MovimientoNegocio extends ModeloNegocioBase
         $tabla  .= '</tr>';
     }
 
-    $moneda_tipo1 = $detalle[0]->moneda_postor1;
-    $moneda_tipo2 = $detalle[0]->moneda_postor2;
-    $moneda_tipo3 = $detalle[0]->moneda_postor3;
-
-    if($moneda_tipo1 == 4){
-      $totalDolaresSoles1 = $total1 * $dataTipoCambio;
-    }
-    if($moneda_tipo2 == 4){
-      $totalDolaresSoles2 = $total2 * $dataTipoCambio;
-    }
-    if($moneda_tipo3 == 4){
-      $totalDolaresSoles3 = $total3 * $dataTipoCambio;
-    }
-
-    $subtotal1 = $total1 /1.18;
-    $subtotal2 = $total2 /1.18;
-    $subtotal3 = $total3 /1.18;
 
     $tabla .= '<tfoot>';
     $tabla .= '<tr>'

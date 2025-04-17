@@ -4641,12 +4641,12 @@ function guardar(accion) {
                 var precioP = $('#txtPrecioP' + idx + '_' + item.index).val();
                 precios.push(precioP);
             });
-            if (precios.every(x => x === "0")) {
-                mostrarAdvertencia('Al menos se debe ingresar un precio para la fila:' + (item.index + 1));
-                loaderClose();
-                validar_precios = true;
-                return;
-            }
+            // if (precios.every(x => x === "0")) {
+            //     mostrarAdvertencia('Al menos se debe ingresar un precio para la fila:' + (item.index + 1));
+            //     loaderClose();
+            //     validar_precios = true;
+            //     return;
+            // }
         });
         if (validar_precios) {
             loaderClose();

@@ -153,7 +153,8 @@
                                     <th style='text-align:center;'>S/N</th>
                                     <th style='text-align:center;'>Tipo</th>
                                     <th style='text-align:center;'>Área</th>
-                                    <th style='text-align:center;'>Solicitante</th>
+                                    <th style='text-align:center;' id="th_persona">Solicitante</th>
+                                    <th style='text-align:center;' id="th_total">Total</th>
                                     <th style='text-align:center;'>F.Creación</th>
                                     <th style='text-align:center;'>U.Creación</th>
                                     <th style='text-align:center;'>Estado</th>

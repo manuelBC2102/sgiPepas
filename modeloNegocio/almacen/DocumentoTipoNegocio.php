@@ -276,8 +276,8 @@ class DocumentoTipoNegocio extends ModeloNegocioBase
             }else{
               if($dataArea[0]['id'] == PerfilNegocio::AREA_GEOLOGIA){
                 array_push($filtrados, array("id" => "504", "descripcion" => "DDH", "valor" => ""));
-                $dtd[$index]["lista_defecto"] = "504";
-                $dtd[$index]["bandera_urgencia"] = "1";
+                array_push($filtrados, array("id" => "506", "descripcion" => "PEPAS", "valor" => ""));
+                $dtd[$index]["bandera_urgencia"] = "0";
               }else if($dataArea[0]['id'] == PerfilNegocio::AREA_MANTENIMIENTO){
                 array_push($filtrados, array("id" => "503", "descripcion" => "EQUIPOS", "valor" => ""));
                 array_push($filtrados, array("id" => "506", "descripcion" => "PEPAS", "valor" => ""));

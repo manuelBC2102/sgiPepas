@@ -5372,12 +5372,12 @@ function guardar(accion) {
         var precioP = $('#txtPrecioP' + idx + '_' + item.index).val();
         precios.push(precioP);
       });
-      if (precios.every(x => x === "0")) {
-        mostrarAdvertencia('Al menos se debe ingresar un precio para la fila:' + (item.index + 1));
-        loaderClose();
-        validar_precios = true;
-        return;
-      }
+      // if (precios.every(x => x === "0")) {
+      //   mostrarAdvertencia('Al menos se debe ingresar un precio para la fila:' + (item.index + 1));
+      //   loaderClose();
+      //   validar_precios = true;
+      //   return;
+      // }
     });
     if (validar_precios) {
       loaderClose();
@@ -10252,14 +10252,18 @@ function asignarImportePago() {
     if (!isEmpty(listaPagoProgramacionPostores)) {
       var porcentaje;
       var importePago;
-      arrayProveedor.forEach(function (proveedorID, idx) {
-        $.each(listaPagoProgramacionPostores[proveedorID.indice], function (index, item) {
-          porcentaje = item[3];
-          importePago = (totalesPostores[proveedorID.indice].total * porcentaje) / 100;
-          listaPagoProgramacionPostores[proveedorID.indice][index][1] = importePago;
+      if(!isEmpty(arrayProveedor)){
+        arrayProveedor.forEach(function (proveedorID, idx) {
+          if(proveedorID.indice in listaPagoProgramacionPostores){
+            $.each(listaPagoProgramacionPostores[proveedorID.indice], function (index, item) {
+              porcentaje = item[3];
+              importePago = (totalesPostores[proveedorID.indice].total * porcentaje) / 100;
+                listaPagoProgramacionPostores[proveedorID.indice][index][1] = importePago;
+            });
+          }
         });
-      });
-      aceptarProgramacion(false);
+        aceptarProgramacion(false);
+      }
     }
   } else {
     var dtdTipoPago = obtenerDocumentoTipoDatoIdXTipo(25);
@@ -12820,9 +12824,10 @@ function agregarDistribucionPagosCotizacion(i) {
 }
 
 function llenarFilaDetalleTablaProveedor(indice) {
+  document.getElementById("th_Nro").style.width = "50px";
   var boton_eliminarProveedor = "";
   if (indice != 0) {
-    boton_eliminarProveedor = "&nbsp;&nbsp;<a id='btn_EliminarProveedor_" + indice + "' onclick='confirmarEliminarProveedor(" + indice + ");' hidden><i class='fa fa-trash-o' style='color:#cb2a2a;' title='Eliminar'></i></a>";
+      boton_eliminarProveedor = "&nbsp;&nbsp;<a id='btn_EliminarProveedor_" + indice + "' onclick='confirmarEliminarProveedor(" + indice + ");' hidden><i class='fa fa-trash-o' style='color:#cb2a2a;' title='Eliminar'></i></a>";
   }
   var fila = "<tr id=\"trDetalleProveedor_" + indice + "\">";
   fila = fila + "<td style='border:0; width: 200px; vertical-align: middle; padding-right: 10px;'id=\"txtNumItem_" + indice + "\" name=\"txtNumItem_" + indice + "\" align='right'><div class'input-group col-lg-12 col-md-12 col-sm-12 col-xs-12' style='text-align: center;'>" + (indice + 1) + boton_eliminarProveedor + "</div></td>";

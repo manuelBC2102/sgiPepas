@@ -214,6 +214,7 @@ function buscarRequerimientos() {
             { "data": "tipo_requerimiento", "class": "alignCenter" },
             { "data": "area_descripcion", "class": "alignCenter" },
             { "data": "solicitante_nombre_completo", "class": "alignCenter" },
+            { "data": "total", "class": "alignRight" },
             { "data": "fecha_creacion", "class": "alignCenter" },
             { "data": "usuario_creacion", "class": "alignCenter" },
             { "data": "estado_descripcion", "class": "alignCenter" },
@@ -232,7 +233,13 @@ function buscarRequerimientos() {
                 "render": function (data, type, row) {
                     return (isEmpty(data)) ? '' : data.replace(" 00:00:00", "");
                 },
-                "targets": 3
+                "targets": 5
+            },
+            {
+                "render": function (data, type, row) {
+                    return devolverDosDecimales(data);
+                },
+                "targets": 4
             },
             {
                 "render": function (data, type, row) {
@@ -240,13 +247,40 @@ function buscarRequerimientos() {
                     if (documento_tipo == ORDEN_COMPRA) {
                         acciones += "<a href='#' onclick='abrirPdfCuadroComparativoCotizacion(" + row.id + ")'><i class='fa fa-print' style='color:black;' title='Ver pdf de cuadro comparativo'></i></a>&nbsp;";
                     }
+                    var tabla = $('#datatableRequermiento').DataTable();
+                    if(documento_tipo == ORDEN_COMPRA || documento_tipo == ORDEN_SERVICIO){
+                        setTimeout(function() {
+                            tabla.column(2).visible(false);
+                        }, 100);
+                        $("#th_persona").html("Razón Social");
+                    }else{
+                        setTimeout(function() {
+                            tabla.column(4).visible(false);
+                        }, 100);
+                    }
+                    $('.title').html("Aprobación de "+ row.documento_tipo_descripcion);
                     return data + "" + acciones;
                 },
-                "targets": 8
+                "targets": 9
             },
         ],
         "dom": '<"top">rt<"bottom"<"col-md-3"l><"col-md-9"p><"col-md-12"i>><"clear">',
-        destroy: true
+        destroy: true,
+        "drawCallback": function(settings) {
+            var api = this.api();
+            var dataCount = api.data().count();
+            if (dataCount === 0) {
+                var tabla = $('#datatableRequermiento').DataTable();
+                if(documento_tipo == ORDEN_COMPRA || documento_tipo == ORDEN_SERVICIO){
+
+                }else{
+                    
+                }
+                setTimeout(function() {
+                    tabla.column(4).visible(false);
+                }, 100);
+            }
+        }
     });
     loaderClose();
 }
@@ -545,9 +579,9 @@ function onResponsevisualizarConsolidado(data) {
     data.documento_detalle.forEach((proveedor, idx) => {
         var monto = totalPostores[idx];
         var tipoCambio = proveedor.moneda_id == 4 ? proveedor.tipo_cambio : 1;
-        var esSinIGV = proveedor.igv === 0;
-        var subTotal = esSinIGV ? monto / 1.18:monto;
-        var total = esSinIGV ? monto : subTotal * 1.18;
+        var esSinIGV = proveedor.igv == 0;
+        var subTotal = esSinIGV ? monto:monto / 1.18;
+        var total = esSinIGV ? subTotal * 1.18:monto;
         var igv = total - subTotal;
         var totalSoles = total * tipoCambio;
 
@@ -1038,4 +1072,22 @@ function ocultarModalDistribucionPagos() {
         $("#modalDetalle").modal('show');
         $(this).off('hidden.bs.modal'); // Evita que se dispare varias veces
     });
+}
+
+function abrirDocumentoPDF(data, contenedor) {
+    var link = document.createElement("a");
+    link.download = data.nombre + '.pdf';
+    link.href = contenedor + data.pdf;
+    link.click();
+
+    setTimeout(function () {
+        //eliminarPDF(data.url);
+        eliminarPDF(contenedor + data.pdf);
+    }, 3000);
+}
+
+function eliminarPDF(url) {
+    ax.setAccion("eliminarPDF");
+    ax.addParamTmp("url", url);
+    ax.consumir();
 }
