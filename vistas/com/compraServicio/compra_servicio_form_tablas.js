@@ -1362,7 +1362,8 @@ function onResponseObtenerConfiguracionesIniciales(data) {
             var idx = $(this).attr('id').split('_')[1];  // Extraemos el índice del ID del input (ej. fileInput_0 -> idx = 0)
             // Mostrar el nombre del archivo en el elemento correspondiente
             var archivo = $(this).val().slice(12);
-            $("#text_archivo_" + idx).html($(this).val().slice(12));
+            var nombreReducido = archivo.length > 25 ? archivo.slice(0, 10) + "..." + archivo.slice(-10) : archivo;
+            $("#text_archivo_" + idx).html(nombreReducido);
 
             if (this.files && this.files[0]) {
                 var documento = {};
@@ -2102,9 +2103,6 @@ function cargarComprasDetalleCombo(data, indice) {
             });
 
             if (e.val == "1") {
-                if (stockBien == 0) {
-                    $("#txtCantidadAprobada_" + indice).val($("#txtCantidad_" + indice).val());
-                }
                 $("#txtCantidadAprobada_" + indice).prop('disabled', false);
                 $("#trDetalle_" + indice).css('background-color', '');
             } else if (e.val == "2") {
@@ -3637,7 +3635,9 @@ function onResponseObtenerDocumentoTipoDato(data) {
                     });
                     break;
                 case 43:
-                    select2.cargar("cbo_" + item.id, item.data, "id", "descripcion");
+                    if(!isEmpty(item.data)){
+                        select2.cargar("cbo_" + item.id, item.data, "id", "descripcion");
+                    }
                     $("#cbo_" + item.id).select2({
                         width: '100%'
                     });
@@ -4656,27 +4656,27 @@ function guardar(accion) {
         arrayProveedor.forEach(function (proveedorID, idx) {//revisar
             calcularFooterTipoCambio(proveedorID.indice);
 
-            if (isEmpty(listaPagoProgramacionPostores[idx]) && totalesPostores[idx].total > 0) {
-                mostrarAdvertencia("Falta realizar la distribución de pagos para: " + select2.obtenerText("cboProveedor_" + idx));
-                bandera_pagos = true;
-                return;
-            } else {
-                var total = 0;
-                if (totalesPostores[idx].total > 0) {
-                    listaPagoProgramacionPostores[idx].forEach(function (listaPago, index) {//revisar
-                        total = total + parseFloat(listaPago[1]);
-                    });
-                    if (devolverDosDecimales(total) != devolverDosDecimales(totalesPostores[idx].total)) {
+            // if (isEmpty(listaPagoProgramacionPostores[idx]) && totalesPostores[idx].total > 0) {
+            //     mostrarAdvertencia("Falta realizar la distribución de pagos para: " + select2.obtenerText("cboProveedor_" + idx));
+            //     bandera_pagos = true;
+            //     return;
+            // } else {
+            //     var total = 0;
+            //     if (totalesPostores[idx].total > 0) {
+            //         listaPagoProgramacionPostores[idx].forEach(function (listaPago, index) {//revisar
+            //             total = total + parseFloat(listaPago[1]);
+            //         });
+            //         if (devolverDosDecimales(total) != devolverDosDecimales(totalesPostores[idx].total)) {
 
-                        mostrarValidacionLoaderClose('Total de pago no coincide con el total del documento, monto total por programar ' + formatearNumero(calculoTotal));
-                        $('#modalProgramacionPagos').modal('show');
-                        onListarPagoProgramacion(listaPagoProgramacionPostores[idx]);
-                        $('#indexProveedor').val(idx);
-                        bandera_pagos = true;
-                        return;
-                    }
-                }
-            }
+            //             mostrarValidacionLoaderClose('Total de pago no coincide con el total del documento, monto total por programar ' + formatearNumero(calculoTotal));
+            //             $('#modalProgramacionPagos').modal('show');
+            //             onListarPagoProgramacion(listaPagoProgramacionPostores[idx]);
+            //             $('#indexProveedor').val(idx);
+            //             bandera_pagos = true;
+            //             return;
+            //         }
+            //     }
+            // }
 
             if (isEmpty(lstDocumentoArchivos[idx]) && totalesPostores[idx].total > 0) {
                 mostrarAdvertencia("Falta registrar pdf Cotización para:" + select2.obtenerText("cboProveedor_" + idx));
@@ -5092,57 +5092,67 @@ function validarDetalleFormularioLlenos() {
                 valido = false;
                 return false;
             }
-            var cantidad_ = parseInt(item.cantidad);
-            var cantidadAceptada_ = parseInt(item.cantidadAceptada);
+            var cantidadAceptada_ = parseInt(item.cantidad);
+            var cantidad_ = parseInt(item.cantidadAceptada);
             var stockBien_ = parseInt(item.stockBien);
 
             if (item.esCompra == 1) {
                 var dataStockReservaBien = dataStockReservaOk.find(itemReversa => itemReversa.bien_id == item.bienId);
                 if (!isEmpty(dataStockReservaBien)) {
-                    if (cantidad_ == cantidadAceptada_) {
-                        dataStockReservaOk = dataStockReservaOk.filter(objeto => objeto.bien_id != item.bienId);
-                        valido = false;
-                        return false;
-                    } else if (cantidad_ < (cantidadAceptada_ - stockBien_)) {
-                        mostrarValidacionLoaderClose("La catindad aceptada tiene que ser igual o mayor a la resta entre (Cant. solicitada - stock), para la fila: " + (item.index + 1));
-                        valido = false;
-                        return false;
-                    } else if ((cantidad_ + (parseInt(dataStockReservaBien.reserva))) > item.stockBien && stockBien_ > 0 && (cantidad_ + (parseInt(dataStockReservaBien.reserva)) != cantidadAceptada_)) {
-                        dataStockReservaOk = dataStockReservaOk.filter(objeto => objeto.bien_id != item.bienId);
-                        mostrarValidacionLoaderClose("Necesitas realizar una reserva de stock, para la fila: " + (item.index + 1));
-                        reservarStockBien(item.index);
-                        valido = false;
-                        return false;
-                    } else if ((parseInt(dataStockReservaBien.reserva) + cantidad_) != cantidadAceptada_ && cantidad_ > 0) {
-                        dataStockReservaOk = dataStockReservaOk.filter(objeto => objeto.bien_id != item.bienId);
-                        mostrarValidacionLoaderClose("Se ha cambiado la cantidad aceptada, tiene que actualizar el monto reservado, para la fila: " + (item.index + 1));
-                        reservarStockBien(item.index);
-                        valido = false;
-                        return false;
-                    } else if (cantidad_ == 0) {
-                        dataStockReservaOk = dataStockReservaOk.filter(objeto => objeto.bien_id != item.bienId);
-                        mostrarValidacionLoaderClose("La cantidad aceptada tiene que ser mayo que 0, tiene que actualizar el monto reservado, para la fila: " + (item.index + 1));
-                        valido = false;
-                    }
+                    // if (cantidad_ == cantidadAceptada_) {
+                    //     dataStockReservaOk = dataStockReservaOk.filter(objeto => objeto.bien_id != item.bienId);
+                    //     valido = false;
+                    //     return false;
+                    // } else if (cantidad_ < (cantidadAceptada_ - stockBien_)) {
+                    //     mostrarValidacionLoaderClose("La catindad aceptada tiene que ser igual o mayor a la resta entre (Cant. solicitada - stock), para la fila: " + (item.index + 1));
+                    //     valido = false;
+                    //     return false;
+                    // } else if ((cantidad_ + (parseInt(dataStockReservaBien.reserva))) > item.stockBien && stockBien_ > 0 && (cantidad_ + (parseInt(dataStockReservaBien.reserva)) != cantidadAceptada_)) {
+                    //     dataStockReservaOk = dataStockReservaOk.filter(objeto => objeto.bien_id != item.bienId);
+                    //     mostrarValidacionLoaderClose("Necesitas realizar una reserva de stock, para la fila: " + (item.index + 1));
+                    //     reservarStockBien(item.index);
+                    //     valido = false;
+                    //     return false;
+                    // } else if ((parseInt(dataStockReservaBien.reserva) + cantidad_) != cantidadAceptada_ && cantidad_ > 0) {
+                    //     dataStockReservaOk = dataStockReservaOk.filter(objeto => objeto.bien_id != item.bienId);
+                    //     mostrarValidacionLoaderClose("Se ha cambiado la cantidad aceptada, tiene que actualizar el monto reservado, para la fila: " + (item.index + 1));
+                    //     reservarStockBien(item.index);
+                    //     valido = false;
+                    //     return false;
+                    // } else if (cantidad_ == 0) {
+                    //     dataStockReservaOk = dataStockReservaOk.filter(objeto => objeto.bien_id != item.bienId);
+                    //     mostrarValidacionLoaderClose("La cantidad aceptada tiene que ser mayo que 0, tiene que actualizar el monto reservado, para la fila: " + (item.index + 1));
+                    //     valido = false;
+                    // }
                 } else {
-                    if (cantidad_ < (cantidadAceptada_ - stockBien_)) {
-                        mostrarValidacionLoaderClose("La cantidad aceptada tiene que ser igual o mayor a la resta entre (Cant. solicitada - stock), para la fila: " + (item.index + 1));
-                        valido = false;
-                        return false;
-                    } else if (cantidad_ > cantidadAceptada_) {
-                        mostrarValidacionLoaderClose("La cantidad aceptada tiene que ser igual a la solicitada, para la fila: " + (item.index + 1));
-                        valido = false;
-                        return false;
-                    } else if (cantidad_ < cantidadAceptada_ && cantidad_ > 1) {
-                        mostrarValidacionLoaderClose("Necesitas realizar una reserva de stock, para la fila: " + (item.index + 1));
-                        reservarStockBien(item.index);
-                        valido = false;
-                        return false;
-                    } else if (cantidad_ == 0) {
-                        mostrarValidacionLoaderClose("Necesitas realizar una reserva de stock, para la fila: " + (item.index + 1));
+                    if (cantidadAceptada_ < 1) {
+                        mostrarValidacionLoaderClose("La cantidad aceptada tiene que ser mayor a 1, para la fila: " + (item.index + 1));
                         valido = false;
                         return false;
                     }
+                    if (cantidadAceptada_ > cantidad_) {
+                        mostrarValidacionLoaderClose("La cantidad aceptada tiene que ser menor o igual a la cantidad solicitada, para la fila: " + (item.index + 1));
+                        valido = false;
+                        return false;
+                    }
+                    // if (cantidad_ < (cantidadAceptada_ - stockBien_)) {
+                    //     mostrarValidacionLoaderClose("La cantidad aceptada tiene que ser igual o mayor a la resta entre (Cant. solicitada - stock), para la fila: " + (item.index + 1));
+                    //     valido = false;
+                    //     return false;
+                    // } else if (cantidad_ > cantidadAceptada_) {
+                    //     mostrarValidacionLoaderClose("La cantidad aceptada tiene que ser igual a la solicitada, para la fila: " + (item.index + 1));
+                    //     valido = false;
+                    //     return false;
+                    // } else if (cantidad_ < cantidadAceptada_ && cantidad_ > 1) {
+                    //     mostrarValidacionLoaderClose("Necesitas realizar una reserva de stock, para la fila: " + (item.index + 1));
+                    //     reservarStockBien(item.index);
+                    //     valido = false;
+                    //     return false;
+                    // } else if (cantidad_ == 0) {
+                    //     mostrarValidacionLoaderClose("Necesitas realizar una reserva de stock, para la fila: " + (item.index + 1));
+                    //     valido = false;
+                    //     return false;
+                    // }
                 }
 
             }
@@ -8902,6 +8912,10 @@ function buscarPagoProgramacion(fechaPago, importePago, dias, porcentaje) {
                 if (proveedor_index == idx) {
                     programacionPostores.forEach(function (programacion, idx) {
                         arrayFechaPago.push(programacion[0]);
+                        arrayImportePago.push(programacion[1]);
+                        arrayDias.push(programacion[2]);
+                        arrayPorcentaje.push(programacion[3]);
+                        arrayGlosa.push(programacion[4]);
                     });
                 }
             });
@@ -11226,6 +11240,20 @@ function cargarProveedorDetalleCombo(data, indice) {
         var proveedorExistente = arrayProveedor.findIndex(item => item.proveedor_id === e.val);
 
         if (proveedorExistenteIndex == -1 && proveedorExistente == -1) {
+            $("#i_sumilla_" + indice).attr('style', 'color: black;');
+            $("#a_sumilla_" + indice).attr('onclick', 'mostrarModalSumilla('+ indice +');');
+            $("#i_pdfCotizacion_" + indice).attr('style', 'color: blue;');
+            $("#a_pdfCotizacion_" + indice).attr('onclick', '$("#fileInput_' + indice + '").click();');
+            // $("#i_distribucionPagosCotizacion_" + indice).attr('style', 'color: green;');           
+            // $("#a_distribucionPagosCotizacion_" + indice).attr('onclick', 'mostrarModalDistribucionPago('+ indice +');');
+
+            $("#cboMonedaP_" + indice).prop('disabled', false);
+            $("#txtTipoCambio_" + indice).prop('disabled', false);
+            $("#selectIGV_" + indice).prop('disabled', false);
+            $("#cboUO_" + indice).prop('disabled', false);
+            $("#cboTiempoEntrega_" + indice).prop('disabled', false);
+            $("#cboCondicionPago_" + indice).prop('disabled', false);
+
             $("#btn_EliminarProveedor_" + indice).show();
             var sumilla = (isEmpty(arrayProveedor[indice])) ? null : arrayProveedor[indice].sumilla;
             arrayProveedor.push({
@@ -11309,10 +11337,12 @@ function cargarProveedorDetalleCombo(data, indice) {
                 $('#datatable').append(filaExtratfoot);
                 if (!isEmpty(dataDocumentoCopia)) {
                     detalle = [];
+                    request.documentoRelacion = [];
                     onResponseObtenerDocumentoRelacion(dataDocumentoCopia);
                 }
                 if (!isEmpty(dataGrupoProducto)) {
                     detalle = [];
+                    request.documentoRelacion = [];
                     onResponseObtenerDetalle(dataGrupoProducto);
                 }
             } else {
@@ -11437,7 +11467,7 @@ function agregarRazonSocialProveedor(i) {
 
 function agregarMoneda(i) {
     var $html = "<div class=\"input-group col-lg-12 col-md-12 col-sm-12 col-xs-12\">" +
-        "<select name=\"cboMonedaP_" + i + "\" id=\"cboMonedaP_" + i + "\" class=\"select2\" onchange=\"\">" +
+        "<select name=\"cboMonedaP_" + i + "\" id=\"cboMonedaP_" + i + "\" class=\"select2\" onchange=\"\" disabled>" +
         "</select></div>";
     return $html;
 }
@@ -11445,27 +11475,27 @@ function agregarMoneda(i) {
 function agregarTipoCambio(i) {
     var tipo_cambio = dataCofiguracionInicial.dataTipoCambio[0].equivalencia_venta;
     var $html = "<div class=\"input-group col-lg-12 col-md-12 col-sm-12 col-xs-12\" style=\"display: flex; align-items: center; gap: 8px;\">" +
-        "<input type=\"number\" id=\"txtTipoCambio_" + i + "\" name=\"txtTipoCambio_" + i + "\" class=\"form-control\" required=\"\" aria-required=\"true\" value=\"" + devolverDosDecimales(tipo_cambio) + "\" style=\"text-align: right; width:100px;\" onchange=\"calcularFooterTipoCambio(" + i + ")\" onkeyup=\"calcularFooterTipoCambio(" + i + ")\" /></div>";
+        "<input type=\"number\" id=\"txtTipoCambio_" + i + "\" name=\"txtTipoCambio_" + i + "\" class=\"form-control\" required=\"\" aria-required=\"true\" value=\"" + devolverDosDecimales(tipo_cambio) + "\" style=\"text-align: right; width:100px;\" onchange=\"calcularFooterTipoCambio(" + i + ")\" onkeyup=\"calcularFooterTipoCambio(" + i + ")\" disabled/></div>";
     return $html;
 }
 
 function agregarChkIGV(i) {
     var $html = "<div class=\"input-group col-lg-12 col-md-12 col-sm-12 col-xs-12\" style=\"text-align:center;\">" +
-        "<input type='checkbox' id=\"selectIGV_" + i + "\" onchange=\"calcularFooterTipoCambio(" + i + ")\">" +
+        "<input type='checkbox' id=\"selectIGV_" + i + "\" onchange=\"calcularFooterTipoCambio(" + i + ")\" disabled>" +
         "</div>";
     return $html;
 }
 
 function agregarUO(i) {
     var $html = "<div class=\"input-group col-lg-12 col-md-12 col-sm-12 col-xs-12\">" +
-        "<select name=\"cboUO_" + i + "\" id=\"cboUO_" + i + "\" class=\"select2\" >" +
+        "<select name=\"cboUO_" + i + "\" id=\"cboUO_" + i + "\" class=\"select2\" disabled>" +
         "</select></div>";
     return $html;
 }
 
 function agregarTiempoEntrega(i) {
     var $html = "<div class=\"input-group col-lg-12 col-md-12 col-sm-12 col-xs-12\">" +
-        "<select name=\"cboTiempoEntrega_" + i + "\" id=\"cboTiempoEntrega_" + i + "\" class=\"select2\" >" +
+        "<select name=\"cboTiempoEntrega_" + i + "\" id=\"cboTiempoEntrega_" + i + "\" class=\"select2\" disabled>" +
         "<option value='1'>Inmediato</option>" +
         "<option value='2'>Días</option>" +
         "<option value='3'>Contraentrega</option>" +
@@ -11481,13 +11511,13 @@ function agregarTiempo(i) {
 
 function agregarSumilla(i) {
     var $html = "<div class=\"input-group col-lg-12 col-md-12 col-sm-12 col-xs-12\" style=\"text-align:center;\">" +
-        "<a href='#' onclick='mostrarModalSumilla(" + i + ")'><i class='fa fa-comment' style='color:black;' title='Subir pdf cotización'></i></a></div>";
+      "<a href='#' id='a_sumilla_"+ i +"'><i id='i_sumilla_" + i + "' class='fa fa-comment' style='color:gray; opacity:0.5; cursor:not-allowed;' title='Subir pdf cotización'></i></a></div>";
     return $html;
 }
 
 function agregarCondicionPago(i) {
     var $html = "<div class=\"input-group col-lg-12 col-md-12 col-sm-12 col-xs-12\">" +
-        "<select name=\"cboCondicionPago_" + i + "\" id=\"cboCondicionPago_" + i + "\" class=\"select2\" onchange=\"calcularFooterTipoCambio(" + i + ")\">" +
+        "<select name=\"cboCondicionPago_" + i + "\" id=\"cboCondicionPago_" + i + "\" class=\"select2\" onchange=\"calcularFooterTipoCambio(" + i + ")\" disabled>" +
         "<option value='1'>Contado</option>" +
         "<option value='2'>Crédito</option>" +
         "</select></div>";
@@ -11503,7 +11533,7 @@ function agregarDiasPago(i) {
 function agregarPdfCotizacion(i) {
     var $html = "<div class=\"input-group col-lg-12 col-md-12 col-sm-12 col-xs-12\" style=\"text-align:center;\">";
 
-    var btn_upload = "&nbsp;<a href='#' onclick=\"$('#fileInput_" + i + "').click();\"><i class='fa fa-cloud-upload' style='color:blue;' title='Adjuntar pdf'></i></a>";
+    var btn_upload = "&nbsp;<a href='#' id='a_pdfCotizacion_" + i + "' ><i id='i_pdfCotizacion_" + i + "' class='fa fa-cloud-upload' style='color:gray; opacity:0.5; cursor:not-allowed;' title='Adjuntar pdf'></i></a>";
     btn_upload += "<input type='file' id='fileInput_" + i + "' style='display:none;'>";
     btn_upload += "&nbsp;<i id='text_archivo_" + i + "' style='font-size:10px'></i>";
 
@@ -11513,7 +11543,7 @@ function agregarPdfCotizacion(i) {
 
 function agregarDistribucionPagosCotizacion(i) {
     var $html = "<div class=\"input-group col-lg-12 col-md-12 col-sm-12 col-xs-12\" style=\"text-align:center;\">" +
-        "<a href='#' onclick='mostrarModalDistribucionPago(" + i + ")'><i class='fa fa-calendar' style='color:green;' title='Distribución pagos'></i></a></div>";
+        "<a href='#' id='a_distribucionPagosCotizacion_" + i + "'><i id='i_distribucionPagosCotizacion_" + i + "' class='fa fa-calendar' style='color:gray; opacity:0.5; cursor:not-allowed;' title='Distribución pagos' disabled></i></a></div>";
     return $html;
 }
 
@@ -11548,7 +11578,7 @@ function llenarFilaDetalleTablaProveedor(indice) {
     //pdf cotización
     fila += "<td style='border:0; width: " + widtIGV + "px; vertical-align: middle; padding: " + KPADINGTD + "px;' id=\"tdTiempoEntrega_" + indice + "\">" + agregarPdfCotizacion(indice) + "</td>";
     //distribución pagos
-    fila += "<td style='border:0; width: " + widtIGV + "px; vertical-align: middle; padding: " + KPADINGTD + "px;' id=\"tdTiempoEntrega_" + indice + "\">" + agregarDistribucionPagosCotizacion(indice) + "</td>";
+    // fila += "<td style='border:0; width: " + widtIGV + "px; vertical-align: middle; padding: " + KPADINGTD + "px;' id=\"tdTiempoEntrega_" + indice + "\">" + agregarDistribucionPagosCotizacion(indice) + "</td>";
 
     fila = fila + "</tr>";
     return fila;
@@ -11733,6 +11763,20 @@ function confirmarEliminarProveedor(indice) {
 }
 
 function eliminarEncabezador(indice) {
+    $("#i_sumilla_" + indice).attr('style', 'ccolor:gray; opacity:0.5; cursor:not-allowed;');
+    $("#a_sumilla_" + indice).attr('onclick', '');
+    $("#i_pdfCotizacion_" + indice).attr('style', 'color:gray; opacity:0.5; cursor:not-allowed;');
+    $("#a_pdfCotizacion_" + indice).attr('onclick', '');
+    // $("#i_distribucionPagosCotizacion_" + indice).attr('style', 'color:gray; opacity:0.5; cursor:not-allowed;');           
+    // $("#a_distribucionPagosCotizacion_" + indice).attr('onclick', '');
+
+    $("#cboMonedaP_" + indice).prop('disabled', true);
+    $("#txtTipoCambio_" + indice).prop('disabled', true);
+    $("#selectIGV_" + indice).prop('disabled', true);
+    $("#cboUO_" + indice).prop('disabled', true);
+    $("#cboTiempoEntrega_" + indice).prop('disabled', true);
+    $("#cboCondicionPago_" + indice).prop('disabled', true);
+
     // Eliminar encabezado principal
     $("#btn_EliminarProveedor_" + indice).hide();
     select2.asignarValor("cboProveedor_" + indice, 0);

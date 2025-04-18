@@ -120,6 +120,7 @@ class OrdenCompraServicioControlador extends AlmacenIndexControlador {
         $serieNumeroCotizacion = '';
         $serieNumeroSolicitudRequerimiento = '';
         $cuenta = '';
+        $banderaUrgencia = 0;
         $dataRelacionada = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoId($documentoId);
         foreach ($dataRelacionada as $itemRelacion) {
             if ($itemRelacion['documento_tipo_id'] == Configuraciones::COTIZACIONES || $itemRelacion['documento_tipo_id'] == Configuraciones::COTIZACION_SERVICIO) {
@@ -127,21 +128,42 @@ class OrdenCompraServicioControlador extends AlmacenIndexControlador {
             }
             if ($itemRelacion['documento_tipo_id'] == Configuraciones::SOLICITUD_REQUERIMIENTO) {
                 $serieNumeroSolicitudRequerimiento .= $itemRelacion['serie_numero'] . ", ";
-
+        
                 $documentoDatoValor = DocumentoDatoValorNegocio::create()->obtenerXIdDocumento($itemRelacion["documento_relacionado_id"]);
                 foreach ($documentoDatoValor as $index => $item) {
                     switch ($item['tipo'] * 1) {
                         case 52:
                             $cuenta .= $item['valor'] . ", ";
                             break;
+                        case 52:
+                            $cuenta .= $item['valor'] . ", ";
+                            break;                    
+                        case 4:
+                            if ($item['descripcion'] == "Urgencia" && $item['valor'] == "Si") {
+                                $banderaUrgencia = 1;
+                            }
+                            break;                    
                     }
                 }
+            }
+            if ($itemRelacion['documento_tipo_id'] == Configuraciones::COTIZACION_SERVICIO) {
+                $banderaUrgencia = 2;
             }
         }
 
         foreach ($detalle as $i => $item) {
-            $resMovimientoBienDetalle = MovimientoBien::create()->obtenerMovimientoBienDetalleObtenerUnidadMinera($item->movimientoBienId);
-            $detalle->cantidad_requerimiento = $resMovimientoBienDetalle[0]['cantidad_requerimiento'];
+            $resMovimientoBienDetalle = MovimientoBien::create()->obtenerMovimientoBienDetalleObtenerUnidadMinera($item->movimientoBienId, $banderaUrgencia);
+            $resultado = [];
+            foreach ($resMovimientoBienDetalle as $dato) {
+                $unidad = $dato['unidad_minera'];
+                $cantidad = floatval($dato['cantidad_requerimiento_area']);
+                if (!isset($resultado[$unidad])) {
+                    $resultado[$unidad] = 0;
+                }
+                $resultado[$unidad] += $cantidad;
+            }
+        
+            $detalle[$i]->cantidad_requerimiento = $resultado;
         }
 
         $response = [

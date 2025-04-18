@@ -120,14 +120,14 @@
                                                 <th style='text-align:center;'>Moneda</th>  
                                                 <th style='text-align:center;'>Tipo cambio</th>             
                                                 <th style='text-align:center;'>IGV</th>
-                                                <th style='text-align:center;'>U.O</th>
+                                                <th style='text-align:center;'>Entrega en destino</th>
                                                 <th style='text-align:center;'>Tiempo de entrega</th>
                                                 <th style='text-align:center;'>Tiempo</th>
                                                 <th style='text-align:center;'>Condición de pago</th>
                                                 <th style='text-align:center;'>Días de pago</th>
                                                 <th style='text-align:center;'>Sumilla</th>
                                                 <th style='text-align:center;'>Pdf Cotización</th>   
-                                                <th style='text-align:center;'>Distribución pagos</th>   
+                                                <!-- <th style='text-align:center;'>Distribución pagos</th>    -->
                                             </tr>                              
                                         </thead>                                       
                                             <tbody id="dgDetalleProveedor">                                  

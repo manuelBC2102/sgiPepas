@@ -892,4 +892,15 @@ class Documento extends ModeloBase {
         $this->commandAddParameter(":vin_proveedor_id", $proveedorId);
         return $this->commandGetData();
     }
+
+    public function editarDocumentoDetalleDistribucionPagosEstado($documento_detalle_id) {
+        $this->commandPrepare("sp_documento_detalle_distribucion_pagoCambiarEstado");
+        $this->commandAddParameter("vin_documento_detalle_id", $documento_detalle_id);
+        return $this->commandGetData();
+    }
+
+    public function obtenerAreaConSolicitudes() {
+        $this->commandPrepare("sp_obtenerAreaConSolicitudes");
+        return $this->commandGetData();
+    }
 }

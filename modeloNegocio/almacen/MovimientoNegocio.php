@@ -8183,6 +8183,7 @@ class MovimientoNegocio extends ModeloNegocioBase
         $respuestaDataPostorProveedor = Documento::create()->editar_documento_detalle($documentoId, $itemPostor['proveedor_id'], $itemPostor['monedaId'], $itemPostor['tipoCambio'], $itemPostor['igv'], $itemPostor['uoId'],$itemPostor['tiempoEntrega'], $itemPostor['tiempo'], $itemPostor['condicionPago'], $itemPostor['diasPago'],$itemPostor['sumilla'], $usuarioId);
         
         $pagoProgramacion = $listaPagoProgramacionPostores[intval($itemPostor['indice'])];
+        $resEstado = Documento::create()->editarDocumentoDetalleDistribucionPagosEstado($respuestaDataPostorProveedor[0]['vout_id']);
         foreach($pagoProgramacion as $itemPagoProgramacionPostores){
           if (strpos($itemPagoProgramacionPostores[0], '/') !== false) {
             $fechaPago = DateUtil::formatearCadenaACadenaBD($itemPagoProgramacionPostores[0]);
@@ -8240,9 +8241,9 @@ class MovimientoNegocio extends ModeloNegocioBase
             "valor" => $itemPostor["tiempoEntrega"]);
           $camposDinamicos [$cont + 1] = array(
               "id" =>"",
-              "tipo" => "46",
+              "tipo" => "45",
               "opcional" => "1",
-              "descripcion" => "U.O",
+              "descripcion" => "Entrega en destino",
               "codigo" => "",
               "valor" => $itemPostor["uoId"]);            
           $camposDinamicos [$cont + 3] = array(
@@ -11569,7 +11570,7 @@ class MovimientoNegocio extends ModeloNegocioBase
       }
     }
   
-    if($documentoTipoId == Configuraciones::ORDEN_SERVICIO){
+    if($documentoTipoId == Configuraciones::ORDEN_COMPRA || $documentoTipoId == Configuraciones::ORDEN_SERVICIO){
       if (!ObjectUtil::isEmpty($listaPagoProgramacion)) {
         foreach ($listaPagoProgramacion as $ind => $item) {
           if (strpos($itemPagoProgramacionPostores[0], '/') !== false) {

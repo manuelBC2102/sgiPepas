@@ -234,8 +234,12 @@ class DocumentoTipoNegocio extends ModeloNegocioBase
             $dtd[$index]["data"] = PersonaNegocio::create()->obtenerPersonaConductor();
             break;
           case self::DATO_AREA:
-              $dtd[$index]["data"] = PersonaNegocio::create()->getAllArea();
-              $dtd[$index]["lista_defecto"] = PersonaNegocio::create()->getAllAreaXUsuarioId($usuarioId)[0]["id"];
+              if($documentoTipoId == Configuraciones::REQUERIMIENTO_AREA){
+                $dtd[$index]["data"] = Documento::create()->obtenerAreaConSolicitudes();
+              }else{
+                $dtd[$index]["data"] = PersonaNegocio::create()->getAllArea();
+                $dtd[$index]["lista_defecto"] = PersonaNegocio::create()->getAllAreaXUsuarioId($usuarioId)[0]["id"];
+              }
               break;
           case self::DATO_GRUPO_PRODUCTO:
             $dataBienTipo = BienTipo::create()->obtenerBienTipoXRequermientoXArea();

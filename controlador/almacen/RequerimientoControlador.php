@@ -42,6 +42,7 @@ class RequerimientoControlador extends AlmacenIndexControlador
             $stringAcciones = "";
             $matrizUsuario = null;
             $areaId = null;
+            $esUrgencia = null;
 
             if($data[$i]['documento_tipo_id'] == 280){
                 $dataDocumento = DocumentoNegocio::create()->obtenerDetalleDocumento($data[$i]['id']);
@@ -74,7 +75,7 @@ class RequerimientoControlador extends AlmacenIndexControlador
                 return $acumulador + ($seleccion['cantidad'] * $seleccion['valor_monetario']);
             }, 0);
             
-            if($data[$i]['documento_tipo_id'] == Configuraciones::ORDEN_COMPRA && 30000 > $sumaDetalle){
+            if(($data[$i]['documento_tipo_id'] == Configuraciones::ORDEN_COMPRA || $data[$i]['documento_tipo_id'] == Configuraciones::ORDEN_SERVICIO)&& 30000 > $sumaDetalle){
                 $nivelM=1;
                 $matrizUsuario = array_filter($matrizUsuario, function($item) use ($nivelM) {
                     return $item['nivel'] <= $nivelM;
@@ -83,6 +84,29 @@ class RequerimientoControlador extends AlmacenIndexControlador
 
             $usuario_estado = DocumentoNegocio::create()->obtenerDocumentoDocumentoEstadoXdocumentoId($data[$i]['id'], "0,1");
 
+            $stringProgressBar = "<div class='progress'>";
+            $arrayAprobadores = [];
+            $arrayAprobaciones = [];
+            $sinAprobar = [];
+
+            $agrupados = [];
+
+            foreach ($matrizUsuario as $usuario) {
+                $key = $usuario['nivel'] . '-' . $usuario['area_id'];
+            
+                if (!isset($agrupados[$key])) {
+                    // Si no existe aún esa combinación, la agregamos tal cual
+                    $agrupados[$key] = $usuario;
+                } else {
+                    // Si ya existe, concatenamos nombre y usuario_aprobador_id
+                    $agrupados[$key]['nombre'] .= ' | ' . $usuario['nombre'];
+                    $agrupados[$key]['usuario_aprobador_id'] .= ',' . $usuario['usuario_aprobador_id'];
+                }
+            }
+            
+            // Resultado final
+            $matrizUsuario = array_values($agrupados); // para tener índice limpio si lo necesitas
+            
             $tamanioMatriz = count($matrizUsuario);
             $porcentajeDividido = 100 / ($tamanioMatriz == 1 ? 2 : $tamanioMatriz);
 
@@ -91,10 +115,7 @@ class RequerimientoControlador extends AlmacenIndexControlador
                     "usuario_aprobador_id" => $data[$i]["usuario_id"],  "nivel" => 1, "nombre" => $usuario_estado[0]['nombre']);
                 array_push($matrizUsuario, $arrayMatriz);
             }
-            $stringProgressBar = "<div class='progress'>";
-            $arrayAprobadores = [];
-            $arrayAprobaciones = [];
-            $sinAprobar = [];
+
             foreach ($matrizUsuario as $key => $value) {
                 $colorBar = "";
                 $colorBar_none = "background-color:white;";
@@ -114,7 +135,9 @@ class RequerimientoControlador extends AlmacenIndexControlador
                         case "1":
                             $andera_sinaprobar = true;
                             foreach ($usuario_estado as $val) {
-                                if($value["usuario_aprobador_id"] == $val["usuario_creacion"] && $val["estado_descripcion"] != "Registrado"){
+                                // if($value["usuario_aprobador_id"] == $val["usuario_creacion"] && $val["estado_descripcion"] != "Registrado"){
+                                $valores = explode(',', $value["usuario_aprobador_id"]);
+                                if(in_array($val["usuario_creacion"], $valores) && $val["estado_descripcion"] != "Registrado"){
                                     $colorBar = "progress-bar-info";
                                     $colorBar_none = "";
                                     $mensaje = $usuario_estado[$key]["estado_descripcion"]. " por,";
@@ -164,6 +187,14 @@ class RequerimientoControlador extends AlmacenIndexControlador
                             break;
                     }
                 }
+                if ($mensaje == "Aprobado por,") {
+                    $valoresAp = explode(',', $value['usuario_aprobador_id']);
+                    foreach ($usuario_estado as $val) {
+                        if (in_array($val['usuario_creacion'], $valoresAp)) {
+                            $value['nombre'] = $val['nombre'];
+                        }
+                    }
+                }
                 $stringProgressBar .= "<div class='progress-bar " . $colorBar . " progress-bar-striped' role='progressbar' aria-valuenow='" . $porcentajeDividido . "' aria-valuemin='0' aria-valuemax='100' style='width: " . $porcentajeDividido . "% ;border: 1px solid #000;" . $colorBar_none . "' title='" .$mensaje.' '. $value['nombre'] . "'>" .
                     "</div>";
             }
@@ -177,8 +208,19 @@ class RequerimientoControlador extends AlmacenIndexControlador
                 return $item['nivel'] == $nivel_minimo;
             });
 
+            $result = [];
+            foreach ($arrayAprobadores as $item) {
+                if (strpos($item, ',') !== false) {
+                    $result = explode(',', $item);
+                } else {
+                    array_push($result ,$item);
+                }
+            }
+            $arrayAprobadores = array_values($result);
+            $valoresFiltro = explode(',', $filtrado[0]['usuario_aprobador_id']);
+
             $icon_aprobacion = "<i class='fa fa-eye' style='color:green;' title='Ver detalle'></i>";
-            if (in_array($usuarioId, $arrayAprobadores) && !in_array($usuarioId, $arrayAprobaciones) && $filtrado[0]['usuario_aprobador_id'] == $usuarioId && $data[$i]['estado_descripcion'] != "Rechazado") {
+            if (in_array($usuarioId, $arrayAprobadores) && !in_array($usuarioId, $arrayAprobaciones) && in_array($usuarioId, $valoresFiltro) && $data[$i]['estado_descripcion'] != "Rechazado") {
                 // $stringAcciones .= "<a href='#' onclick='aprobar(" . $data[$i]['id'] . ", " . $data[$i]['movimiento_id']. ", " . $data[$i]['documento_tipo_id']. ")'><i class='fa fa-check' style='color:blue;' title='Aprobar'></i></a>&nbsp;";
                 // $stringAcciones .= "<a href='#' onclick='rechazar(" . $data[$i]['id'] . ", " . $data[$i]['movimiento_id'].  ", " . $data[$i]['documento_tipo_id']. ")'><i class='fa fa-times' style='color:red;' title='Rechazar '></i></a>&nbsp;";
                 $data[$i]['uasurio_estado_descripcion'] = "Por Aprobar";

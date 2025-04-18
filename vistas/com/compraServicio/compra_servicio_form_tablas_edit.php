@@ -126,7 +126,7 @@
                                                 <th style='text-align:center;'>Moneda</th>  
                                                 <th style='text-align:center;'>Tipo cambio</th>             
                                                 <th style='text-align:center;'>IGV</th>
-                                                <th style='text-align:center;'>U.O</th>
+                                                <th style='text-align:center;'>Entrega en destino</th>
                                                 <th style='text-align:center;'>Tiempo de entrega</th>
                                                 <th style='text-align:center;'>Tiempo</th>
                                                 <th style='text-align:center;'>Condición de pago</th>

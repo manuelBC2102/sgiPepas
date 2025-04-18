@@ -62,88 +62,7 @@ $organizador_entrega =  OrganizadorNegocio::create()->getOrganizador($entrega_en
 $ubigeoProveedor_entrega = PersonaNegocio::create()->obtenerUbigeoXId($dataDocumento[0]["ubigeo_id"]);
 
 
-class PDF extends FPDF
-{
-    protected $B = 0;
-    protected $I = 0;
-    protected $U = 0;
-    protected $HREF = '';
-
-    function WriteHTML($html)
-    {
-        // Int�rprete de HTML
-        $html = str_replace("\n", ' ', $html);
-        $a = preg_split('/<(.*)>/U', $html, -1, PREG_SPLIT_DELIM_CAPTURE);
-        foreach ($a as $i => $e) {
-            if ($i % 2 == 0) {
-                // Text
-                if ($this->HREF)
-                    $this->PutLink($this->HREF, $e);
-                else
-                    $this->Write(5, $e);
-            } else {
-                // Etiqueta
-                if ($e[0] == '/')
-                    $this->CloseTag(strtoupper(substr($e, 1)));
-                else {
-                    // Extraer atributos
-                    $a2 = explode(' ', $e);
-                    $tag = strtoupper(array_shift($a2));
-                    $attr = array();
-                    foreach ($a2 as $v) {
-                        if (preg_match('/([^=]*)=["\']?([^"\']*)/', $v, $a3))
-                            $attr[strtoupper($a3[1])] = $a3[2];
-                    }
-                    $this->OpenTag($tag, $attr);
-                }
-            }
-        }
-    }
-
-    function OpenTag($tag, $attr)
-    {
-        // Etiqueta de apertura
-        if ($tag == 'B' || $tag == 'I' || $tag == 'U')
-            $this->SetStyle($tag, true);
-        if ($tag == 'A')
-            $this->HREF = $attr['HREF'];
-        if ($tag == 'BR')
-            $this->Ln(5);
-    }
-
-    function CloseTag($tag)
-    {
-        // Etiqueta de cierre
-        if ($tag == 'B' || $tag == 'I' || $tag == 'U')
-            $this->SetStyle($tag, false);
-        if ($tag == 'A')
-            $this->HREF = '';
-    }
-
-    function SetStyle($tag, $enable)
-    {
-        // Modificar estilo y escoger la fuente correspondiente
-        $this->$tag += ($enable ? 1 : -1);
-        $style = '';
-        foreach (array('B', 'I', 'U') as $s) {
-            if ($this->$s > 0)
-                $style .= $s;
-        }
-        $this->SetFont('', $style);
-    }
-
-    function PutLink($URL, $txt)
-    {
-        // Escribir un hiper-enlace
-        $this->SetTextColor(0, 0, 255);
-        $this->SetStyle('U', true);
-        $this->Write(5, $txt, $URL);
-        $this->SetStyle('U', false);
-        $this->SetTextColor(0);
-    }
-}
-
-$pdf = new PDF('P', 'mm', 'A4');
+$pdf = new FPDF('P', 'mm', 'A4');
 
 $pdf->SetTitle(strtoupper($dataDocumentoTipo[0]['descripcion']));
 $pdf->SetAuthor('Soluciones Mineras S.A.C.');
@@ -160,7 +79,7 @@ QRcode::png($documentoId . '-' . $documentoTipoId, $qrFile,  'L', 2, 1);
 $pdf->Image($qrFile, 10, 5, 25, 25);
 
 // Logo
-$pdf->Image('C:\wamp64\www\minaApp\vistas\images\logo_pepas_de_oro.png', 150, 10, 45, 20);
+$pdf->Image(__DIR__ .'/../../../vistas/images/logo_pepas_de_oro.png', 150, 10, 45, 25);
 
 // Título
 $pdf->SetFont('Arial', 'B', 10);
@@ -171,7 +90,7 @@ $pdf->Cell(170, 0, $titulo, 0, 1, 'C');
 
 // Dirección
 $pdf->SetFont('Arial', '', 6);
-$pdf->SetXY(10, 30);
+$pdf->SetXY(10, 33);
 $pdf->Cell(120, 3, 'PZA.PLAZA DE ARMAS PAMPAMARCA NRO. S/N ANX. PAMPAMARCA', 0, 1);
 $pdf->SetX(10);
 $pdf->Cell(120, 3, '(COMUNIDAD DE PAMPAMARCA) APURIMAC - AYMARAES - COTARUSE', 0, 1);
@@ -266,6 +185,7 @@ $pdf->MultiCell(45, 10, $dataDocumento[0]['usuario'], 1, 'C');
 $serieNumeroCotizacion = '';
 $serieNumeroSolicitudRequerimiento = '';
 $cuenta = '';
+$unidadMinera = '';
 $dataRelacionada = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoId($documentoId);
 $banderaUrgencia = 0;
 foreach ($dataRelacionada as $itemRelacion) {
@@ -278,6 +198,9 @@ foreach ($dataRelacionada as $itemRelacion) {
         $documentoDatoValor = DocumentoDatoValorNegocio::create()->obtenerXIdDocumento($itemRelacion["documento_relacionado_id"]);
         foreach ($documentoDatoValor as $index => $item) {
             switch ($item['tipo'] * 1) {
+                case 51:
+                    $unidadMinera .= $item['valor'] . ", ";
+                    break;                
                 case 52:
                     $cuenta .= $item['valor'] . ", ";
                     break;
@@ -293,6 +216,27 @@ foreach ($dataRelacionada as $itemRelacion) {
         $banderaUrgencia = 2;
     }
 }
+
+function insertarSaltosLinea($texto, $longitudMax = 45) {
+    $palabras = explode(' ', $texto);
+    $linea = '';
+    $resultado = '';
+
+    foreach ($palabras as $palabra) {
+        if (strlen($linea . ' ' . $palabra) > $longitudMax) {
+            $resultado .= trim($linea) . "\n";
+            $linea = $palabra . ' ';
+        } else {
+            $linea .= $palabra . ' ';
+        }
+    }
+
+    $resultado .= trim($linea); // Agrega lo último
+    return $resultado;
+}
+
+//Filtrar repetidos
+$unidadMinera = implode(', ', array_unique(array_filter(array_map('trim', explode(',', $unidadMinera)))));
 
 // Separar por comas y eliminar espacios, eliminar repetidos
 $cuenta = array_unique(array_filter(array_map('trim', explode(',', $cuenta))));
@@ -315,7 +259,7 @@ $pdf->MultiCell(45, 5, 'U.O:', 1, 'L', true);
 
 $pdf->SetFont('Arial', '', 7);
 $pdf->SetXY(55, 97);
-$pdf->MultiCell(90, 5, $U_O, 1, 'L', true);
+$pdf->MultiCell(90, 5, $unidadMinera, 1, 'L', true);
 
 // Fila: REFERENCIA
 $pdf->SetFont('Arial', 'B', 8);
@@ -360,40 +304,78 @@ $pdf->SetFillColor(254, 191, 0);
 $pdf->SetFont('Arial', 'B', 8);
 $pdf->Cell(10, 6, 'Item', 1, 0, 'C', true);
 $pdf->Cell(20, 6, utf8_decode('Código'), 1, 0, 'C', true);
-$pdf->Cell(60, 6, utf8_decode('Descripción'), 1, 0, 'C', true);
+$pdf->Cell(65, 6, utf8_decode('Descripción'), 1, 0, 'C', true);
 $pdf->Cell(15, 6, 'Cantidad', 1, 0, 'C', true);
 $pdf->Cell(10, 6, 'U.m', 1, 0, 'C', true);
-$pdf->Cell(25, 6, 'Valor Unitario', 1, 0, 'C', true);
-$pdf->Cell(25, 6, 'Totales', 1, 0, 'C', true);
-$pdf->Cell(25, 6, 'Unidad Minera', 1, 1, 'C', true);
+$pdf->Cell(20, 6, 'Valor Unitario', 1, 0, 'C', true);
+$pdf->Cell(20, 6, 'Totales', 1, 0, 'C', true);
+$pdf->Cell(30, 6, 'Unidad Minera', 1, 1, 'C', true);
 
 // Filas
 foreach ($detalle as $i => $item) {
     $pdf->SetFont('Arial', '', 6);
     $resMovimientoBienDetalle = MovimientoBien::create()->obtenerMovimientoBienDetalleObtenerUnidadMinera($item->movimientoBienId, $banderaUrgencia);
-    $cantidadSaltos = (substr_count($resMovimientoBienDetalle[0]['cantidad_requerimiento'], "\n") + 1);
-    $pdf->Cell(10, (4 * $cantidadSaltos), $i + 1, 1, 0, 'C');
-    $pdf->Cell(20, (4 * $cantidadSaltos), $item->bien_codigo, 1);
-    $pdf->Cell(60, (4 * $cantidadSaltos), $item->descripcion, 1);
-    $pdf->Cell(15, (4 * $cantidadSaltos), number_format($item->cantidad, 2), 1, 0, 'R');
-    $pdf->Cell(10, (4 * $cantidadSaltos), $item->simbolo, 1, 0, 'C');
-    $pdf->Cell(25, (4 * $cantidadSaltos), number_format($item->precioUnitario, 2), 1, 0, 'R');
-    $pdf->Cell(25, (4 * $cantidadSaltos), number_format($item->importe, 2), 1, 0, 'R');
+    $resultado = [];
+    foreach ($resMovimientoBienDetalle as $dato) {
+        $unidad = $dato['unidad_minera'];
+        $cantidad = floatval($dato['cantidad_requerimiento_area']);
+        if (!isset($resultado[$unidad])) {
+            $resultado[$unidad] = 0;
+        }
+        $resultado[$unidad] += $cantidad;
+    }
+    // Crear la cadena formateada
+    $textoFinal = "";
+    foreach ($resultado as $unidad => $total) {
+        $textoFinal .= "$unidad: " . rtrim(number_format($total, 0, '.', '')) . "\n";
+    }
+
+    $cantidadSaltos = substr_count($textoFinal, "\n");
+    $pdf->SetFont('Arial', '', 6);
+    // Altura de línea base
+    $lineHeight = 4;
+    // Calcular altura necesaria para descripcion
+    $descripcion = insertarSaltosLinea($item->descripcion, 45);
+    $nbLines = (substr_count($descripcion, "\n") + 1);
+    $descripcionHeight = max($lineHeight * $cantidadSaltos, $lineHeight * $nbLines);
+    
+    if($descripcionHeight > $lineHeight){
+        $lineHeight = $descripcionHeight;
+    }
+
+    // Guardar posición X e Y antes de MultiCell
+    $x = $pdf->GetX();
+    $y = $pdf->GetY();
+
+    $pdf->Cell(10, $descripcionHeight, $i + 1, 1, 0, 'C');
+    $pdf->Cell(20, $descripcionHeight, $item->bien_codigo, 1, 0);
+    
+    // Usar MultiCell para descripcion
+    $pdf->SetXY($x + 30, $y); // Ajustar al punto donde empieza la celda de descripcion
+    $pdf->MultiCell(65, ($nbLines < 2 ? $descripcionHeight: 4), $descripcion, 1);
+
+    // Volver a la posición X al lado derecho de la MultiCell
+    $pdf->SetXY($x + 95, $y);
+    $pdf->Cell(15, $descripcionHeight, number_format($item->cantidad, 2), 1, 0, 'R');
+    $pdf->Cell(10, $descripcionHeight, $item->simbolo, 1, 0, 'C');
+    $pdf->Cell(20, $descripcionHeight, number_format($item->precioUnitario, 2), 1, 0, 'R');
+    $pdf->Cell(20, $descripcionHeight, number_format($item->importe, 2), 1, 0, 'R');
+
     $pdf->SetFont('Arial', '', 4);
-    $pdf->MultiCell(25,  4, $resMovimientoBienDetalle[0]['cantidad_requerimiento'], 1, 1);
+    $pdf->MultiCell(30,  (4 * $nbLines), $textoFinal, 1);
 }
 
 // Agrega las celdas vacías si hay menos de 20 filas
-for ($i = count($detalle); $i < 20; $i++) {
+for ($i = count($detalle); $i < 15; $i++) {
     $pdf->SetFont('Arial', '', 6);
     $pdf->Cell(10, 4, $i + 1, 1, 0, 'C');
     $pdf->Cell(20, 4, '', 1);
-    $pdf->Cell(60, 4, '', 1);
+    $pdf->Cell(65, 4, '', 1);
     $pdf->Cell(15, 4, '', 1);
     $pdf->Cell(10, 4, '', 1);
-    $pdf->Cell(25, 4, '', 1);
-    $pdf->Cell(25, 4, '', 1);
-    $pdf->Cell(25, 4, '', 1, 1);
+    $pdf->Cell(20, 4, '', 1);
+    $pdf->Cell(20, 4, '', 1);
+    $pdf->Cell(30, 4, '', 1, 1);
 }
 
 $tablaHeight = $pdf->GetY();
@@ -401,7 +383,7 @@ $espacio = 0;  // Inicializar el espacio
 $paginaAltura = $pdf->getPageHeight();  // Altura total de la página
 $alturaDisponible = $paginaAltura - $tablaHeight - 20;
 // Ahora puedes ajustar el valor de $espacio basado en el espacio disponible
-if ($alturaDisponible > 20) {
+if ($alturaDisponible > 70) {
     // Si hay mucho espacio, usa ese espacio
     $espacio = $tablaHeight + 2;  // Ajusta un pequeño margen después de la tabla
 } else {
@@ -520,29 +502,29 @@ $pdf->SetXY(150, $espacio + 25);
 if (!ObjectUtil::isEmpty($resultadoMatriz[0]['firma_digital'])) {
     $pdf->Image($personaFirma1, 150,  $espacio + 25, 45, 20);
 }
-$pdf->SetFont('helvetica', '', 6);
+$pdf->SetFont('Arial', '', 6);
 $pdf->SetXY(110, $espacio + 30);
 $pdf->MultiCell(39, 3, 'JEFE DE LOGISTICA', 0, 'C', true);
 
-$pdf->SetFont('helvetica', 'B', 8);
+$pdf->SetFont('Arial', 'B', 8);
 $pdf->SetXY(110, $espacio + 38);
 $pdf->MultiCell(39, 5, 'Autorizado por.', 0, 'C', true);
 $pdf->SetXY(150, $espacio + 38);
 $pdf->MultiCell(50, 10, '', 1, 'C', true); //Revisar
-$pdf->SetFont('helvetica', '', 6);
+$pdf->SetFont('Arial', '', 6);
 $pdf->SetXY(110, $espacio + 43);
 $pdf->MultiCell(39, 3, 'COMPRADOR', 0, 'C', true);
 
-$pdf->SetFont('helvetica', 'B', 8);
+$pdf->SetFont('Arial', 'B', 8);
 $pdf->SetXY(110, $espacio + 51);
 $pdf->MultiCell(39, 5, 'Autorizado por.', 0, 'C', true);
 $pdf->SetXY(150, $espacio + 51);
 $pdf->MultiCell(50, 10, '', 1, 'C', true); //Revisar
-$pdf->SetFont('helvetica', '', 6);
+$pdf->SetFont('Arial', '', 6);
 $pdf->SetXY(110, $espacio + 56);
 $pdf->MultiCell(39, 3, 'GERENTE GENERAL', 0, 'C', true);
 
-$pdf->SetFont('helvetica', '', 4);
+$pdf->SetFont('Arial', '', 4);
 $pdf->SetXY(10, $espacio + 63);
 $pdf->MultiCell(150, 2, utf8_decode('El horario de recepción es de lunes a viernes de 8:00 am a 1:00 pm; los documentos que envíen después de este horario o los días sábados, domingos y feriados serán considerados como recibidos a partir'), 0, 'L', true);
 $pdf->SetXY(10, $espacio + 65);
@@ -552,39 +534,33 @@ $pdf->MultiCell(150, 2, utf8_decode('El pago es semanal todos los jueves, se pro
 
 
 
-// $pdf->AddPage();
-
-// $distribucionPagos = OrdenCompraServicio::create()->obtenerDistribucionPagos($documentoId);
-// $cont_distribucionPagos = 0;
-// $pdf->SetFont('helvetica', '', 7);
-// $tabla_distribucionPagos = '<table cellspacing="0" cellpadding="1" border="1">
-//     <tr style="background-color:rgb(254, 191, 0);">
-//         <th style="text-align:center;vertical-align:middle;" width="5%"><b>Item</b></th>
-//         <th style="text-align:center;vertical-align:middle;" width="45%"><b>Importe</b></th>
-//         <th style="text-align:center;vertical-align:middle;" width="50%"><b>Porcentaje</b></th>
-//     </tr>
-// ';
-// if (!ObjectUtil::isEmpty($distribucionPagos)) {
-//   foreach ($distribucionPagos as $index => $item) {
-//     $cont_distribucionPagos++;
-
-//     $tabla_distribucionPagos = $tabla_distribucionPagos . '<tr>'
-//       . '<td style="text-align:center"  width="5%">' . ($index + 1) . '</td>'
-//       . '<td style="text-align:center"  width="45%">' . number_format($item['importe'], 2) . '</td>'
-//       . '<td style="text-align:center"  width="50%">' . number_format($item['porcentaje'], 2) . '</td>'
-//       . '</tr>';
-//   }
-// }
-// $tabla_distribucionPagos = $tabla_distribucionPagos . '</table>';
-
-// $tabla_distribucionPagosTitulo = '<div style="text-align: center;"> <h3>DISTRIBUCIÓN DE PAGOS</h3></div> <div style="text-align: justify;"></div>';
-// $pdf->writeHTML($tabla_distribucionPagosTitulo, true, false, true, false, '');
-
-// $pdf->writeHTML($tabla_distribucionPagos, true, false, true, false, '');
 $pdf->AddPage();
-$pdf->Image('C:\wamp64\www\sgiPepas\vistas\images\Condiciones1.jpg', 0, 0, 210, 350);
+$pdf->Ln(5); // Espacio antes del título
+$pdf->SetFont('Arial', 'B', 12);
+$pdf->Cell(0, 10, utf8_decode('DISTRIBUCIÓN DE PAGOS'), 0, 1, 'C');
+
+$distribucionPagos = OrdenCompraServicio::create()->obtenerDistribucionPagos($documentoId);
+$cont_distribucionPagos = 0;
+$pdf->SetFont('Arial', 'B', 8);
+$pdf->SetFillColor(254, 191, 0);
+$pdf->Cell(10, 7, 'Item', 1, 0, 'C', true);
+$pdf->Cell(90, 7, 'Importe', 1, 0, 'C', true);
+$pdf->Cell(90, 7, 'Porcentaje %', 1, 1, 'C', true);
+
+$pdf->SetFont('Arial', '', 7);
+if (!ObjectUtil::isEmpty($distribucionPagos)) {
+    foreach ($distribucionPagos as $index => $item) {
+        $pdf->Cell(10, 8, $index + 1, 1, 0, 'C');
+        $pdf->Cell(90, 8, number_format($item['importe'], 2), 1, 0, 'C');
+        $pdf->Cell(90, 8, number_format($item['porcentaje'], 2), 1, 1, 'C');
+    }
+}
 
 $pdf->AddPage();
-$pdf->Image('C:\wamp64\www\sgiPepas\vistas\images\Condiciones2.jpg', 0, 0, 210, 350);
+
+$pdf->Image(__DIR__ .'/../../../vistas/images/Condiciones1.jpg', 0, 0, 210, 350);
+
+$pdf->AddPage();
+$pdf->Image(__DIR__ .'/../../../vistas/images/Condiciones2.jpg', 0, 0, 210, 350);
 
 $pdf->Output();

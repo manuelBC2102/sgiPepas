@@ -6,10 +6,10 @@ include_once __DIR__ . '../../../modeloNegocio/almacen/PersonaNegocio.php';
 include_once __DIR__ . '../../../modeloNegocio/almacen/DocumentoNegocio.php';
 
 //284 = Orden de Servicio
-// 285 = Orden de Compra
+//282 = Orden de Compra
 
-$documentoId = 4878;
-$documentoTipoId = 284;
+$documentoId = 4971;
+$documentoTipoId = 282;
 
 $data = MovimientoNegocio::create()->imprimir($documentoId, $documentoTipoId);
 
@@ -56,6 +56,7 @@ $serieNumeroCotizacion = '';
 $serieNumeroSolicitudRequerimiento = '';
 $cuenta = '';
 $dataRelacionada = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoId($documentoId);
+$banderaUrgencia = 0;
 foreach ($dataRelacionada as $itemRelacion) {
     if ($itemRelacion['documento_tipo_id'] == Configuraciones::COTIZACIONES || $itemRelacion['documento_tipo_id'] == Configuraciones::COTIZACION_SERVICIO) {
         $serieNumeroCotizacion = $itemRelacion['serie_numero'];
@@ -69,14 +70,35 @@ foreach ($dataRelacionada as $itemRelacion) {
                 case 52:
                     $cuenta .= $item['valor'] . ", ";
                     break;
+                case 52:
+                    $cuenta .= $item['valor'] . ", ";
+                    break;                    
+                case 4:
+                    if ($item['descripcion'] == "Urgencia" && $item['valor'] == "Si") {
+                        $banderaUrgencia = 1;
+                    }
+                    break;                    
             }
         }
+    }
+    if ($itemRelacion['documento_tipo_id'] == Configuraciones::COTIZACION_SERVICIO) {
+        $banderaUrgencia = 2;
     }
 }
 
 foreach ($detalle as $i => $item) {
-    $resMovimientoBienDetalle = MovimientoBien::create()->obtenerMovimientoBienDetalleObtenerUnidadMinera($item->movimientoBienId);
-    $detalle->cantidad_requerimiento = $resMovimientoBienDetalle[0]['cantidad_requerimiento'];
+    $resMovimientoBienDetalle = MovimientoBien::create()->obtenerMovimientoBienDetalleObtenerUnidadMinera($item->movimientoBienId, $banderaUrgencia);
+    $resultado = [];
+    foreach ($resMovimientoBienDetalle as $dato) {
+        $unidad = $dato['unidad_minera'];
+        $cantidad = floatval($dato['cantidad_requerimiento_area']);
+        if (!isset($resultado[$unidad])) {
+            $resultado[$unidad] = 0;
+        }
+        $resultado[$unidad] += $cantidad;
+    }
+
+    $detalle[$i]->cantidad_requerimiento = $resultado;
 }
 
 $response = [
