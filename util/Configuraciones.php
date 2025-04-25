@@ -138,7 +138,9 @@ class Configuraciones
   const COTIZACION_SERVICIO = 285;
   const INGRESO_RESERVA_STOCK = 286;
   const SALIDA_RESERVA_STOCK = 287;
-
+  const GENERAR_COTIZACION_SERVICIO = 288;
+  const RECEPCION = 10;
+  
   const MOVIMIENTO_TIPO_SOLICITUD_REQUERIMIENTO= 144;
 
   // URL de facturacion electrónica

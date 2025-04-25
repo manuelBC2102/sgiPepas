@@ -42,7 +42,7 @@ class OrdenCompraServicioNegocio extends ModeloNegocioBase
         $formaOrdenar = $order[0]['dir'];
         $columnaOrdenar = $columns[$columnaOrdenarIndice]['data'];
 
-        return OrdenCompraServicio::create()->obtenerOrdenCompraServicioXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $columnaOrdenar, $formaOrdenar, $elementosFiltrados, $start);
+        return OrdenCompraServicio::create()->obtenerOrdenCompraServicioXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, null, $columnaOrdenar, $formaOrdenar, $elementosFiltrados, $start);
     }
 
     public function obtenerCantidadOrdenCompraServicioXCriterios($criterios, $columns, $order)
@@ -57,7 +57,7 @@ class OrdenCompraServicioNegocio extends ModeloNegocioBase
         $columnaOrdenar = $columns[$columnaOrdenarIndice]['data'];
 
 
-        return OrdenCompraServicio::create()->obtenerCantidadOrdenCompraServicioXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $columnaOrdenar, $formaOrdenar);
+        return OrdenCompraServicio::create()->obtenerCantidadOrdenCompraServicioXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, null, $columnaOrdenar, $formaOrdenar);
     }
 
     private function formatearFechaBD($cadena)
@@ -68,51 +68,56 @@ class OrdenCompraServicioNegocio extends ModeloNegocioBase
         return "";
     }
 
-    public function visualizarOrdenCompraServicio($id, $movimientoId){
+    public function visualizarOrdenCompraServicio($id, $movimientoId)
+    {
         $respuesta = new stdClass();
         $detalle =  MovimientoBien::create()->obtenerXIdMovimiento($movimientoId);
         $respuesta->dataDocumento = DocumentoNegocio::create()->obtenerDetalleDocumento($id);
 
-        foreach($detalle as $index => $item){
-            $detalle[$index]["subTotal_precio_postor1"] = $item["cantidad"] * $item["precio_postor1"];
-            $detalle[$index]["subTotal_precio_postor2"] = $item["cantidad"] * $item["precio_postor2"];
-            $detalle[$index]["subTotal_precio_postor3"] = $item["cantidad"] * $item["precio_postor3"];
-        }
-
         $respuesta->detalle = $detalle;
-
         return $respuesta;
     }
 
-    public function cargarArchivosAdjuntos($documentoId, $lstDocumentoArchivos, $lstDocEliminado,$usuarioId){
+    public function cargarArchivosAdjuntos($documentoId, $lstDocumentoArchivos, $lstDocEliminado, $usuarioId)
+    {
         $documento = Documento::create()->obtenerDocumentoDatos($documentoId);
+        $documentoAdjuntos = DocumentoNegocio::create()->obtenerDocumentoAdjuntoXDocumentoId($documentoId);
 
-        foreach($lstDocumentoArchivos as $index => $item){
-            if($item['tipo_archivoId'] == 4){
-                if (strpos($item['id'], 't') == 0) {
+        $sumaMontos  = array_reduce($documentoAdjuntos, function ($acumulador, $seleccion) {
+            if($seleccion['estado'] == 2 || $seleccion['estado'] == 1){
+                return $acumulador + $seleccion['contenido_archivo'];
+            }
+          }, 0);
+
+        foreach ($lstDocumentoArchivos as $index => $item) {
+            if ($item['tipo_archivoId'] == 4) {
+                if (strpos($item['id'], 't') !== false) {
                     $decode = Util::base64ToImage($item['data']);
                     $xml = simplexml_load_string($decode);
                     if ($xml === false) {
-                            throw new WarningException("Error al leer archivo XML");
-                    }else{
+                        throw new WarningException("Error al leer archivo XML");
+                    } else {
                         // Buscar el RUC del emisor (Proveedor) en el XML
                         $ruc_emisor = (string) $xml->children('cac', true)->AccountingSupplierParty->children('cac', true)->Party->children('cac', true)->PartyIdentification->children('cbc', true)->ID;
                         //validar ruc
                         $mensaje = '';
-                        if(trim($ruc_emisor) != trim($documento[0]['persona_ruc'])){
-                                $mensaje = 'El ruc no coicide con la orden de compra';
+                        if (trim($ruc_emisor) != trim($documento[0]['persona_ruc'])) {
+                            $mensaje = 'El ruc no coicide con la orden de compra';
                         }
                         //falta validar monto total con la Orden de compra
                         $montoTotalFactura = (string) $xml->children('cac', true)->TaxTotal->children('cbc', true)->TaxAmount;
 
-                        Documento::create()->obtenerDocumentoAdjuntoXDocumentoId($documentoId);
+                        $montoTotal = $sumaMontos + $montoTotalFactura;
+
                         $total = $documento[0]["total"];
+                        if($total <= $montoTotal){
+                            $mensaje = 'La suma de las facturas no coicide con la orden de compra';
+                        }
 
                         $lstDocumentoArchivos[$index]["contenido_archivo"] = $montoTotalFactura;
-
                     }
 
-                    if(!ObjectUtil::isEmpty($mensaje)){
+                    if (!ObjectUtil::isEmpty($mensaje)) {
                         throw new WarningException($mensaje);
                     }
                 }
@@ -136,21 +141,34 @@ class OrdenCompraServicioNegocio extends ModeloNegocioBase
                 //     }
                 // }
             }
-
         }
-        
+
         $resAdjunto = MovimientoNegocio::create()->guardarArchivosXDocumentoID($documentoId, $lstDocumentoArchivos, $lstDocEliminado, $usuarioId);
 
         if ($resAdjunto[0]['vout_exito'] != 1) {
             throw new WarningException($resAdjunto[0]['vout_mensaje']);
         }
-        
+
         $respuesta =  new stdClass();
         $respuesta->mensaje = $resAdjunto[0]['vout_mensaje'];
         $respuesta->data = DocumentoNegocio::create()->obtenerDocumentoAdjuntoXDocumentoId($documentoId);
         return  $respuesta;
     }
- 
+
+    public function aprobarRechazar($documentoAdjuntoId, $accion, $razonRechazo, $usuarioId, $documentoId)
+    {
+        if ($accion == 'AP') {
+            $res = OrdenCompraServicio::create()->aprobarRechazarDocumentoAdjunto($documentoAdjuntoId, 2, $razonRechazo);
+        } elseif ($accion == 'RE') {
+            $res = OrdenCompraServicio::create()->aprobarRechazarDocumentoAdjunto($documentoAdjuntoId, 3, $razonRechazo);
+        }
+
+        $respuesta =  new stdClass();
+        $respuesta->data = DocumentoNegocio::create()->obtenerDocumentoAdjuntoXDocumentoId($documentoId);
+        $respuesta->accion = $accion == "AP"? "aprobado":"rechazado";
+        return  $respuesta;
+    }
+
     // public function visualizarDistribucionPagos($documentoId){
     //     return OrdenCompraServicio::create()->obtenerDistribucionPagos($documentoId);
     // }
@@ -218,13 +236,13 @@ class OrdenCompraServicioNegocio extends ModeloNegocioBase
     //         }
 
     //     }
-        
+
     //     $resAdjunto = $this->guardarArchivosXDistribucionPagoID($distribucionPagoId, $lstDocumentoArchivos, $lstDocEliminado, $usuarioId);
 
     //     if ($resAdjunto[0]['vout_exito'] != 1) {
     //         throw new WarningException($resAdjunto[0]['vout_mensaje']);
     //     }
-        
+
     //     $respuesta->mensaje = $resAdjunto[0]['vout_mensaje'];
     //     $respuesta->data = OrdenCompraServicio::create()->obtenerDocumentoAdjuntoXDistribucionPagos($distribucionPagoId);
     //     return  $respuesta;
@@ -246,24 +264,24 @@ class OrdenCompraServicioNegocio extends ModeloNegocioBase
     //     //Insertando documento_adjunto
     //     foreach ($lstDocumento as $d) {
     //       //Se valida que el ID contenga el prefijo temporal "t" para que se opere, si no lo encuentra ya estaría registrado
-  
+
     //       if (strpos($d['id'], 't') !== false) {
-  
+
     //         //DOCUMENTO ADJUNTO
     //         if (!ObjectUtil::isEmpty($d['data'])) {
-  
+
     //           $decode = Util::base64ToImage($d['data']);
     //           $nombreArchivo = $d['archivo'];
     //           $pos = strripos($nombreArchivo, '.');
     //           $ext = substr($nombreArchivo, $pos);
-  
+
     //           $hoy = date("YmdHis").substr((string)microtime(), 2, 3);;
     //           $nombreGenerado = $distribucionPagoId . $hoy . $usuCreacion . $ext;
     //           $url = __DIR__ . '/../../util/uploads/documentoAdjunto/' . $nombreGenerado;
-  
+
     //           file_put_contents($url, $decode);
     //           $tipo_archivoId = $d["tipo_archivoId"];
-  
+
     //           $contenido_archivo = $d["contenido_archivo"];
     //           $resAdjunto = OrdenCompraServicio::create()->insertarActualizarDocumentoAdjunto(null, $distribucionPagoId, $nombreArchivo, $nombreGenerado, $usuCreacion, null,$tipo_archivoId, $contenido_archivo);
     //           if ($resAdjunto[0]['vout_exito'] != 1) {

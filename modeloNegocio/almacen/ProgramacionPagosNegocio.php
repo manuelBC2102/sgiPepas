@@ -88,6 +88,7 @@ class ProgramacionPagosNegocio extends ModeloNegocioBase
 
     public function registrarProgramacionPagos($filasSeleccionadas, $fecha_programacion, $tipo, $moneda, $usuario)
     {
+        $moneda = ObjectUtil::isEmpty($moneda)? 2 : $moneda;
         $sumaMontos = array_reduce($filasSeleccionadas, function ($acumulador, $seleccion) {
             return $acumulador + $seleccion['total'];
         }, 0);
@@ -312,9 +313,9 @@ class ProgramacionPagosNegocio extends ModeloNegocioBase
         $hoy = date("YmdHis");
         $nombreGenerado = $programacionId . $hoy . $usuario .".". $ext;
         if($ext == "pdf"){
-            $url = __DIR__ . '/../../util/uploads/documentoAdjunto/' . $nombreGenerado;
+            $url = __DIR__ . '/../../vistas/com/programacionPagos/documentoAdjunto/' . $nombreGenerado;
         }else{
-            $url = __DIR__ . '/../../util/uploads/imagenAdjunto/' . $nombreGenerado;
+            $url = __DIR__ . '/../../vistas/com/programacionPagos/documentoAdjunto/' . $nombreGenerado;
         }
 
         file_put_contents($url, $decode);

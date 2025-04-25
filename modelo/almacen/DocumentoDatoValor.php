@@ -19,7 +19,7 @@ class DocumentoDatoValor extends ModeloBase {
         $this->commandPrepare("sp_documento_dato_valor_guardar");
         $this->commandAddParameter(":vin_documento_id", $documentoId);
         $this->commandAddParameter(":vin_documento_tipo_dato_id", $documentoTipoDatoId);
-        $this->commandAddParameter(":vin_valor_numero", $valorNumero);
+        $this->commandAddParameter(":vin_valor_numero", $valorNumero == ""? null:$valorNumero);
         $this->commandAddParameter(":vin_valor_fecha", $valorFecha == ""? null:$valorFecha);
         $this->commandAddParameter(":vin_valor_cadena", $valorCadena);
         $this->commandAddParameter(":vin_valor_lista", $valorLista==""?null:$valorLista);

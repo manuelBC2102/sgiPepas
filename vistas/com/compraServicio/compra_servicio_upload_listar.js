@@ -40,6 +40,21 @@ function onResponseAprobacionOrdenCompraServicio(response) {
                 lstDocumentoArchivos = response.data.data;
                 onResponseListarArchivosDocumento(response.data.data);
                 break;
+            case 'aprobarRechazar':
+                $("#modalRechazarDocumento").modal('hide');
+                swal({
+                    title: "Documentos "+ response.data.accion +" correctamente",
+                    text: response.data.mensaje,
+                    type: "success",
+                    showCancelButton: false,
+                    confirmButtonColor: "#33b86c",
+                    confirmButtonText: "Aceptar",
+                    closeOnConfirm: false,
+                    closeOnCancel: false
+                });
+                lstDocumentoArchivos = response.data.data;
+                onResponseListarArchivosDocumento(response.data.data);
+                break;
         }
     }else{
         switch (response[PARAM_ACCION_NAME]) {
@@ -419,7 +434,7 @@ $("#btnAgregarDoc").click(function fileIsLoaded(e) {
             case 4 : //Xml factura y Cdr factura
             var mimeType = filePath.match(/^data:(.*?);base64/);
                 if(mimeType[1] != "text/xml"){
-                    mostrarAdvertencia('El archivo tiene que ser de extensión .xlsx o .xls');
+                    mostrarAdvertencia('El archivo tiene que ser de extensión .xml');
                     loaderClose();
                     return;
                 }
@@ -429,9 +444,11 @@ $("#btnAgregarDoc").click(function fileIsLoaded(e) {
         var esUnico = false;
         if (!isEmpty(lstDocumentoArchivos)) {
             for (let i = 0; i < lstDocumentoArchivos.length; i++) {
-                if (lstDocumentoArchivos[i].tipo_archivoId == select2.obtenerValor('cboTipoArchivo')) {
-                    esUnico = true;
-                    break;
+                if(lstDocumentoArchivos[i].tipo_archivoId != 4){
+                    if (lstDocumentoArchivos[i].tipo_archivoId == select2.obtenerValor('cboTipoArchivo')) {
+                        esUnico = true;
+                        break;
+                    }
                 }
             }
         }
@@ -458,6 +475,8 @@ $("#btnAgregarDoc").click(function fileIsLoaded(e) {
                 $("#msjDocumento").hide();
             } else {
                 onResponseListarArchivosDocumento(lstDocumentoArchivos);
+                $("#archivoAdjuntoMulti").val("");
+                $("#dataArchivoMulti").val("");
             }
         }
 
@@ -484,6 +503,8 @@ function onResponseListarArchivosDocumento(data) {
         + "<th style='text-align:center; vertical-align: middle; width:8%'>#</th>"
         + "<th style='text-align:center; vertical-align: middle;'>Tipo Archivo</th>"
         + "<th style='text-align:center; vertical-align: middle;'>Nombre</th>"
+        + "<th style='text-align:center; vertical-align: middle;'>Total factura</th>"
+        + "<th style='text-align:center; vertical-align: middle;'>Estado</th>"
         + "<th style='text-align:center; vertical-align: middle; width:15%'>Acciones</th>"
         + "</tr>"
         + "</thead>";
@@ -496,14 +517,19 @@ function onResponseListarArchivosDocumento(data) {
             cuerpo = "<tr>"
                 + "<td style='text-align:center;'>" + (index + 1) + "</td>"
                 + "<td style='text-align:center;'>" + item.tipo_archivo + "</td>"
-                + "<td style='text-align:center;'>" + item.archivo + "</td>";
+                + "<td style='text-align:center;'>" + item.archivo + "</td>"
+                + "<td style='text-align:center;'>" +  (item.contenido_archivo == null ? "":item.contenido_archivo)  + "</td>"
+                + "<td style='text-align:center;'>" + item.estado_descripcion + "</td>";
 
             cuerpo += "<td style='text-align:center;'>"
-                + "<a href='" + item.data + "' download='" + item.archivo + "' target='_blank'><i class='fa fa-cloud-download' style='color:#1ca8dd;'></i></a>&nbsp;\n"
-                + "<a href='#' onclick='eliminarDocumento(\"" + item.id + "\")'><i class='fa fa-trash-o' style='color:#cb2a2a;'></i></a>&nbsp;\n";
-            // if (!item.id.match(/t/g)) {
-            //     cuerpo += "<a href='#' onclick='rechazarDocumento(\"" + item.id + "\")'><i class='fa fa-times' style='color:red;'></i></a>&nbsp;\n";
-            // }
+                + "<a href='" + item.data + "' download='" + item.archivo + "' target='_blank'><i class='fa fa-cloud-download' style='color:#1ca8dd;'></i></a>&nbsp;\n";
+            if(item.estado == 1 && item.tipo_archivoId == 4){
+                cuerpo += "<a href='#' onclick='eliminarDocumento(\"" + item.id + "\")'><i class='fa fa-trash-o' style='color:#cb2a2a;'></i></a>&nbsp;\n";
+                // if (!item.id.match(/t/g)) {
+                    cuerpo += "<a href='#' onclick='rechazarDocumento(\"" + item.id + "\")'><i class='fa fa-times' style='color:red;'></i></a>&nbsp;\n";
+                    cuerpo += "<a href='#' onclick='aprobarDocumento(\"" + item.id + "\")'><i class='fa fa-check' style='color:blue;'></i></a>&nbsp;\n";
+                // }
+            }
             cuerpo += "</td>"
                 + "</tr>";
             cuerpo_total += cuerpo;
@@ -608,3 +634,34 @@ function onResponseListarArchivosDistribucionPago(data) {
     $("#datatable3DistribucionPagos").DataTable();
 }
 
+function rechazarDocumento(id){
+    $("#modalRechazarDocumento").modal("show");
+    $("#documentoAdjuntoId").val(id);
+}
+
+function confirmarRechazo() {
+    debugger;
+    var inputValue = $("#txtMotivoRechazo").val();
+    var documentoAdjuntoId = $("#documentoAdjuntoId").val();
+    if (inputValue === "" || isEmpty(inputValue.trim())) {
+        $("#txtMotivoRechazo").html('Debe ingresar un motivo').show();
+        return;
+    } else {
+        aprobarRechazarVistoBueno('RE', documentoAdjuntoId, inputValue);
+    }
+}
+
+function aprobarRechazarVistoBueno(accion, documentoAdjuntoId, razonRechazo) {
+    loaderShow('#modalRechazarDocumento');
+    var documentoId = documentoIdGlobal;
+    ax.setAccion("aprobarRechazar");
+    ax.addParamTmp("accion", accion);
+    ax.addParamTmp("documentoAdjuntoId", documentoAdjuntoId);
+    ax.addParamTmp("razonRechazo", razonRechazo);
+    ax.addParamTmp("documentoId", documentoId);
+    ax.consumir();
+}
+
+function aprobarDocumento(documentoAdjuntoId){
+    aprobarRechazarVistoBueno('AP', documentoAdjuntoId, null);
+}

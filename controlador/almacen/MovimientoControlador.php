@@ -551,7 +551,7 @@ class MovimientoControlador extends AlmacenIndexControlador
       $stringAcciones = '';
       for ($j = 0; $j < count($responseAcciones); $j++) {
         if (($data[$i]['documento_estado_id'] == 2) &&
-          ($responseAcciones[$j]['id'] == 3 || $responseAcciones[$j]['id'] == 4 || $responseAcciones[$j]['id'] == 13 || $responseAcciones[$j]['id'] == 14 || $responseAcciones[$j]['id'] == 19 || $responseAcciones[$j]['id'] == 33 || ($responseAcciones[$j]['id'] == 1 && $data[$i]['efact_ws_estado'] != 0) || ($responseAcciones[$j]['id'] == 28 && $data[$i]['efact_ws_estado'] != 0) || ($responseAcciones[$j]['id'] == 29 && $data[$i]['efact_ws_estado'] != 0))
+          ($responseAcciones[$j]['id'] == 3 || $responseAcciones[$j]['id'] == 4 || $responseAcciones[$j]['id'] == 13 || $responseAcciones[$j]['id'] == 14 || $responseAcciones[$j]['id'] == 19 || $responseAcciones[$j]['id'] == 33 || $responseAcciones[$j]['id'] == 34 || ($responseAcciones[$j]['id'] == 1 && $data[$i]['efact_ws_estado'] != 0) || ($responseAcciones[$j]['id'] == 28 && $data[$i]['efact_ws_estado'] != 0) || ($responseAcciones[$j]['id'] == 29 && $data[$i]['efact_ws_estado'] != 0))
         ) { //13 y 14 acciones para QR. 19 Editar
           $stringAcciones .= '';
         } elseif ($responseAcciones[$j]['id'] == 1 && $data[$i]['efact_ws_estado'] != 0 && ObjectUtil::isEmpty($data[$i]['efact_pdf_nombre'])) {
@@ -590,9 +590,12 @@ class MovimientoControlador extends AlmacenIndexControlador
         } elseif ((($data[$i]['documento_estado_id'] == 9) && ($responseAcciones[$j]['id'] == 3))) {
           //
           $stringAcciones .= '';    
-        } elseif ((($data[$i]['documento_estado_id'] == 17) && ($responseAcciones[$j]['id'] == 33))) {
+        } elseif ((($data[$i]['documento_estado_id'] == 17 || $data[$i]['documento_estado_id'] == 3) && ($responseAcciones[$j]['id'] == 33))) {
           //
           $stringAcciones .= '';
+        } elseif ((($data[$i]['documento_estado_id'] == 17 || $data[$i]['documento_estado_id'] == 3) && ($responseAcciones[$j]['id'] == 34))) {
+          //
+          $stringAcciones .= '';          
         } elseif ($responseAcciones[$j]['id'] == 30 && ObjectUtil::isEmpty($data[$i]['orden_compra_serie_numero'])) {
           //
           $stringAcciones .= '';                        
@@ -791,14 +794,14 @@ class MovimientoControlador extends AlmacenIndexControlador
 
       }
 
-      if($dataDocumentoTipo[0]['id'] == Configuraciones::GENERAR_COTIZACION){
+      if($dataDocumentoTipo[0]['id'] == Configuraciones::GENERAR_COTIZACION || $dataDocumentoTipo[0]['id'] == Configuraciones::GENERAR_COTIZACION_SERVICIO){
         $dataRelacionada = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoId($documentoId);
         foreach($dataRelacionada as $itemRelacion){
-          if($itemRelacion['documento_tipo_id'] == Configuraciones::COTIZACIONES){
+          if($itemRelacion['documento_tipo_id'] == Configuraciones::COTIZACIONES || $itemRelacion['documento_tipo_id'] == Configuraciones::COTIZACION_SERVICIO){
             $respuestaAnular = MovimientoNegocio::create()->anularDocumento($itemRelacion['documento_relacionado_id'], $documentoEstadoId, $usuarioId, $idNegocio, $serie);
             $dataRelacionada2 = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoId($itemRelacion['documento_relacionado_id']);
             foreach($dataRelacionada2 as $itemRelacion2){
-              if($itemRelacion2['documento_tipo_id'] == Configuraciones::ORDEN_COMPRA){
+              if($itemRelacion2['documento_tipo_id'] == Configuraciones::ORDEN_COMPRA || $itemRelacion2['documento_tipo_id'] == Configuraciones::ORDEN_SERVICIO){
                 $respuestaAnular = MovimientoNegocio::create()->anularDocumento($itemRelacion2['documento_relacionado_id'], $documentoEstadoId, $usuarioId, $idNegocio, $serie);
               }
             }
@@ -1981,6 +1984,11 @@ class MovimientoControlador extends AlmacenIndexControlador
   public function obtenerDetalleBienRequerimiento(){
     $movimientoBienId = $this->getParametro("movimientoBienId");
     return MovimientoNegocio::create()->obtenerDetalleBienRequerimiento($movimientoBienId);
+  }
+
+  public function obtenerDetalleBienRequerimientoEditar(){
+    $movimientoBienId = $this->getParametro("movimientoBienId");
+    return MovimientoNegocio::create()->obtenerDetalleBienRequerimientoEditar($movimientoBienId);
   }
 
   public function exportarPdfCotizacion(){

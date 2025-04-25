@@ -13,13 +13,14 @@ class OrdenCompraServicio extends ModeloBase
         return parent::create();
     }
 
-    public function obtenerOrdenCompraServicioXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $columnaOrdenar, $formaOrdenar, $elementosFiltrados, $start)
+    public function obtenerOrdenCompraServicioXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $almacenId = null, $columnaOrdenar, $formaOrdenar, $elementosFiltrados, $start)
     {
         $this->commandPrepare("sp_ordenCompraServicio_obtenerXCriterios");
         $this->commandAddParameter(":vin_fecha_emision_desde", $fechaEmisionInicio);
         $this->commandAddParameter(":vin_fecha_emision_hasta", $fechaEmisionFin);
         $this->commandAddParameter(":vin_estado_id", $estadoId);
         $this->commandAddParameter(":vin_tipo_id", $tipoId);
+        $this->commandAddParameter(":vin_entrega_destino_id", $almacenId);
         $this->commandAddParameter(":vin_columna_ordenar", $columnaOrdenar);
         $this->commandAddParameter(":vin_forma_ordenar", $formaOrdenar);
         $this->commandAddParameter(":vin_limite", $elementosFiltrados);
@@ -27,13 +28,14 @@ class OrdenCompraServicio extends ModeloBase
         return $this->commandGetData();
     }
 
-    public function obtenerCantidadOrdenCompraServicioXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $columnaOrdenar, $formaOrdenar)
+    public function obtenerCantidadOrdenCompraServicioXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $almacenId, $columnaOrdenar, $formaOrdenar)
     {
         $this->commandPrepare("sp_ordenCompraServicio_obtenerXCriterios_contador");
         $this->commandAddParameter(":vin_fecha_emision_desde", $fechaEmisionInicio);
         $this->commandAddParameter(":vin_fecha_emision_hasta", $fechaEmisionFin);
         $this->commandAddParameter(":vin_estado_id", $estadoId);
         $this->commandAddParameter(":vin_tipo_id", $tipoId);
+        $this->commandAddParameter(":vin_entrega_destino_id", $almacenId);
         $this->commandAddParameter(":vin_columna_ordenar", $columnaOrdenar);
         $this->commandAddParameter(":vin_forma_ordenar", $formaOrdenar);
         return $this->commandGetData();
@@ -71,6 +73,15 @@ class OrdenCompraServicio extends ModeloBase
         $this->commandAddParameter(":vin_estado", $estado);
         $this->commandAddParameter(":vin_tipo_archivoId", $tipo_archivoId);
         $this->commandAddParameter(":vin_contenido_archivo", $contenido_archivo);
+        return $this->commandGetData();
+    }
+
+    public function aprobarRechazarDocumentoAdjunto($documentoAdjuntoId, $estado, $comentario)
+    {
+        $this->commandPrepare("sp_documento_adjuntoAprobarRechazar");
+        $this->commandAddParameter(":vin_id", $documentoAdjuntoId);
+        $this->commandAddParameter(":vin_estado", $estado);
+        $this->commandAddParameter(":vin_comentario", $comentario);
         return $this->commandGetData();
     }
 }

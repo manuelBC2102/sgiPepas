@@ -202,6 +202,7 @@
                                     <th style='text-align:center;'>Usuario</th>
                                     <th style='text-align:center;' hidden>PersonaId</th>
                                     <th style='text-align:center;' hidden>facturacionProveedorId</th>
+                                    <th style='text-align:center;'>Acc.</th>
                                 </tr>
                             </thead>
                         </table>

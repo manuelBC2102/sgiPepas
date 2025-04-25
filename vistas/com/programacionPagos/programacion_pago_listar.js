@@ -36,8 +36,10 @@ $(document).ready(function () {
         var tipo_operacion = select2.obtenerValor("cboTipo_operacion");
         if (tipo_operacion == 2) {
             $("#div_cboMoneda2").addClass("hidden");
+            select2.asignarValor("cboMoneda2", '');
         } else {
             $("#div_cboMoneda2").removeClass("hidden");
+            select2.asignarValor("cboMoneda2", 2);
         }
         obtenerDocumentosPagos();
     });
@@ -91,7 +93,7 @@ function onResponseProgramacionPagoListar(response) {
                     closeOnCancel: false
                 });
                 buscarDocumentos();
-                break;
+                break;                
         }
     }
 }
@@ -115,7 +117,7 @@ function obtenerFechaActualBD() {
     mes = (mes < 10) ? ('0' + mes) : mes;
     var anio = hoy.getFullYear();
 
-    return dia + "/" + mes + "/" + anio;
+    return dia+ "/" + mes + "/" + anio ;
 }
 
 function buscarDocumentos() {
@@ -189,13 +191,13 @@ function buscarDocumentos() {
                     } else {
                         muestraFecha = data;
                     }
-                    return muestraFecha;
+                    return muestraFecha;                
                 },
                 "targets": 4
             },
             {
                 "render": function (data, type, row) {
-                    return data == 1 ? "Registrado" : "Anulado";
+                    return data == 1 ? "Registrado" : data == 2 ?"Pagado": "Anulado";
                 },
                 "targets": 5
             },
@@ -203,16 +205,16 @@ function buscarDocumentos() {
                 "render": function (data, type, row) {
                     var acciones = "";
                     acciones += "<a href='#' onclick='visualizarProgramacion(" + row.id + ")'><i class='fa fa-eye' style='color:blue;' title='Ver detalle programación'></i></a>&nbsp;";
-                    if (row.estado == 1 && !isEmpty(row.url_pdf)) {
+                    if ((row.estado == 1 || row.estado == 2) && !isEmpty(row.url_pdf)) {
                         acciones += "<a href='#' onclick='anularProgramacion(" + row.id + ")'><i class='fa fa-ban' style='color:red;' title='Anular'></i></a>&nbsp;";
                         if (row.tipo_operacion == 1) {
                             acciones += "<a href='#' onclick='generarTXTPagos(" + row.id + ")'><i class='fa fa-file-text-o' style='color:green;' title='Generar txt Interbank'></i></a>&nbsp;";
                         } else {
                             acciones += "<a href='#' onclick='generarTXTPagosDetraccion(" + row.id + ")'><i class='fa fa-file-text-o' style='color:green;' title='Generar txt Detracciones'></i></a>&nbsp;";
                         }
-                        acciones += "<a href='#' onclick='verPdf(\"" + row.url_pdf + "\")'><i class='fa fa-cloud-download' style='color:blue;' title='Generar txt Detracciones'></i></a>&nbsp;";
+                        acciones += "<a href='#' onclick='verPdf(\"" + row.url_pdf + "\")'><i class='fa fa-cloud-download' style='color:blue;' title='Descargar pago'></i></a>&nbsp;";
                     }else if (row.estado == 1 && isEmpty(row.url_pdf)) {
-                        acciones += "<a href='#' onclick='subirArchivosAdjuntos(" + row.id + ")'><i class='fa fa-cloud-upload' style='color:blue;' title='Subir archivos adjuntos'></i></a>&nbsp;";
+                        acciones += "<a href='#' onclick='subirArchivosAdjuntos(" + row.id + ")'><i class='fa fa-cloud-upload' style='color:blue;' title='Subir pago'></i></a>&nbsp;";
                         acciones += "<a href='#' onclick='anularProgramacion(" + row.id + ")'><i class='fa fa-ban' style='color:red;' title='Anular'></i></a>&nbsp;";
                         if (row.tipo_operacion == 1) {
                             acciones += "<a href='#' onclick='generarTXTPagos(" + row.id + ")'><i class='fa fa-file-text-o' style='color:green;' title='Generar txt Interbank'></i></a>&nbsp;";
@@ -320,7 +322,7 @@ function obtenerDocumentosPagos() {
     ax.addParamTmp("tipo_operacion", select2.obtenerValor("cboTipo_operacion"));
     ax.addParamTmp("persona_id", select2.obtenerValor("cboPersonaM"));
     ax.addParamTmp("moneda_id", select2.obtenerValor("cboMoneda2"));
-    $('#dtDocumentos').DataTable().destroy();
+    $("#dtDocumentos").DataTable().clear().destroy();
     $('input[type=checkbox]').prop('checked', false);
 
     $('#dtDocumentos').dataTable({
@@ -349,8 +351,22 @@ function obtenerDocumentosPagos() {
             { "data": "moneda_simbolo", "width": "4%", "sClass": "alignCenter" },
             { "data": "total", "width": "8%", "sClass": "alignRight" },
             { "data": "usuario", "width": "6%", "sClass": "alignCenter" },
+            
             { "data": "persona_proveedor_id", "width": "6%", "sClass": "hidden" },
             { "data": "facturacion_proveedor_id", "width": "6%", "sClass": "hidden" },
+            {
+                data: "facturacion_proveedor_id",
+                render: function (data, type, row) {
+                    if (type === 'display') {
+                       
+                        return '<a onclick="imprimirDocumentoTicket2(' + row.facturacion_proveedor_id + ')"><b><i class="fa fa-folder-open" style="color:#black;"></i></b></a>';
+                    }
+                    return data;
+                },
+                orderable: false,
+                class: "alignCenter",
+                "width": "5%"
+            },
         ],
         columnDefs: [
             {
@@ -376,6 +392,16 @@ function obtenerDocumentosPagos() {
                 },
                 "targets": 2
             },
+            {
+                "render": function (data, type, row) {
+                    if(select2.obtenerValor("cboTipo_operacion") == 1){
+                        return data;
+                    }else{
+                        return "S/";
+                    }
+                },
+                "targets": 4
+            },            
         ],
         "dom": '<"top">rt<"bottom"<"col-md-3"l><"col-md-9"p><"col-md-12"i>><"clear">',
         destroy: true
@@ -394,6 +420,9 @@ function reinicializarDataTableDetalle() {
         "destroy": true
     });
 }
+function imprimirDocumentoTicket2(id) {
+    window.open(URL_BASE + 'vistas/com/valorizacion/valorizacion2_pdf.php?id=' + id);
+}
 
 function onResponseRegistrarProgramacionPagos(data) {
     swal({
@@ -410,7 +439,7 @@ function onResponseRegistrarProgramacionPagos(data) {
     if (data.tipo_mensaje == 1) {
         $("#modalDocumentos").modal('hide');
         buscarDocumentos();
-        select2.asignarValor('cboTipo_operacionPP', 1);
+        select2.asignarValor('cboTipo_operacion', 1);
         select2.asignarValor('cboPersonaM', 0);
         select2.asignarValor('cboMoneda2', 2);
         obtenerDocumentosPagos();
@@ -445,15 +474,15 @@ function onResponseVisualizarProgramacion(data) {
                 },
                 {
                     "render": function (data, type, row) {
-                        return row.serie + "-" + row.correlativo;
+                        return row.serie + "-"+ row.correlativo;
                     },
                     "targets": 1
                 },
                 {
                     "render": function (data, type, row) {
-                        if (data == 2) {
+                        if(data == 2){
                             return "S/";
-                        } else {
+                        }else{
                             return "$";
                         }
                     },
@@ -537,6 +566,7 @@ function visualizarProgramacion(id) {
     ax.addParamTmp("id", id);
     ax.consumir();
 }
+
 
 function subirArchivosAdjuntos(id, movimientoId) {
     $("#modalAdjunto").modal('show');
@@ -659,12 +689,12 @@ function verPdf(nombreAdjunto){
 
     if(partesNombreAdjunto[1] == "pdf"){
         newWindow.document.write('<html><body>');
-        newWindow.document.write('<embed width="100%" height="100%" src="' + URL_BASE + "util/uploads/documentoAdjunto/" + nombreAdjunto + '" type="application/pdf">');
+        newWindow.document.write('<embed width="100%" height="100%" src="' + URL_BASE + "vistas/com/programacionPagos/documentoAdjunto/" + nombreAdjunto + '" type="application/pdf">');
         newWindow.document.write('</body></html>');
         newWindow.document.close();
     }else{
         newWindow.document.write('<html><body>');
-        newWindow.document.write('<img src="' + URL_BASE + "util/uploads/imagenAdjunto/" + nombreAdjunto + '">'); 
+        newWindow.document.write('<img src="' + URL_BASE + "vistas/com/programacionPagos/imagenAdjunto/" + nombreAdjunto + '">'); 
         newWindow.document.write('</body></html>');
         newWindow.document.close();
     }

@@ -9,7 +9,7 @@
 </div>
 
 <div class="panel panel-default">
-<input type="hidden" id="documento_tipo" value="<?php echo $_GET['documento_tipo']; ?>" />
+    <input type="hidden" id="documento_tipo" value="<?php echo $_GET['documento_tipo']; ?>" />
     <div class="row">
         <div class="panel panel-default m-t-20 p-t-0" style="padding-left: 0px;padding-bottom: 1px;padding-right: 0px;">
             <div class="tab-content" style="margin: 0px;padding: 15px">
@@ -58,15 +58,14 @@
                                                                 <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
                                                                     <select name="cboEstado" id="cboEstado" class="select2">
                                                                         <option value="0">seleccionar</option>
-                                                                        <option value="1">Registrado</option>
-                                                                        <option value="3">Aprobado</option>
+                                                                        <option value="3" selected>Aprobado</option>
                                                                         <option value="9">Rechazado</option>
                                                                     </select>
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </div>                                                
+                                                </div>
                                             </li>
                                             <li>
                                                 <div style="float: right">
@@ -200,7 +199,7 @@
                             <i class="ion-upload" style="font-size: 16px;"></i>
                             Cargar documento
                             <input name="archivoAdjuntoMulti" id="archivoAdjuntoMulti" type="file" accept="*" class="upload">
-                            <input type="hidden" id="dataArchivoMulti" name ="dataArchivoMulti" />
+                            <input type="hidden" id="dataArchivoMulti" name="dataArchivoMulti" />
                         </div>
                     </div>
                     <div class="form-group col-md-2">
@@ -240,4 +239,27 @@
     </div>
 </div>
 
-<script src="vistas/com/orden_compra_servicio/orden_compra_servicio_listar.js"></script>
+<div id="modalRechazarDocumento" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h4 class="modal-title">¿Seguro que desea rechazar el documento?
+                </h4>
+                <input type="hidden" id="documentoAdjuntoId" name="documentoAdjuntoId" />
+            </div>
+            <div class="modal-body">
+                <div style='text-align: left;'><label class='control-label'>Ingrese un motivo</label></div>
+                <textarea id='txtMotivoRechazo' class='form-control' rows='1' placeholder=''></textarea>
+                <div style="text-align: left; padding-top: 5px;"><span id="msjMotivo_rechazo" class="control-label" style="color: red; font-style: normal;
+                                                                       display: inline;" hidden=""></span></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn m-b-5" id="id" style="border-radius: 0px;margin-bottom: 1px;" data-dismiss="modal">&ensp;No, cancelar!</button>
+                <button type="button" class="btn btn-danger m-b-5" id="id" style="border-radius: 0px;" onclick="confirmarRechazo();">&ensp;Si, rechazar!</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="vistas/com/compraServicio/compra_servicio_upload_listar.js"></script>

@@ -273,7 +273,7 @@ function onResponseMovimientoListar(response) {
                 loaderClose();
                 break;
             case 'validarDocumentoEdicion':
-                onResponseValidarDocumentoEdicionCompraServicio(response.data, response[PARAM_TAG]);
+                onResponseValidarDocumentoEdicionCompra(response.data, response[PARAM_TAG]);
                 loaderClose();
                 break;
             case 'consultarEstadoSunat':
@@ -841,11 +841,11 @@ function nuevoFormCompraServicio()
     VALOR_ID_USUARIO = null;
 
     if (tipoInterfaz == 2) {
-        cargarDiv('#window', 'vistas/com/compraServicio/compra_servicio_form_tablas.php?tipoInterfaz=' + tipoInterfaz);
+        cargarDiv('#window', 'vistas/com/compraServicio/compra_form_tablas.php?tipoInterfaz=' + tipoInterfaz);
     } else if (tipoInterfaz == 3) {
         cargarDiv('#window', 'vistas/com/compraServicio/compra_servicio_form_tablas_atencion.php?tipoInterfaz=' + tipoInterfaz);
     } else {
-        cargarDiv('#window', 'vistas/com/compraServicio/compra_servicio_form.php');
+        cargarDiv('#window', 'vistas/com/compraServicio/compra_form.php');
     }
 }
 
@@ -2313,7 +2313,7 @@ function onResponseObtenerDocumentoTipoDesplegable(data) {
     }
     if (data.documento_tipo[0]['id'] === '104') {
         $('#liEstadoCotizacion').show();
-        select2.asignarValor('cboEstadoCotizacion', "16");
+        select2.asignarValor('cboEstadoCotizacion', ["3", "16"]);
     }
     fechasActuales();
 }
@@ -2340,7 +2340,7 @@ function buscarDesplegable()
     var agencia = $('#cboAgencia').val();
     var area = select2.obtenerValor('cboArea');
     var requerimiento_tipo = select2.obtenerValor('cboTipoRequerimiento');
-    var estado_cotizacion = select2.obtenerValor('cboEstadoCotizacion');
+    var estado_cotizacion = $('#cboEstadoCotizacion').val();
 
     llenarParametrosBusqueda(personaId, tipoDocumentoIds, serie, numero, fechaEmision, monedaId, estadoNegocio, proyecto, serieCompra, numeroCompra, responsable, progreso, prioridad, agencia, area, requerimiento_tipo, estado_cotizacion);
 
@@ -4033,7 +4033,7 @@ function onResponseGuardarArchivosXDocumentoID(data) {
     }
 }
 
-function editarDocumentoCompraServicio(documentoId, movimientoId) {
+function editarDocumentoCompra(documentoId, movimientoId) {
     loaderShow();
     ax.setAccion("validarDocumentoEdicion");
     ax.addParamTmp("documentoId", documentoId);
@@ -4041,11 +4041,11 @@ function editarDocumentoCompraServicio(documentoId, movimientoId) {
     ax.consumir();
 }
 
-function onResponseValidarDocumentoEdicionCompraServicio(data, documentoId) {
+function onResponseValidarDocumentoEdicionCompra(data, documentoId) {
 //    console.log(documentoId);
     if (data.exito == 1) {
         loaderShow();
-        cargarDiv('#window', 'vistas/com/compraServicio/compra_servicio_form_tablas_edit.php?tipoInterfaz=2&documentoId=' + documentoId);
+        cargarDiv('#window', 'vistas/com/compraServicio/compra_form_tablas_edit.php?tipoInterfaz=2&documentoId=' + documentoId);
     } else {
         mostrarAdvertencia(data.mensaje);
     }

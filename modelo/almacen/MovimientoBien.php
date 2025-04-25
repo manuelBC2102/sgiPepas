@@ -220,6 +220,12 @@ class MovimientoBien extends ModeloBase {
         return $this->commandGetData();        
     }
 
+    public function movimientoBienDetalleobtenerDetalleXRequerimientoIdEditar($movimientoBienId){
+        $this->commandPrepare("sp_movimiento_bien_detalle_obtenerDetalleXRequerimientoIdEditar");
+        $this->commandAddParameter(":vin_movimiento_bien_id", $movimientoBienId);
+        return $this->commandGetData();        
+    }
+
     public function obtenerMovimientoBienDetalleObtenerSolicitudR($movimientoBienId){
         $this->commandPrepare("sp_movimiento_bien_detalleObtenerSolicitudR");
         $this->commandAddParameter(":vin_movimiento_bien_id", $movimientoBienId);

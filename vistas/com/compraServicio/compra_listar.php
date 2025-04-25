@@ -237,14 +237,16 @@
                                         </li>
                                         <li id="liEstadoCotizacion" hidden>
                                             <div class="form-group col-md-2" >
-                                                <label style="color: #141719;">Area</label>
+                                                <label style="color: #141719;">Estado</label>
                                             </div>
                                             <div class="form-group col-md-10">
                                                 <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                                                    <select name="cboEstadoCotizacion" id="cboEstadoCotizacion" class="select2">
+                                                    <select name="cboEstadoCotizacion" id="cboEstadoCotizacion" class="select2" multiple>
                                                         <option value="0">Seleccionar</option>
                                                         <option value="16">Ganador</option>
+                                                        <option value="3">Aprobado</option>
                                                         <option value="1">Registrado</option>
+                                                        <option value="2">Anulado</option>
                                                     </select>
                                                 </div>
                                             </div>
@@ -1038,4 +1040,4 @@
             integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" 
     crossorigin="anonymous"></script>-->
 <script type="text/javascript" src="vistas/libs/imagina/assets/json/jquery.json-editor.min.js"></script>
-<script src="vistas/com/compraServicio/compra_servicio_listar.js"></script>
+<script src="vistas/com/compraServicio/compra_listar.js"></script>

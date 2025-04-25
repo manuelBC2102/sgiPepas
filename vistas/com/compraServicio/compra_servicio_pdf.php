@@ -7,17 +7,24 @@ require_once('../../../modeloNegocio/almacen/DocumentoNegocio.php');
 require_once('../../../modeloNegocio/almacen/MatrizAprobacionNegocio.php');
 require_once('../../../util/phpqrcode/qrlib.php'); // Librería para generar QR
 
-isset($_GET["id"]) ? $documentoId = $_GET["id"] : "";
-if (ObjectUtil::isEmpty($_GET["id"]) || $documentoId == "") {
-    echo ("No se encontró el Orden de compra o Servicio");
-    exit();
-}
-$documentoTipoId = null;
-$dataRelacionada = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoId($documentoId);
-foreach ($dataRelacionada as $itemRelacion) {
-    if ($itemRelacion['documento_tipo_id'] == Configuraciones::ORDEN_SERVICIO || $itemRelacion['documento_tipo_id'] == Configuraciones::ORDEN_COMPRA) {
-        $documentoId = $itemRelacion['documento_relacionado_id'];
-        $documentoTipoId = $itemRelacion['documento_tipo_id'];
+isset($_GET["documentoTipoId"]) ? $documentoTipoId = $_GET["documentoTipoId"] : "";
+
+if (!ObjectUtil::isEmpty($documentoTipoId)) {
+    $documentoId = $_GET["id"];
+    $documentoTipoId = $_GET["documentoTipoId"];
+}else{
+    isset($_GET["id"]) ? $documentoId = $_GET["id"] : "";
+    if (ObjectUtil::isEmpty($_GET["id"]) || $documentoId == "") {
+        echo ("No se encontró el Orden de compra o Servicio");
+        exit();
+    }
+    $documentoTipoId = null;
+    $dataRelacionada = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoId($documentoId);
+    foreach ($dataRelacionada as $itemRelacion) {
+        if ($itemRelacion['documento_tipo_id'] == Configuraciones::ORDEN_SERVICIO || $itemRelacion['documento_tipo_id'] == Configuraciones::ORDEN_COMPRA) {
+            $documentoId = $itemRelacion['documento_relacionado_id'];
+            $documentoTipoId = $itemRelacion['documento_tipo_id'];
+        }
     }
 }
 
@@ -37,16 +44,39 @@ $entrega_en_destino = null;
 $entrega_en_destino_id = null;
 $U_O = null;
 $cuenta = null;
+$tiempo_entrega = null;
+$tiempo = "";
+$diasPago = "";
 
 foreach ($documentoDatoValor as $index => $item) {
     switch ($item['tipo'] * 1) {
+        case 1:
+            if ($item['descripcion'] == "Tiempo") {
+                $tiempo = number_format($item['valor'], 0).", ";
+            } 
+            if ($item['descripcion'] == "Dias de pago") {
+                $diasPago = ", ". $item['valor'];
+            }             
+            break;
         case 2:
             if ($item['descripcion'] == "Referencia") {
                 $referencia = $item['valor'];
             }
+            if ($item['descripcion'] == "Condición de pago") {
+                $terminos_de_pago = $item['valor'];
+            }
+            if ($item['descripcion'] == "Dias de pago") {
+                $diasPago = ", ". $item['valor'];
+            } 
+            if ($item['descripcion'] == "Tiempo de entrega") {
+                $tiempo_entrega = $item['valor'];
+            }    
+            if ($item['descripcion'] == "Tiempo") {
+                $tiempo = number_format($item['valor'], 0).", ";
+            }                      
             break;
-        case 50:
-            $terminos_de_pago = $item['valor'];
+        case 4:
+            $tiempo_entrega = $item['valor'];
             break;
         case 45:
             $entrega_en_destino = $item['valor'];
@@ -55,12 +85,67 @@ foreach ($documentoDatoValor as $index => $item) {
         case 46:
             $U_O = $item['valor'];
             break;
+            break;
+        case 50:
+            $terminos_de_pago = $item['valor'];
+        break;
     }
 }
 
 $organizador_entrega =  OrganizadorNegocio::create()->getOrganizador($entrega_en_destino_id);
 $ubigeoProveedor_entrega = PersonaNegocio::create()->obtenerUbigeoXId($dataDocumento[0]["ubigeo_id"]);
 
+
+$serieNumeroCotizacion = '';
+$serieNumeroSolicitudRequerimiento = '';
+$cuenta = '';
+$unidadMinera = '';
+$dataRelacionada = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoId($documentoId);
+$banderaUrgencia = 0;
+$usuarioRequerimientoArea = 0;
+foreach ($dataRelacionada as $itemRelacion) {
+    if ($itemRelacion['documento_tipo_id'] == Configuraciones::COTIZACIONES || $itemRelacion['documento_tipo_id'] == Configuraciones::COTIZACION_SERVICIO) {
+        $serieNumeroCotizacion = $itemRelacion['serie_numero'];
+    }
+    if ($itemRelacion['documento_tipo_id'] == Configuraciones::SOLICITUD_REQUERIMIENTO) {
+        $serieNumeroSolicitudRequerimiento .= $itemRelacion['serie_numero'] . ", ";
+
+        $documentoDatoValor = DocumentoDatoValorNegocio::create()->obtenerXIdDocumento($itemRelacion["documento_relacionado_id"]);
+        foreach ($documentoDatoValor as $index => $item) {
+            switch ($item['tipo'] * 1) {
+                case 51:
+                    $unidadMinera .= $item['valor'] . ", ";
+                    break;                
+                case 52:
+                    $cuenta .= $item['valor'] . ", ";
+                    break;
+                case 4:
+                    if ($item['descripcion'] == "Urgencia" && $item['valor'] == "Si") {
+                        $banderaUrgencia = 1;
+                    }
+                    break;
+            }
+        }
+    }
+    if ($itemRelacion['documento_tipo_id'] == Configuraciones::COTIZACION_SERVICIO) {
+        $banderaUrgencia = 1;
+    }
+    if($documentoTipoId == Configuraciones::ORDEN_COMPRA && $banderaUrgencia == 0){
+        if ($itemRelacion['documento_tipo_id'] == Configuraciones::REQUERIMIENTO_AREA) {
+            $usuarioRequerimientoArea = $itemRelacion['solicitante_nombre_completo'];
+        }
+    }
+    if($documentoTipoId == Configuraciones::ORDEN_COMPRA && $banderaUrgencia == 1){
+        if ($itemRelacion['documento_tipo_id'] == Configuraciones::SOLICITUD_REQUERIMIENTO) {
+            $usuarioRequerimientoArea = $itemRelacion['solicitante_nombre_completo'];
+        }
+    }
+    if($documentoTipoId == Configuraciones::ORDEN_SERVICIO){
+        if ($itemRelacion['documento_tipo_id'] == Configuraciones::SOLICITUD_REQUERIMIENTO) {
+            $usuarioRequerimientoArea = $itemRelacion['solicitante_nombre_completo'];
+        }
+    }
+}
 
 $pdf = new FPDF('P', 'mm', 'A4');
 
@@ -180,42 +265,7 @@ $pdf->Cell(45, 5, 'Solicitado por', 1, 0, 'C', true);
 $pdf->SetFillColor(255, 255, 255);
 $pdf->SetFont('Arial', '', 7);
 $pdf->SetXY(100, 82);
-$pdf->MultiCell(45, 10, $dataDocumento[0]['usuario'], 1, 'C');
-
-$serieNumeroCotizacion = '';
-$serieNumeroSolicitudRequerimiento = '';
-$cuenta = '';
-$unidadMinera = '';
-$dataRelacionada = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoId($documentoId);
-$banderaUrgencia = 0;
-foreach ($dataRelacionada as $itemRelacion) {
-    if ($itemRelacion['documento_tipo_id'] == Configuraciones::COTIZACIONES || $itemRelacion['documento_tipo_id'] == Configuraciones::COTIZACION_SERVICIO) {
-        $serieNumeroCotizacion = $itemRelacion['serie_numero'];
-    }
-    if ($itemRelacion['documento_tipo_id'] == Configuraciones::SOLICITUD_REQUERIMIENTO) {
-        $serieNumeroSolicitudRequerimiento .= $itemRelacion['serie_numero'] . ", ";
-
-        $documentoDatoValor = DocumentoDatoValorNegocio::create()->obtenerXIdDocumento($itemRelacion["documento_relacionado_id"]);
-        foreach ($documentoDatoValor as $index => $item) {
-            switch ($item['tipo'] * 1) {
-                case 51:
-                    $unidadMinera .= $item['valor'] . ", ";
-                    break;                
-                case 52:
-                    $cuenta .= $item['valor'] . ", ";
-                    break;
-                case 4:
-                    if ($item['descripcion'] == "Urgencia" && $item['valor'] == "Si") {
-                        $banderaUrgencia = 1;
-                    }
-                    break;
-            }
-        }
-    }
-    if ($itemRelacion['documento_tipo_id'] == Configuraciones::COTIZACION_SERVICIO) {
-        $banderaUrgencia = 2;
-    }
-}
+$pdf->MultiCell(45, 10, $usuarioRequerimientoArea, 1, 'C');
 
 function insertarSaltosLinea($texto, $longitudMax = 45) {
     $palabras = explode(' ', $texto);
@@ -318,7 +368,12 @@ foreach ($detalle as $i => $item) {
     $resultado = [];
     foreach ($resMovimientoBienDetalle as $dato) {
         $unidad = $dato['unidad_minera'];
-        $cantidad = floatval($dato['cantidad_requerimiento_area']);
+        if($banderaUrgencia == 0){
+            $cantidad = floatval($dato['cantidad_requerimiento_area']);
+        }else{
+            $cantidad = floatval($dato['cantidad_requerimiento']);
+        }
+
         if (!isset($resultado[$unidad])) {
             $resultado[$unidad] = 0;
         }
@@ -358,7 +413,7 @@ foreach ($detalle as $i => $item) {
     $pdf->SetXY($x + 95, $y);
     $pdf->Cell(15, $descripcionHeight, number_format($item->cantidad, 2), 1, 0, 'R');
     $pdf->Cell(10, $descripcionHeight, $item->simbolo, 1, 0, 'C');
-    $pdf->Cell(20, $descripcionHeight, number_format($item->precioUnitario, 2), 1, 0, 'R');
+    $pdf->Cell(20, $descripcionHeight, number_format($item->precioUnitario, 4), 1, 0, 'R');
     $pdf->Cell(20, $descripcionHeight, number_format($item->importe, 2), 1, 0, 'R');
 
     $pdf->SetFont('Arial', '', 4);
@@ -415,36 +470,51 @@ $pdf->MultiCell(25, 5, number_format($dataDocumento[0]['igv'], 2), 1, 'R', true)
 $pdf->SetXY(175, $espacio + 15);
 $pdf->MultiCell(25, 5, number_format($dataDocumento[0]['total'], 2), 1, 'R', true);
 
-$pdf->SetFont('Arial', '', 5);
 $pdf->SetXY(10, $espacio);
-$pdf->MultiCell(90, 5, 'Intrucciones', 1, 'L', true);
+$pdf->SetFont('Arial', 'B', 7);
+$pdf->MultiCell(90, 5, 'Tiempo de entrega: ', 1, 'L', true);
+$pdf->SetXY(34, $espacio + 1);
+$pdf->SetFont('Arial', '', 7);
+$pdf->MultiCell(50, 3, $tiempo." ".utf8_decode($tiempo_entrega), 0, 'L', true);
+
 $pdf->SetXY(10, $espacio + 5);
-$pdf->MultiCell(90, 5, utf8_decode('* Entrega del bien con GR,OC/OS  y  FACTURA, sino no se recepcionará.'), 1, 'L', true);
-$pdf->SetXY(10, $espacio + 10);
-$pdf->MultiCell(90, 5, '* En la guia de remision mencionar el numero de orden de compra', 1, 'L', true);
+$pdf->SetFont('Arial', 'B', 7);
+$pdf->MultiCell(90, 8, 'Sumilla: ', 1, 'L', true);
+$pdf->SetXY(20, $espacio + 6);
+$pdf->SetFont('Arial', '', 6);
+$pdf->MultiCell(75, 2, utf8_decode(str_replace('&nbsp;', ' ', $dataDocumento[0]['comentario'])), 0, 'L', true);
+
+$pdf->SetFont('Arial', 'B', 5);
 $pdf->SetXY(10, $espacio + 15);
-$pdf->MultiCell(90, 5, '* incluye IGV', 1, 'L', true);
+$pdf->MultiCell(90, 5, 'Intrucciones', 1, 'L', true);
+$pdf->SetFont('Arial', '', 4);
+$pdf->SetXY(10, $espacio + 19);
+$pdf->MultiCell(90, 4, utf8_decode('* Entrega del bien con GR,OC/OS  y  FACTURA, sino no se recepcionará.'), 1, 'L', true);
+$pdf->SetXY(10, $espacio + 23);
+$pdf->MultiCell(90, 4, '* En la guia de remision mencionar el numero de orden de compra', 1, 'L', true);
+$pdf->SetXY(10, $espacio + 27);
+$pdf->MultiCell(90, 4, '* incluye IGV', 1, 'L', true);
 
 $pdf->SetFont('Arial', '', 4);
-$pdf->SetXY(10, $espacio + 23);
+$pdf->SetXY(10, $espacio + 33);
 $pdf->MultiCell(70, 3, utf8_decode('*El lugar de entrega se coordinará con el Comprador.'), 0, 'L', true);
-$pdf->SetXY(10, $espacio + 26);
-$pdf->MultiCell(70, 3, '*Para aclaraciones contactar con el comprador :', 0, 'L', true);
-$pdf->SetXY(10, $espacio + 29);
+$pdf->SetXY(10, $espacio + 36);
+$pdf->MultiCell(70, 3, '*Para aclaraciones contactar con el comprador.', 0, 'L', true);
+$pdf->SetXY(10, $espacio + 39);
 $pdf->SetFont('Arial', 'B', 4);
 $pdf->MultiCell(70, 3, utf8_decode('Procedimiento para presentación de facturas y comprobantes de pago:'), 0, 'L', true);
 $pdf->SetFont('Arial', '', 4);
-$pdf->SetXY(10, $espacio + 32);
+$pdf->SetXY(10, $espacio + 42);
 $pdf->MultiCell(70, 3, utf8_decode('- Validación SUNAT para Comprobantes electrónicos.'), 10, 'L', true);
-$pdf->SetXY(10, $espacio + 35);
+$pdf->SetXY(10, $espacio + 45);
 $pdf->MultiCell(70, 3, utf8_decode('- Validación de emisor electrónicos para Comprobantes físicos.'), 0, 'L', true);
-$pdf->SetXY(10, $espacio + 38);
+$pdf->SetXY(10, $espacio + 48);
 $pdf->MultiCell(70, 3, utf8_decode('- En el caso de facturas electrónicas deben remitir el archivo en pdf y xml.'), 0, 'L', true);
-$pdf->SetXY(10, $espacio + 41);
+$pdf->SetXY(10, $espacio + 51);
 $pdf->MultiCell(70, 3, '- Copia de la Orden de Compra.', 0, 'L', true);
-$pdf->SetXY(10, $espacio + 44);
+$pdf->SetXY(10, $espacio + 54);
 $pdf->MultiCell(70, 3, utf8_decode('- Acta de conformidad y/o Liquidación en el caso de ser un servicio.'), 0, 'L', true);
-$pdf->SetXY(10, $espacio + 47);
+$pdf->SetXY(10, $espacio + 57);
 $pdf->MultiCell(70, 3, utf8_decode('- Guía de remisión con sello de recepción o conformidad.'), 0, 'L', true);
 
 
@@ -536,6 +606,22 @@ $pdf->MultiCell(150, 2, utf8_decode('El pago es semanal todos los jueves, se pro
 
 $pdf->AddPage();
 $pdf->Ln(5); // Espacio antes del título
+if($documentoTipoId == Configuraciones::ORDEN_SERVICIO && !ObjectUtil::isEmpty($dataDocumento[0]['monto_detraccion_retencion'])){
+    $pdf->SetFont('Arial', 'B', 12);
+    $pdf->Cell(0, 10, utf8_decode('DETRACCIÓN'), 0, 1, 'C');
+
+    $pdf->SetFont('Arial', 'B', 8);
+    $pdf->SetFillColor(254, 191, 0);
+    $pdf->Cell(90, 7, utf8_decode('Descripción'), 1, 0, 'C', true);
+    $pdf->Cell(50, 7, 'Importe', 1, 0, 'C', true);
+    $pdf->Cell(50, 7, 'Porcentaje %', 1, 1, 'C', true);
+
+    $pdf->SetFont('Arial', '', 7);
+    $pdf->Cell(90, 8, $dataDocumento[0]['descripcion_detraccion'], 1, 0, 'C');
+    $pdf->Cell(50, 8, number_format($dataDocumento[0]['monto_detraccion_retencion'], 3), 1, 0, 'C');
+    $pdf->Cell(50, 8, number_format($dataDocumento[0]['porcentaje_afecto'], 2), 1, 1, 'C');
+}
+
 $pdf->SetFont('Arial', 'B', 12);
 $pdf->Cell(0, 10, utf8_decode('DISTRIBUCIÓN DE PAGOS'), 0, 1, 'C');
 
@@ -551,7 +637,7 @@ $pdf->SetFont('Arial', '', 7);
 if (!ObjectUtil::isEmpty($distribucionPagos)) {
     foreach ($distribucionPagos as $index => $item) {
         $pdf->Cell(10, 8, $index + 1, 1, 0, 'C');
-        $pdf->Cell(90, 8, number_format($item['importe'], 2), 1, 0, 'C');
+        $pdf->Cell(90, 8, number_format($item['importe'], 3), 1, 0, 'C');
         $pdf->Cell(90, 8, number_format($item['porcentaje'], 2), 1, 1, 'C');
     }
 }

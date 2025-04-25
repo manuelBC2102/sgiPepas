@@ -273,12 +273,14 @@ function onResponseObtenerMenuXEmpresa(data) {
                         dataMenu += ' active(' + valueHijo.id + ',' + value.id + ');"style="display: table-cell;padding-left: 0px;">';
                         dataMenu += '<i class="' + valueHijo.icono + ' "style="width: 15px;"></i>' + valueHijo.nombre + '</a></li>';
                     }else if(value.id == 391 || value.id == 405 || value.id == 406){
-                        if(valueHijo.url.indexOf('tipoInterfaz=4')!=-1){
+                        if(valueHijo.id == 409){
+                            urlNuevoMov='servicio_form_tablas.php?tipoInterfaz=2';
+                        }else if(valueHijo.url.indexOf('tipoInterfaz=4')!=-1){
                             urlNuevoMov='movimiento_form_dua.php?tipoInterfaz=2';
                         }else if(valueHijo.url.indexOf('tipoInterfaz=3')!=-1){
                             urlNuevoMov='movimiento_form_tablas_atencion.php?tipoInterfaz=3';
                         }else {
-                            urlNuevoMov='compra_servicio_form_tablas.php?tipoInterfaz=2';
+                            urlNuevoMov='compra_form_tablas.php?tipoInterfaz=2';
                         }
                         
                         idOpcion = (isEmpty(valueHijo["opcion_id"])) ? valueHijo.id : valueHijo["opcion_id"];

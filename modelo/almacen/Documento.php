@@ -19,7 +19,7 @@ class Documento extends ModeloBase {
     }
 
   // TODO: Inicio Guardar Documento - Percepcion
-  public function guardar($documentoTipoId, $movimientoId, $personaId, $direccionId, $organizadorId, $adjuntoId, $codigo, $serie, $numero, $fechaEmision, $fechaVencimiento, $fechaTentativa, $descripcion, $comentario, $importeTotal, $importeIgv, $importeSubTotal, $estado, $monedaId, $usuarioCreacionId, $cuentaId = null, $actividadId = null, $retencionDetraccionId = null, $utilidadTotal = null, $utilidadPorcentajeTotal = null, $cambioPersonalizado = null, $tipoPago = null, $importeNoAfecto = null, $periodoId = null, $banderaProductoDuplicado = 0, $detraccionId = null, $afectoDetraccionRetencion = null, $porcentajeDetraccionRetencion = null, $montoDetraidoRetencion = null, $contOperacionTipoId = null, $esEar = 0, $importeOtros = 0, $importeExoneracion = 0, $importeIcbp = 0,$afectoAImpuesto = null,$percepcion = null, $igv_porcentaje = null, $es_rq = null) {
+  public function guardar($documentoTipoId, $movimientoId, $personaId, $direccionId, $organizadorId, $adjuntoId, $codigo, $serie, $numero, $fechaEmision, $fechaVencimiento, $fechaTentativa, $descripcion, $comentario, $importeTotal, $importeIgv, $importeSubTotal, $estado, $monedaId, $usuarioCreacionId, $cuentaId = null, $actividadId = null, $retencionDetraccionId = null, $utilidadTotal = null, $utilidadPorcentajeTotal = null, $cambioPersonalizado = null, $tipoPago = null, $importeNoAfecto = null, $periodoId = null, $banderaProductoDuplicado = 0, $detraccionId = null, $afectoDetraccionRetencion = null, $porcentajeDetraccionRetencion = null, $montoDetraidoRetencion = null, $contOperacionTipoId = null, $esEar = 0, $importeOtros = 0, $importeExoneracion = 0, $importeIcbp = 0,$afectoAImpuesto = null,$percepcion = null, $igv_porcentaje = null, $es_rq = null, $tipoCambio = null) {
     $this->commandPrepare("sp_documento_guardar");
     $this->commandAddParameter(":vin_documento_tipo_id", $documentoTipoId);
     $this->commandAddParameter(":vin_movimiento_id", $movimientoId);
@@ -53,8 +53,8 @@ class Documento extends ModeloBase {
     $this->commandAddParameter(":vin_bandera_producto_duplicado", $banderaProductoDuplicado);
     $this->commandAddParameter(":vin_detraccion_id", $detraccionId);
     $this->commandAddParameter(":vin_afecto_detraccion_retencion", $afectoDetraccionRetencion == ""? null : $afectoDetraccionRetencion);
-    $this->commandAddParameter(":vin_porcentaje_afecto", $porcentajeDetraccionRetencion);
-    $this->commandAddParameter(":vin_monto_detraccion_retencion", $montoDetraidoRetencion);
+    $this->commandAddParameter(":vin_porcentaje_afecto", $porcentajeDetraccionRetencion == ""? null : $porcentajeDetraccionRetencion);
+    $this->commandAddParameter(":vin_monto_detraccion_retencion", $montoDetraidoRetencion == ""? null : $montoDetraidoRetencion);
     $this->commandAddParameter(":vin_cont_operacion_tipo_id", $contOperacionTipoId);
     $this->commandAddParameter(":vin_es_ear", $esEar);
     $this->commandAddParameter(":vin_importe_otro", $importeOtros);
@@ -64,6 +64,7 @@ class Documento extends ModeloBase {
     $this->commandAddParameter(":vin_percepcion", $percepcion);
     $this->commandAddParameter(":vin_igv_porcentaje", $igv_porcentaje);
     $this->commandAddParameter(":vin_es_rq", $es_rq);
+    $this->commandAddParameter(":vin_tipo_cambio", $tipoCambio);
     return $this->commandGetData();
   }
 
@@ -809,7 +810,7 @@ class Documento extends ModeloBase {
         return $this->commandGetData();
     }
 
-    function guardar_documento_detalle($documentoId, $personaId, $monedaId, $tipoCambio, $igv, $uoId, $tiempoEntrega, $tiempo, $condicionPago, $diasPago, $sumilla, $usuarioId) {
+    function guardar_documento_detalle($documentoId, $personaId, $monedaId, $tipoCambio, $igv, $uoId, $tiempoEntrega, $tiempo, $condicionPago, $diasPago, $sumilla, $referecnia, $usuarioId) {
         $this->commandPrepare("sp_documento_detalle_guardar");
         $this->commandAddParameter(":vin_documento_id", $documentoId);
         $this->commandAddParameter(":vin_persona_id", $personaId);
@@ -822,6 +823,7 @@ class Documento extends ModeloBase {
         $this->commandAddParameter(":vin_condicion_pago", $condicionPago);
         $this->commandAddParameter(":vin_dias_pago", $diasPago);
         $this->commandAddParameter(":vin_sumilla", $sumilla);
+        $this->commandAddParameter(":vin_referencia", $referecnia);
         $this->commandAddParameter(":vin_usuario_registro", $usuarioId);
         return $this->commandGetData();
     }

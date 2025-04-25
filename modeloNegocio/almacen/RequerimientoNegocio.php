@@ -274,6 +274,16 @@ class RequerimientoNegocio extends ModeloNegocioBase
                     );
                 }
                 $distribucionPagos = OrdenCompraServicio::create()->cambiarEstadoDistribucionPagos($documentoId);
+                
+                $dataRelacionada = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoId($documentoId);
+                foreach ($dataRelacionada as $itemRelacion) {
+                    if(($itemRelacion['documento_tipo_id'] == Configuraciones::COTIZACIONES || $itemRelacion['documento_tipo_id'] == Configuraciones::COTIZACION_SERVICIO) && $itemRelacion['documento_estado_id'] == 16){
+                        $data = DocumentoNegocio::create()->ActualizarDocumentoEstadoId($itemRelacion['documento_relacionado_id'], 3, $usuarioId); // 3 = Aprobado
+                    }
+                    if($itemRelacion['documento_tipo_id'] == Configuraciones::GENERAR_COTIZACION && $itemRelacion['documento_estado_id'] == 17){
+                        $data = DocumentoNegocio::create()->ActualizarDocumentoEstadoId($itemRelacion['documento_relacionado_id'], 3, $usuarioId); // 3 = Aprobado
+                    }
+                }
             }
 
             $respuesta =  new stdClass();

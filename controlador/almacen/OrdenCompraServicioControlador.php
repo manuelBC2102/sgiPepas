@@ -71,6 +71,18 @@ class OrdenCompraServicioControlador extends AlmacenIndexControlador {
     //     return OrdenCompraServicioNegocio::create()->cargarArchivosAdjuntosDistribucionPagos($distribucionPagoId, $documentoId, $lstDocumentoArchivos, $lstDocEliminado,$usuarioId);
     // } 
 
+    public function aprobarRechazar()
+    {
+      $this->setTransaction(true);
+      $documentoAdjuntoId = $this->getParametro("documentoAdjuntoId");
+      $accion = $this->getParametro("accion");
+      $razonRechazo = $this->getParametro("razonRechazo");
+      $documentoId = $this->getParametro("documentoId");
+      $usuarioId = $this->getUsuarioId();
+      $respuestaVistoBueno = OrdenCompraServicioNegocio::create()->aprobarRechazar($documentoAdjuntoId, $accion, $razonRechazo, $usuarioId, $documentoId);
+      return $respuestaVistoBueno;
+    }
+
     public function getCompraServicio(){
         $documento = $this->getParametro("documento");
         $descripcion_documento = explode('-', $documento);

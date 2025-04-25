@@ -116,17 +116,18 @@
                                         <thead>                                
                                             <tr>                                   
                                                 <th style='text-align:center;' id='th_Nro'>#</th> 
-                                                <th style='text-align:center;'>Razón social</th>      
-                                                <th style='text-align:center;'>Moneda</th>  
-                                                <th style='text-align:center;'>Tipo cambio</th>             
-                                                <th style='text-align:center;'>IGV</th>
-                                                <th style='text-align:center;'>Entrega en destino</th>
-                                                <th style='text-align:center;'>Tiempo de entrega</th>
+                                                <th style='text-align:center;'>Razón social *</th>      
+                                                <th style='text-align:center;'>Moneda *</th>  
+                                                <th style='text-align:center;'>Tipo cambio *</th>             
+                                                <th style='text-align:center;'>IGV *</th>
+                                                <th style='text-align:center;'>Entrega en destino *</th>
+                                                <th style='text-align:center;'>Tiempo de entrega *</th>
                                                 <th style='text-align:center;'>Tiempo</th>
-                                                <th style='text-align:center;'>Condición de pago</th>
+                                                <th style='text-align:center;'>Condición de pago *</th>
                                                 <th style='text-align:center;'>Días de pago</th>
+                                                <th style='text-align:center;'>Referencia</th>   
                                                 <th style='text-align:center;'>Sumilla</th>
-                                                <th style='text-align:center;'>Pdf Cotización</th>   
+                                                <th style='text-align:center;'>Pdf Cotización *</th>   
                                                 <!-- <th style='text-align:center;'>Distribución pagos</th>    -->
                                             </tr>                              
                                         </thead>                                       
@@ -308,8 +309,8 @@
                                                 <h4 id="contenedorIgv"></h4>                       
                                                 <median class="text-uppercase">                   
                                                 <label class="cr-styled" style="text-align: left;" >        
-                                                    <input type="checkbox" id="chkIGV" onclick="onChangeCheckIGV();" checked="true">   
-                                                    <i class="fa"></i>                                      
+                                                    <div hidden><input type="checkbox" id="chkIGV" onclick="onChangeCheckIGV();" checked="true">
+                                                    <i class="fa"></i></div>                                      
                                                     <label id="txtDescripcionIGV"></label>                                              
                                                 </label>                                        
                                                 </median>                                    
@@ -1403,7 +1404,7 @@
             </div>    
         </div>
         <div id="modalDetalleRequerimiento"  class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;"> 
-            <div class="modal-dialog">       
+            <div class="modal-dialog modal-lg">       
                 <div class="modal-content">      
                     <div class="modal-header">                   
                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>         
@@ -1414,8 +1415,9 @@
                             <table id="datatableDetalleReserva" class="table table-striped table-bordered">     
                                 <thead>                              
                                     <tr>                                      
-                                        <th style='text-align:center;'>Producto</th>                      
-                                        <th style='text-align:center;'>Datos adicionales</th>         
+                                        <th style='text-align:center;'>Producto</th>    
+                                        <th style='text-align:center;'>Cantidad</th>                      
+                                        <th style='text-align:center;'>Comentario</th>         
                                         <th style='text-align:center;'>Archivo adjunto</th>      
                                     </tr>                             
                                 </thead>                         
@@ -1455,6 +1457,6 @@
         <!-- fin modal sumilla del item -->          
         <div id="datosImpresion" hidden="true"></div> 
         <script src="vistas/libs/imagina/js/jquery.btnswitch.js"></script>  
-        <script src="vistas/com/compraServicio/compra_servicio_form_tablas.js"></script>
+        <script src="vistas/com/compraServicio/servicio_form_tablas.js"></script>
     </body>
 </html>

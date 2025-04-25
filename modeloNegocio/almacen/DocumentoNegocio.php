@@ -22,7 +22,7 @@ class DocumentoNegocio extends ModeloNegocioBase
   }
 
   // TODO: Fin Guardar Documento - Percepcion
-  public function guardar($documentoTipoId, $movimientoId, $adjuntoId, $camposDinamicos, $estado, $usuarioCreacionId, $monedaId, $comentarioDoc = null, $descripcionDoc = null, $utilidadTotal = null, $utilidadPorcentajeTotal = null, $tipoPago = null, $periodoId = null, $datosExtras = null, $contOperacionTipoId = null, $esEar = 0, $igv_porcentaje = null)
+  public function guardar($documentoTipoId, $movimientoId, $adjuntoId, $camposDinamicos, $estado, $usuarioCreacionId, $monedaId, $comentarioDoc = null, $descripcionDoc = null, $utilidadTotal = null, $utilidadPorcentajeTotal = null, $tipoPago = null, $periodoId = null, $datosExtras = null, $contOperacionTipoId = null, $esEar = 0, $igv_porcentaje = null, $tipoCambio = null)
   {
     $personaId = null;
     $codigo = null;
@@ -201,7 +201,7 @@ class DocumentoNegocio extends ModeloNegocioBase
                 break;
               case DocumentoTipoNegocio::DATO_OTRA_PERSONA:
                 array_push($listas, $valorDtd);
-                if($documentoTipoId == Configuraciones::COTIZACIONES){
+                if($documentoTipoId == Configuraciones::COTIZACIONES || $documentoTipoId == Configuraciones::COTIZACION_SERVICIO){
                   $personaId = $valor;
                 }
                 break;
@@ -234,10 +234,10 @@ class DocumentoNegocio extends ModeloNegocioBase
                 array_push($cadenas, $valorDtd);
                 break;
               case DocumentoTipoNegocio::DATO_TIPO_REQUERIMIENTO: //Tipo requerimiento
-                if($documentoTipoId ==  Configuraciones::SOLICITUD_REQUERIMIENTO || $documentoTipoId == Configuraciones::ORDEN_SERVICIO || $documentoTipoId == Configuraciones::REQUERIMIENTO_AREA || $documentoTipoId == Configuraciones::GENERAR_COTIZACION){
+                if($documentoTipoId ==  Configuraciones::SOLICITUD_REQUERIMIENTO){
                   $es_rq = $valor;
-                  array_push($listas, $valorDtd);
                 }
+                array_push($listas, $valorDtd);
                 break;
               case DocumentoTipoNegocio::DATO_AREA: //Area
                   array_push($cadenas, $valorDtd);
@@ -371,11 +371,11 @@ class DocumentoNegocio extends ModeloNegocioBase
       $importeSubTotal = 0.0;
     }
 
-    if($documentoTipoId == 280 || $documentoTipoId == 281 || $documentoTipoId == 283){
+    if($documentoTipoId == Configuraciones::SOLICITUD_REQUERIMIENTO || $documentoTipoId == Configuraciones::GENERAR_COTIZACION || $documentoTipoId == Configuraciones::REQUERIMIENTO_AREA || $documentoTipoId == Configuraciones::GENERAR_COTIZACION_SERVICIO || $documentoTipoId == Configuraciones::GENERAR_COTIZACION_SERVICIO){
       $personaId = PersonaNegocio::create()->obtenerPersonaXUsuarioId($usuarioCreacionId)[0]['id'];
     }
     
-    $documento = Documento::create()->guardar($documentoTipoId, $movimientoId, $personaId, $direccionId, $organizadorId, $adjuntoId, $codigo, $serie, $numero, $fechaEmision, $fechaVencimiento, $fechaTentativa, $descripcion, $comentarioDoc, $importeTotal, $importeIgv, $importeSubTotal, $estado, $monedaId, $usuarioCreacionId, $cuentaId, $actividadId, $retencionDetraccionId, $utilidadTotal, $utilidadPorcentajeTotal, $cambioPersonalizado, $tipoPago, $importeNoAfecto, $periodoId, $banderaProductoDuplicado, $detraccionId, $datosExtras['afecto_detraccion_retencion'], $datosExtras['porcentaje_afecto'], $datosExtras['monto_detraccion_retencion'], $contOperacionTipoId, $esEar, $importeOtros, $importeExoneracion, $importeIcbp, $datosExtras['afecto_impuesto'], $percepcion, $igv_porcentaje, $es_rq);
+    $documento = Documento::create()->guardar($documentoTipoId, $movimientoId, $personaId, $direccionId, $organizadorId, $adjuntoId, $codigo, $serie, $numero, $fechaEmision, $fechaVencimiento, $fechaTentativa, $descripcion, $comentarioDoc, $importeTotal, $importeIgv, $importeSubTotal, $estado, $monedaId, $usuarioCreacionId, $cuentaId, $actividadId, $retencionDetraccionId, $utilidadTotal, $utilidadPorcentajeTotal, $cambioPersonalizado, $tipoPago, $importeNoAfecto, $periodoId, $banderaProductoDuplicado, $detraccionId, $datosExtras['afecto_detraccion_retencion'], $datosExtras['porcentaje_afecto'], $datosExtras['monto_detraccion_retencion'], $contOperacionTipoId, $esEar, $importeOtros, $importeExoneracion, $importeIcbp, $datosExtras['afecto_impuesto'], $percepcion, $igv_porcentaje, $es_rq, $tipoCambio);
 
     $documentoId = $this->validateResponse($documento);
     if (ObjectUtil::isEmpty($documentoId)) {

@@ -131,8 +131,10 @@
                                                 <th style='text-align:center;'>Tiempo</th>
                                                 <th style='text-align:center;'>Condición de pago</th>
                                                 <th style='text-align:center;'>Días de pago</th>
+                                                <th style='text-align:center;'>Referencia</th>   
                                                 <th style='text-align:center;'>Sumilla</th>
-                                                <th style='text-align:center;'>Pdf Cotización</th>   
+                                                <th style='text-align:center;'>Pdf Cotización</th>
+                                                <th style='text-align:center;'>Detracción</th>   
                                                 <th style='text-align:center;'>Distribución pagos</th>   
                                             </tr>                              
                                         </thead>                                       
@@ -1367,7 +1369,7 @@
             </div>    
         </div>
         <div id="modalDetalleRequerimiento"  class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;"> 
-            <div class="modal-dialog">       
+            <div class="modal-dialog modal-lg">       
                 <div class="modal-content">      
                     <div class="modal-header">                   
                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>         
@@ -1379,7 +1381,8 @@
                                 <thead>                              
                                     <tr>                                      
                                         <th style='text-align:center;'>Producto</th>                      
-                                        <th style='text-align:center;'>Datos adicionales</th>         
+                                        <th style='text-align:center;'>Cantidad</th>                      
+                                        <th style='text-align:center;'>Comentario</th>         
                                         <th style='text-align:center;'>Archivo adjunto</th>      
                                     </tr>                             
                                 </thead>                         
@@ -1420,6 +1423,6 @@
         <!-- fin modal sumilla del item -->                    
         <div id="datosImpresion" hidden="true"></div> 
         <script src="vistas/libs/imagina/js/jquery.btnswitch.js"></script>  
-        <script src="vistas/com/compraServicio/compra_servicio_form_tablas_edit.js"></script> 
+        <script src="vistas/com/compraServicio/servicio_form_tablas_edit.js"></script> 
     </body>
 </html>
