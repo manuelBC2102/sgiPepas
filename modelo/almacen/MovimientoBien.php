@@ -214,15 +214,17 @@ class MovimientoBien extends ModeloBase {
         return $this->commandGetData();        
     }
 
-    public function movimientoBienDetalleobtenerDetalleXRequerimientoId($movimientoBienId){
+    public function movimientoBienDetalleobtenerDetalleXRequerimientoId($movimientoBienId, $documentoTipoOrigenId = null){
         $this->commandPrepare("sp_movimiento_bien_detalle_obtenerDetalleXRequerimientoId");
         $this->commandAddParameter(":vin_movimiento_bien_id", $movimientoBienId);
+        $this->commandAddParameter(":vin_documentoTipoOrigenId", $documentoTipoOrigenId);
         return $this->commandGetData();        
     }
 
-    public function movimientoBienDetalleobtenerDetalleXRequerimientoIdEditar($movimientoBienId){
+    public function movimientoBienDetalleobtenerDetalleXRequerimientoIdEditar($movimientoBienId, $documentoTipoOrigenId = null){
         $this->commandPrepare("sp_movimiento_bien_detalle_obtenerDetalleXRequerimientoIdEditar");
         $this->commandAddParameter(":vin_movimiento_bien_id", $movimientoBienId);
+        $this->commandAddParameter(":vin_documentoTipoOrigenId", $documentoTipoOrigenId);
         return $this->commandGetData();        
     }
 
