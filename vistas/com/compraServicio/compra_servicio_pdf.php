@@ -72,7 +72,7 @@ foreach ($documentoDatoValor as $index => $item) {
                 $tiempo_entrega = $item['valor'];
             }    
             if ($item['descripcion'] == "Tiempo") {
-                $tiempo = number_format($item['valor'], 0).", ";
+                $tiempo = number_format($item['valor'], 0)." ".utf8_decode("días ").", ";
             }                      
             break;
         case 4:
@@ -369,7 +369,7 @@ foreach ($detalle as $i => $item) {
     foreach ($resMovimientoBienDetalle as $dato) {
         $unidad = $dato['unidad_minera'];
         if($banderaUrgencia == 0){
-            $cantidad = floatval($dato['cantidad_requerimiento_area']);
+            $cantidad = floatval($dato['cantidad_requerimiento']);
         }else{
             $cantidad = floatval($dato['cantidad_requerimiento']);
         }
@@ -407,7 +407,7 @@ foreach ($detalle as $i => $item) {
     
     // Usar MultiCell para descripcion
     $pdf->SetXY($x + 30, $y); // Ajustar al punto donde empieza la celda de descripcion
-    $pdf->MultiCell(65, ($nbLines < 2 ? $descripcionHeight: 4), $descripcion, 1);
+    $pdf->MultiCell(65, ($nbLines == 1 ? $descripcionHeight:($descripcionHeight / 2)), $descripcion, 1);
 
     // Volver a la posición X al lado derecho de la MultiCell
     $pdf->SetXY($x + 95, $y);
@@ -417,7 +417,7 @@ foreach ($detalle as $i => $item) {
     $pdf->Cell(20, $descripcionHeight, number_format($item->importe, 2), 1, 0, 'R');
 
     $pdf->SetFont('Arial', '', 4);
-    $pdf->MultiCell(30,  (4 * $nbLines), $textoFinal, 1);
+    $pdf->MultiCell(30,  ($nbLines > 2 ? $descripcionHeight: 4), $textoFinal, 1);
 }
 
 // Agrega las celdas vacías si hay menos de 20 filas

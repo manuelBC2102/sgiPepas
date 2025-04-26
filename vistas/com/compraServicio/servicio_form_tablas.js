@@ -285,6 +285,9 @@ function onResponseMovimientoFormTablas(response) {
                     cargarPantallaListarServicio();
                 }
                 break;
+            case "eliminarPDF2":
+                loaderClose();
+                break;                 
             case 'obtenerNumeroNotaCredito':
                 onResponseObtenerNumeroNotaCredito(response.data);
                 loaderClose();
@@ -4736,27 +4739,27 @@ function guardar(accion) {
             //     }
             // }
 
-            if (isEmpty(lstDocumentoArchivos[idx]) && totalesPostores[idx].total > 0) {
+            if (isEmpty(lstDocumentoArchivos[idx])) {
                 mostrarAdvertencia("Falta registrar pdf Cotización para:" + select2.obtenerText("cboProveedor_" + idx));
                 bandera_pagos = true;
                 return;
             }
-            if(proveedorID.tiempoEntrega == 2 && isEmpty(proveedorID.tiempo)){
+            if(proveedorID.tiempoEntrega == 2 && isEmpty(arrayProveedor[idx].tiempo)){
                 mostrarAdvertencia("Si tiempo de entrega es Días, Falta registrar tiempo para:" + select2.obtenerText("cboProveedor_" + idx));
                 bandera_pagos = true;
                 return;
             }
-            if(proveedorID.tiempoEntrega == 2 && proveedorID.tiempo > 0){
+            if(proveedorID.tiempoEntrega == 2 && arrayProveedor[idx].tiempo <= 0){
                 mostrarAdvertencia("Si tiempo de entrega es Días, tiempo tiene que ser mayor que 0 para:" + select2.obtenerText("cboProveedor_" + idx));
                 bandera_pagos = true;
                 return;
             }
-            if(proveedorID.condicionPago == 2 && (isEmpty(proveedorID.diasPago) || proveedorID.diasPago > 0)){
+            if(proveedorID.condicionPago == 2 && isEmpty(arrayProveedor[idx].diasPago)){
                 mostrarAdvertencia("Si condición de pago es Crédito, Falta registrar días de pago para:" + select2.obtenerText("cboProveedor_" + idx));
                 bandera_pagos = true;
                 return;
             }
-            if(proveedorID.condicionPago == 2 && proveedorID.diasPago > 0){
+            if(proveedorID.condicionPago == 2 && arrayProveedor[idx].diasPago <= 0){
                 mostrarAdvertencia("Si condición de pago es Crédito, días de pago tiene que ser mayo que 0 para:" + select2.obtenerText("cboProveedor_" + idx));
                 bandera_pagos = true;
                 return;
@@ -6101,7 +6104,12 @@ function obtenerParametrosBusquedaDocumentoACopiar() {
     parametrosBusquedaDocumentoACopiar.fecha_vencimiento_fin = $('#dpFechaVencimientoFin').val();
 }
 
+var documentoTipoOrigenIdGLobal = null;
 function agregarDocumentoRelacion(documentoTipoOrigenId, documentoId, movimientoId, monedaId, relacionar) {
+    documentoTipoOrigenIdGLobal = null;
+    if(documentoTipoOrigenId == SOLICITUD_REQUERIMIENTO){
+        documentoTipoOrigenIdGLobal = documentoTipoOrigenId;
+    }
     if (doc_TipoId == GENERAR_COTIZACION || documentoTipoOrigenId == SOLICITUD_REQUERIMIENTO || doc_TipoId == GENERAR_COTIZACION_SERVICIO) {
         if (!isEmpty(detalle)) {
             mostrarAdvertencia("No puede copiar el documento al formulario.");
@@ -11238,6 +11246,7 @@ function verDetalleRequerimiento(indice) {
         loaderShow();
         ax.setAccion("obtenerDetalleBienRequerimiento");
         ax.addParamTmp("movimientoBienId", $("#txtmovimiento_bien_ids_" + indexTemporal).val());
+        ax.addParamTmp("documentoTipoOrigenId", documentoTipoOrigenIdGLobal);
         ax.consumir();
         $('#modalDetalleRequerimiento').modal('show');
     } else {
@@ -11785,7 +11794,7 @@ function abrirDocumentoPDF2(data, contenedor) {
     banderaSolicitud = true;
 
     setTimeout(function () {
-        eliminarPDF(contenedor + data.pdf);
+        eliminarPDF2(contenedor + data.pdf);
     }, 4000);
 }
 
@@ -11909,4 +11918,10 @@ function eliminarEncabezador(indice) {
     theadOriginal = $('#datatable thead').html(); // Guardar copia original
 
     return false;
+}
+
+function eliminarPDF2(url) {
+  ax.setAccion("eliminarPDF2");
+  ax.addParamTmp("url", url);
+  ax.consumir();
 }

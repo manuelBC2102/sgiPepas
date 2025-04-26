@@ -1983,12 +1983,14 @@ class MovimientoControlador extends AlmacenIndexControlador
 
   public function obtenerDetalleBienRequerimiento(){
     $movimientoBienId = $this->getParametro("movimientoBienId");
-    return MovimientoNegocio::create()->obtenerDetalleBienRequerimiento($movimientoBienId);
+    $documentoTipoOrigenId = $this->getParametro("documentoTipoOrigenId");
+    return MovimientoNegocio::create()->obtenerDetalleBienRequerimiento($movimientoBienId, $documentoTipoOrigenId);
   }
 
   public function obtenerDetalleBienRequerimientoEditar(){
     $movimientoBienId = $this->getParametro("movimientoBienId");
-    return MovimientoNegocio::create()->obtenerDetalleBienRequerimientoEditar($movimientoBienId);
+    $documentoTipoOrigenId = $this->getParametro("documentoTipoOrigenId");
+    return MovimientoNegocio::create()->obtenerDetalleBienRequerimientoEditar($movimientoBienId, $documentoTipoOrigenId);
   }
 
   public function exportarPdfCotizacion(){
@@ -2021,5 +2023,12 @@ class MovimientoControlador extends AlmacenIndexControlador
     $usuarioId = $this->getUsuarioId();
     $opcionId = $this->getOpcionId();
     return MovimientoNegocio::create()->exportarExcelCotizacion(null, null, null, $usuarioId, $documentoId, $opcionId);
+  }
+
+  public function eliminarPDF2(){
+    /** @var string */
+    $url = __DIR__. '/../../'.$this->getParametro("url");
+    unlink($url);
+    return 1;
   }
 }

@@ -237,6 +237,9 @@ function onResponseMovimientoFormTablas(response) {
         loaderClose();
         cargarPantallaListarCompra();
         break;
+      case "eliminarPDF2":
+        loaderClose();
+        break;
 
       // pagos
       case "obtenerDocumentoTipoDatoPago":
@@ -315,7 +318,10 @@ function onResponseMovimientoFormTablas(response) {
       case "eliminarPDF":
         loaderClose();
         cargarPantallaListarCompra();
-        break;
+        break
+      case "eliminarPDF2":
+        loaderClose();
+        break;        
       case "guardarDocumentoPago":
         loaderClose();
         habilitarBoton();
@@ -5415,6 +5421,26 @@ function guardar(accion) {
         }
 
       }
+      if(proveedorID.tiempoEntrega == 2 && isEmpty(arrayProveedor[idx].tiempo)){
+        mostrarAdvertencia("Si tiempo de entrega es Días, Falta registrar tiempo para:" + select2.obtenerText("cboProveedor_" + idx));
+        bandera_pagos = true;
+        return;
+      }
+      if(proveedorID.tiempoEntrega == 2 && arrayProveedor[idx].tiempo <= 0){
+        mostrarAdvertencia("Si tiempo de entrega es Días, tiempo tiene que ser mayor que 0 para:" + select2.obtenerText("cboProveedor_" + idx));
+        bandera_pagos = true;
+        return;
+      }
+      if(proveedorID.condicionPago == 2 && isEmpty(arrayProveedor[idx].diasPago)){
+          mostrarAdvertencia("Si condición de pago es Crédito, Falta registrar días de pago para:" + select2.obtenerText("cboProveedor_" + idx));
+          bandera_pagos = true;
+          return;
+      }
+      if(proveedorID.condicionPago == 2 && arrayProveedor[idx].diasPago <= 0){
+          mostrarAdvertencia("Si condición de pago es Crédito, días de pago tiene que ser mayo que 0 para:" + select2.obtenerText("cboProveedor_" + idx));
+          bandera_pagos = true;
+          return;
+      }
     });
     if (bandera_pagos) {
       loaderClose();
@@ -6920,6 +6946,7 @@ function reinicializarDataTableDetalle() {
 
 var detalleDocumentoRelacion = [];
 var bandera_edicion = null;
+var documentoTipoOrigenIdGLobal = null;
 function onResponseObtenerDocumentoRelacion(data) {
   //    $('#modalDocumentoRelacion').modal('hide');
 
@@ -6969,11 +6996,13 @@ function onResponseObtenerDocumentoRelacion(data) {
   limpiarDetalle();
   reinicializarDataTableDetalle();
 
+  documentoTipoOrigenIdGLobal = null;
   if (doc_TipoId == GENERAR_COTIZACION && !isEmpty(data.dataPostores)) {
     asignarValoresPostor(data.dataPostores);
     listaPagoProgramacionPostores = data.listaPagoProgramacionPostores;
     lstDocumentoArchivos = data.dataDocumentoAdjunto;
     bandera_edicion = 1;
+    documentoTipoOrigenIdGLobal = data.documentoTipoOrigenId;
   }
 
   detalleDocumentoRelacion = data.detalleDocumento;
@@ -7285,8 +7314,10 @@ function cargarDataDocumentoACopiar(
             select2.asignarValor("cbo_" + item.otro_documento_id, item.valor);
             break;
           case 44:
-            select2.cargar("cbo_" + item.otro_documento_id, [{id: item.valor, descripcion: item.valorText}], "id", "descripcion");
-            select2.asignarValor("cbo_" + item.otro_documento_id, item.valor);
+            if(!isEmpty(item.valorText)){
+              select2.cargar("cbo_" + item.otro_documento_id, [{id: item.valor, descripcion: item.valorText}], "id", "descripcion");
+              select2.asignarValor("cbo_" + item.otro_documento_id, item.valor);
+            }
             break;
           case 46:
             select2.asignarValor("cbo_" + item.otro_documento_id, item.valor);
@@ -12669,6 +12700,7 @@ function verDetalleRequerimiento(indice) {
     loaderShow();
     ax.setAccion("obtenerDetalleBienRequerimientoEditar");
     ax.addParamTmp("movimientoBienId", $("#txtmovimiento_bien_ids_" + indexTemporal).val());
+    ax.addParamTmp("documentoTipoOrigenId", documentoTipoOrigenIdGLobal);
     ax.consumir();
     $('#modalDetalleRequerimiento').modal('show');
   } else {
@@ -13045,7 +13077,7 @@ function abrirDocumentoPDF2(data, contenedor) {
   banderaSolicitud = true;
 
   setTimeout(function () {
-    eliminarPDF(contenedor + data.pdf);
+    eliminarPDF2(contenedor + data.pdf);
   }, 4000);
 }
 
@@ -13105,7 +13137,7 @@ function agregarProverdorTabla(valor, indice) {
     $("#txtReferencia_" + indice).prop('disabled', false);    
 
     $("#btn_EliminarProveedor_" + indice).show();
-    var sumilla = (arrayProveedor.length == 0) ? null : isEmpty(sumillas[indice])? null: sumillas[indice].sumilla;
+    var sumilla = isEmpty(sumillas[indice])? null: sumillas[indice].sumilla;
     arrayProveedor.push({
       "indice": indice,
       "proveedor_id": valor,
@@ -13364,4 +13396,10 @@ function exportarExcelCotizacion() {
     loaderClose();
     return;
   }
+}
+
+function eliminarPDF2(url) {
+  ax.setAccion("eliminarPDF2");
+  ax.addParamTmp("url", url);
+  ax.consumir();
 }

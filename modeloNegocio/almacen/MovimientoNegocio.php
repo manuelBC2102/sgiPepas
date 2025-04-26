@@ -8072,6 +8072,7 @@ class MovimientoNegocio extends ModeloNegocioBase
       throw new WarningException("No se encontró el documento");
     }
 
+    $respuesta->documentoTipoOrigenId = $documentoTipoOrigenId;
     $respuesta->documentoACopiar = $documentoACopiar;
     // $respuesta->dataDocumentoRelacionada = DocumentoNegocio::create()->obtenerDataDocumentoACopiarRelacionada($documentoTipoOrigenId, $documentoTipoDestinoId, $documentoId);
     $respuesta->detalleDocumento = $this->obtenerDocumentoRelacionDetalleEdicion($movimientoId, $documentoId, $opcionId, $documentoRelacionados);
@@ -11673,12 +11674,12 @@ class MovimientoNegocio extends ModeloNegocioBase
     return $documentosIdCotizaciones;
   }
 
-  public function obtenerDetalleBienRequerimiento($movimientoBienId){
-    return MovimientoBien::create()->movimientoBienDetalleobtenerDetalleXRequerimientoId($movimientoBienId);
+  public function obtenerDetalleBienRequerimiento($movimientoBienId, $documentoTipoOrigenId){
+    return MovimientoBien::create()->movimientoBienDetalleobtenerDetalleXRequerimientoId($movimientoBienId, $documentoTipoOrigenId);
   }
 
-  public function obtenerDetalleBienRequerimientoEditar($movimientoBienId){
-    return MovimientoBien::create()->movimientoBienDetalleobtenerDetalleXRequerimientoIdEditar($movimientoBienId);
+  public function obtenerDetalleBienRequerimientoEditar($movimientoBienId, $documentoTipoOrigenId){
+    return MovimientoBien::create()->movimientoBienDetalleobtenerDetalleXRequerimientoIdEditar($movimientoBienId, $documentoTipoOrigenId);
   }
 
   public function generarDocumentoPDFGenerarCotizacion($documentoId, $comentario, $tipoSalidaPDF, $url, $data){
