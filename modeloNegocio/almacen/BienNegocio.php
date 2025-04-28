@@ -57,9 +57,9 @@ class BienNegocio extends ModeloNegocioBase {
         return $data;
     }
 
-    public function insertBienTipo($codigo, $descripcion, $comentario, $estado, $usuarioCreacion, $bienTipoPadreId, $codigoSunatId, $codigoSunatId2) {
+    public function insertBienTipo($codigo, $descripcion, $comentario, $estado, $tipo, $usuarioCreacion, $bienTipoPadreId, $codigoSunatId, $codigoSunatId2) {
 
-        $response = Bien::create()->insertBienTipo($codigo, $descripcion, $comentario, $estado, $usuarioCreacion, $bienTipoPadreId, $codigoSunatId, $codigoSunatId2);
+        $response = Bien::create()->insertBienTipo($codigo, $descripcion, $comentario, $estado, $tipo, $usuarioCreacion, $bienTipoPadreId, $codigoSunatId, $codigoSunatId2);
         return $response;
     }
 
@@ -67,8 +67,8 @@ class BienNegocio extends ModeloNegocioBase {
         return Bien::create()->getBienTipo($id);
     }
 
-    public function updateBienTipo($id_bien_tipo, $descripcion, $codigo, $comentario, $estado, $bienTipoPadreId, $codigoSunatId, $codigoSunatId2) {
-        $response = Bien::create()->updateBienTipo($id_bien_tipo, $descripcion, $codigo, $comentario, $estado, $bienTipoPadreId, $codigoSunatId, $codigoSunatId2);
+    public function updateBienTipo($id_bien_tipo, $descripcion, $codigo, $comentario, $estado, $tipo, $bienTipoPadreId, $codigoSunatId, $codigoSunatId2) {
+        $response = Bien::create()->updateBienTipo($id_bien_tipo, $descripcion, $codigo, $comentario, $estado, $tipo, $bienTipoPadreId, $codigoSunatId, $codigoSunatId2);
 
         return $response;
     }

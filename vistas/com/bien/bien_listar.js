@@ -302,14 +302,14 @@ function nuevoBien()
 {
     loaderShow(null);
     commonVars.bienId = 0;
-    commonVars.bienTipoId = 0;
+    commonVars.bienTipoId = 2;
     cargarDiv('#window', 'vistas/com/bien/bien_form.php', "Nuevo " + obtenerTitulo());
 }
 function nuevoServicio()
 {
     loaderShow(null);
     commonVars.bienId = 0;
-    commonVars.bienTipoId = -1;
+    commonVars.bienTipoId = 1;
     cargarDiv('#window', 'vistas/com/bien/bien_form.php', "Nuevo " + obtenerTitulo());
 }
 

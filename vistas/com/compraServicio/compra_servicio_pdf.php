@@ -72,7 +72,7 @@ foreach ($documentoDatoValor as $index => $item) {
                 $tiempo_entrega = $item['valor'];
             }    
             if ($item['descripcion'] == "Tiempo") {
-                $tiempo = number_format($item['valor'], 0)." ".utf8_decode("días ").", ";
+                $tiempo = number_format($item['valor'], 0)." , ";
             }                      
             break;
         case 4:
@@ -518,7 +518,7 @@ $pdf->SetXY(10, $espacio + 57);
 $pdf->MultiCell(70, 3, utf8_decode('- Guía de remisión con sello de recepción o conformidad.'), 0, 'L', true);
 
 
-$matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXDocumentoTipoXArea($documentoTipoId, null);
+$matrizUsuario = RequerimientoNegocio::create()->generarMatrizDocumento($documentoTipoId, $documentoId, $dataDocumento[0]['movimiento_id'], $dataDocumento[0]['usuario_creacion']);
 $usuario_estado = DocumentoNegocio::create()->obtenerDocumentoDocumentoEstadoXdocumentoId($documentoId, "0,1");
 
 $resultadoMatriz = [];
@@ -557,10 +557,10 @@ foreach ($matrizUsuario as $key => $value) {
     }
 }
 
-$personaFirma0 = __DIR__ . "/../../vistas/com/persona/firmas/" . $resultadoMatriz[0]['firma_digital'] . "png";
-$personaFirma1 = __DIR__ . "/../../vistas/com/persona/firmas/" . $resultadoMatriz[1]['firma_digital'] . "png";
-$personaFirma2 = __DIR__ . "/../../vistas/com/persona/firmas/" . $resultadoMatriz[2]['firma_digital'] . "png";
-$personaFirma3 = __DIR__ . "/../../vistas/com/persona/firmas/" . $resultadoMatriz[3]['firma_digital'] . "png";
+$personaFirma0 = __DIR__ . "/../persona/firmas/" . $resultadoMatriz[0]['firma_digital'] . "png";
+$personaFirma1 = __DIR__ . "/../persona/firmas/" . $resultadoMatriz[1]['firma_digital'] . "png";
+$personaFirma2 = __DIR__ . "/../persona/firmas/" . $resultadoMatriz[2]['firma_digital'] . "png";
+$personaFirma3 = __DIR__ . "/../persona/firmas/" . $resultadoMatriz[3]['firma_digital'] . "png";
 
 
 $pdf->SetFont('Arial', 'B', 8);
@@ -569,8 +569,8 @@ $pdf->MultiCell(39, 5, 'Autorizado por.', 0, 'C', true);
 $pdf->SetXY(150, $espacio + 25);
 $pdf->MultiCell(50, 10, '', 1, 'C', true); //Revisar
 $pdf->SetXY(150, $espacio + 25);
-if (!ObjectUtil::isEmpty($resultadoMatriz[0]['firma_digital'])) {
-    $pdf->Image($personaFirma1, 150,  $espacio + 25, 45, 20);
+if (!ObjectUtil::isEmpty($resultadoMatriz[1]['firma_digital'])) {
+    // $pdf->Image($personaFirma1, 163,  $espacio + 25, 25, 10);
 }
 $pdf->SetFont('Arial', '', 6);
 $pdf->SetXY(110, $espacio + 30);
@@ -581,6 +581,10 @@ $pdf->SetXY(110, $espacio + 38);
 $pdf->MultiCell(39, 5, 'Autorizado por.', 0, 'C', true);
 $pdf->SetXY(150, $espacio + 38);
 $pdf->MultiCell(50, 10, '', 1, 'C', true); //Revisar
+$pdf->SetXY(150, $espacio + 38);
+if (!ObjectUtil::isEmpty($resultadoMatriz[0]['firma_digital'])) {
+    $pdf->Image($personaFirma0, 163,  $espacio + 38, 25, 10);
+}
 $pdf->SetFont('Arial', '', 6);
 $pdf->SetXY(110, $espacio + 43);
 $pdf->MultiCell(39, 3, 'COMPRADOR', 0, 'C', true);
@@ -590,17 +594,32 @@ $pdf->SetXY(110, $espacio + 51);
 $pdf->MultiCell(39, 5, 'Autorizado por.', 0, 'C', true);
 $pdf->SetXY(150, $espacio + 51);
 $pdf->MultiCell(50, 10, '', 1, 'C', true); //Revisar
+$pdf->SetXY(150, $espacio + 51);
+if (!ObjectUtil::isEmpty($resultadoMatriz[1]['firma_digital'])) {
+    $pdf->Image($personaFirma1, 163,  $espacio + 51, 25, 10);
+}
 $pdf->SetFont('Arial', '', 6);
 $pdf->SetXY(110, $espacio + 56);
 $pdf->MultiCell(39, 3, 'GERENTE GENERAL', 0, 'C', true);
 
+$pdf->SetFont('Arial', 'B', 8);
+$pdf->SetXY(110, $espacio + 64);
+$pdf->MultiCell(39, 5, 'Autorizado por.', 0, 'C', true);
+$pdf->SetXY(150, $espacio + 64);
+$pdf->MultiCell(50, 10, '', 1, 'C', true); //Revisar
+$pdf->SetXY(150, $espacio + 64);
+if (!ObjectUtil::isEmpty($resultadoMatriz[1]['firma_digital'])) {
+    $pdf->Image($personaFirma1, 163,  $espacio + 51, 25, 10);
+}
+$pdf->SetFont('Arial', '', 6);
+$pdf->SetXY(110, $espacio + 69);
+$pdf->MultiCell(39, 3, 'JUNTA DIRECTIVA', 0, 'C', true);
+
 $pdf->SetFont('Arial', '', 4);
 $pdf->SetXY(10, $espacio + 63);
-$pdf->MultiCell(150, 2, utf8_decode('El horario de recepción es de lunes a viernes de 8:00 am a 1:00 pm; los documentos que envíen después de este horario o los días sábados, domingos y feriados serán considerados como recibidos a partir'), 0, 'L', true);
-$pdf->SetXY(10, $espacio + 65);
-$pdf->MultiCell(150, 2, utf8_decode('del siguiente día hábil y deberán ser remitidos a la siguiente dirección de correo electrónico '), 0, 'L', true);
+$pdf->MultiCell(105, 2, utf8_decode('El horario de recepción es de lunes a viernes de 8:00 am a 1:00 pm; los documentos que envíen después de este horario o los días sábados, domingos y feriados serán considerados como recibidos a partir del siguiente día hábil y deberán ser remitidos a la siguiente dirección de correo electrónico'), 0, 'L', true);
 $pdf->SetXY(10, $espacio + 67);
-$pdf->MultiCell(150, 2, utf8_decode('El pago es semanal todos los jueves, se programarán todos los comprobantes que cumplan con el procedimiento solicitado y hayan sido emitidos y registrados hasta el martes previo.'), 0, 'L', 1, 0, '', $espacio + 59, true, 0, false, true, 2, 'M');
+$pdf->MultiCell(105, 3, utf8_decode('El pago es semanal todos los jueves, se programarán todos los comprobantes que cumplan con el procedimiento solicitado y hayan sido emitidos y registrados hasta el martes previo.'), 0, 'L', 1, 0, '', $espacio + 59, true, 0, false, true, 2, 'M');
 
 
 
@@ -617,7 +636,7 @@ if($documentoTipoId == Configuraciones::ORDEN_SERVICIO && !ObjectUtil::isEmpty($
     $pdf->Cell(50, 7, 'Porcentaje %', 1, 1, 'C', true);
 
     $pdf->SetFont('Arial', '', 7);
-    $pdf->Cell(90, 8, $dataDocumento[0]['descripcion_detraccion'], 1, 0, 'C');
+    $pdf->Cell(90, 8, utf8_decode($dataDocumento[0]['descripcion_detraccion']), 1, 0, 'C');
     $pdf->Cell(50, 8, number_format($dataDocumento[0]['monto_detraccion_retencion'], 3), 1, 0, 'C');
     $pdf->Cell(50, 8, number_format($dataDocumento[0]['porcentaje_afecto'], 2), 1, 1, 'C');
 }
@@ -630,14 +649,14 @@ $cont_distribucionPagos = 0;
 $pdf->SetFont('Arial', 'B', 8);
 $pdf->SetFillColor(254, 191, 0);
 $pdf->Cell(10, 7, 'Item', 1, 0, 'C', true);
-$pdf->Cell(90, 7, 'Importe', 1, 0, 'C', true);
+$pdf->Cell(90, 7, 'Glosa', 1, 0, 'C', true);
 $pdf->Cell(90, 7, 'Porcentaje %', 1, 1, 'C', true);
 
 $pdf->SetFont('Arial', '', 7);
 if (!ObjectUtil::isEmpty($distribucionPagos)) {
     foreach ($distribucionPagos as $index => $item) {
         $pdf->Cell(10, 8, $index + 1, 1, 0, 'C');
-        $pdf->Cell(90, 8, number_format($item['importe'], 3), 1, 0, 'C');
+        $pdf->Cell(90, 8, utf8_decode($item['glosa']), 1, 0, 'C');
         $pdf->Cell(90, 8, number_format($item['porcentaje'], 2), 1, 1, 'C');
     }
 }

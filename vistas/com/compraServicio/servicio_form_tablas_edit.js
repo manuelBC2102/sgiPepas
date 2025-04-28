@@ -13176,7 +13176,7 @@ function agregarProverdorTabla(valor, indice) {
     $("#txtReferencia_" + indice).prop('disabled', false);    
 
     $("#btn_EliminarProveedor_" + indice).show();
-    var sumilla = (arrayProveedor.length == 0) ? null : isEmpty(sumillas[indice])? null: sumillas[indice].sumilla;
+    var sumilla = isEmpty(sumillas[indice])? null: sumillas[indice].sumilla;
     arrayProveedor.push({
       "indice": indice,
       "proveedor_id": valor,

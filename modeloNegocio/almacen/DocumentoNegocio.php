@@ -783,7 +783,13 @@ class DocumentoNegocio extends ModeloNegocioBase
           break;   
         case DocumentoTipoNegocio::CONDICION_PAGO: //
             array_push($listas, $valorDtd);
-          break;                   
+          break;
+        case DocumentoTipoNegocio::UNIDAD_MINERA:
+            array_push($listas, $valorDtd);
+          break;
+        case DocumentoTipoNegocio::CUENTA_GASTOS:
+            array_push($listas, $valorDtd);
+          break;                           
         default:
       }
     }
@@ -874,30 +880,41 @@ class DocumentoNegocio extends ModeloNegocioBase
     }
 
     $adjuntoId = null;
+    $bandera_edicion = 0;
 
     $documento = Documento::create()->editarDocumento($documentoId, $personaId, $direccionId, $organizadorId, $adjuntoId, $codigo, $serie, $numero, $fechaEmision, $fechaVencimiento, $fechaTentativa, $descripcion, $comentario, $importeTotal, $importeIgv, $importeSubTotal, $monedaId, $cuentaId, $actividadId, $retencionDetraccionId, $percepcion, $periodoId, $tipoPago, $banderaProductoDuplicado, $detraccionId, $datosExtras['afecto_detraccion_retencion'], $datosExtras['porcentaje_afecto'], $datosExtras['monto_detraccion_retencion'], $contOperacionTipoId, $importeOtros, $importeExoneracion, $importeIcbp, $datosExtras['afecto_impuesto'], $igv_porcentaje);
-
+    if($documento[0]['vout_exito_editar'] == 1){
+      $bandera_edicion = 1;
+    }
     // Ahora guardamos los campos dinámicos
     // Campos numéricos
     foreach ($numeros as $item) {
       $res = DocumentoDatoValorNegocio::create()->editarNumero($documentoId, $item["id"], $item["valor"]);
     }
-
+    if($res[0]['vout_exito_editar'] == 1){
+      $bandera_edicion = 1;
+    }
     // Campos cadenas
     foreach ($cadenas as $item) {
       $res = DocumentoDatoValorNegocio::create()->editarCadena($documentoId, $item["id"], $item["valor"]);
     }
-
+    if($res[0]['vout_exito_editar'] == 1){
+      $bandera_edicion = 1;
+    }
     // Campos fechas
     foreach ($fechas as $item) {
       $res = DocumentoDatoValorNegocio::create()->editarFecha($documentoId, $item["id"], DateUtil::formatearCadenaACadenaBD($item["valor"]));
     }
-
+    if($res[0]['vout_exito_editar'] == 1){
+      $bandera_edicion = 1;
+    }
     // Campos listas
     foreach ($listas as $item) {
       $res = DocumentoDatoValorNegocio::create()->editarLista($documentoId, $item["id"], $item["valor"]);
     }
-
+    if($res[0]['vout_exito_editar'] == 1){
+      $bandera_edicion = 1;
+    }
     // DOCUMENTO ADJUNTO
     if (!ObjectUtil::isEmpty($archivoAdjunto['data'])) {
       $decode = Util::base64ToImage($archivoAdjunto['data']);
@@ -926,7 +943,7 @@ class DocumentoNegocio extends ModeloNegocioBase
       $resAdjunto = $this->guardarArchivosXDocumentoID($documentoId, $archivoAdjuntoMulti, null, $usuarioCreacionId);
     }
 
-    return $documento;
+    return array($documento, $bandera_edicion);
   }
 
   function buscarDocumentosOperacionXOpcionXSerieNumero($opcionId, $busqueda)

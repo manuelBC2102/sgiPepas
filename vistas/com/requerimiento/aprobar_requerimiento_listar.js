@@ -129,6 +129,10 @@ function onResponseAprobacionConsolidado(response) {
                 loaderClose();
                 abrirDocumentoPDF(response.data, 'vistas/com/movimiento/documentos/');
                 break;
+            case 'validarDocumentoEdicion':
+                onResponseValidarDocumentoEdicion(response.data, response[PARAM_TAG]);
+                loaderClose();
+                break;
         }
     } else {
         switch (response[PARAM_ACCION_NAME]) {
@@ -248,17 +252,17 @@ function buscarRequerimientos() {
                         acciones += "<a href='#' onclick='abrirPdfCuadroComparativoCotizacion(" + row.id + ")'><i class='fa fa-print' style='color:black;' title='Ver pdf de cuadro comparativo'></i></a>&nbsp;";
                     }
                     var tabla = $('#datatableRequermiento').DataTable();
-                    if(documento_tipo == ORDEN_COMPRA || documento_tipo == ORDEN_SERVICIO){
-                        setTimeout(function() {
+                    if (documento_tipo == ORDEN_COMPRA || documento_tipo == ORDEN_SERVICIO) {
+                        setTimeout(function () {
                             tabla.column(2).visible(false);
                         }, 100);
                         $("#th_persona").html("Razón Social");
-                    }else{
-                        setTimeout(function() {
+                    } else {
+                        setTimeout(function () {
                             tabla.column(4).visible(false);
                         }, 100);
                     }
-                    $('.title').html("Aprobación de "+ row.documento_tipo_descripcion);
+                    $('.title').html("Aprobación de " + row.documento_tipo_descripcion);
                     return data + "" + acciones;
                 },
                 "targets": 9
@@ -266,17 +270,17 @@ function buscarRequerimientos() {
         ],
         "dom": '<"top">rt<"bottom"<"col-md-3"l><"col-md-9"p><"col-md-12"i>><"clear">',
         destroy: true,
-        "drawCallback": function(settings) {
+        "drawCallback": function (settings) {
             var api = this.api();
             var dataCount = api.data().count();
             if (dataCount === 0) {
                 var tabla = $('#datatableRequermiento').DataTable();
-                if(documento_tipo == ORDEN_COMPRA || documento_tipo == ORDEN_SERVICIO){
+                if (documento_tipo == ORDEN_COMPRA || documento_tipo == ORDEN_SERVICIO) {
 
-                }else{
-                    
+                } else {
+
                 }
-                setTimeout(function() {
+                setTimeout(function () {
                     tabla.column(4).visible(false);
                 }, 100);
             }
@@ -580,8 +584,8 @@ function onResponsevisualizarConsolidado(data) {
         var monto = totalPostores[idx];
         var tipoCambio = proveedor.moneda_id == 4 ? proveedor.tipo_cambio : 1;
         var esSinIGV = proveedor.igv == 0;
-        var subTotal = esSinIGV ? monto:monto / 1.18;
-        var total = esSinIGV ? subTotal * 1.18:monto;
+        var subTotal = esSinIGV ? monto : monto / 1.18;
+        var total = esSinIGV ? subTotal * 1.18 : monto;
         var igv = total - subTotal;
         var totalSoles = total * tipoCambio;
 
@@ -1090,4 +1094,25 @@ function eliminarPDF(url) {
     ax.setAccion("eliminarPDF");
     ax.addParamTmp("url", url);
     ax.consumir();
+}
+
+function editarDocumento(documentoId, opcionId) {
+    loaderShow();
+    ax.setAccion("validarDocumentoEdicion");
+    ax.addParamTmp("documentoId", documentoId);
+    ax.setTag(documentoId);
+    ax.setOpcion(opcionId);
+    ax.consumir();
+}
+
+function onResponseValidarDocumentoEdicion(data, documentoId) {
+    //    console.log(documentoId);
+    if (data.exito == 1) {
+        loaderShow();
+        cargarDivTitulo('#window', 'vistas/com/compraServicio/compra_form_tablas_edit.php?tipoInterfaz=2&documentoId=' + documentoId, "Editar Solicitud de requerimiento");
+        active(392,391);
+        commonVars.titulo = "Solicitud de requerimiento";
+    } else {
+        mostrarAdvertencia(data.mensaje);
+    }
 }

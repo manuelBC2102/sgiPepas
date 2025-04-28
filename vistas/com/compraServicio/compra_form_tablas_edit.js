@@ -2514,6 +2514,10 @@ function agregarOrganizadorDetalleTabla(i) {
 }
 
 function agregarCantidadDetalleTabla(i) {
+  var disabled = "disabled";
+  if(doc_TipoId == SOLICITUD_REQUERIMIENTO){
+    disabled = "";
+  }
   var $html =
     '<div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">' +
     '<input type="number" id="txtCantidad_' +
@@ -2528,7 +2532,7 @@ function agregarCantidadDetalleTabla(i) {
     i +
     ");hallarStockSaldo(" +
     i +
-    ');"/ disabled></div><input type=\'hidden\' id=\'txtmovimiento_bien_ids_' + i + '\' name=\'txtmovimiento_bien_ids_' + i + '\' />';
+    ');"/ '+ disabled +'></div><input type=\'hidden\' id=\'txtmovimiento_bien_ids_' + i + '\' name=\'txtmovimiento_bien_ids_' + i + '\' />';
 
   return $html;
 }
@@ -3213,13 +3217,17 @@ function agregarSubTotalDetalleTabla(i) {
 }
 
 function agregarUnidadMedidaDetalleTabla(i) {
+  var disabled = "disabled";
+  if(doc_TipoId == SOLICITUD_REQUERIMIENTO){
+    disabled = "";
+  }
   var $html =
     '<div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">' +
     '<select name="cboUnidadMedida_' +
     i +
     '" id="cboUnidadMedida_' +
     i +
-    '" class="select2" onchange="" disabled>' +
+    '" class="select2" onchange="" '+ disabled +'>' +
     "</select></div>";
 
   return $html;
@@ -4116,9 +4124,7 @@ function onResponseObtenerDocumentoTipoDato(data) {
             if (item.lista_defecto == 454) {
               $("#id_" + dtdTipoTipo.id).hide();
             }
-            if (doc_TipoId == GENERAR_COTIZACION || doc_TipoId == REQUERIMIENTO_AREA) {
-              $("#cboTipoRequerimiento_" + item.id).attr('disabled', 'disabled');
-            }
+            $("#cboTipoRequerimiento_" + item.id).attr('disabled', 'disabled');
           }
           break;
         case 43:
@@ -4135,6 +4141,8 @@ function onResponseObtenerDocumentoTipoDato(data) {
         case 46:
         case 47:
         case 48:
+        case 51:
+        case 52:
           html += '<select name="cbo_' + item.id + '" id="cbo_' + item.id + '" class="select2"></select>';
           break;
         case 49:
@@ -4342,6 +4350,18 @@ function onResponseObtenerDocumentoTipoDato(data) {
           });
           select2.asignarValor("cbo_" + item.id, 0);
           break;
+        case 51:
+          select2.cargar("cbo_" + item.id, item.data, "id", "descripcion");
+          $("#cbo_" + item.id).select2({
+            width: '100%'
+          });
+          break;
+        case 52:
+          select2.cargar("cbo_" + item.id, item.data, "id", "descripcion");
+          $("#cbo_" + item.id).select2({
+            width: '100%'
+          });
+          break;                    
       }
     });
     $("#id_3044").hide();
@@ -5180,6 +5200,8 @@ function obtenerValoresCamposDinamicos() {
       case 47:// Cuenta
       case 48: //Requerimientos
       case 50: //Condición de pago
+      case 51: //Unidad Minera     
+      case 52: //Cuentas        
         camposDinamicos[index]["valor"] = select2.obtenerValor(
           "cbo_" + item.id
         );
@@ -5782,7 +5804,7 @@ function validarDetalleFormularioLlenos() {
   var validar_postor = false;
 
   $.each(detalle, function (i, item) {
-    actualizarTotalesGenerales(i);
+    actualizarTotalesGenerales(item.index);
     //validamos que este seleccionado el tipo de precio
     if (existeColumnaCodigo(4)) {
       if (isEmpty(item.precioTipoId) || item.precioTipoId == 0) {
@@ -7325,6 +7347,12 @@ function cargarDataDocumentoACopiar(
           case 50:
             select2.asignarValor("cbo_" + item.otro_documento_id, item.valor);
             break;
+          case 51:
+            select2.asignarValor("cbo_" + item.otro_documento_id, item.valor);
+            break;   
+          case 52:
+            select2.asignarValor("cbo_" + item.otro_documento_id, item.valor);
+            break;                       
         }
       });
       bandera.mostrarDivDocumentoRelacion = true;
@@ -8686,6 +8714,7 @@ function agregarFila() {
       dataCofiguracionInicial.dataAgencia,
       nroFilasReducida
     );
+    cargarCeCoDetalleCombo(dataCofiguracionInicial.centroCostoRequerimiento, nroFilasReducida);
 
     // nroFilasInicial++;
     nroFilasReducida++;
@@ -12524,10 +12553,17 @@ function adjuntarImagenPdfBien(index) {
   var bienId = select2.obtenerValor("cboBien_" + indexTemporal);
   if (indexTemporal != -1 && !isEmpty(bienId)) {
     if (!isEmpty(detalle[indexTemporal].detalle)) {
-      $("#text_archivoAdjunto").html($("#nombreimagenPdfAdjunto_" + indexTemporal).val());
-      $("#nombrearchivoAdjunto").val($("#nombreimagenPdfAdjunto_" + indexTemporal).val());
-      $("#base64archivoAdjunto").val($("#imagenPdfAdjunto_" + indexTemporal).val());
+      if (!isEmpty(detalle[indexTemporal].detalle[0].valorDet)) {
+        $("#text_archivoAdjunto").html(detalle[indexTemporal].detalle[0].valorDet);
+        $("#base64archivoAdjunto").val(detalle[indexTemporal].detalle[0].valorDet);
+        $("#nombrearchivoAdjunto").val(detalle[indexTemporal].detalle[0].valorDet);
+      }else{
+        $("#text_archivoAdjunto").html($("#nombreimagenPdfAdjunto_" + indexTemporal).val());
+        $("#nombrearchivoAdjunto").val($("#nombreimagenPdfAdjunto_" + indexTemporal).val());
+        $("#base64archivoAdjunto").val($("#imagenPdfAdjunto_" + indexTemporal).val());
+      }
     } else {
+      $("#text_archivoAdjunto").html("");
       $("#comentarioBien").val("");
     }
     $('#modalImagenPdfAdjuntaBien').modal('show');
@@ -12546,11 +12582,17 @@ function verImagenPdf() {
   var newWindow = window.open();
 
   if (partesnombreAdjunto[1] == "pdf") {
+    if(!isEmpty(filePath)){
+      filePath = URL_BASE + "util/uploads/documentoAdjunto/" + nombreAdjunto;
+    }
     newWindow.document.write('<html><body>');
     newWindow.document.write('<embed width="100%" height="100%" src="' + filePath + '" type="application/pdf">');
     newWindow.document.write('</body></html>');
     newWindow.document.close();
   } else {
+    if(!isEmpty(filePath)){
+      filePath = URL_BASE + "util/uploads/imagenAdjunto/" + nombreAdjunto;
+    }
     newWindow.document.write('<html><body>');
     newWindow.document.write('<img src="' + filePath + '">');
     newWindow.document.write('</body></html>');
@@ -13099,6 +13141,11 @@ function asignarValoresPostor(data) {
     }
     $("#txtTiempoEntrega_" + idx).val(proveedorID.tiempo)
     select2.asignarValor("cboCondicionPago_" + idx, proveedorID.condicion_pago);
+    if (proveedorID.dias_pago == 2) {
+      $("#txtDiasPago_" + idx).prop('disabled', false);
+    } else {
+      $("#txtDiasPago_" + idx).prop('disabled', true);
+    }
     $("#txtDiasPago_" + idx).val(proveedorID.dias_pago)
     var nombreReducido = (proveedorID.archivo).length > 25 ? (proveedorID.archivo).slice(0, 10) + "..." + (proveedorID.archivo).slice(-10) : proveedorID.archivo;
     $("#text_archivo_" + idx).html(nombreReducido);
@@ -13402,4 +13449,14 @@ function eliminarPDF2(url) {
   ax.setAccion("eliminarPDF2");
   ax.addParamTmp("url", url);
   ax.consumir();
+}
+
+function base64ToSize(base64) {
+  // Eliminar el encabezado de la cadena base64, si está presente
+  const base64Data = base64.split(',')[1] || base64;
+  // El tamaño en bytes de la cadena base64
+  const byteSize = (base64Data.length * 3) / 4 - (base64Data.endsWith('==') ? 2 : base64Data.endsWith('=') ? 1 : 0);
+  // Convertir el tamaño a MB
+  const sizeInMB = byteSize / (1024 * 1024); // 1 MB = 1024 * 1024 bytes
+  return sizeInMB;
 }

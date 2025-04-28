@@ -527,7 +527,7 @@ class MovimientoControlador extends AlmacenIndexControlador
     $responseAcciones = MovimientoNegocio::create()->obtenerMovimientoTipoAcciones($opcionId);
 
     //SI HAY ACCION DE EDICION BUSCAR PERFIL
-    $banderaPerfilAutorizado = TRUE; //El usuario solicitó el cambio.
+    $banderaPerfilAutorizado = FALSE; //El usuario solicitó el cambio.
     // $dataPerfil = PerfilNegocio::create()->obtenerPerfilXUsuarioId($usuarioId);
     // $arrayUnicoPerfil = ObjectUtil::arrayUniqueXNombreColumna($dataPerfil, 'id');
     // if (in_array("" . PerfilNegocio::PERFIL_ADMINISTRADOR_ID, $arrayUnicoPerfil) || in_array("" . PerfilNegocio::PERFIL_ADMINISTRADOR_TI_ID, $arrayUnicoPerfil)) {
@@ -550,6 +550,9 @@ class MovimientoControlador extends AlmacenIndexControlador
     for ($i = 0; $i < $tamanio; $i++) {
       $stringAcciones = '';
       for ($j = 0; $j < count($responseAcciones); $j++) {
+        if($data[$i]['usuario_creacion'] == $usuarioId){
+          $banderaPerfilAutorizado = TRUE;
+        }
         if (($data[$i]['documento_estado_id'] == 2) &&
           ($responseAcciones[$j]['id'] == 3 || $responseAcciones[$j]['id'] == 4 || $responseAcciones[$j]['id'] == 13 || $responseAcciones[$j]['id'] == 14 || $responseAcciones[$j]['id'] == 19 || $responseAcciones[$j]['id'] == 33 || $responseAcciones[$j]['id'] == 34 || ($responseAcciones[$j]['id'] == 1 && $data[$i]['efact_ws_estado'] != 0) || ($responseAcciones[$j]['id'] == 28 && $data[$i]['efact_ws_estado'] != 0) || ($responseAcciones[$j]['id'] == 29 && $data[$i]['efact_ws_estado'] != 0))
         ) { //13 y 14 acciones para QR. 19 Editar
@@ -587,6 +590,9 @@ class MovimientoControlador extends AlmacenIndexControlador
         } elseif ((($data[$i]['documento_estado_id'] == 3) && ($responseAcciones[$j]['id'] == 3))) {
           //
           $stringAcciones .= '';
+        } elseif ((($data[$i]['documento_estado_id'] == 3) && ($responseAcciones[$j]['id'] == 19))) {
+          //
+          $stringAcciones .= '';          
         } elseif ((($data[$i]['documento_estado_id'] == 9) && ($responseAcciones[$j]['id'] == 3))) {
           //
           $stringAcciones .= '';    
@@ -1731,7 +1737,7 @@ class MovimientoControlador extends AlmacenIndexControlador
 
     $respuestaGuardar = MovimientoNegocio::create()->guardarXAccionEnvioEdicion($documentoId, $opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $listaDetalleEliminar, $documentoARelacionar, $valorCheck, $comentario, $checkIgv, $monedaId, $accionEnvio, $tipoPago, $listaPagoProgramacion, $anticiposAAplicar, $periodoId, $percepcion, $datosExtras, $detalleDistribucion, $contOperacionTipoId, $distribucionObligatoria, $igv_porcentaje, null,$dataPostorProveedor, $listaPagoProgramacionPostores);
 
-    if (isset($respuestaGuardar->bandera_historial) && !ObjectUtil::isEmpty($respuestaGuardar->bandera_historial)) {
+    if (isset($respuestaGuardar->bandera_historial) && !ObjectUtil::isEmpty($respuestaGuardar->bandera_historial) && $respuestaGuardar->bandera_historialEditar == 1) {
       if ($respuestaGuardar->bandera_historial == 1) {
         $valoresActualizados = $this->eliminarParametrosJSON($this->params);
       } elseif ($respuestaGuardar->bandera_historial == 2) {

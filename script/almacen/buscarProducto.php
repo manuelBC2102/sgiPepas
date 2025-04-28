@@ -11,9 +11,9 @@ $tipoRequerimientoText = $_GET['tipoRequerimientoText'];
 
 $bien_tipo = 0;
 if($tipoRequerimientoText == "Compra"){
-    $bien_tipo = 0;
+    $bien_tipo = 2;
 }else if($tipoRequerimientoText == "Servicio"){
-    $bien_tipo = -1;
+    $bien_tipo = 1;
 }
 
 $buscar1=  str_replace(' ', '%',$buscar);

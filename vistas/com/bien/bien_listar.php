@@ -8,7 +8,7 @@
                 <button type="button" class="btn btn-info"  onclick="nuevoBien()"><i class=" fa fa-plus-square-o"></i>&nbsp; Nuevo producto</button>
                 <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown" aria-expanded="false"><i class="caret"></i></button>
                 <ul class="dropdown-menu" role="menu">
-                    <!-- <li><a href="#" onclick="nuevoServicio()">Nuevo servicio</a></li> -->
+                    <li><a href="#" onclick="nuevoServicio()">Nuevo servicio</a></li>
                 </ul>
             </div>
 

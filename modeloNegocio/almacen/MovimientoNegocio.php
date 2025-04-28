@@ -37,6 +37,7 @@ require_once __DIR__ . '/../../modelo/contabilidad/Tabla.php';
 require_once __DIR__ . '/MatrizAprobacionNegocio.php';
 require_once __DIR__ . '/../../modelo/almacen/ProgramacionPagos.php';
 require_once __DIR__ . '/../../modelo/almacen/OrdenCompraServicio.php';
+require_once __DIR__ . '/RequerimientoNegocio.php';
 
 
 
@@ -8171,6 +8172,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     $documentoTipo = DocumentoTipoNegocio::create()->obtenerDocumentoTipoXId($documentoTipoId);
     $respuesta = new stdClass();
     $respuesta->bandera_historial = $documentoTipo[0]['bandera_historial'];
+    $respuesta->bandera_historialEditar = $resEdicion[1];
 
     $dataMovimientoDocumento = MovimientoBien::create()->obtenerMovimientoIdXDocumentoId($documentoId);
     $respuesta->movimientoId = $dataMovimientoDocumento[0]['movimiento_id'];
@@ -8359,7 +8361,7 @@ class MovimientoNegocio extends ModeloNegocioBase
         throw new WarningException($mensaje);
       }
     }
-
+    $bandera_edicion = 0;
     $respuestaDoc = MovimientoNegocio::create()->guardarEdicionDocumento($documentoId, $camposDinamicos, $comentario, $periodoId, $tipoPago, $monedaId, $usuarioId, $datosExtras, $contOperacionTipoId, $igv_porcentaje);
 
     //ELIMINAR MOVIMIENTO BIEN
@@ -8367,6 +8369,9 @@ class MovimientoNegocio extends ModeloNegocioBase
       foreach ($listaDetalleEliminar as $itemId) {
         $resElimina = MovimientoBien::create()->actualizarEstadoXId($itemId, 2);
       }
+    }
+    if($resElimina[0]['vout_exito_editar'] == 1){
+      $bandera_edicion = 1;
     }
 
     //Insertamos el detalle
@@ -8389,8 +8394,14 @@ class MovimientoNegocio extends ModeloNegocioBase
       //REGISTRAR LA EDICION DEL DETALLE
       if (!ObjectUtil::isEmpty($item['movimientoBienId'])) {
         $movimientoBien = MovimientoBien::create()->editar($item['movimientoBienId'], $dataDocumento[0]['movimiento_id'], $item["organizadorId"], $item["bienId"], $item["unidadMedidaId"], $item["cantidad"], $item["precio"], 1, $usuarioId, $item["precioTipoId"], $item["utilidad"], $item["utilidadPorcentaje"], $checkIgv, $item["adValorem"], $item["comentarioBien"], $item["agenciaId"], $agrupadorDetalle, $ticket, $item["CeCoId"], ($item["precioPostor1"] == "" ? null : $item["precioPostor1"]), ($item["precioPostor2"] == "" ? null : $item["precioPostor2"]), ($item["precioPostor3"] == "" ? null : $item["precioPostor3"]), $item["esCompra"], $item["cantidadAceptada"], $item['postor_ganador_id']);
+        if($movimientoBien[0]['vout_exito_editar'] == 1){
+          $bandera_edicion = 1;
+        }
       } else {
-        $movimientoBien = MovimientoBien::create()->guardar($dataDocumento[0]['movimiento_id'], $item["organizadorId"], $item["bienId"], $item["unidadMedidaId"], $item["cantidad"], $item["precio"], 1, $usuarioId, $item["precioTipoId"], $item["utilidad"], $item["utilidadPorcentaje"], $checkIgv, $item["adValorem"], $item["comentarioBien"], $item["agenciaId"], $agrupadorDetalle, $ticket);
+        $movimientoBien = MovimientoBien::create()->guardar($dataDocumento[0]['movimiento_id'], $item["organizadorId"], $item["bienId"], $item["unidadMedidaId"], $item["cantidad"], $item["precio"], 1, $usuarioId, $item["precioTipoId"], $item["utilidad"], $item["utilidadPorcentaje"], $checkIgv, $item["adValorem"], $item["comentarioBien"], $item["agenciaId"], $agrupadorDetalle, $ticket, $item["CeCoId"]);
+        if($movimientoBien[0]['vout_exito_editar'] == 1){
+          $bandera_edicion = 1;
+        }
       }
 
       $movimientoBienId = $this->validateResponse($movimientoBien);
@@ -8406,9 +8417,36 @@ class MovimientoNegocio extends ModeloNegocioBase
             $fechaVencimiento = DateUtil::formatearCadenaACadenaBD($valor['valorDet']);
             //EDITA SI YA EXISTE LA FECHA DE VENCIMIENTO SINO REGISTRA
             $resDetalle = MovimientoNegocio::create()->movimientoBienDetalleEditarFecha($movimientoBienId, $valor['columnaCodigo'], $fechaVencimiento, $usuarioId);
+            if($resDetalle[0]['vout_exito_editar'] == 1){
+              $bandera_edicion = 1;
+            }
+          }
+          if ($valor['columnaCodigo'] == 36 && !ObjectUtil::isEmpty($valor['nombreArchivo'])) {
+            $decode = Util::base64ToImage($valor['valorDet']);
+            $nombreArchivo = $valor['nombreArchivo'];
+            $pos = strripos($nombreArchivo, '.');
+            $ext = substr($nombreArchivo, $pos);
+
+            $hoy = date("YmdHis").substr((string)microtime(), 2, 3);;
+            $nombreGenerado = $documentoId . $hoy . $usuarioId . $ext;
+            if($ext == ".pdf" || $ext == ".PDF"){
+              $url = __DIR__ . '/../../util/uploads/documentoAdjunto/' . $nombreGenerado;
+            }else{
+              $url = __DIR__ . '/../../util/uploads/imagenAdjunto/' . $nombreGenerado;
+            }
+
+            file_put_contents($url, $decode);
+            $resspuestaEstado = MovimientoBien::create()->movimientoBienDetalleEditarEstado($movimientoBienId, 36);
+            $resDetalle = MovimientoNegocio::create()->movimientoBienDetalleEditarCadena($movimientoBienId, $valor['columnaCodigo'], $nombreGenerado, $usuarioId, $valor['valorExtra']);
+            if($resDetalle[0]['vout_exito_editar'] == 1){
+              $bandera_edicion = 1;
+            }
           }
           if(($documentoTipoId == Configuraciones::GENERAR_COTIZACION || $documentoTipoId == Configuraciones::GENERAR_COTIZACION_SERVICIO) && $valor['columnaCodigo'] == 37){
             $resDetalle = MovimientoNegocio::create()->movimientoBienDetalleEditarCadena($movimientoBienId, $valor['columnaCodigo'], $valor['valorDet'], $usuarioId, $valor['valorExtra']);
+            if($resDetalle[0]['vout_exito_editar'] == 1){
+              $bandera_edicion = 1;
+            }
           }
         }
       }
@@ -8459,7 +8497,7 @@ class MovimientoNegocio extends ModeloNegocioBase
 
     $this->setMensajeEmergente("La operación se completó de manera satisfactoria");
 
-    return $documentoId;
+    return array($documentoId, $bandera_edicion);
   }
   // TODO: Fin Guardar Edicion
 
@@ -10690,7 +10728,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     // $pdf->SetLineWidth(0); // Establecer el grosor del borde a 0
     // $pdf->Text(50, 120, 'Sin aprobar', false, false, true, ''); // Especifica la posición del texto
 
-    $matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXDocumentoTipoXArea(Configuraciones::SOLICITUD_REQUERIMIENTO, $areaId);
+    $matrizUsuario = RequerimientoNegocio::create()->generarMatrizDocumento(Configuraciones::SOLICITUD_REQUERIMIENTO, $documentoId, $dataDocumento[0]['movimiento_id'], $dataDocumento[0]['usuario_creacion']);
     $usuario_estado = DocumentoNegocio::create()->obtenerDocumentoDocumentoEstadoXdocumentoId($documentoId, "0,1");
 
     $resultadoMatriz = [];
@@ -11008,7 +11046,8 @@ class MovimientoNegocio extends ModeloNegocioBase
     // $pdf->SetLineWidth(0); // Establecer el grosor del borde a 0
     // $pdf->Text(50, 120, 'Sin aprobar', false, false, true, ''); // Especifica la posición del texto
 
-    $matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXDocumentoTipoXArea(Configuraciones::SOLICITUD_REQUERIMIENTO, $areaId);
+    // $matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXDocumentoTipoXArea(Configuraciones::SOLICITUD_REQUERIMIENTO, $areaId);
+    $matrizUsuario = RequerimientoNegocio::create()->generarMatrizDocumento(Configuraciones::REQUERIMIENTO_AREA, $documentoId, $dataDocumento[0]['movimiento_id'], $dataDocumento[0]['usuario_creacion']);
     $usuario_estado = DocumentoNegocio::create()->obtenerDocumentoDocumentoEstadoXdocumentoId($documentoId, "0,1");
 
     $resultadoMatriz = [];
@@ -11947,6 +11986,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     $pdf->SetFont('helvetica', 'B', 6);
     $pdf->MultiCell(50, 5, 'Generado por', 1, 'C', 1, 0, 185, $espacio, true, 0, false, true, 5, 'M');
     $pdf->MultiCell(50, 30, $dataDocumento[0]['nombre'], 1, 'C', 1, 0, 185, $espacio, true, 0, false, true, 30, 'B');
+    $pdf->Image($personaFirma0, 185, $espacio + 5, 55, 20, '', '', '', false, 300, '', false, false, 1);
    
     $pdf->MultiCell(50, 5, 'Fecha:', 1, 'L', 1, 0, 185, $espacio + 30, true, 0, false, true, 5, 'M');
     $pdf->SetFont('helvetica', '', 6);

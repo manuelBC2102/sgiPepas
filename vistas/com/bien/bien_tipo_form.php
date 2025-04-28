@@ -102,6 +102,17 @@ if (isset($f_tipo)) {
                                             <span id='msj_comentario' class="control-label"
                                                   style='color:red;font-style: normal;' hidden></span>
                                         </div> 
+                                        <div class="form-group col-md-6">
+                                            <label>Tipo *</label>
+                                            <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                                <select name="cboTipo" id="cboTipo" class="select2">
+                                                    <option value="1">Servicio</option>
+                                                    <option value="2">Compra</option>
+                                                </select>
+                                                <span id='msj_tipo' class="control-label"
+                                                style='color:red;font-style: normal;' hidden></span>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="row">
                                         <div class="form-group col-md-12">

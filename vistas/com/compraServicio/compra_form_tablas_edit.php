@@ -1353,6 +1353,7 @@
                                 <br><br>
                                 &nbsp;<a id="text_archivoAdjunto" onclick="verImagenPdf()"></a>
                                 &nbsp;<input type ='hidden' id="nombrearchivoAdjunto"  />
+                                &nbsp;<input type ='hidden' id="base64archivoAdjunto"  />
                             </div>                                         
                             <div class="col-sm-12" id="divImagenAdjuntaBien" style="display: flex; justify-content: center; align-items: center;">
                                 <div id="error" style="color: red; display: none;">El archivo no es válido, tiene que ser una imagen o pdf</div>

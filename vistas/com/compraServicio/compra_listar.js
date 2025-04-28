@@ -4465,7 +4465,7 @@ function cargarHistorialDocumento(data) {
         html += "<th style='text-align:center;'>Fecha</th>";
         html += "<th style='text-align:center;'>Usuario</th>";
         html += "<th style='text-align:center;'>Acciones</th> ";
-        html += "<th style='text-align:center;'>Valor</th>";
+        // html += "<th style='text-align:center;'>Valor</th>";
         html += "</tr>";
         tHeadHistorial.append(html);
 
@@ -4480,13 +4480,13 @@ function cargarHistorialDocumento(data) {
             html += "<td style='text-align:center;'>" + item.fecha_creacion + "</td>";
             html += "<td >" + item.usuario + "</td>";
             html += "<td>" + item.descripcion + "</td> ";
-            html += "<td style='text-align:center;'>";
-            if (item.tipo == 1) {
-                html += "<div id='vHistorial_" + item.id + "'></div>";
-            } else {
-                html += '<a onclick="visualizarInformacionHistorial(' + item.id + ')" title="Visualizar"><b><i class="fa fa-eye" style="color:#1ca8dd"></i></a>'
-            }
-            html += "</td>";
+            // html += "<td style='text-align:center;'>";
+            // if (item.tipo == 1) {
+            //     html += "<div id='vHistorial_" + item.id + "'></div>";
+            // } else {
+            //     html += '<a onclick="visualizarInformacionHistorial(' + item.id + ')" title="Visualizar"><b><i class="fa fa-eye" style="color:#1ca8dd"></i></a>'
+            // }
+            // html += "</td>";
             html += "</tr>";
             tBodyHistorial.append(html);
             if (item.tipo == 1) {
@@ -4875,4 +4875,12 @@ function imprimirOrdenServicio(documentoId, documentoTipo){
 
 function devolverDosDecimales(num) {
         return redondearNumero(num).toFixed(2);
+}
+
+function editarDocumento(documentoId, movimientoTipoId) {
+    loaderShow();
+    ax.setAccion("validarDocumentoEdicion");
+    ax.addParamTmp("documentoId", documentoId);
+    ax.setTag(documentoId);
+    ax.consumir();
 }

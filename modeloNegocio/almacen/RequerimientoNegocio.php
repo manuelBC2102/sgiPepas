@@ -291,4 +291,78 @@ class RequerimientoNegocio extends ModeloNegocioBase
             return  $respuesta;
         }
     }
+
+    public function generarMatrizDocumento($documentoTipoId, $documentoId, $movimientoId, $usuarioId){
+        $matrizUsuario = null;
+        $areaId = null;
+        $esUrgencia = null;
+
+        if($documentoTipoId == Configuraciones::SOLICITUD_REQUERIMIENTO){
+            $dataDocumento = DocumentoNegocio::create()->obtenerDetalleDocumento($documentoId);
+            foreach ($dataDocumento as $key => $value) {
+                if($value['descripcion'] == "Urgencia" && $value['valor'] == "Si") {
+                    $matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXDocumentoTipoUrgente($documentoTipoId);
+                }
+                if($value['tipo'] == "43") {
+                    $areaId = $value['valorid'];
+                }
+            }
+            if($matrizUsuario == null){
+                foreach ($dataDocumento as $key => $value) {
+                    switch ($value['tipo']) {
+                        case '43':
+                            $matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXDocumentoTipoXArea($documentoTipoId, $value['valorid']);
+                            break;
+                    }
+                    if($value['descripcion'] == "Tipo de requerimiento" && $value['valor'] == "Servicio") {
+                        $matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXRequerimientoServicio($documentoTipoId, 2, $areaId);
+                    }
+                }
+            }
+        }else{
+            $matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXDocumentoTipoXArea($documentoTipoId);
+        }
+        $movimientoDetalle = MovimientoBien::create()->obtenerXIdMovimiento($movimientoId);
+
+        $sumaDetalle = array_reduce($movimientoDetalle, function ($acumulador, $seleccion) {
+            return $acumulador + ($seleccion['cantidad'] * $seleccion['valor_monetario']);
+        }, 0);
+        
+        if(($documentoTipoId == Configuraciones::ORDEN_COMPRA || $documentoTipoId == Configuraciones::ORDEN_SERVICIO)&& 30000 > $sumaDetalle){
+            $nivelM=1;
+            $matrizUsuario = array_filter($matrizUsuario, function($item) use ($nivelM) {
+                return $item['nivel'] <= $nivelM;
+            });
+        }
+
+        $usuario_estado = DocumentoNegocio::create()->obtenerDocumentoDocumentoEstadoXdocumentoId($documentoId, "0,1");
+
+        $agrupados = [];
+
+        foreach ($matrizUsuario as $usuario) {
+            $key = $usuario['nivel'] . '-' . $usuario['area_id'];
+        
+            if (!isset($agrupados[$key])) {
+                // Si no existe aún esa combinación, la agregamos tal cual
+                $agrupados[$key] = $usuario;
+            } else {
+                // Si ya existe, concatenamos nombre y usuario_aprobador_id
+                $agrupados[$key]['nombre'] .= ' | ' . $usuario['nombre'];
+                $agrupados[$key]['usuario_aprobador_id'] .= ',' . $usuario['usuario_aprobador_id'];
+            }
+        }
+        
+        // Resultado final
+        $matrizUsuario = array_values($agrupados); // para tener índice limpio si lo necesitas
+        
+        $tamanioMatriz = count($matrizUsuario);
+
+        if($tamanioMatriz == 1){
+            $arrayMatriz = array(
+                "usuario_aprobador_id" => $usuarioId,  "nivel" => 1, "nombre" => $usuario_estado[0]['nombre']);
+            array_push($matrizUsuario, $arrayMatriz);
+        }
+    
+        return $matrizUsuario;
+    }
 }

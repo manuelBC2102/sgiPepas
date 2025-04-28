@@ -36,7 +36,7 @@ function controlarDomXTipoBien() {
         $("#contenedorCuentaContable").show();
         $("#contenedorCostoInicial").show();
     } else {
-
+        $("#contenedorBienTipo").show();
         $('#btnProveedor').hide();
     }
 }
@@ -442,6 +442,7 @@ function onResponseObtenerConfiguracionesIniciales(data) {
     $('a[href="#tabActivoFijo"]').hide();
     $('#txtDescuento').val('0.00');
     // cargamos los combos
+
     if (commonVars.bienId > 0) {
         select2.cargar("cboEmpresa", data.empresa, "id", "razon_social");
         if (commonVars.bienTipoId == -2) {
@@ -470,6 +471,14 @@ function onResponseObtenerConfiguracionesIniciales(data) {
             select2.cargar("cboPrecioTipo", data.precioTipo, "id", "descripcion");
             select2.cargar("cboMoneda", data.moneda, "id", ["descripcion", "simbolo"]);
             select2.cargarAsignaUnico("cboUnidadMedida", data.unidadMedidaUnidades, "id", "descripcion");
+            select2.cargar("cboBienTipo", data.bienTipo, "id", ["codigo", "descripcion"]);
+        }
+
+        if (commonVars.bienTipoId == -1) {
+            $("#contenedorModelo").hide();
+            $("#contenedorSeriNumero").hide();
+            $("#codigoProductoText").html("Código de Servicio *")
+            $('a[href="#tabPrecios"]').hide();
         }
         //select2.cargar("cboUnidadControl", data.bienTipo, "id", "descripcion");
 
@@ -518,10 +527,19 @@ function onResponseObtenerConfiguracionesIniciales(data) {
         select2.cargarAsignaUnico("cboEmpresa", data.empresa, "id", "razon_social");
         select2.cargarAsignaUnico("cboUnidadTipo", data.unidadMedidaTipo, "id", "descripcion");
 
-        if (data.unidadMedidaTipo.length == 1) {
-            onchangeUnidadTipo();
+        if (commonVars.bienTipoId != -1) {
+            if (data.unidadMedidaTipo.length == 1) {
+                onchangeUnidadTipo();
+            }
+        }
+        if (commonVars.bienTipoId == -1) {
+            $("#contenedorModelo").hide();
+            $("#contenedorSeriNumero").hide();
+            $("#codigoProductoText").html("Código de Servicio *")
+            $('a[href="#tabPrecios"]').hide();
         }
 
+        select2.cargar("cboBienTipo", data.bienTipo, "id", ["codigo", "descripcion"]);
         select2.cargarAsignaUnico("cboBienTipo", data.bienTipo, "id", ["codigo", "descripcion"]);
         select2.cargarAsignaUnico("cboPrecioTipo", data.precioTipo, "id", "descripcion");
         select2.cargarAsignaUnico("cboMoneda", data.moneda, "id", ["descripcion", "simbolo"]);

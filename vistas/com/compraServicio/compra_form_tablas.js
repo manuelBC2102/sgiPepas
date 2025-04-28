@@ -1148,9 +1148,9 @@ function onResponseObtenerConfiguracionesIniciales(data) {
             if (arrayCuenta.includes(dtdTipoCuentaText)) {
                 var dtdTipoTipoRequerimiento = obtenerDocumentoTipoDatoIdXTipo(42);
                 if (select2.obtenerValor("cboTipoRequerimiento_" + dtdTipoTipoRequerimiento) != 455) {
-                    select2.asignarValor("cbo_" + dtdTipoUrgencia.id, 473);
+                    select2.asignarValor("cbo_" + dtdTipoUrgencia.id, 472);
                 } else {
-                    select2.asignarValor("cbo_" + dtdTipoUrgencia.id, 474);
+                    select2.asignarValor("cbo_" + dtdTipoUrgencia.id, 473);
                 }
                 $("#cbo_" + dtdTipoUrgencia.id).prop('disabled', true);
             } else {
@@ -1195,7 +1195,7 @@ function onResponseObtenerConfiguracionesIniciales(data) {
 
             //Validamos nuevamente y ocultamos columnas
             if (doc_TipoId == REQUERIMIENTO_AREA) {
-                if (select2.obtenerValor("cboTipoRequerimiento_" + dtdTipoTipoRequerimiento) == 488) {
+                if (select2.obtenerValor("cboTipoRequerimiento_" + dtdTipoTipoRequerimiento) == 484) {
                     $("#tb_cantidad_470").hide();
                     $("#tb_cantidad_aceptada_475").hide();
                     $("#tb_stock_473").hide();
@@ -3678,7 +3678,7 @@ function onResponseObtenerDocumentoTipoDato(data) {
                     select2.asignarValor("cbo_" + item.id, 0);
                     if (doc_TipoId != REQUERIMIENTO_AREA) {
                         if (!isEmpty(item.lista_defecto)) {
-                            if (item.lista_defecto == 12) {
+                            if (item.lista_defecto == AREA_LOGISTICA) {
                                 $("#cbo_" + item.id).prop("disabled", false);
                             } else {
                                 var id = parseInt(item.lista_defecto);
@@ -4741,7 +4741,7 @@ function guardar(accion) {
                 bandera_pagos = true;
                 return;
             }
-            if(proveedorID.tiempoEntrega == 2 && isEmpty(proveedorID.arrayProveedor[idx])){
+            if(proveedorID.tiempoEntrega == 2 && isEmpty(arrayProveedor[idx].tiempo)){
                 mostrarAdvertencia("Si tiempo de entrega es Días, Falta registrar tiempo para:" + select2.obtenerText("cboProveedor_" + idx));
                 bandera_pagos = true;
                 return;

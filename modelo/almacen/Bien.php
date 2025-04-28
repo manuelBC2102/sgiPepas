@@ -29,12 +29,13 @@ class Bien extends ModeloBase {
         return $this->commandGetData();
     }
 
-    public function insertBienTipo($codigo, $descripcion, $comentario, $estado, $usuarioCreacion, $bienTipoPadreId, $codigoSunatId, $codigoSunatId2) {
+    public function insertBienTipo($codigo, $descripcion, $comentario, $estado, $tipo, $usuarioCreacion, $bienTipoPadreId, $codigoSunatId, $codigoSunatId2) {
         $this->commandPrepare("sp_bien_tipo_insert");
         $this->commandAddParameter(":vin_codigo", $codigo);
         $this->commandAddParameter(":vin_descripcion", $descripcion);
         $this->commandAddParameter(":vin_comentario", $comentario);
         $this->commandAddParameter(":vin_estado", $estado);
+        $this->commandAddParameter(":vin_tipo", $tipo);
         $this->commandAddParameter(":vin_usuario_creacion", $usuarioCreacion);
         $this->commandAddParameter(":vin_bien_tipo_padre_id", $bienTipoPadreId);
         $this->commandAddParameter(":vin_sunat_tabla_detalle_id", $codigoSunatId);
@@ -56,13 +57,14 @@ class Bien extends ModeloBase {
         return $this->commandGetData();
     }
 
-    public function updateBienTipo($id, $descripcion, $codigo, $comentario, $estado, $bienTipoPadreId, $codigoSunatId, $codigoSunatId2) {
+    public function updateBienTipo($id, $descripcion, $codigo, $comentario, $estado, $tipo, $bienTipoPadreId, $codigoSunatId, $codigoSunatId2) {
         $this->commandPrepare("sp_bien_tipo_update");
         $this->commandAddParameter(":vin_id", $id);
         $this->commandAddParameter(":vin_codigo", $codigo);
         $this->commandAddParameter(":vin_descripcion", $descripcion);
         $this->commandAddParameter(":vin_comentario", $comentario);
         $this->commandAddParameter(":vin_estado", $estado);
+        $this->commandAddParameter(":vin_tipo", $tipo);
         $this->commandAddParameter(":vin_bien_tipo_padre_id", $bienTipoPadreId);
         $this->commandAddParameter(":vin_sunat_tabla_detalle_id", $codigoSunatId);
         $this->commandAddParameter(":vin_sunat_tabla_detalle_id2", $codigoSunatId2);

@@ -44,7 +44,7 @@ class RequerimientoControlador extends AlmacenIndexControlador
             $areaId = null;
             $esUrgencia = null;
 
-            if($data[$i]['documento_tipo_id'] == 280){
+            if($data[$i]['documento_tipo_id'] == Configuraciones::SOLICITUD_REQUERIMIENTO){
                 $dataDocumento = DocumentoNegocio::create()->obtenerDetalleDocumento($data[$i]['id']);
                 foreach ($dataDocumento as $key => $value) {
                     if($value['descripcion'] == "Urgencia" && $value['valor'] == "Si") {
@@ -221,18 +221,16 @@ class RequerimientoControlador extends AlmacenIndexControlador
 
             $icon_aprobacion = "<i class='fa fa-eye' style='color:green;' title='Ver detalle'></i>";
             if (in_array($usuarioId, $arrayAprobadores) && !in_array($usuarioId, $arrayAprobaciones) && in_array($usuarioId, $valoresFiltro) && $data[$i]['estado_descripcion'] != "Rechazado") {
-                // $stringAcciones .= "<a href='#' onclick='aprobar(" . $data[$i]['id'] . ", " . $data[$i]['movimiento_id']. ", " . $data[$i]['documento_tipo_id']. ")'><i class='fa fa-check' style='color:blue;' title='Aprobar'></i></a>&nbsp;";
-                // $stringAcciones .= "<a href='#' onclick='rechazar(" . $data[$i]['id'] . ", " . $data[$i]['movimiento_id'].  ", " . $data[$i]['documento_tipo_id']. ")'><i class='fa fa-times' style='color:red;' title='Rechazar '></i></a>&nbsp;";
                 $data[$i]['uasurio_estado_descripcion'] = "Por Aprobar";
                 $icon_aprobacion = "<i class='fa fa-check' style='color:blue;' title='Aprobar'></i>";
-                // if($criterios['documento_tipo'] == 282){
-                //     $stringAcciones .= "<a href='#' onclick='archivosAdjuntos(" . $data[$i]['id'] . ", " . $data[$i]['movimiento_id']. ")'><i class='fa fa-cloud-upload' style='color:blue;' title='Revisar archivos adjuntos'></i></a>&nbsp;";
+
+                // if($data[$i]['documento_tipo_id'] == Configuraciones::SOLICITUD_REQUERIMIENTO){
+                //     $stringAcciones .= "<a href='#' onclick='editarDocumento(" . $data[$i]['id'] . ", 392)'><i class='fa fa-edit' style='color:purple;' title='Editar documento'></i></a>&nbsp;";
                 // }
             }
 
             if(count($usuario_estado) < count($matrizUsuario) && $data[$i]['estado_descripcion'] != "Rechazado"){
                 $data[$i]['estado_descripcion'] = "Por Aprobar";
-
             }
             $stringAcciones .= "<a href='#' onclick='visualizar(" . $data[$i]['id'] . ", " . $data[$i]['movimiento_id']. ", " . $data[$i]['documento_estado_id']. ", \"".$data[$i]['uasurio_estado_descripcion']."\", " . $data[$i]['documento_tipo_id']. ", \"".$data[$i]['documento_tipo_descripcion']."\")'>". $icon_aprobacion."</a>&nbsp;";
             $data[$i]['progreso'] = $stringProgressBar;
@@ -348,4 +346,10 @@ class RequerimientoControlador extends AlmacenIndexControlador
       return 1;
     }
   
+    // EDICION
+    public function validarDocumentoEdicion()
+    {
+        $documentoId = $this->getParametro("documentoId");
+        return MovimientoNegocio::create()->validarDocumentoEdicion($documentoId);
+    }
 }

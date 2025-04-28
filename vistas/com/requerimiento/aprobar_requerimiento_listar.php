@@ -170,10 +170,6 @@
                                 <b>Leyenda:</b>&nbsp;&nbsp;
                                 <i class='fa fa-eye' style='color:green;'></i> Ver detalle &nbsp;&nbsp;&nbsp;
                                 <i class='fa fa-check' style='color:blue;'></i> Aprobar  &nbsp;&nbsp;&nbsp;
-                                <i class='fa fa-eye' style='color:blue;'></i> Ver detalle cuadro comparativo&nbsp;&nbsp;&nbsp;
-                                <i class='fa fa-print' style='color:black;'></i> Ver pdf de cuadro comparativo&nbsp;&nbsp;&nbsp;
-                                <i class='fa fa-eye' style='color:black;'></i> Ver detalle distribución pagos&nbsp;&nbsp;&nbsp;
-                                <!-- <i class='fa fa-times' style='color:red;'></i> Rechazar  &nbsp;&nbsp;&nbsp; -->
                             </p>
                         </div>
                     </div>

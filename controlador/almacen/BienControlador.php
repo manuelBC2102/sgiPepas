@@ -27,11 +27,12 @@ class BienControlador extends AlmacenIndexControlador {
         $codigo = $this->getParametro("codigo");
         $comentario = $this->getParametro("comentario");
         $estado = $this->getParametro("estado");
+        $tipo = $this->getParametro("tipo");
         $bienTipoPadreId = $this->getParametro("bienTipoPadreId");
         $usu_creacion = $this->getUsuarioId();
         $codigoSunatId = $this->getParametro("codigoSunatId");
         $codigoSunatId2 = $this->getParametro("codigoSunatId2");
-        return BienNegocio::create()->insertBienTipo($codigo, $descripcion, $comentario, $estado, $usu_creacion, $bienTipoPadreId, $codigoSunatId, $codigoSunatId2);
+        return BienNegocio::create()->insertBienTipo($codigo, $descripcion, $comentario, $estado, $tipo, $usu_creacion, $bienTipoPadreId, $codigoSunatId, $codigoSunatId2);
     }
 
     public function getBienTipo() {
@@ -210,7 +211,7 @@ class BienControlador extends AlmacenIndexControlador {
         $respuesta->unidadMedidaTipo = ($bienTipoId == -1) ? UnidadNegocio::create()->obtenerUnidadMedidaTipoXId(-1) : UnidadNegocio::create()->obtenerUnidadMedidaTipo(); // UnidadMedidaTipo
         //$respuesta->empresa = EmpresaNegocio::create()->getAllEmpresaByUsuarioId($usuarioId); // Empresas
         $respuesta->empresa = EmpresaNegocio::create()->getEmpresaActivas(); //todas las empresas
-        $respuesta->bienTipo = ($bienTipoId == -1) ? BienNegocio::create()->obtenerBienTipoXId($bienTipoId) : BienNegocio::create()->obtenerXIdPadre(-3); // BienTipo 
+        $respuesta->bienTipo = BienNegocio::create()->obtenerXIdPadre($bienTipoId); // BienTipo 
         $respuesta->bien = ($bienId > -2) ? BienNegocio::create()->getBien($bienId) : null; // > -2 , porque el id de comment = -1
         $respuesta->bienPrecio = ($bienId > 0) ? BienPrecioNegocio::create()->obtenerBienPrecioXBienId($bienId) : null;
 
@@ -439,4 +440,8 @@ class BienControlador extends AlmacenIndexControlador {
         return BienNegocio::create()->obtenerConfiguracionesInicialesBienTipo($bienTipoId);
     }
 
+    public function obtenerBienTipoXId() {
+        $bienTipoId = $this->getParametro("bienTipoId");
+        return BienNegocio::create()->obtenerConfiguracionesInicialesBienTipo($bienTipoId);
+    }
 }

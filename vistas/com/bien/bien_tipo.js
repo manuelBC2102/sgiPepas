@@ -5,6 +5,18 @@ var bandera_getCombo = false;
 $("#cboEstado").change(function () {
     $('#msj_estado').hide();
 });
+
+$("#cboTipo").change(function () {
+    $('#msj_tipo').hide();
+});
+
+$("#cboBienTipoPadre").change(function (e) {
+    loaderShow();
+    ax.setAccion("obtenerBienTipoXId");
+    ax.addParamTmp("bienTipoId", e.val);
+    ax.consumir();
+});
+
 function onchangeEmpresa()
 {
     $('#msj_empresa').hide();
@@ -56,6 +68,7 @@ function validar_bien_tipo_form() {
     var descripcion = document.getElementById('txt_descripcion').value;
     var codigo = document.getElementById('txt_codigo').value;
     var estado = document.getElementById('cboEstado').value;
+    var tipo = document.getElementById('cboTipo').value;
     if (descripcion == "" || descripcion == null || espacio.test(descripcion) || descripcion.length == 0)
     {
         $("msj_descripcion").removeProp(".hidden");
@@ -74,6 +87,12 @@ function validar_bien_tipo_form() {
         $("#msj_estado").text("Seleccionar un estado").show();
         bandera = false;
     }
+    if (tipo == "" || espacio.test(tipo) || tipo.lenght == 0 || tipo == null)
+        {
+            $("msj_tipo").removeProp(".hidden");
+            $("#msj_tipo").text("Seleccionar un tipo").show();
+            bandera = false;
+        }    
     return bandera;
 }
 
@@ -158,6 +177,13 @@ function successBien(response) {
                 break;
              case 'obtenerConfiguracionesInicialesBienTipo':
                 onResponseObtenerConfiguracionesInicialesBienTipo(response.data);  
+                loaderClose();
+                break;
+            case 'obtenerBienTipoXId':
+                if(!isEmpty(response.data)){
+                    asignarValorSelect2('cboTipo', response.data.dataBienTipo[0].tipo);
+                    $("#cboTipo").prop("disabled", true);
+                }
                 loaderClose();
                 break;
         }
@@ -246,7 +272,7 @@ function onResponseAjaxpGetDataGridBienTipo(data) {
     $("#dataList").append(html);
     loaderClose();
 }
-function guardarBienTipo(tipo)
+function guardarBienTipo(bienTipo)
 {
     var id = document.getElementById('id').value;
     var usu_creacion = document.getElementById('usuario').value;
@@ -254,20 +280,21 @@ function guardarBienTipo(tipo)
     var codigo = document.getElementById('txt_codigo').value;
     var comentario = document.getElementById('txt_comentario').value;
     var estado = document.getElementById('cboEstado').value;
+    var tipo = document.getElementById('cboTipo').value;
     var bienTipoPadreId = document.getElementById('cboBienTipoPadre').value;
     
     var codigoSunatId=select2.obtenerValor('cboCodigoSunat');	
     var codigoSunatId2=select2.obtenerValor('cboCodigoSunat2');	    
     
-    if (tipo == 1)
+    if (bienTipo == 1)
     {
-        updateBienTipo(id, descripcion, codigo, comentario, estado,bienTipoPadreId,codigoSunatId,codigoSunatId2);
+        updateBienTipo(id, descripcion, codigo, comentario, estado, tipo, bienTipoPadreId,codigoSunatId,codigoSunatId2);
     } else {
-        insertBienTipo(descripcion, codigo, comentario, estado, usu_creacion,bienTipoPadreId,codigoSunatId,codigoSunatId2);
+        insertBienTipo(descripcion, codigo, comentario, estado, tipo,usu_creacion,bienTipoPadreId,codigoSunatId,codigoSunatId2);
     }
 }
 
-function insertBienTipo(descripcion, codigo, comentario, estado, usu_creacion,bienTipoPadreId,codigoSunatId,codigoSunatId2)
+function insertBienTipo(descripcion, codigo, comentario, estado, tipo, usu_creacion,bienTipoPadreId,codigoSunatId,codigoSunatId2)
 {
     if (validar_bien_tipo_form()) {
         loaderShow(null);
@@ -277,6 +304,7 @@ function insertBienTipo(descripcion, codigo, comentario, estado, usu_creacion,bi
         ax.addParamTmp("codigo", codigo);
         ax.addParamTmp("comentario", comentario);
         ax.addParamTmp("estado", estado);
+        ax.addParamTmp("tipo", tipo);
         ax.addParamTmp("usu_creacion", usu_creacion);
         ax.addParamTmp("bienTipoPadreId", bienTipoPadreId);
         ax.addParamTmp("codigoSunatId", codigoSunatId);
@@ -301,12 +329,15 @@ function llenarFormularioEditar(data)
         if(!isEmpty(data[0].bien_tipo_padre_id)){
             asignarValorSelect2('cboBienTipoPadre', data[0].bien_tipo_padre_id);
         }  
+        $("#cboTipo").prop("disabled", true);
+
         asignarValorSelect2('cboEstado', data[0].estado);
+        asignarValorSelect2('cboTipo', data[0].tipo);
         asignarValorSelect2('cboCodigoSunat', data[0].sunat_tabla_detalle_id);
         asignarValorSelect2('cboCodigoSunat2', data[0].sunat_tabla_detalle_id2);
     }
 }
-function updateBienTipo(id, descripcion, codigo, comentario, estado,bienTipoPadreId,codigoSunatId,codigoSunatId2)
+function updateBienTipo(id, descripcion, codigo, comentario, estado, tipo,bienTipoPadreId,codigoSunatId,codigoSunatId2)
 {
     if (validar_bien_tipo_form()) {
         loaderShow(null);
@@ -317,6 +348,7 @@ function updateBienTipo(id, descripcion, codigo, comentario, estado,bienTipoPadr
         ax.addParamTmp("codigo", codigo);
         ax.addParamTmp("comentario", comentario);
         ax.addParamTmp("estado", estado);
+        ax.addParamTmp("tipo", tipo);
         ax.addParamTmp("bienTipoPadreId", bienTipoPadreId);
         ax.addParamTmp("codigoSunatId", codigoSunatId);
         ax.addParamTmp("codigoSunatId2", codigoSunatId2);
@@ -408,6 +440,7 @@ function onResponseObtenerConfiguracionesInicialesBienTipo(data) {
     select2.cargar("cboCodigoSunat", data.dataSunatDetalle, "id", ["codigo", "descripcion"]);
     select2.cargar("cboCodigoSunat2", data.dataSunatDetalle2, "id", ["codigo", "descripcion"]);
     select2.cargar("cboBienTipoPadre", data.dataBienTipoPadres, "id", ["codigo", "descripcion"]);
+    select2.asignarValor("cboTipo",'');
     
     llenarFormularioEditar(data.dataBienTipo);
 }
