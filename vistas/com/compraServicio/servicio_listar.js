@@ -2774,7 +2774,12 @@ function onResponseObtenerMovimientoTipoColumnaLista(data) {
             objColumnaDefs = {};
             if (!isEmpty(item.documento_columna_consulta_id)) {
                 switch (parseInt(item.documento_columna_consulta_id)) {
-
+                    case 9: //Usuario
+                        objColumnaDefs.render = function (data, type, row) {
+                            return '<p title="'+row.persona_nombre+'">'+ data +'</p>';
+                        };
+                        objColumnaDefs.targets = index;
+                        break;
                     case 8: //fecha creacion
                         objColumnaDefs.render = function (data, type, row) {
                             var fecha = row.fecha_creacion;
