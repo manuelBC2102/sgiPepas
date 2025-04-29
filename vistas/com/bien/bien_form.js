@@ -118,7 +118,7 @@ function validarFormulario() {
 
     var espacio = /^\s+$/;
 
-    if (commonVars.bienTipoId != -1) {
+    if (commonVars.bienTipoId != 1) {
         var descripcion = document.getElementById('txt_descripcion').value;
         var cant_minima = null;
         // var cant_minima = document.getElementById('txt_cant_minima').value;
@@ -448,7 +448,7 @@ function onResponseObtenerConfiguracionesIniciales(data) {
         if (commonVars.bienTipoId == -2) {
             $('a[href="#tabActivoFijo"]').show();
         }
-        if (commonVars.bienTipoId != -1) {
+        if (commonVars.bienTipoId != 1) {
             select2.cargar("cboUnidadTipo", data.unidadMedidaTipo, "id", "descripcion");
             select2.cargar("cboBienTipo", data.bienTipo, "id", ["codigo", "descripcion"]);
             select2.cargar("cboPrecioTipo", data.precioTipo, "id", "descripcion");
@@ -468,15 +468,17 @@ function onResponseObtenerConfiguracionesIniciales(data) {
 
 
         } else {
+            select2.cargar("cboUnidadTipo", data.unidadMedidaTipo, "id", "descripcion");
             select2.cargar("cboPrecioTipo", data.precioTipo, "id", "descripcion");
             select2.cargar("cboMoneda", data.moneda, "id", ["descripcion", "simbolo"]);
             select2.cargarAsignaUnico("cboUnidadMedida", data.unidadMedidaUnidades, "id", "descripcion");
             select2.cargar("cboBienTipo", data.bienTipo, "id", ["codigo", "descripcion"]);
         }
 
-        if (commonVars.bienTipoId == -1) {
+        if (commonVars.bienTipoId == 1) {
             $("#contenedorModelo").hide();
             $("#contenedorSeriNumero").hide();
+            $("#contenedorMarca").hide();
             $("#codigoProductoText").html("Código de Servicio *")
             $('a[href="#tabPrecios"]').hide();
         }
@@ -527,16 +529,17 @@ function onResponseObtenerConfiguracionesIniciales(data) {
         select2.cargarAsignaUnico("cboEmpresa", data.empresa, "id", "razon_social");
         select2.cargarAsignaUnico("cboUnidadTipo", data.unidadMedidaTipo, "id", "descripcion");
 
-        if (commonVars.bienTipoId != -1) {
+        if (commonVars.bienTipoId != 1) {
             if (data.unidadMedidaTipo.length == 1) {
                 onchangeUnidadTipo();
             }
         }
-        if (commonVars.bienTipoId == -1) {
+        if (commonVars.bienTipoId == 1) {
             $("#contenedorModelo").hide();
             $("#contenedorSeriNumero").hide();
             $("#codigoProductoText").html("Código de Servicio *")
             $('a[href="#tabPrecios"]').hide();
+            $("#contenedorMarca").hide();
         }
 
         select2.cargar("cboBienTipo", data.bienTipo, "id", ["codigo", "descripcion"]);
@@ -571,6 +574,7 @@ function onResponseObtenerConfiguracionesIniciales(data) {
         // fin preseleccion
 
     }
+
     select2.cargar("cboMetodoDepreciacion", data.dataDepreciacionMetodo, "id", "descripcion");
     select2.cargar("cboDepreciacion", data.dataDepreciacion, "id", "descripcion");
     // cargamos el formulario
@@ -578,7 +582,7 @@ function onResponseObtenerConfiguracionesIniciales(data) {
         unidad_controlID = data.bien[0].unidad_control_id;
         llenarFormularioEditar(data.bien);
         cargarCentroCostoBien(data.dataDistribucion);
-        if (commonVars.bienTipoId != -1) {
+        if (commonVars.bienTipoId != 1) {
             onchangeUnidadTipo();
         }
         //llenarcboUnidadControlEditar(data.bien);
@@ -590,6 +594,9 @@ function onResponseObtenerConfiguracionesIniciales(data) {
         //llenarModalProveedores(data.bienPersona);
     }
 
+    if (commonVars.bienTipoId == 1) {
+        onchangeUnidadTipo();
+    }
     loaderClose();
 }
 
@@ -861,12 +868,7 @@ function updateBien(id, descripcion, codigo, cant_minima, tipo, estado, comentar
         ax.addParamTmp("id_bien", id);
         ax.addParamTmp("descripcion", descripcion);
         ax.addParamTmp("codigo", codigo);
-
-        if (commonVars.bienTipoId != -1) {
-            ax.addParamTmp("tipo", tipo);
-        } else {
-            ax.addParamTmp("tipo", -1);
-        }
+        ax.addParamTmp("tipo", tipo);
         ax.addParamTmp("cant_minima", cant_minima);
         ax.addParamTmp("estado", estado);
         ax.addParamTmp("comentario", comentario);

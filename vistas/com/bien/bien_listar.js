@@ -130,7 +130,7 @@ function onResponseAjaxpGetDataGridBien(dataRespuesta) {
             switch (parseInt(item.estado)) {
                 case 1:
                     item.estado_descripcion = "Activo";
-                    item.opciones = '<a onclick="editarBien(' + item['id'] + ', ' + item['bien_tipo_id'] + ')"><b><i class="fa fa-edit" style="color:#E8BA2F;"></i><b></a>&nbsp;&nbsp;&nbsp;';
+                    item.opciones = '<a onclick="editarBien(' + item['id'] + ', ' + item['tipo'] + ')"><b><i class="fa fa-edit" style="color:#E8BA2F;"></i><b></a>&nbsp;&nbsp;&nbsp;';
                     if (item['bien_tipo_id'] == -2) {
                         item.opciones += '<a onclick="darBajaActivo(' + item['id'] + ',\'' + bienDescripcion + '\')"><b><i class="ion-flash-off" style="color:#cb2a2a;"></i><b></a>';
                     } else {

@@ -51,7 +51,7 @@
                                             </div>
 
                                             <div class="form-group col-md-6" id="contenedorModelo">
-                                                <label>Modelo *</label>
+                                                <label>Modelo </label>
                                                 <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
                                                     <input type="text" id="txt_modelo" name="txt_modelo" class="form-control" required="" aria-required="true" value="" maxlength="500"/>
                                                 </div>
@@ -69,7 +69,7 @@
                                                       style='color:red;font-style: normal;' hidden></span>
                                             </div>
                                             <div class="form-group col-md-6 " id="contenedorSeriNumero">
-                                                <label>Serie y número *</label>
+                                                <label>Serie y número </label>
                                                 <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
                                                     <input  type="text" id="txt_serie_numero" name="txt_serie_numero" class="form-control" value="" maxlength="45"/>
                                                 </div>

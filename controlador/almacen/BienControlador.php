@@ -48,10 +48,11 @@ class BienControlador extends AlmacenIndexControlador {
         $codigo = $this->getParametro("codigo");
         $comentario = $this->getParametro("comentario");
         $estado = $this->getParametro("estado");
+        $tipo = $this->getParametro("tipo");
         $bienTipoPadreId = $this->getParametro("bienTipoPadreId");
         $codigoSunatId = $this->getParametro("codigoSunatId");
         $codigoSunatId2 = $this->getParametro("codigoSunatId2");
-        return BienNegocio::create()->updateBienTipo($id_bien_tipo, $descripcion, $codigo, $comentario, $estado, $bienTipoPadreId, $codigoSunatId, $codigoSunatId2);
+        return BienNegocio::create()->updateBienTipo($id_bien_tipo, $descripcion, $codigo, $comentario, $estado, $tipo, $bienTipoPadreId, $codigoSunatId, $codigoSunatId2);
     }
 
     public function deleteBienTipo() {
@@ -208,7 +209,7 @@ class BienControlador extends AlmacenIndexControlador {
         $empresaId = $this->getParametro("empresaId");
         $respuesta = new stdClass();
         // Obtengo las configuraciones comunes 
-        $respuesta->unidadMedidaTipo = ($bienTipoId == -1) ? UnidadNegocio::create()->obtenerUnidadMedidaTipoXId(-1) : UnidadNegocio::create()->obtenerUnidadMedidaTipo(); // UnidadMedidaTipo
+        $respuesta->unidadMedidaTipo = ($bienTipoId == 1) ? UnidadNegocio::create()->obtenerUnidadMedidaTipoXId(14) : UnidadNegocio::create()->obtenerUnidadMedidaTipo(); // UnidadMedidaTipo
         //$respuesta->empresa = EmpresaNegocio::create()->getAllEmpresaByUsuarioId($usuarioId); // Empresas
         $respuesta->empresa = EmpresaNegocio::create()->getEmpresaActivas(); //todas las empresas
         $respuesta->bienTipo = BienNegocio::create()->obtenerXIdPadre($bienTipoId); // BienTipo 
