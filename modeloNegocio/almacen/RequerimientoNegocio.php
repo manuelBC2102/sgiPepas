@@ -77,6 +77,9 @@ class RequerimientoNegocio extends ModeloNegocioBase
                 $documentoTipoId = $tipo;
             }
         }
+        if($documentoTipoId == Configuraciones::ORDEN_COMPRA || $documentoTipoId == Configuraciones::ORDEN_SERVICIO){
+            $areaId = null;
+        }
 
         $columnaOrdenarIndice = $order[0]['column'];
         $formaOrdenar = $order[0]['dir'];
@@ -115,7 +118,10 @@ class RequerimientoNegocio extends ModeloNegocioBase
         $respuesta = new stdClass();
         $detalle =  MovimientoBien::create()->obtenerXIdMovimiento($movimientoId);
         $respuesta->dataDocumento = DocumentoNegocio::create()->obtenerDetalleDocumento($id);
-
+        foreach ($detalle as $index => $item) {
+            $resMovimientoBienDetalle = MovimientoBien::create()->obtenerMovimientoBienDetalleXMovimientoBienId($item['movimiento_bien_id']);
+            $detalle[$index]["movimiento_bien_detalle"] = $resMovimientoBienDetalle;
+        }
         $respuesta->detalle = $detalle;
         return $respuesta;
     }
@@ -315,7 +321,7 @@ class RequerimientoNegocio extends ModeloNegocioBase
                             break;
                     }
                     if($value['descripcion'] == "Tipo de requerimiento" && $value['valor'] == "Servicio") {
-                        $matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXRequerimientoServicio($documentoTipoId, 2, $areaId);
+                        $matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXRequerimientoServicio($documentoTipoId);
                     }
                 }
             }

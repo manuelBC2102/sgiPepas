@@ -95,7 +95,7 @@ class MovimientoNegocio extends ModeloNegocioBase
       $mostrarAccNuevo = 0;
       $dataPerfil = PerfilNegocio::create()->obtenerPerfilXUsuarioId($usuarioId);
       foreach ($dataPerfil as $itemPerfil) {
-        if ($itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_TI_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_JEFE_LOGISTA || $itemPerfil['id'] == PerfilNegocio::PERFIL_SOLICITANTE_REQUERIMIENTO || $itemPerfil['id'] == PerfilNegocio::PERFIL_LOGISTA) {
+        if ($itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_TI_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_JEFE_LOGISTA || $itemPerfil['id'] == PerfilNegocio::PERFIL_SOLICITANTE_REQUERIMIENTO || $itemPerfil['id'] == PerfilNegocio::PERFIL_LOGISTA || $itemPerfil['id'] == PerfilNegocio::PERFIL_COMPRAS) {
           $mostrarAccNuevo = 1;
         }
       }
@@ -10465,6 +10465,11 @@ class MovimientoNegocio extends ModeloNegocioBase
           break;          
       }
     }
+
+    if($tipo_requerimiento == "Servicio"){
+      $urgencia = 2;
+    }
+
     $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
 
     // set document information
@@ -10767,10 +10772,10 @@ class MovimientoNegocio extends ModeloNegocioBase
       }
     }
 
-    $personaFirma0 = __DIR__ . "/../../vistas/com/persona/firmas/" . $resultadoMatriz[0]['firma_digital'] . "png";
-    $personaFirma1 = __DIR__ . "/../../vistas/com/persona/firmas/" . $resultadoMatriz[1]['firma_digital'] . "png";
-    $personaFirma2 = __DIR__ . "/../../vistas/com/persona/firmas/" . $resultadoMatriz[2]['firma_digital'] . "png";
-    $personaFirma3 = __DIR__ . "/../../vistas/com/persona/firmas/" . $resultadoMatriz[3]['firma_digital'] . "png";
+    $personaFirma0 = __DIR__ . "/../../vistas/com/persona/firmas/" . $resultadoMatriz[0]['firma_digital'];
+    $personaFirma1 = __DIR__ . "/../../vistas/com/persona/firmas/" . $resultadoMatriz[1]['firma_digital'];
+    $personaFirma2 = __DIR__ . "/../../vistas/com/persona/firmas/" . $resultadoMatriz[2]['firma_digital'];
+    $personaFirma3 = __DIR__ . "/../../vistas/com/persona/firmas/" . $resultadoMatriz[3]['firma_digital'];
 
 
     if ($urgencia == 1) {
@@ -10782,7 +10787,7 @@ class MovimientoNegocio extends ModeloNegocioBase
       $pdf->MultiCell(50, 5, 'Recibido por', 1, 'C', 1, 0, 135, $espacio, true, 0, false, true, 5, 'M');
       $pdf->MultiCell(50, 30, $resultadoMatriz[2]['nombre'], 1, 'C', 1, 0, 135, $espacio, true, 0, false, true, 30, 'B');
       $pdf->Image($personaFirma0, 35, $espacio + 5, 50, 20, '', '', '', false, 300, '', false, false, 1);
-      $pdf->MultiCell(50, 30, 'Jefe de Area', 1, 'C', 1, 0, 35, $espacio + 5, true, 0, false, true, 30, 'B');
+      $pdf->MultiCell(50, 30, 'Usuario', 1, 'C', 1, 0, 35, $espacio + 5, true, 0, false, true, 30, 'B');
       $pdf->Image($personaFirma1, 85, $espacio + 5, 50, 20, '', '', '', false, 300, '', false, false, 1);
       $pdf->MultiCell(50, 30, 'Gerente General', 1, 'C', 1, 0, 85, $espacio + 5, true, 0, false, true, 30, 'B');
       $pdf->Image($personaFirma2, 135, $espacio + 5, 50, 20, '', '', '', false, 300, '', false, false, 1);
@@ -10792,13 +10797,44 @@ class MovimientoNegocio extends ModeloNegocioBase
       $pdf->MultiCell(50, 5, date_format((date_create($dataDocumento[0]['fecha_emision'])), 'd/m/Y'), 1, 'L', 1, 0, 45, $espacio + 35, true, 0, false, true, 5, 'M');
       $pdf->SetFont('helvetica', 'B', 6);
       $pdf->MultiCell(50, 5, 'Fecha:', 1, 'L', 1, 0, 85, $espacio + 35, true, 0, false, true, 5, 'M');
-      $pdf->SetFont('helvetica', 'B', 6);
-      $pdf->MultiCell(40, 5, date_format((date_create($dataDocumento[1]['fecha_emision'])), 'd/m/Y'), 1, 'L', 1, 0, 95, $espacio + 35, true, 0, false, true, 5, 'M');
+      $pdf->SetFont('helvetica', '', 6);
+      $fecha1 =  ObjectUtil::isEmpty($resultadoMatriz[1]['fecha']) ? "" : date_format((date_create($resultadoMatriz[1]['fecha_emision'])), 'd/m/Y');
+      $pdf->MultiCell(40, 5, $fecha1, 1, 'L', 1, 0, 95, $espacio + 35, true, 0, false, true, 5, 'M');
       $pdf->SetFont('helvetica', 'B', 6);
       $pdf->MultiCell(50, 5, 'Fecha:', 1, 'L', 1, 0, 135, $espacio + 35, true, 0, false, true, 5, 'M');
       $pdf->SetFont('helvetica', '', 6);
-      $pdf->MultiCell(40, 5, date_format((date_create($dataDocumento[2]['fecha_emision'])), 'd/m/Y'), 1, 'L', 1, 0, 145, $espacio + 35, true, 0, false, true, 5, 'M');
-    } else {
+      $fecha2 =  ObjectUtil::isEmpty($resultadoMatriz[2]['fecha']) ? "" : date_format((date_create($resultadoMatriz[1]['fecha_emision'])), 'd/m/Y');
+      $pdf->MultiCell(40, 5, $fecha2, 1, 'L', 1, 0, 145, $espacio + 35, true, 0, false, true, 5, 'M');
+    } 
+    if ($urgencia == 2) {
+      $pdf->SetFont('helvetica', 'B', 6);
+      $pdf->MultiCell(50, 5, 'Solicitado por', 1, 'C', 1, 0, 35, $espacio, true, 0, false, true, 5, 'M');
+      $pdf->MultiCell(50, 30, $dataDocumento[0]['nombre'], 1, 'C', 1, 0, 35, $espacio, true, 0, false, true, 30, 'B');
+      $pdf->MultiCell(50, 5, 'Aprobado por', 1, 'C', 1, 0, 85, $espacio, true, 0, false, true, 5, 'M');
+      $pdf->MultiCell(50, 30, $resultadoMatriz[1]['nombre'], 1, 'C', 1, 0, 85, $espacio, true, 0, false, true, 30, 'B');
+      $pdf->MultiCell(50, 5, 'Recibido por', 1, 'C', 1, 0, 135, $espacio, true, 0, false, true, 5, 'M');
+      $pdf->MultiCell(50, 30, $resultadoMatriz[2]['nombre'], 1, 'C', 1, 0, 135, $espacio, true, 0, false, true, 30, 'B');
+      $pdf->Image($personaFirma0, 35, $espacio + 5, 50, 20, '', '', '', false, 300, '', false, false, 1);
+      $pdf->MultiCell(50, 30, 'Usuario', 1, 'C', 1, 0, 35, $espacio + 5, true, 0, false, true, 30, 'B');
+      $pdf->Image($personaFirma1, 85, $espacio + 5, 50, 20, '', '', '', false, 300, '', false, false, 1);
+      $pdf->MultiCell(50, 30, 'Jefe de Area', 1, 'C', 1, 0, 85, $espacio + 5, true, 0, false, true, 30, 'B');
+      $pdf->Image($personaFirma2, 135, $espacio + 5, 50, 20, '', '', '', false, 300, '', false, false, 1);
+      $pdf->MultiCell(50, 30, 'Gerente', 1, 'C', 1, 0, 135, $espacio + 5, true, 0, false, true, 30, 'B');
+      $pdf->MultiCell(60, 5, 'Fecha:', 1, 'L', 1, 0, 35, $espacio + 35, true, 0, false, true, 5, 'M');
+      $pdf->SetFont('helvetica', '', 6);
+      $pdf->MultiCell(50, 5, date_format((date_create($dataDocumento[0]['fecha_emision'])), 'd/m/Y'), 1, 'L', 1, 0, 45, $espacio + 35, true, 0, false, true, 5, 'M');
+      $pdf->SetFont('helvetica', 'B', 6);
+      $pdf->MultiCell(50, 5, 'Fecha:', 1, 'L', 1, 0, 85, $espacio + 35, true, 0, false, true, 5, 'M');
+      $pdf->SetFont('helvetica', '', 6);
+      $fecha1 =  ObjectUtil::isEmpty($resultadoMatriz[1]['fecha']) ? "" : date_format((date_create($resultadoMatriz[1]['fecha_emision'])), 'd/m/Y');
+      $pdf->MultiCell(40, 5, $fecha1, 1, 'L', 1, 0, 95, $espacio + 35, true, 0, false, true, 5, 'M');
+      $pdf->SetFont('helvetica', 'B', 6);
+      $pdf->MultiCell(50, 5, 'Fecha:', 1, 'L', 1, 0, 135, $espacio + 35, true, 0, false, true, 5, 'M');
+      $pdf->SetFont('helvetica', '', 6);
+      $fecha2 =  ObjectUtil::isEmpty($resultadoMatriz[2]['fecha']) ? "" : date_format((date_create($resultadoMatriz[1]['fecha_emision'])), 'd/m/Y');
+      $pdf->MultiCell(40, 5, $fecha2, 1, 'L', 1, 0, 145, $espacio + 35, true, 0, false, true, 5, 'M');
+    } 
+    if($urgencia == 0){
       $pdf->SetFont('helvetica', 'B', 6);
       $pdf->MultiCell(60, 5, 'Solicitado por', 1, 'C', 1, 0, 45, $espacio, true, 0, false, true, 5, 'M');
       $pdf->MultiCell(60, 30, $dataDocumento[0]['nombre'], 1, 'C', 1, 0, 45, $espacio, true, 0, false, true, 30, 'B');
@@ -10814,7 +10850,8 @@ class MovimientoNegocio extends ModeloNegocioBase
       $pdf->SetFont('helvetica', 'B', 6);
       $pdf->MultiCell(60, 5, 'Fecha:', 1, 'L', 1, 0, 105, $espacio + 35, true, 0, false, true, 5, 'M');
       $pdf->SetFont('helvetica', '', 6);
-      $pdf->MultiCell(50, 5, date_format((date_create($resultadoMatriz[1]['fecha_emision'])), 'd/m/Y'), 1, 'L', 1, 0, 115, $espacio + 35, true, 0, false, true, 5, 'M');
+      $fecha1 =  ObjectUtil::isEmpty($resultadoMatriz[1]['fecha']) ? "" : date_format((date_create($resultadoMatriz[1]['fecha_emision'])), 'd/m/Y');
+      $pdf->MultiCell(50, 5, $fecha1, 1, 'L', 1, 0, 115, $espacio + 35, true, 0, false, true, 5, 'M');
     }
     $pdf->SetFont('helvetica', '', 6);
     $pdf->writeHTMLCell(180, 5, '', $espacio + 41, 'El usuario es responsable de asegurar el uso de los documentos vigentes disponibles en la <strong>plataforma documentaria</strong> o en consulta con el <strong>Coordinador SGI o Analista SGI</strong>', 0, 1, 1, true, 'C', true);
@@ -11086,10 +11123,10 @@ class MovimientoNegocio extends ModeloNegocioBase
       }
     }
 
-    $personaFirma0 = __DIR__ . "/../../vistas/com/persona/firmas/" . $resultadoMatriz[0]['firma_digital'] . "png";
-    $personaFirma1 = __DIR__ . "/../../vistas/com/persona/firmas/" . $resultadoMatriz[1]['firma_digital'] . "png";
-    $personaFirma2 = __DIR__ . "/../../vistas/com/persona/firmas/" . $resultadoMatriz[2]['firma_digital'] . "png";
-    $personaFirma3 = __DIR__ . "/../../vistas/com/persona/firmas/" . $resultadoMatriz[3]['firma_digital'] . "png";
+    $personaFirma0 = __DIR__ . "/../../vistas/com/persona/firmas/" . $resultadoMatriz[0]['firma_digital'];
+    $personaFirma1 = __DIR__ . "/../../vistas/com/persona/firmas/" . $resultadoMatriz[1]['firma_digital'];
+    $personaFirma2 = __DIR__ . "/../../vistas/com/persona/firmas/" . $resultadoMatriz[2]['firma_digital'];
+    $personaFirma3 = __DIR__ . "/../../vistas/com/persona/firmas/" . $resultadoMatriz[3]['firma_digital'];
 
 
     if ($urgencia == 1) {
@@ -11113,11 +11150,13 @@ class MovimientoNegocio extends ModeloNegocioBase
       $pdf->MultiCell(50, 5, 'Fecha:', 1, 'L', 1, 0, 85, $espacio + 35, true, 0, false, true, 5, 'M');
       $pdf->SetFont('helvetica', '', 6);
       $pdf->SetFont('helvetica', 'B', 6);
-      $pdf->MultiCell(40, 5, date_format((date_create($dataDocumento[1]['fecha_emision'])), 'd/m/Y'), 1, 'L', 1, 0, 95, $espacio + 35, true, 0, false, true, 5, 'M');
+      $fecha1 =  ObjectUtil::isEmpty($resultadoMatriz[1]['fecha_creacion']) ? "" : date_format((date_create($resultadoMatriz[1]['fecha_emision'])), 'd/m/Y');
+      $pdf->MultiCell(40, 5, $fecha1, 1, 'L', 1, 0, 95, $espacio + 35, true, 0, false, true, 5, 'M');
       $pdf->SetFont('helvetica', 'B', 6);
       $pdf->MultiCell(50, 5, 'Fecha:', 1, 'L', 1, 0, 135, $espacio + 35, true, 0, false, true, 5, 'M');
       $pdf->SetFont('helvetica', '', 6);
-      $pdf->MultiCell(40, 5, date_format((date_create($dataDocumento[2]['fecha_emision'])), 'd/m/Y'), 1, 'L', 1, 0, 145, $espacio + 35, true, 0, false, true, 5, 'M');
+      $fecha2 =  ObjectUtil::isEmpty($resultadoMatriz[2]['fecha_creacion']) ? "" : date_format((date_create($resultadoMatriz[1]['fecha_emision'])), 'd/m/Y');
+      $pdf->MultiCell(40, 5, $fecha2, 1, 'L', 1, 0, 145, $espacio + 35, true, 0, false, true, 5, 'M');
     } else {
       $pdf->SetFont('helvetica', 'B', 6);
       $pdf->MultiCell(60, 5, 'Solicitado por', 1, 'C', 1, 0, 45, $espacio, true, 0, false, true, 5, 'M');
@@ -11130,7 +11169,8 @@ class MovimientoNegocio extends ModeloNegocioBase
       $pdf->MultiCell(60, 30, 'Gerente General', 1, 'C', 1, 0, 105, $espacio + 5, true, 0, false, true, 30, 'B');
       $pdf->MultiCell(60, 5, 'Fecha:', 1, 'L', 1, 0, 45, $espacio + 35, true, 0, false, true, 5, 'M');
       $pdf->SetFont('helvetica', '', 6);
-      $pdf->MultiCell(60, 5, date_format((date_create($dataDocumento[0]['fecha_emision'])), 'd/m/Y'), 1, 'L', 1, 0, 55, $espacio + 35, true, 0, false, true, 5, 'M');
+      $fecha1 =  ObjectUtil::isEmpty($resultadoMatriz[1]['fecha_creacion']) ? "" : date_format((date_create($resultadoMatriz[1]['fecha_emision'])), 'd/m/Y');
+      $pdf->MultiCell(60, 5, $fecha1, 1, 'L', 1, 0, 55, $espacio + 35, true, 0, false, true, 5, 'M');
       $pdf->SetFont('helvetica', 'B', 6);
       $pdf->MultiCell(60, 5, 'Fecha:', 1, 'L', 1, 0, 105, $espacio + 35, true, 0, false, true, 5, 'M');
     }
@@ -11981,7 +12021,7 @@ class MovimientoNegocio extends ModeloNegocioBase
 
     $persona = Persona::create()->obtenerPersonaXUsuarioId($dataDocumento[0]["usuario_creacion"]);
 
-    $personaFirma0 = __DIR__ . "/../../vistas/com/persona/firmas/" . $persona[0]['firma_digital'] . "png";
+    $personaFirma0 = __DIR__ . "/../../vistas/com/persona/firmas/" . $persona[0]['firma_digital'];
 
     $pdf->SetFont('helvetica', 'B', 6);
     $pdf->MultiCell(50, 5, 'Generado por', 1, 'C', 1, 0, 185, $espacio, true, 0, false, true, 5, 'M');

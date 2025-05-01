@@ -273,18 +273,18 @@ class DocumentoTipoNegocio extends ModeloNegocioBase
               if($dataArea[0]['id'] == PerfilNegocio::AREA_LOGISTICA || !ObjectUtil::isEmpty($filtradosPerfil)){
                 $filtrados = $data;
               }else{
-                array_push($filtrados, array("id" => "506", "descripcion" => "PEPAS", "valor" => ""));
-                $dtd[$index]["lista_defecto"] = "506";
+                array_push($filtrados, array("id" => "502", "descripcion" => "PEPAS", "valor" => ""));
+                $dtd[$index]["lista_defecto"] = "502";
                 $dtd[$index]["bandera_urgencia"] = "0";
               }
             }else{
               if($dataArea[0]['id'] == PerfilNegocio::AREA_GEOLOGIA){
-                array_push($filtrados, array("id" => "504", "descripcion" => "DDH", "valor" => ""));
-                array_push($filtrados, array("id" => "506", "descripcion" => "PEPAS", "valor" => ""));
+                array_push($filtrados, array("id" => "500", "descripcion" => "DDH", "valor" => ""));
+                array_push($filtrados, array("id" => "502", "descripcion" => "PEPAS", "valor" => ""));
                 $dtd[$index]["bandera_urgencia"] = "0";
               }else if($dataArea[0]['id'] == PerfilNegocio::AREA_MANTENIMIENTO){
-                array_push($filtrados, array("id" => "503", "descripcion" => "EQUIPOS", "valor" => ""));
-                array_push($filtrados, array("id" => "506", "descripcion" => "PEPAS", "valor" => ""));
+                array_push($filtrados, array("id" => "499", "descripcion" => "EQUIPOS", "valor" => ""));
+                array_push($filtrados, array("id" => "502", "descripcion" => "PEPAS", "valor" => ""));
                 $dtd[$index]["bandera_urgencia"] = "0";
               }
             }

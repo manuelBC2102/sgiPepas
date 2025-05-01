@@ -204,6 +204,8 @@
                                 <th style='text-align:center;'>Cantidad</th>
                                 <th style='text-align:center;'>U. Medida</th>
                                 <th style='text-align:center;'>CeCo</th>
+                                <th style='text-align:center;'>Comentario</th>
+                                <th style='text-align:center;'>Adjunto</th>
                             </tr>
                         </thead>
                     </table>

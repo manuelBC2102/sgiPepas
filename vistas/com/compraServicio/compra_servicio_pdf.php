@@ -226,13 +226,16 @@ $pdf->SetXY(110, 54);
 $pdf->MultiCell(90, 4, '20490115804', 0, 'L');
 
 $pdf->SetXY(110, 58);
-$pdf->MultiCell(90, 4, utf8_decode($organizador_entrega[0]["direccion"]), 0, 'L');
+// $pdf->MultiCell(90, 4, utf8_decode($organizador_entrega[0]["direccion"]), 0, 'L');
+$pdf->MultiCell(90, 4, utf8_decode('PZA.PLAZA DE ARMAS PAMPAMARCA NRO. S/N ANX. PAMPAMARCA (COMUNIDAD DE PAMPAMARCA)'), 0, 'L');
 
 $pdf->SetXY(110, 66);
-$pdf->MultiCell(90, 4, utf8_decode($ubigeoProveedor_entrega[0]['ubigeo_dist']), 0, 'L');
+// $pdf->MultiCell(90, 4, utf8_decode($ubigeoProveedor_entrega[0]['ubigeo_dist']), 0, 'L');
+$pdf->MultiCell(90, 4, utf8_decode('CHALHUANCA'), 0, 'L');
 
 $pdf->SetXY(110, 70);
-$pdf->MultiCell(90, 4, utf8_decode($ubigeoProveedor_entrega[0]['ubigeo_dep']), 0, 'L');
+// $pdf->MultiCell(90, 4, utf8_decode($ubigeoProveedor_entrega[0]['ubigeo_dep']), 0, 'L');
+$pdf->MultiCell(90, 4, utf8_decode('APURIMAC'), 0, 'L');
 
 // Cuadro: Entrega en destino
 $pdf->SetFillColor(217, 217, 217);
@@ -557,10 +560,10 @@ foreach ($matrizUsuario as $key => $value) {
     }
 }
 
-$personaFirma0 = __DIR__ . "/../persona/firmas/" . $resultadoMatriz[0]['firma_digital'] . "png";
-$personaFirma1 = __DIR__ . "/../persona/firmas/" . $resultadoMatriz[1]['firma_digital'] . "png";
-$personaFirma2 = __DIR__ . "/../persona/firmas/" . $resultadoMatriz[2]['firma_digital'] . "png";
-$personaFirma3 = __DIR__ . "/../persona/firmas/" . $resultadoMatriz[3]['firma_digital'] . "png";
+$personaFirma0 = __DIR__ . "/../persona/firmas/" . $resultadoMatriz[0]['firma_digital'];
+$personaFirma1 = __DIR__ . "/../persona/firmas/" . $resultadoMatriz[1]['firma_digital'];
+$personaFirma2 = __DIR__ . "/../persona/firmas/" . $resultadoMatriz[2]['firma_digital'];
+$personaFirma3 = __DIR__ . "/../persona/firmas/" . $resultadoMatriz[3]['firma_digital'];
 
 
 $pdf->SetFont('Arial', 'B', 8);

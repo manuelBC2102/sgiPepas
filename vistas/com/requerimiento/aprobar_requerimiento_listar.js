@@ -400,6 +400,8 @@ function onResponsevisualizarSolicitudRequerimiento(data, documento_estado) {
                 { "data": "cantidad", "width": "9%", "sClass": "alignCenter" },
                 { "data": "unidad_medida_descripcion", "width": "10%", "sClass": "alignCenter" },
                 { "data": "centro_costo_descripcion", "width": "10%", "sClass": "alignCenter" },
+                { "data": "movimiento_bien_comentario", "width": "20%", "sClass": "alignCenter" },
+                { "data": "movimiento_bien_detalle", "width": "10%", "sClass": "alignCenter" },
             ],
             columnDefs: [
                 {
@@ -426,6 +428,16 @@ function onResponsevisualizarSolicitudRequerimiento(data, documento_estado) {
                         return devolverDosDecimales(data);
                     },
                     "targets": [2]
+                },
+                {
+                    "render": function (data, type, row) {
+                        var btn_upload = "";
+                        if(!isEmpty(data)){
+                            btn_upload = "&nbsp;<a href='#' onclick='verImagenPdf("+ row.movimiento_bien_id +")'><i class='fa fa-cloud-download' style='color:blue;' title='"+ data[0].valor_detalle +"'></i></a> <input type='hidden' id='nombreAdjunto_"+ row.movimiento_bien_id +"' name='nombreAdjunto_"+ row.movimiento_bien_id +"' value='"+ data[0].valor_detalle +"'/>";
+                        }
+                        return btn_upload;
+                    },
+                    "targets": 6
                 }
 
             ],
@@ -1114,5 +1126,23 @@ function onResponseValidarDocumentoEdicion(data, documentoId) {
         commonVars.titulo = "Solicitud de requerimiento";
     } else {
         mostrarAdvertencia(data.mensaje);
+    }
+}
+
+function verImagenPdf(index){
+    var nombreAdjunto = $("#nombreAdjunto_" + index).val();
+    var partesNombreAdjunto = nombreAdjunto.split('.');
+    var newWindow = window.open();
+
+    if(partesNombreAdjunto[1] == "pdf"){
+        newWindow.document.write('<html><body>');
+        newWindow.document.write('<embed width="100%" height="100%" src="' + URL_BASE + "util/uploads/documentoAdjunto/" + nombreAdjunto + '" type="application/pdf">');
+        newWindow.document.write('</body></html>');
+        newWindow.document.close();
+    }else{
+        newWindow.document.write('<html><body>');
+        newWindow.document.write('<img src="' + URL_BASE + "util/uploads/imagenAdjunto/" + nombreAdjunto + '">'); 
+        newWindow.document.write('</body></html>');
+        newWindow.document.close();
     }
 }

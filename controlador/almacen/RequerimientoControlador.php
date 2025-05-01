@@ -43,6 +43,7 @@ class RequerimientoControlador extends AlmacenIndexControlador
             $matrizUsuario = null;
             $areaId = null;
             $esUrgencia = null;
+            $esServicio = 0;
 
             if($data[$i]['documento_tipo_id'] == Configuraciones::SOLICITUD_REQUERIMIENTO){
                 $dataDocumento = DocumentoNegocio::create()->obtenerDetalleDocumento($data[$i]['id']);
@@ -62,8 +63,11 @@ class RequerimientoControlador extends AlmacenIndexControlador
                                 break;
                         }
                         if($value['descripcion'] == "Tipo de requerimiento" && $value['valor'] == "Servicio") {
-                            $matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXRequerimientoServicio($data[$i]['documento_tipo_id'], 2, $areaId);
+                            $esServicio = 1;
                         }
+                    }
+                    if($esServicio == 1) {
+                        $matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXRequerimientoServicio($data[$i]['documento_tipo_id']);
                     }
                 }
             }else{
@@ -116,6 +120,12 @@ class RequerimientoControlador extends AlmacenIndexControlador
                 array_push($matrizUsuario, $arrayMatriz);
             }
 
+            usort($matrizUsuario, function($a, $b) {
+                if ($a['nivel'] == $b['nivel']) {
+                    return 0;
+                }
+                return ($a['nivel'] < $b['nivel']) ? -1 : 1;
+            });
             foreach ($matrizUsuario as $key => $value) {
                 $colorBar = "";
                 $colorBar_none = "background-color:white;";

@@ -1002,6 +1002,7 @@ function onResponseObtenerConfiguracionesIniciales(data) {
       $("#cboTipoRequerimiento_" + dtdTipoTipoRequerimiento).select2({
         width: "100%"
       }).on("change", function (e) {
+        var dtdTipoTipoRequerimiento = obtenerDocumentoTipoDatoIdXTipo(42);
         if (doc_TipoId == SOLICITUD_REQUERIMIENTO) {
           tipoRequerimientoGlobalText = select2.obtenerText("cboTipoRequerimiento_" + dtdTipoTipoRequerimiento);
           if (e.val == 455) {
@@ -1018,6 +1019,19 @@ function onResponseObtenerConfiguracionesIniciales(data) {
             $("#id_" + dtdTipoTipo.id + " label").html("Tipo *");
             $("#id_" + dtdTipoClase.id).hide();
             select2.asignarValor("cbo_" + dtdTipoClase.id, "");
+            $("#id_" + dtdTipoUrgencia.id).hide();
+
+            var dtdTipoCuentaText = select2.obtenerText("cbo_" + dtdTipoCuenta);
+            let arrayCuenta = ["DDH", "EQUIPOS", "PROYECTOS"];
+            if (arrayCuenta.includes(dtdTipoCuentaText)) {
+                var dtdTipoTipoRequerimiento = obtenerDocumentoTipoDatoIdXTipo(42);
+                if (select2.obtenerValor("cboTipoRequerimiento_" + dtdTipoTipoRequerimiento) != 455) {
+                    select2.asignarValor("cbo_" + dtdTipoUrgencia.id, 472);
+                } else {
+                    select2.asignarValor("cbo_" + dtdTipoUrgencia.id, 473);
+                }
+            }
+            $("#switchProductoDuplicado").btnSwitch("setValue", true);
           } else {
             loaderShow();
             detalle = [];
@@ -1033,6 +1047,19 @@ function onResponseObtenerConfiguracionesIniciales(data) {
             $("#id_" + dtdTipoTipo.id).hide();
             select2.asignarValor("cbo_" + dtdTipoTipo.id, "");
             $("#id_" + dtdTipoOtros).hide();
+            $("#id_" + dtdTipoUrgencia.id).show();
+
+            var dtdTipoCuentaText = select2.obtenerText("cbo_" + dtdTipoCuenta);
+            let arrayCuenta = ["DDH", "EQUIPOS", "PROYECTOS"];
+            if (arrayCuenta.includes(dtdTipoCuentaText)) {
+                debugger;
+                var dtdTipoTipoRequerimiento = obtenerDocumentoTipoDatoIdXTipo(42);
+                if (select2.obtenerValor("cboTipoRequerimiento_" + dtdTipoTipoRequerimiento) != 455) {
+                    select2.asignarValor("cbo_" + dtdTipoUrgencia.id, 472);
+                } else {
+                    select2.asignarValor("cbo_" + dtdTipoUrgencia.id, 473);
+                }
+            }
           }
         }
       });
@@ -1134,6 +1161,28 @@ function onResponseObtenerConfiguracionesIniciales(data) {
 
       }
     });
+    $("#cbo_" + dtdTipoCuenta).select2({
+      width: "100%"
+    }).on("change", function (e) {
+        var dtdTipoCuentaText = select2.obtenerText("cbo_" + dtdTipoCuenta);
+
+        let arrayCuenta = ["DDH", "EQUIPOS", "PROYECTOS"];
+        if (arrayCuenta.includes(dtdTipoCuentaText)) {
+            var dtdTipoTipoRequerimiento = obtenerDocumentoTipoDatoIdXTipo(42);
+            if (select2.obtenerValor("cboTipoRequerimiento_" + dtdTipoTipoRequerimiento) != 455) {
+                select2.asignarValor("cbo_" + dtdTipoUrgencia.id, 472);
+            } else {
+                select2.asignarValor("cbo_" + dtdTipoUrgencia.id, 473);
+            }
+            $("#cbo_" + dtdTipoUrgencia.id).prop('disabled', true);
+        } else {
+            $("#cbo_" + dtdTipoUrgencia.id).prop('disabled', false);
+            var dtdTipoTipoRequerimiento = obtenerDocumentoTipoDatoIdXTipo(42);
+            if (select2.obtenerValor("cboTipoRequerimiento_" + dtdTipoTipoRequerimiento) != 455) {
+                select2.asignarValor("cbo_" + dtdTipoUrgencia.id, 0);
+            }
+        }
+    });
   }
 
   //Se realiza la busqueda por área de solicitudes de requerimiento
@@ -1220,6 +1269,7 @@ function onResponseObtenerConfiguracionesIniciales(data) {
     $("#cboTipoRequerimiento_" + dtdTipoTipoRequerimiento).select2({
       width: "100%"
     }).on("change", function (e) {
+      var dtdTipoTipoRequerimiento = obtenerDocumentoTipoDatoIdXTipo(42);
       tipoRequerimientoGlobal = e.val;
       tipoRequerimientoGlobalText = select2.obtenerText("cboTipoRequerimiento_" + dtdTipoTipoRequerimiento);
       if (e.val == 488) {
@@ -12872,6 +12922,7 @@ function cargarCondicionpago(indice) {
       $("#txtDiasPago_" + indice).prop('disabled', false);
     } else {
       $("#txtDiasPago_" + indice).prop('disabled', true);
+      $("#txtDiasPago_" + indice).val("");
     }
     if (!isEmpty(arrayProveedor[indice])) {
       calcularFooterTipoCambio(indice);
@@ -13141,7 +13192,7 @@ function asignarValoresPostor(data) {
     }
     $("#txtTiempoEntrega_" + idx).val(proveedorID.tiempo)
     select2.asignarValor("cboCondicionPago_" + idx, proveedorID.condicion_pago);
-    if (proveedorID.dias_pago == 2) {
+    if (proveedorID.condicion_pago == 2) {
       $("#txtDiasPago_" + idx).prop('disabled', false);
     } else {
       $("#txtDiasPago_" + idx).prop('disabled', true);

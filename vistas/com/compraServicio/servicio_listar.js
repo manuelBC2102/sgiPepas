@@ -66,7 +66,7 @@ $(document).ready(function () {
     iniciarDataPicker();
     cambiarAnchoBusquedaDesplegable();
 
-    if (commonVars.titulo == "Recepción" || commonVars.titulo == "Cotizaciones") {
+    if (commonVars.titulo == "Recepción" || commonVars.titulo == "Cotizaciones de servicio") {
         $("#btnNuevo").hide();
     }
 });
