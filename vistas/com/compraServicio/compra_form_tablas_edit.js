@@ -991,7 +991,7 @@ function onResponseObtenerConfiguracionesIniciales(data) {
     var dtdTipoTipo = obtenerDocumentoTipoDatoXTipoXCodigo(4, "02");
     var dtdTipoOtros = obtenerDocumentoTipoDatoIdXTipo(2);
     var dtdTipoTipoRequerimiento = obtenerDocumentoTipoDatoIdXTipo(42);
-
+    var dtdTipoCuenta = obtenerDocumentoTipoDatoIdXTipo(52);
 
     if (!isEmpty(dtdTipoClase)) {
       $("#id_" + dtdTipoClase.id + " label").html("Clase *");
@@ -1052,7 +1052,6 @@ function onResponseObtenerConfiguracionesIniciales(data) {
             var dtdTipoCuentaText = select2.obtenerText("cbo_" + dtdTipoCuenta);
             let arrayCuenta = ["DDH", "EQUIPOS", "PROYECTOS"];
             if (arrayCuenta.includes(dtdTipoCuentaText)) {
-                debugger;
                 var dtdTipoTipoRequerimiento = obtenerDocumentoTipoDatoIdXTipo(42);
                 if (select2.obtenerValor("cboTipoRequerimiento_" + dtdTipoTipoRequerimiento) != 455) {
                     select2.asignarValor("cbo_" + dtdTipoUrgencia.id, 472);
@@ -1074,6 +1073,7 @@ function onResponseObtenerConfiguracionesIniciales(data) {
             $("#id_" + dtdTipoOtros).show();
           } else {
             $("#id_" + dtdTipoOtros).hide();
+            $("#id_" + dtdTipoOtros).val("");
           }
         }
       });
@@ -1994,6 +1994,8 @@ var indiceBien;
 var primeraFechaEmision;
 var banderaPrimeraFE = true;
 function cargarBienDetalleCombo(data, indice, valorInicial) {
+  var dtdTipoTipoRequerimiento = obtenerDocumentoTipoDatoIdXTipo(42);
+  tipoRequerimientoGlobalText = select2.obtenerText("cboTipoRequerimiento_" + dtdTipoTipoRequerimiento);
   if (existeColumnaCodigo(24)) {
     $("#badge_" + indice).html("");
     $("#obscboBien_" + indice).html("");
@@ -5572,12 +5574,16 @@ function guardar(accion) {
   var banderaProductoDuplicado = $("#switchProductoDuplicado").btnSwitch(
     "getValue"
   ); // switch activado: TRUE, switch activado: FALSE
-  if (!banderaProductoDuplicado) {
-    if (validarDetalleRepetido()) {
-      mostrarValidacionLoaderClose(
-        "Detalle repetido, seleccione otro bien, organizador o unidad de medida."
-      );
-      return;
+  var dtdTipoTipoRequerimiento = obtenerDocumentoTipoDatoIdXTipo(42);
+  tipoRequerimientoGlobalText = select2.obtenerText("cboTipoRequerimiento_" + dtdTipoTipoRequerimiento);
+  if(tipoRequerimientoGlobalText == "Compra"){
+    if (!banderaProductoDuplicado) {
+      if (validarDetalleRepetido()) {
+        mostrarValidacionLoaderClose(
+          "Detalle repetido, seleccione otro bien, organizador o unidad de medida."
+        );
+        return;
+      }
     }
   }
 
@@ -7294,6 +7300,18 @@ function cargarDataDocumentoACopiar(
             if (doc_TipoId == GENERAR_COTIZACION && item.descripcion == "Varios Postores") {
               habilitarPostores(item.valor);
             }
+            if (doc_TipoId == SOLICITUD_REQUERIMIENTO && item.descripcion == "Tipo") {
+              var dtdTipoTipo = obtenerDocumentoTipoDatoXTipoXCodigo(4, "02");
+              var dtdTipoOtros = obtenerDocumentoTipoDatoIdXTipo(2);
+              if (doc_TipoId == SOLICITUD_REQUERIMIENTO) {
+                if (item.valor == 459) {
+                    $("#id_" + dtdTipoOtros).show();
+                } else {
+                    $("#id_" + dtdTipoOtros).hide();
+                    $("#id_" + dtdTipoOtros).val("");
+                }
+              }
+            }
             break;
           case 25:
             select2.asignarValor("cboTipoPago", item.valor);
@@ -7381,6 +7399,67 @@ function cargarDataDocumentoACopiar(
             break;
           case 42:
             select2.asignarValor("cboTipoRequerimiento_" + item.otro_documento_id, item.valor);
+            var dtdTipoClase = obtenerDocumentoTipoDatoXTipoXCodigo(4, "01");
+            var dtdTipoTipo = obtenerDocumentoTipoDatoXTipoXCodigo(4, "02");
+            var dtdTipoOtros = obtenerDocumentoTipoDatoIdXTipo(2);
+            var dtdTipoCuenta = obtenerDocumentoTipoDatoIdXTipo(52);
+            var dtdTipoUrgencia = obtenerDocumentoTipoDatoXTipoXCodigo(4, "04");
+
+            if (item.valor == 455) {
+              loaderShow();
+              detalle = [];
+              indiceLista = [];
+              banderaCopiaDocumento = 0;
+              indexDetalle = 0;
+              nroFilasInicial = parseInt(dataDocumentoTipo[0]['cantidad_detalle']);
+              limpiarDetalle();
+              loaderClose();
+
+              $("#id_" + dtdTipoTipo.id).show();
+              $("#id_" + dtdTipoTipo.id + " label").html("Tipo *");
+              $("#id_" + dtdTipoClase.id).hide();
+              select2.asignarValor("cbo_" + dtdTipoClase.id, "");
+              $("#id_" + dtdTipoUrgencia.id).hide();
+
+              var dtdTipoCuentaText = select2.obtenerText("cbo_" + dtdTipoCuenta);
+              let arrayCuenta = ["DDH", "EQUIPOS", "PROYECTOS"];
+              if (arrayCuenta.includes(dtdTipoCuentaText)) {
+                  var dtdTipoTipoRequerimiento = obtenerDocumentoTipoDatoIdXTipo(42);
+                  if (select2.obtenerValor("cboTipoRequerimiento_" + dtdTipoTipoRequerimiento) != 455) {
+                      select2.asignarValor("cbo_" + dtdTipoUrgencia.id, 472);
+                  } else {
+                      select2.asignarValor("cbo_" + dtdTipoUrgencia.id, 473);
+                  }
+              }
+              $("#switchProductoDuplicado").btnSwitch("setValue", true);
+            } else {
+                loaderShow();
+                detalle = [];
+                indiceLista = [];
+                banderaCopiaDocumento = 0;
+                indexDetalle = 0;
+                nroFilasInicial = parseInt(dataDocumentoTipo[0]['cantidad_detalle']);
+                limpiarDetalle();
+                loaderClose();
+
+                $("#id_" + dtdTipoClase.id).show();
+                $("#id_" + dtdTipoClase.id + " label").html("Clase *");
+                $("#id_" + dtdTipoTipo.id).hide();
+                select2.asignarValor("cbo_" + dtdTipoTipo.id, "");
+                $("#id_" + dtdTipoOtros).hide();
+                $("#id_" + dtdTipoUrgencia.id).show();
+
+                var dtdTipoCuentaText = select2.obtenerText("cbo_" + dtdTipoCuenta);
+                let arrayCuenta = ["DDH", "EQUIPOS", "PROYECTOS"];
+                if (arrayCuenta.includes(dtdTipoCuentaText)) {
+                    var dtdTipoTipoRequerimiento = obtenerDocumentoTipoDatoIdXTipo(42);
+                    if (select2.obtenerValor("cboTipoRequerimiento_" + dtdTipoTipoRequerimiento) != 455) {
+                        select2.asignarValor("cbo_" + dtdTipoUrgencia.id, 472);
+                    } else {
+                        select2.asignarValor("cbo_" + dtdTipoUrgencia.id, 473);
+                    }
+                }
+            }
             break;
           case 43:
             select2.asignarValor("cbo_" + item.otro_documento_id, item.valor);

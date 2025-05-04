@@ -286,7 +286,7 @@ function onResponseObtenerMenuXEmpresa(data) {
                         idOpcion = (isEmpty(valueHijo["opcion_id"])) ? valueHijo.id : valueHijo["opcion_id"];
                         $id_li_hijo = "m" + valueHijo.id;
                         dataMenu += '<li id="' + $id_li_hijo + '">';
-                        if(!(valueHijo.nombre).includes("Aprobación") && !(valueHijo.nombre).includes("factura") && valueHijo.nombre != "Cotizaciones de servicio" && valueHijo.nombre != "Cotizaciones"){
+                        if(!(valueHijo.nombre).includes("Aprobación") && !(valueHijo.nombre).includes("factura") && valueHijo.nombre != "Cotizaciones de servicio" && valueHijo.nombre != "Cotizaciones" && !(valueHijo.nombre).includes("Seguimiento")){
                             dataMenu += '<a style="display: table-cell; padding-right: 5px;"';                                 
                             dataMenu += ' onclick="cargarDivIndex(\'#window\',\'' + URL_BASE + 'vistas/com/compraServicio/'+ urlNuevoMov + '\',\'' + idOpcion + '\',\'' + valueHijo.nombre + '\');active(' + valueHijo.id + ',' + value.id + ');">';
                             dataMenu += '<span class="badge bg-primary">+</span></a>';

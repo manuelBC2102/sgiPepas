@@ -212,7 +212,7 @@ class MatrizAprobacion extends ModeloBase {
     public function validarDocumentoAprobacionUltimoNivelXMonto($documentoId, $documentoTipoId, $monto){
         $this->commandPrepare("sp_documento_validar_aprobacionUltimoNivelXMonto");
         $this->commandAddParameter(":vin_documento_id", $documentoId);
-        $this->commandAddParameter(":vin_documento_tipo", $documentoTipoId);
+        $this->commandAddParameter(":vin_documento_tipo_id", $documentoTipoId);
         $this->commandAddParameter(":vin_monto", $monto);
         return $this->commandGetData();
     }

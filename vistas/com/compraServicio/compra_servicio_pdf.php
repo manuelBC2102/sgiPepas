@@ -7,6 +7,36 @@ require_once('../../../modeloNegocio/almacen/DocumentoNegocio.php');
 require_once('../../../modeloNegocio/almacen/MatrizAprobacionNegocio.php');
 require_once('../../../util/phpqrcode/qrlib.php'); // Librería para generar QR
 
+class PDF extends FPDF
+{
+    function WriteHTML($html)
+    {
+        // Intérprete HTML muy básico
+        $html = str_replace("\n", ' ', $html);
+        $a = preg_split('/<(.*)>/U', $html, -1, PREG_SPLIT_DELIM_CAPTURE);
+        $tag = false;
+
+        foreach ($a as $i => $e) {
+            if ($i % 2 == 0) {
+                // Texto
+                if ($tag == 'B' || $tag == 'I' || $tag == 'U') {
+                    $this->SetFont('', strtolower($tag));
+                } else {
+                    $this->SetFont('', '');
+                }
+                $this->Write(5, html_entity_decode($e));
+            } else {
+                // Etiqueta
+                if ($e[0] == '/') {
+                    $tag = false;
+                } else {
+                    $tag = strtoupper($e);
+                }
+            }
+        }
+    }
+}
+
 isset($_GET["documentoTipoId"]) ? $documentoTipoId = $_GET["documentoTipoId"] : "";
 
 if (!ObjectUtil::isEmpty($documentoTipoId)) {
@@ -147,7 +177,7 @@ foreach ($dataRelacionada as $itemRelacion) {
     }
 }
 
-$pdf = new FPDF('P', 'mm', 'A4');
+$pdf = new PDF('P', 'mm', 'A4');
 
 $pdf->SetTitle(strtoupper($dataDocumentoTipo[0]['descripcion']));
 $pdf->SetAuthor('Soluciones Mineras S.A.C.');
@@ -200,16 +230,16 @@ $pdf->SetFont('Arial', '', 7);
 $pdf->SetXY(10, 50);
 $pdf->MultiCell(90, 4, $dataDocumento[0]['nombre'], 0, 'L');
 
-$pdf->SetXY(10, 54);
+$pdf->SetXY(10, 58);
 $pdf->MultiCell(90, 4, $dataDocumento[0]['codigo_identificacion'], 0, 'L');
 
-$pdf->SetXY(10, 58);
+$pdf->SetXY(10, 62);
 $pdf->MultiCell(90, 4, utf8_decode($dataDocumento[0]['direccion']), 0, 'L');
 
-$pdf->SetXY(10, 66);
+$pdf->SetXY(10, 70);
 $pdf->MultiCell(90, 4, utf8_decode($ubigeoProveedor[0]['ubigeo_dist']), 0, 'L');
 
-$pdf->SetXY(10, 70);
+$pdf->SetXY(10, 74);
 $pdf->MultiCell(90, 4, utf8_decode($ubigeoProveedor[0]['ubigeo_dep']), 0, 'L');
 $pdf->Ln(10);
 
@@ -222,53 +252,53 @@ $pdf->SetFont('Arial', '', 7);
 $pdf->SetXY(110, 50);
 $pdf->MultiCell(100, 4, 'ASOCIACION DE MINEROS ARTESANALES PEPAS DE ORO DE PAMPAMARCA', 0, 'L');
 
-$pdf->SetXY(110, 54);
+$pdf->SetXY(110, 58);
 $pdf->MultiCell(90, 4, '20490115804', 0, 'L');
 
-$pdf->SetXY(110, 58);
+$pdf->SetXY(110, 62);
 // $pdf->MultiCell(90, 4, utf8_decode($organizador_entrega[0]["direccion"]), 0, 'L');
 $pdf->MultiCell(90, 4, utf8_decode('PZA.PLAZA DE ARMAS PAMPAMARCA NRO. S/N ANX. PAMPAMARCA (COMUNIDAD DE PAMPAMARCA)'), 0, 'L');
 
-$pdf->SetXY(110, 66);
+$pdf->SetXY(110, 70);
 // $pdf->MultiCell(90, 4, utf8_decode($ubigeoProveedor_entrega[0]['ubigeo_dist']), 0, 'L');
 $pdf->MultiCell(90, 4, utf8_decode('CHALHUANCA'), 0, 'L');
 
-$pdf->SetXY(110, 70);
+$pdf->SetXY(110, 74);
 // $pdf->MultiCell(90, 4, utf8_decode($ubigeoProveedor_entrega[0]['ubigeo_dep']), 0, 'L');
 $pdf->MultiCell(90, 4, utf8_decode('APURIMAC'), 0, 'L');
 
 // Cuadro: Entrega en destino
 $pdf->SetFillColor(217, 217, 217);
 $pdf->SetFont('Arial', 'B', 8);
-$pdf->SetXY(10, 77);
+$pdf->SetXY(10, 79);
 $pdf->Cell(45, 5, 'Entrega en destino', 1, 0, 'C', true);
 
 $pdf->SetFillColor(255, 255, 255);
 $pdf->SetFont('Arial', '', 7);
-$pdf->SetXY(10, 82);
-$pdf->MultiCell(45, 10, $entrega_en_destino, 1, 'C');
+$pdf->SetXY(10, 84);
+$pdf->MultiCell(45, 8, $entrega_en_destino, 1, 'C');
 
 // Cuadro: Términos de pago
 $pdf->SetFillColor(217, 217, 217);
 $pdf->SetFont('Arial', 'B', 8);
-$pdf->SetXY(55, 77);
+$pdf->SetXY(55, 79);
 $pdf->Cell(45, 5, utf8_decode('Términos de pago'), 1, 0, 'C', true);
 
 $pdf->SetFillColor(255, 255, 255);
 $pdf->SetFont('Arial', '', 7);
-$pdf->SetXY(55, 82);
-$pdf->MultiCell(45, 10, utf8_decode($terminos_de_pago), 1, 'C');
+$pdf->SetXY(55, 84);
+$pdf->MultiCell(45, 8, utf8_decode($terminos_de_pago), 1, 'C');
 
 // Cuadro: Solicitado por
 $pdf->SetFillColor(217, 217, 217);
 $pdf->SetFont('Arial', 'B', 8);
-$pdf->SetXY(100, 77);
+$pdf->SetXY(100, 79);
 $pdf->Cell(45, 5, 'Solicitado por', 1, 0, 'C', true);
 
 $pdf->SetFillColor(255, 255, 255);
 $pdf->SetFont('Arial', '', 7);
-$pdf->SetXY(100, 82);
-$pdf->MultiCell(45, 10, $usuarioRequerimientoArea, 1, 'C');
+$pdf->SetXY(100, 84);
+$pdf->MultiCell(45, 8, $usuarioRequerimientoArea, 1, 'C');
 
 function insertarSaltosLinea($texto, $longitudMax = 45) {
     $palabras = explode(' ', $texto);
@@ -321,7 +351,7 @@ $pdf->MultiCell(45, 5, 'REFERENCIA:', 1, 'L', true);
 
 $pdf->SetFont('Arial', '', 7);
 $pdf->SetXY(55, 102);
-$pdf->MultiCell(90, 5, $referencia, 1, 'L', true);
+$pdf->MultiCell(90, 5, utf8_decode($referencia), 1, 'L', true);
 
 // Fila: GENERADO POR
 $pdf->SetFont('Arial', 'B', 8);
@@ -410,7 +440,7 @@ foreach ($detalle as $i => $item) {
     
     // Usar MultiCell para descripcion
     $pdf->SetXY($x + 30, $y); // Ajustar al punto donde empieza la celda de descripcion
-    $pdf->MultiCell(65, ($nbLines == 1 ? $descripcionHeight:($descripcionHeight / 2)), $descripcion, 1);
+    $pdf->MultiCell(65, ($nbLines == 1 ? $descripcionHeight:($descripcionHeight / 2)), utf8_decode($descripcion), 1);
 
     // Volver a la posición X al lado derecho de la MultiCell
     $pdf->SetXY($x + 95, $y);
@@ -420,7 +450,7 @@ foreach ($detalle as $i => $item) {
     $pdf->Cell(20, $descripcionHeight, number_format($item->importe, 2), 1, 0, 'R');
 
     $pdf->SetFont('Arial', '', 4);
-    $pdf->MultiCell(30,  ($nbLines > 2 ? $descripcionHeight: 4), $textoFinal, 1);
+    $pdf->MultiCell(30,  $descripcionHeight, $textoFinal, 1);
 }
 
 // Agrega las celdas vacías si hay menos de 20 filas
@@ -485,7 +515,8 @@ $pdf->SetFont('Arial', 'B', 7);
 $pdf->MultiCell(90, 8, 'Sumilla: ', 1, 'L', true);
 $pdf->SetXY(20, $espacio + 6);
 $pdf->SetFont('Arial', '', 6);
-$pdf->MultiCell(75, 2, utf8_decode(str_replace('&nbsp;', ' ', $dataDocumento[0]['comentario'])), 0, 'L', true);
+// $pdf->MultiCell(75, 2, utf8_decode(str_replace('&nbsp;', ' ', $dataDocumento[0]['comentario'])), 0, 'L', true);
+$pdf->WriteHTML(str_replace('&nbsp;', ' ', $dataDocumento[0]['comentario']));
 
 $pdf->SetFont('Arial', 'B', 5);
 $pdf->SetXY(10, $espacio + 15);
@@ -500,28 +531,30 @@ $pdf->MultiCell(90, 4, '* incluye IGV', 1, 'L', true);
 
 $pdf->SetFont('Arial', '', 4);
 $pdf->SetXY(10, $espacio + 33);
-$pdf->MultiCell(70, 3, utf8_decode('*El lugar de entrega se coordinará con el Comprador.'), 0, 'L', true);
-$pdf->SetXY(10, $espacio + 36);
-$pdf->MultiCell(70, 3, '*Para aclaraciones contactar con el comprador.', 0, 'L', true);
+$pdf->MultiCell(90, 3, utf8_decode('*A partir del 01/01/2025, Minera Pepas de Oro es Agente de Retención según RS 229-2024-SUNAT, aplicando retenciones a pagos que superen S/700 o su equivalente en USD.'), 0, 'L', true);
 $pdf->SetXY(10, $espacio + 39);
+$pdf->MultiCell(70, 3, utf8_decode('*El lugar de entrega se coordinará con el Comprador.'), 0, 'L', true);
+$pdf->SetXY(10, $espacio + 42);
+$pdf->MultiCell(70, 3, '*Para aclaraciones contactar con el comprador.', 0, 'L', true);
+$pdf->SetXY(10, $espacio + 45);
 $pdf->SetFont('Arial', 'B', 4);
 $pdf->MultiCell(70, 3, utf8_decode('Procedimiento para presentación de facturas y comprobantes de pago:'), 0, 'L', true);
 $pdf->SetFont('Arial', '', 4);
-$pdf->SetXY(10, $espacio + 42);
-$pdf->MultiCell(70, 3, utf8_decode('- Validación SUNAT para Comprobantes electrónicos.'), 10, 'L', true);
-$pdf->SetXY(10, $espacio + 45);
-$pdf->MultiCell(70, 3, utf8_decode('- Validación de emisor electrónicos para Comprobantes físicos.'), 0, 'L', true);
 $pdf->SetXY(10, $espacio + 48);
-$pdf->MultiCell(70, 3, utf8_decode('- En el caso de facturas electrónicas deben remitir el archivo en pdf y xml.'), 0, 'L', true);
+$pdf->MultiCell(70, 3, utf8_decode('- Validación SUNAT para Comprobantes electrónicos.'), 10, 'L', true);
 $pdf->SetXY(10, $espacio + 51);
-$pdf->MultiCell(70, 3, '- Copia de la Orden de Compra.', 0, 'L', true);
+$pdf->MultiCell(70, 3, utf8_decode('- Validación de emisor electrónicos para Comprobantes físicos.'), 0, 'L', true);
 $pdf->SetXY(10, $espacio + 54);
-$pdf->MultiCell(70, 3, utf8_decode('- Acta de conformidad y/o Liquidación en el caso de ser un servicio.'), 0, 'L', true);
+$pdf->MultiCell(70, 3, utf8_decode('- En el caso de facturas electrónicas deben remitir el archivo en pdf y xml.'), 0, 'L', true);
 $pdf->SetXY(10, $espacio + 57);
+$pdf->MultiCell(70, 3, '- Copia de la Orden de Compra.', 0, 'L', true);
+$pdf->SetXY(10, $espacio + 60);
+$pdf->MultiCell(70, 3, utf8_decode('- Acta de conformidad y/o Liquidación en el caso de ser un servicio.'), 0, 'L', true);
+$pdf->SetXY(10, $espacio + 63);
 $pdf->MultiCell(70, 3, utf8_decode('- Guía de remisión con sello de recepción o conformidad.'), 0, 'L', true);
 
 
-$matrizUsuario = RequerimientoNegocio::create()->generarMatrizDocumento($documentoTipoId, $documentoId, $dataDocumento[0]['movimiento_id'], $dataDocumento[0]['usuario_creacion']);
+$matrizUsuario = RequerimientoNegocio::create()->generarMatrizDocumento($documentoTipoId, $documentoId, $dataDocumento[0]['movimiento_id'], $dataDocumento[0]['usuario_creacion'], $dataDocumento[0]['total']);
 $usuario_estado = DocumentoNegocio::create()->obtenerDocumentoDocumentoEstadoXdocumentoId($documentoId, "0,1");
 
 $resultadoMatriz = [];
@@ -560,11 +593,14 @@ foreach ($matrizUsuario as $key => $value) {
     }
 }
 
-$personaFirma0 = __DIR__ . "/../persona/firmas/" . $resultadoMatriz[0]['firma_digital'];
-$personaFirma1 = __DIR__ . "/../persona/firmas/" . $resultadoMatriz[1]['firma_digital'];
-$personaFirma2 = __DIR__ . "/../persona/firmas/" . $resultadoMatriz[2]['firma_digital'];
-$personaFirma3 = __DIR__ . "/../persona/firmas/" . $resultadoMatriz[3]['firma_digital'];
+$personaFirma0 = '../persona/firmas/' . $resultadoMatriz[0]['firma_digital'];
+$personaFirma1 = '../persona/firmas/' . $resultadoMatriz[1]['firma_digital'];
+$personaFirma2 = '../persona/firmas/' . $resultadoMatriz[2]['firma_digital'];
+$personaFirma3 = '../persona/firmas/' . $resultadoMatriz[3]['firma_digital'];
 
+$filtrado = array_values(array_filter($matrizUsuario, function($item) {
+    return $item['nivel'] == 2;
+}))[0]['monto_aprobacion_max'];        
 
 $pdf->SetFont('Arial', 'B', 8);
 $pdf->SetXY(110, $espacio + 25);
@@ -572,12 +608,12 @@ $pdf->MultiCell(39, 5, 'Autorizado por.', 0, 'C', true);
 $pdf->SetXY(150, $espacio + 25);
 $pdf->MultiCell(50, 10, '', 1, 'C', true); //Revisar
 $pdf->SetXY(150, $espacio + 25);
-if (!ObjectUtil::isEmpty($resultadoMatriz[1]['firma_digital'])) {
-    // $pdf->Image($personaFirma1, 163,  $espacio + 25, 25, 10);
+if (!ObjectUtil::isEmpty($resultadoMatriz[0]['firma_digital'])) {
+    // $pdf->Image($personaFirma0, 163,  $espacio + 25, 25, 10);
 }
 $pdf->SetFont('Arial', '', 6);
 $pdf->SetXY(110, $espacio + 30);
-$pdf->MultiCell(39, 3, 'JEFE DE LOGISTICA', 0, 'C', true);
+$pdf->MultiCell(39, 3, 'COMPRADOR', 0, 'C', true);
 
 $pdf->SetFont('Arial', 'B', 8);
 $pdf->SetXY(110, $espacio + 38);
@@ -585,12 +621,12 @@ $pdf->MultiCell(39, 5, 'Autorizado por.', 0, 'C', true);
 $pdf->SetXY(150, $espacio + 38);
 $pdf->MultiCell(50, 10, '', 1, 'C', true); //Revisar
 $pdf->SetXY(150, $espacio + 38);
-if (!ObjectUtil::isEmpty($resultadoMatriz[0]['firma_digital'])) {
-    $pdf->Image($personaFirma0, 163,  $espacio + 38, 25, 10);
+if (!ObjectUtil::isEmpty($resultadoMatriz[1]['firma_digital'])) {
+    // $pdf->Image($personaFirma1, 163,  $espacio + 38, 25, 10);
 }
 $pdf->SetFont('Arial', '', 6);
 $pdf->SetXY(110, $espacio + 43);
-$pdf->MultiCell(39, 3, 'COMPRADOR', 0, 'C', true);
+$pdf->MultiCell(39, 3, 'JEFE LOGISTICA', 0, 'C', true);
 
 $pdf->SetFont('Arial', 'B', 8);
 $pdf->SetXY(110, $espacio + 51);
@@ -598,30 +634,37 @@ $pdf->MultiCell(39, 5, 'Autorizado por.', 0, 'C', true);
 $pdf->SetXY(150, $espacio + 51);
 $pdf->MultiCell(50, 10, '', 1, 'C', true); //Revisar
 $pdf->SetXY(150, $espacio + 51);
-if (!ObjectUtil::isEmpty($resultadoMatriz[1]['firma_digital'])) {
-    $pdf->Image($personaFirma1, 163,  $espacio + 51, 25, 10);
+if (!ObjectUtil::isEmpty($resultadoMatriz[2]['firma_digital'])) {
+    // $pdf->Image($personaFirma2, 163,  $espacio + 51, 25, 10);
 }
 $pdf->SetFont('Arial', '', 6);
 $pdf->SetXY(110, $espacio + 56);
-$pdf->MultiCell(39, 3, 'GERENTE GENERAL', 0, 'C', true);
+$pdf->MultiCell(39, 3, 'GERENTE', 0, 'C', true);
 
-$pdf->SetFont('Arial', 'B', 8);
-$pdf->SetXY(110, $espacio + 64);
-$pdf->MultiCell(39, 5, 'Autorizado por.', 0, 'C', true);
-$pdf->SetXY(150, $espacio + 64);
-$pdf->MultiCell(50, 10, '', 1, 'C', true); //Revisar
-$pdf->SetXY(150, $espacio + 64);
-if (!ObjectUtil::isEmpty($resultadoMatriz[1]['firma_digital'])) {
-    $pdf->Image($personaFirma1, 163,  $espacio + 51, 25, 10);
+$total = $dataDocumento[0]['total'];
+if($dataDocumento[0]['moneda_id'] == 4){
+    $total = $dataDocumento[0]['total'] * $dataDocumento[0]['tipo_cambio'];
+} 
+if(floatval($total) > floatval($filtrado)){
+    $pdf->SetFont('Arial', 'B', 8);
+    $pdf->SetXY(110, $espacio + 64);
+    $pdf->MultiCell(39, 5, 'Autorizado por.', 0, 'C', true);
+    $pdf->SetXY(150, $espacio + 64);
+    $pdf->MultiCell(50, 10, '', 1, 'C', true); //Revisar
+    $pdf->SetXY(150, $espacio + 64);
+    if (!ObjectUtil::isEmpty($resultadoMatriz[3]['firma_digital'])) {
+        // $pdf->Image($personaFirma3, 163,  $espacio + 51, 25, 10);
+    }
+    $pdf->SetFont('Arial', '', 6);
+    $pdf->SetXY(110, $espacio + 68);
+    $pdf->MultiCell(39, 3, 'JUNTA DIRECTIVA', 0, 'C', true);
 }
-$pdf->SetFont('Arial', '', 6);
-$pdf->SetXY(110, $espacio + 69);
-$pdf->MultiCell(39, 3, 'JUNTA DIRECTIVA', 0, 'C', true);
+
 
 $pdf->SetFont('Arial', '', 4);
-$pdf->SetXY(10, $espacio + 63);
+$pdf->SetXY(10, $espacio + 66);
 $pdf->MultiCell(105, 2, utf8_decode('El horario de recepción es de lunes a viernes de 8:00 am a 1:00 pm; los documentos que envíen después de este horario o los días sábados, domingos y feriados serán considerados como recibidos a partir del siguiente día hábil y deberán ser remitidos a la siguiente dirección de correo electrónico'), 0, 'L', true);
-$pdf->SetXY(10, $espacio + 67);
+$pdf->SetXY(10, $espacio + 70);
 $pdf->MultiCell(105, 3, utf8_decode('El pago es semanal todos los jueves, se programarán todos los comprobantes que cumplan con el procedimiento solicitado y hayan sido emitidos y registrados hasta el martes previo.'), 0, 'L', 1, 0, '', $espacio + 59, true, 0, false, true, 2, 'M');
 
 

@@ -72,12 +72,13 @@ class RequerimientoNegocio extends ModeloNegocioBase
         $areaId = $criterios['area'];
         $requerimiento_tipo = $criterios['requerimiento_tipo'];
         $tipo = $criterios['tipo'];
+        $estadoId = $criterios['estado'];
         if (!ObjectUtil::isEmpty($tipo)) {
             if ($tipo != 0) {
                 $documentoTipoId = $tipo;
             }
         }
-        if($documentoTipoId == Configuraciones::ORDEN_COMPRA || $documentoTipoId == Configuraciones::ORDEN_SERVICIO){
+        if ($documentoTipoId == Configuraciones::ORDEN_COMPRA || $documentoTipoId == Configuraciones::ORDEN_SERVICIO) {
             $areaId = null;
         }
 
@@ -85,7 +86,7 @@ class RequerimientoNegocio extends ModeloNegocioBase
         $formaOrdenar = $order[0]['dir'];
         $columnaOrdenar = $columns[$columnaOrdenarIndice]['data'];
 
-        return Requerimiento::create()->obtenerRequerimientosXCriterios($fechaEmisionInicio, $fechaEmisionFin, $documentoTipoId, $areaId, $requerimiento_tipo, $columnaOrdenar, $formaOrdenar, $elementosFiltrados, $start);
+        return Requerimiento::create()->obtenerRequerimientosXCriterios($fechaEmisionInicio, $fechaEmisionFin, $documentoTipoId, $areaId, $requerimiento_tipo, $estadoId, $columnaOrdenar, $formaOrdenar, $elementosFiltrados, $start);
     }
 
     public function obtenerCantidadRequerimientosXCriterios($criterios, $columns, $order)
@@ -95,13 +96,22 @@ class RequerimientoNegocio extends ModeloNegocioBase
         $documentoTipoId = $criterios['documento_tipo'];
         $areaId = $criterios['area'];
         $requerimiento_tipo = $criterios['requerimiento_tipo'];
+        $tipo = $criterios['tipo'];
+        $estadoId = $criterios['estado'];
+        if (!ObjectUtil::isEmpty($tipo)) {
+            if ($tipo != 0) {
+                $documentoTipoId = $tipo;
+            }
+        }
+        if ($documentoTipoId == Configuraciones::ORDEN_COMPRA || $documentoTipoId == Configuraciones::ORDEN_SERVICIO) {
+            $areaId = null;
+        }
 
         $columnaOrdenarIndice = $order[0]['column'];
         $formaOrdenar = $order[0]['dir'];
         $columnaOrdenar = $columns[$columnaOrdenarIndice]['data'];
 
-
-        return Requerimiento::create()->obtenerCantidadRequerimientosXCriterios($fechaEmisionInicio, $fechaEmisionFin, $documentoTipoId, $areaId, $requerimiento_tipo, $columnaOrdenar, $formaOrdenar);
+        return Requerimiento::create()->obtenerCantidadRequerimientosXCriterios($fechaEmisionInicio, $fechaEmisionFin, $documentoTipoId, $areaId, $requerimiento_tipo, $estadoId, $columnaOrdenar, $formaOrdenar);
     }
 
     private function formatearFechaBD($cadena)
@@ -140,15 +150,15 @@ class RequerimientoNegocio extends ModeloNegocioBase
     public function visualizarConsolidado($documentoId)
     {
         $respuesta = new stdClass();
-        
+
         $dataRelacionada = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoId($documentoId);
-        foreach($dataRelacionada as $itemRelacion){
-            if($itemRelacion['documento_tipo_id'] == Configuraciones::GENERAR_COTIZACION){
+        foreach ($dataRelacionada as $itemRelacion) {
+            if ($itemRelacion['documento_tipo_id'] == Configuraciones::GENERAR_COTIZACION || $itemRelacion['documento_tipo_id'] == Configuraciones::GENERAR_COTIZACION_SERVICIO) {
                 $respuesta->dataDocumento = DocumentoNegocio::create()->obtenerDetalleDocumento($itemRelacion['documento_relacionado_id']);
                 $respuesta->dataDocumentoCabecera = DocumentoNegocio::create()->obtenerDocumentoXDocumentoId($itemRelacion['documento_relacionado_id']);
-                $detalle =  MovimientoBien::create()->obtenerXIdMovimiento($respuesta->dataDocumentoCabecera[0]['movimiento_id']);         
+                $detalle =  MovimientoBien::create()->obtenerXIdMovimiento($respuesta->dataDocumentoCabecera[0]['movimiento_id']);
                 $documento_detalle = Documento::create()->obtenerDocumentoDetalleDatos($itemRelacion['documento_relacionado_id']);
-            }        
+            }
         }
 
 
@@ -236,118 +246,85 @@ class RequerimientoNegocio extends ModeloNegocioBase
             throw new WarningException("El usuario no esta registrado en la matriz de aprobación, comunicarse con el Administrador");
         }
 
-        $sumaDetalle = array_reduce($movimientoDetalle, function ($acumulador, $seleccion) {
-            return $acumulador + ($seleccion['cantidad'] * $seleccion['valor_monetario']);
-        }, 0);
+        $sumaDetalle = $dataDocumento[0]['total'];
 
-        $bandera_matriz = false;
-        foreach ($matrizUsuario as $item) {
-            if (intval($sumaDetalle) <= intval($item['monto_aprobacion_max'])) {
-                $bandera_matriz = true;
+        $data = DocumentoNegocio::create()->ActualizarDocumentoEstadoId($documentoId, 3, $usuarioId); // 3 = Aprobado
+        if (ObjectUtil::isEmpty($data)) {
+            throw new WarningException("Hubo un problema al aporbar Orden de compra");
+        }
+
+        $validarDocumento = MatrizAprobacion::create()->validarDocumentoAprobacionUltimoNivelXMonto($documentoId, $dataDocumento[0]['documento_tipo_id'], $sumaDetalle);
+        if ($validarDocumento[0]["validar"] == 1) {
+            $dataRelacionada = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoId($documentoId);
+            foreach ($dataRelacionada as $itemRelacion) {
+                if (($itemRelacion['documento_tipo_id'] == Configuraciones::COTIZACIONES || $itemRelacion['documento_tipo_id'] == Configuraciones::COTIZACION_SERVICIO) && $itemRelacion['documento_estado_id'] == 16) {
+                    $data = DocumentoNegocio::create()->ActualizarDocumentoEstadoId($itemRelacion['documento_relacionado_id'], 3, $usuarioId); // 3 = Aprobado
+                }
+                if (($itemRelacion['documento_tipo_id'] == Configuraciones::GENERAR_COTIZACION || $itemRelacion['documento_tipo_id'] == Configuraciones::GENERAR_COTIZACION_SERVICIO) && $itemRelacion['documento_estado_id'] == 17) {
+                    $data = DocumentoNegocio::create()->ActualizarDocumentoEstadoId($itemRelacion['documento_relacionado_id'], 3, $usuarioId); // 3 = Aprobado
+                }
             }
         }
 
-        if ($bandera_matriz == false) {
-            throw new WarningException("El monto del consolidado supera al habilitado para el usuario , comunicarse con el Administrador");
-        } else {
-            $data = DocumentoNegocio::create()->ActualizarDocumentoEstadoId($documentoId, 3, $usuarioId); // 3 = Aprobado
-            if (ObjectUtil::isEmpty($data)) {
-                throw new WarningException("Hubo un problema al aporbar Orden de compra");
-            }
-
-
-            $validarDocumento = MatrizAprobacion::create()->validarDocumentoAprobacionUltimoNivelXMonto($documentoId, $dataDocumento[0]['documento_tipo_id'], $sumaDetalle);
-            if ($validarDocumento[0]["validar"] == 1) {
-                $detalleDistribucionPagos = OrdenCompraServicio::create()->obtenerDistribucionPagos($documentoId);
-
-                foreach($detalleDistribucionPagos as $item){
-                    $subTotal =  round($item['importe'] / 1.18);
-                    $igv = $item['importe'] - $subTotal;
-                    $valorizacion = ActaRetiro::create()->registrarFacturaProveedor(
-                        "", //Serie
-                        "", //Numero
-                        $subTotal,
-                        $igv,
-                        $item['importe'], //Total
-                        0, //Detraccion
-                        $item['importe'],
-                        $usuarioId,
-                        null,
-                        null,
-                        $dataDocumento[0]['persona_id'],
-                        null,
-                        $dataDocumento[0]['moneda_id']
-                    );
-                }
-                $distribucionPagos = OrdenCompraServicio::create()->cambiarEstadoDistribucionPagos($documentoId);
-                
-                $dataRelacionada = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoId($documentoId);
-                foreach ($dataRelacionada as $itemRelacion) {
-                    if(($itemRelacion['documento_tipo_id'] == Configuraciones::COTIZACIONES || $itemRelacion['documento_tipo_id'] == Configuraciones::COTIZACION_SERVICIO) && $itemRelacion['documento_estado_id'] == 16){
-                        $data = DocumentoNegocio::create()->ActualizarDocumentoEstadoId($itemRelacion['documento_relacionado_id'], 3, $usuarioId); // 3 = Aprobado
-                    }
-                    if($itemRelacion['documento_tipo_id'] == Configuraciones::GENERAR_COTIZACION && $itemRelacion['documento_estado_id'] == 17){
-                        $data = DocumentoNegocio::create()->ActualizarDocumentoEstadoId($itemRelacion['documento_relacionado_id'], 3, $usuarioId); // 3 = Aprobado
-                    }
-                }
-            }
-
-            $respuesta =  new stdClass();
-            $respuesta->mensaje = "La operación se generó con éxito";
-            return  $respuesta;
-        }
+        $respuesta =  new stdClass();
+        $respuesta->mensaje = "La operación se generó con éxito";
+        return  $respuesta;
     }
 
-    public function generarMatrizDocumento($documentoTipoId, $documentoId, $movimientoId, $usuarioId){
+    public function generarMatrizDocumento($documentoTipoId, $documentoId, $movimientoId, $usuarioId, $total = null)
+    {
         $matrizUsuario = null;
         $areaId = null;
         $esUrgencia = null;
 
-        if($documentoTipoId == Configuraciones::SOLICITUD_REQUERIMIENTO){
+        if ($documentoTipoId == Configuraciones::SOLICITUD_REQUERIMIENTO) {
             $dataDocumento = DocumentoNegocio::create()->obtenerDetalleDocumento($documentoId);
             foreach ($dataDocumento as $key => $value) {
-                if($value['descripcion'] == "Urgencia" && $value['valor'] == "Si") {
+                if ($value['descripcion'] == "Urgencia" && $value['valor'] == "Si") {
                     $matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXDocumentoTipoUrgente($documentoTipoId);
                 }
-                if($value['tipo'] == "43") {
+                if ($value['tipo'] == "43") {
                     $areaId = $value['valorid'];
                 }
             }
-            if($matrizUsuario == null){
+            if ($matrizUsuario == null) {
                 foreach ($dataDocumento as $key => $value) {
                     switch ($value['tipo']) {
                         case '43':
                             $matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXDocumentoTipoXArea($documentoTipoId, $value['valorid']);
                             break;
                     }
-                    if($value['descripcion'] == "Tipo de requerimiento" && $value['valor'] == "Servicio") {
+                    if ($value['descripcion'] == "Tipo de requerimiento" && $value['valor'] == "Servicio") {
                         $matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXRequerimientoServicio($documentoTipoId);
                     }
                 }
             }
-        }else{
+        } else {
             $matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXDocumentoTipoXArea($documentoTipoId);
         }
-        $movimientoDetalle = MovimientoBien::create()->obtenerXIdMovimiento($movimientoId);
 
-        $sumaDetalle = array_reduce($movimientoDetalle, function ($acumulador, $seleccion) {
-            return $acumulador + ($seleccion['cantidad'] * $seleccion['valor_monetario']);
-        }, 0);
-        
-        if(($documentoTipoId == Configuraciones::ORDEN_COMPRA || $documentoTipoId == Configuraciones::ORDEN_SERVICIO)&& 30000 > $sumaDetalle){
-            $nivelM=1;
-            $matrizUsuario = array_filter($matrizUsuario, function($item) use ($nivelM) {
+        $filtrado = array_values(array_filter($matrizUsuario, function ($item) {
+            return $item['nivel'] == 2;
+        }))[0]['monto_aprobacion_max'];
+        if (($documentoTipoId == Configuraciones::ORDEN_COMPRA || $documentoTipoId == Configuraciones::ORDEN_SERVICIO) && $filtrado > $total) {
+            $nivelM = 2;
+            $matrizUsuario = array_filter($matrizUsuario, function ($item) use ($nivelM) {
                 return $item['nivel'] <= $nivelM;
             });
         }
 
         $usuario_estado = DocumentoNegocio::create()->obtenerDocumentoDocumentoEstadoXdocumentoId($documentoId, "0,1");
-
         $agrupados = [];
 
+        usort($matrizUsuario, function ($a, $b) {
+            if ($a['nivel'] == $b['nivel']) {
+                return 0;
+            }
+            return ($a['nivel'] < $b['nivel']) ? -1 : 1;
+        });
         foreach ($matrizUsuario as $usuario) {
             $key = $usuario['nivel'] . '-' . $usuario['area_id'];
-        
+
             if (!isset($agrupados[$key])) {
                 // Si no existe aún esa combinación, la agregamos tal cual
                 $agrupados[$key] = $usuario;
@@ -357,18 +334,78 @@ class RequerimientoNegocio extends ModeloNegocioBase
                 $agrupados[$key]['usuario_aprobador_id'] .= ',' . $usuario['usuario_aprobador_id'];
             }
         }
-        
+
         // Resultado final
         $matrizUsuario = array_values($agrupados); // para tener índice limpio si lo necesitas
-        
+
         $tamanioMatriz = count($matrizUsuario);
 
-        if($tamanioMatriz == 1){
+        if ($tamanioMatriz == 1) {
             $arrayMatriz = array(
-                "usuario_aprobador_id" => $usuarioId,  "nivel" => 1, "nombre" => $usuario_estado[0]['nombre']);
+                "usuario_aprobador_id" => $usuarioId,
+                "nivel" => 1,
+                "nombre" => $usuario_estado[0]['nombre']
+            );
             array_push($matrizUsuario, $arrayMatriz);
         }
-    
+
         return $matrizUsuario;
+    }
+
+    //
+    public function obtenerConfiguracionesInicialesSeguimientoRequerimiento($idEmpresa)
+    {
+        $respuesta = new stdClass();
+        $respuesta->bien = BienNegocio::create()->obtenerBienKardexXEmpresa($idEmpresa);
+        $respuesta->bien_tipo = BienTipo::create()->obtener();
+        return $respuesta;
+    }
+
+    public function obtenerSeguimientoRequerimientoXCriterios($bienIds, $bienTipoIds, $fechaInicio, $fechaFin, $serie, $numero)
+    {
+        $respuesta = new stdClass();
+        $bienIds = Util::convertirArrayXCadena($bienIds);
+        $bienTipoIds = Util::convertirArrayXCadena($bienTipoIds);
+        $data = Requerimiento::create()->obtenerSeguimientoRequerimientoXCriterios($bienIds, $bienTipoIds, $fechaInicio, $fechaFin, $serie, $numero);
+        foreach ($data as $index => $dataItem) {
+            $usuario_estado = DocumentoNegocio::create()->obtenerDocumentoDocumentoEstadoXdocumentoId($dataItem['documento_id'], "0,1");
+            $dataEsatdoRQ = "";
+            $dataEsatdoRQFecha = "";
+            foreach ($usuario_estado as $indexUsuarioEstado => $usuario_estadoItem) {
+                $dataEsatdoRQ .= "<br><strong>".($indexUsuarioEstado + 1) . "." . $usuario_estadoItem['estado_descripcion'] . ":</strong> " . $usuario_estadoItem['nombre'];
+                $dataEsatdoRQFecha .= "<br><strong>".($indexUsuarioEstado + 1) . ".</strong> " . $usuario_estadoItem['fecha_creacion'];
+            }
+            $data[$index]['aprobacionRQ'] = $dataEsatdoRQ;
+            $data[$index]['aprobacionRQFecha'] = $dataEsatdoRQFecha;
+
+            $dataUsuarioGenerador = "";
+            $dataUsuarioGeneradorEstado = "";
+            $dataUsuarioGeneradorFecha = "";
+            $dataOC = "";
+            $dataOCEstado = "";
+            $dataOCFecha = "";
+            $dataRelacionada = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoIdSeguimiento($dataItem['documento_id']);
+            foreach ($dataRelacionada as $itemRelacion) {
+                if ($itemRelacion['documento_tipo_id'] == Configuraciones::GENERAR_COTIZACION || $itemRelacion['documento_tipo_id'] == Configuraciones::GENERAR_COTIZACION_SERVICIO) {
+                    $dataUsuarioGenerador .= $itemRelacion['solicitante_nombre_completo'];
+                    $dataUsuarioGeneradorEstado .= $itemRelacion['documento_estado'];
+                    $dataUsuarioGeneradorFecha .= $itemRelacion['fecha_creacion'];
+                }
+                if ($itemRelacion['documento_tipo_id'] == Configuraciones::ORDEN_COMPRA || $itemRelacion['documento_tipo_id'] == Configuraciones::ORDEN_SERVICIO) {
+                    $dataOC .= $itemRelacion['serie_numero'];
+                    $dataOCEstado .= $itemRelacion['documento_estado'];
+                    $dataOCFecha .= $itemRelacion['fecha_creacion'];
+                }
+            }
+            $data[$index]['usuarioGenerador'] = $dataUsuarioGenerador;
+            $data[$index]['usuarioGeneradorEstado'] = $dataUsuarioGeneradorEstado;
+            $data[$index]['usuarioGeneradorFecha'] = $dataUsuarioGeneradorFecha;
+            $data[$index]['OC'] = $dataOC;
+            $data[$index]['OCEstado'] = $dataOCEstado;
+            $data[$index]['OCFecha'] = $dataOCFecha;
+        }
+
+
+        return $respuesta->data = $data;
     }
 }

@@ -241,7 +241,7 @@ function buscarRequerimientos() {
             },
             {
                 "render": function (data, type, row) {
-                    return devolverDosDecimales(data);
+                    return (row.moneda_id == "2"?"S/ ":"$ ") + parseFloat(data).formatMoney(2, '.', ',');
                 },
                 "targets": 4
             },
@@ -794,7 +794,7 @@ function fechaArmada(valor) {
 
 function aprobar() {
     id = $("#visualizarDocumentoId").val();
-    if (documentoTipoId == SOLICITUD_REQUERIMIENTO || documentoTipoId == ORDEN_SERVICIO || documentoTipoId == REQUERIMIENTO_AREA) { //Requerimiento
+    if (documentoTipoId == SOLICITUD_REQUERIMIENTO || documentoTipoId == REQUERIMIENTO_AREA) { //Requerimiento
         swal({
             title: " ¿Desea continuar?",
             text: "Se procede aprobar " + documento_tipo_descripcionText,
@@ -861,7 +861,7 @@ function aprobar() {
             loaderClose();
             return;
         }
-    } else if (documentoTipoId == ORDEN_COMPRA) { // Orden de compra o Servicio
+    } else if (documentoTipoId == ORDEN_COMPRA || documentoTipoId == ORDEN_SERVICIO) { // Orden de compra o Servicio
         swal({
             title: " ¿Desea continuar?",
             text: "Se procede aprobar la " + documento_tipo_descripcionText,

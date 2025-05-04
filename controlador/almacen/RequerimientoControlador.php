@@ -73,14 +73,16 @@ class RequerimientoControlador extends AlmacenIndexControlador
             }else{
                 $matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXDocumentoTipoXArea($data[$i]['documento_tipo_id']);
             }
-            $movimientoDetalle = MovimientoBien::create()->obtenerXIdMovimiento($data[$i]['movimiento_id']);
-
-            $sumaDetalle = array_reduce($movimientoDetalle, function ($acumulador, $seleccion) {
-                return $acumulador + ($seleccion['cantidad'] * $seleccion['valor_monetario']);
-            }, 0);
             
-            if(($data[$i]['documento_tipo_id'] == Configuraciones::ORDEN_COMPRA || $data[$i]['documento_tipo_id'] == Configuraciones::ORDEN_SERVICIO)&& 30000 > $sumaDetalle){
-                $nivelM=1;
+            $filtrado = array_values(array_filter($matrizUsuario, function($item) {
+                return $item['nivel'] == 2;
+            }))[0]['monto_aprobacion_max']; 
+            $total = $data[$i]['total'];
+            if($data[$i]['moneda_id'] == 4){
+                $total = $data[$i]['total'] * $data[$i]['tipo_cambio'];
+            } 
+            if(($data[$i]['documento_tipo_id'] == Configuraciones::ORDEN_COMPRA || $data[$i]['documento_tipo_id'] == Configuraciones::ORDEN_SERVICIO)&& $filtrado > $total){
+                $nivelM=2;
                 $matrizUsuario = array_filter($matrizUsuario, function($item) use ($nivelM) {
                     return $item['nivel'] <= $nivelM;
                 });
@@ -157,7 +159,8 @@ class RequerimientoControlador extends AlmacenIndexControlador
                                     $andera_sinaprobar = false;
                                 }
                             }
-                            if($andera_sinaprobar == false){
+                            $usuario_creacion = array_column($usuario_estado, 'usuario_creacion');
+                            if($andera_sinaprobar == false && !in_array($value["usuario_aprobador_id"], $usuario_creacion)){
                                 $sinAprobar [] = array("usuario_aprobador_id" => $value["usuario_aprobador_id"], "nivel"=> $value["nivel"]);
                             }
                             break;
@@ -174,7 +177,8 @@ class RequerimientoControlador extends AlmacenIndexControlador
                                     $andera_sinaprobar = false;
                                 }
                             }
-                            if($andera_sinaprobar == false){
+                            $usuario_creacion = array_column($usuario_estado, 'usuario_creacion');
+                            if($andera_sinaprobar == false && !in_array($value["usuario_aprobador_id"], $usuario_creacion)){
                                 $sinAprobar [] = array("usuario_aprobador_id" => $value["usuario_aprobador_id"], "nivel"=> $value["nivel"]);
                             }
                             break;
@@ -191,7 +195,8 @@ class RequerimientoControlador extends AlmacenIndexControlador
                                     $andera_sinaprobar = false;
                                 }
                             }
-                            if($andera_sinaprobar == false){
+                            $usuario_creacion = array_column($usuario_estado, 'usuario_creacion');
+                            if($andera_sinaprobar == false && !in_array($value["usuario_aprobador_id"], $usuario_creacion)){
                                 $sinAprobar [] = array("usuario_aprobador_id" => $value["usuario_aprobador_id"], "nivel"=> $value["nivel"]);
                             }
                             break;
@@ -247,15 +252,7 @@ class RequerimientoControlador extends AlmacenIndexControlador
             $data[$i]['acciones'] = $stringAcciones;
         }
 
-        if($estado == "0"){
-            $filtrados = $data;
-        }else{
-            $filtrados = array_values(array_filter($data, function($item) use($estado){
-                return $item['estado_descripcion'] === $estado;
-            }));  
-        }
-
-        return $this->obtenerRespuestaDataTable($filtrados, $elementosFiltrados, $elementosTotales);
+        return $this->obtenerRespuestaDataTable($data, $elementosFiltrados, $elementosTotales);
     }
 
 
@@ -361,5 +358,24 @@ class RequerimientoControlador extends AlmacenIndexControlador
     {
         $documentoId = $this->getParametro("documentoId");
         return MovimientoNegocio::create()->validarDocumentoEdicion($documentoId);
+    }
+
+    //Seguimiento de requerimiento
+    public function obtenerConfiguracionesInicialesSeguimientoRequerimiento(){
+        $idEmpresa = $this->getParametro("id_empresa");
+        return RequerimientoNegocio::create()->obtenerConfiguracionesInicialesSeguimientoRequerimiento($idEmpresa);
+    }
+
+    public function obtenerDataSeguimientoRequerimiento(){
+        $criterios = $this->getParametro("criterios");
+        $bienIds = $criterios[0]['bienIds'];
+        $bienTipoIds = $criterios[0]['bienTipoIds'];
+        $fechaInicio = $criterios[0]['fechaInicio'];
+        $fechaFin = $criterios[0]['fechaFin'];
+        $serie = $criterios[0]['serie'];
+        $numero = $criterios[0]['numero'];
+        $data = RequerimientoNegocio::create()->obtenerSeguimientoRequerimientoXCriterios($bienIds, $bienTipoIds, $fechaInicio, $fechaFin, $serie, $numero);
+
+        return $this->obtenerRespuestaDataTable($data, count($data), count($data));
     }
 }

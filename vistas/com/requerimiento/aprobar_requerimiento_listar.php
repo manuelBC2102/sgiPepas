@@ -111,9 +111,9 @@
                                                                 <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
                                                                     <select name="cboEstado" id="cboEstado" class="select2">
                                                                         <option value="0">Todos</option>
-                                                                        <option value="Por Aprobar" selected>Por Aprobar</option>    
-                                                                        <option value="Aprobado">Aprobado</option>   
-                                                                        <option value="Rechazado">Rechazado</option>    
+                                                                        <option value="1" selected>Por Aprobar</option>    
+                                                                        <option value="3">Aprobado</option>   
+                                                                        <option value="9">Rechazado</option>    
                                                                     </select>
                                                                 </div>
                                                             </div>

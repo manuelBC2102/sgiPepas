@@ -905,4 +905,10 @@ class Documento extends ModeloBase {
         $this->commandPrepare("sp_obtenerAreaConSolicitudes");
         return $this->commandGetData();
     }
+
+    function obtenerDocumentosRelacionadosXDocumentoIdSeguimiento($documentoId) {
+        $this->commandPrepare("sp_documento_relacionado_obtenerXDocumentoIdSeguimiento");
+        $this->commandAddParameter(":vin_documento_id", $documentoId);
+        return $this->commandGetData();
+    }
 }

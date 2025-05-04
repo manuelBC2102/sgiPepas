@@ -1075,6 +1075,7 @@ function onResponseObtenerConfiguracionesIniciales(data) {
                         $("#id_" + dtdTipoOtros).show();
                     } else {
                         $("#id_" + dtdTipoOtros).hide();
+                        $("#id_" + dtdTipoOtros).val("");
                     }
                 }
             });

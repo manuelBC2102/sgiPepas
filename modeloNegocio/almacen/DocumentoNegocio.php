@@ -1532,4 +1532,9 @@ class DocumentoNegocio extends ModeloNegocioBase
   {
     return Documento::create()->obtenerDocumentosRelacionadosXIngresoSalidaReserva($documentoId);
   }  
+
+  function obtenerDocumentosRelacionadosXDocumentoIdSeguimiento($documentoId)
+  {
+    return Documento::create()->obtenerDocumentosRelacionadosXDocumentoIdSeguimiento($documentoId);
+  }
 }
