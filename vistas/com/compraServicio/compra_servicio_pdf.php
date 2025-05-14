@@ -153,6 +153,9 @@ foreach ($dataRelacionada as $itemRelacion) {
                     if ($item['descripcion'] == "Urgencia" && $item['valor'] == "Si") {
                         $banderaUrgencia = 1;
                     }
+                    if ($item['descripcion'] == "Urgencia" && $item['valor'] == "Si Junta") {
+                        $banderaUrgencia = 1;
+                    }                    
                     break;
             }
         }
@@ -298,7 +301,7 @@ $pdf->Cell(45, 5, 'Solicitado por', 1, 0, 'C', true);
 $pdf->SetFillColor(255, 255, 255);
 $pdf->SetFont('Arial', '', 7);
 $pdf->SetXY(100, 84);
-$pdf->MultiCell(45, 8, $usuarioRequerimientoArea, 1, 'C');
+$pdf->MultiCell(45, 8, utf8_decode($usuarioRequerimientoArea), 1, 'C');
 
 function insertarSaltosLinea($texto, $longitudMax = 45) {
     $palabras = explode(' ', $texto);
@@ -391,8 +394,8 @@ $pdf->Cell(65, 6, utf8_decode('Descripción'), 1, 0, 'C', true);
 $pdf->Cell(15, 6, 'Cantidad', 1, 0, 'C', true);
 $pdf->Cell(10, 6, 'U.m', 1, 0, 'C', true);
 $pdf->Cell(20, 6, 'Valor Unitario', 1, 0, 'C', true);
-$pdf->Cell(20, 6, 'Totales', 1, 0, 'C', true);
-$pdf->Cell(30, 6, 'Unidad Minera', 1, 1, 'C', true);
+$pdf->Cell(15, 6, 'Totales', 1, 0, 'C', true);
+$pdf->Cell(35, 6, 'Unidad Minera', 1, 1, 'C', true);
 
 // Filas
 foreach ($detalle as $i => $item) {
@@ -402,7 +405,7 @@ foreach ($detalle as $i => $item) {
     foreach ($resMovimientoBienDetalle as $dato) {
         $unidad = $dato['unidad_minera'];
         if($banderaUrgencia == 0){
-            $cantidad = floatval($dato['cantidad_requerimiento']);
+            $cantidad = floatval($dato['cantidad_requerimiento_area']);
         }else{
             $cantidad = floatval($dato['cantidad_requerimiento']);
         }
@@ -419,38 +422,47 @@ foreach ($detalle as $i => $item) {
     }
 
     $cantidadSaltos = substr_count($textoFinal, "\n");
-    $pdf->SetFont('Arial', '', 6);
+    $pdf->SetFont('Arial', '', 5);
     // Altura de línea base
     $lineHeight = 4;
-    // Calcular altura necesaria para descripcion
-    $descripcion = insertarSaltosLinea($item->descripcion, 45);
-    $nbLines = (substr_count($descripcion, "\n") + 1);
-    $descripcionHeight = max($lineHeight * $cantidadSaltos, $lineHeight * $nbLines);
-    
-    if($descripcionHeight > $lineHeight){
-        $lineHeight = $descripcionHeight;
-    }
+    $lineHeightDescripcion = 4;
 
+    // Calcular altura necesaria para descripcion
+    $descripcion = insertarSaltosLinea($item->descripcion, 65);
+    $nbLines = (substr_count($descripcion, "\n") + 1);
+    
+    $descripcionHeight = $lineHeight;
+    if($nbLines>1){
+        $lineHeightDescripcion = $lineHeightDescripcion * 2;
+    }
+    
+    if($cantidadSaltos>1){
+        $lineHeightDescripcion = $lineHeightDescripcion * 2;
+        $descripcionHeight = $lineHeight * 2;
+    }
     // Guardar posición X e Y antes de MultiCell
     $x = $pdf->GetX();
     $y = $pdf->GetY();
 
-    $pdf->Cell(10, $descripcionHeight, $i + 1, 1, 0, 'C');
-    $pdf->Cell(20, $descripcionHeight, $item->bien_codigo, 1, 0);
+    $pdf->SetXY($x, $y); // Ajustar al punto donde empieza la celda de descripcion
+    $pdf->MultiCell(10, $lineHeightDescripcion, $i + 1, 1, 'C');
+    $pdf->SetXY($x + 10, $y); // Ajustar al punto donde empieza la celda de descripcion
+    $pdf->MultiCell(20, $lineHeightDescripcion, $item->bien_codigo, 1);
     
     // Usar MultiCell para descripcion
     $pdf->SetXY($x + 30, $y); // Ajustar al punto donde empieza la celda de descripcion
-    $pdf->MultiCell(65, ($nbLines == 1 ? $descripcionHeight:($descripcionHeight / 2)), utf8_decode($descripcion), 1);
-
+    $pdf->MultiCell(65, $descripcionHeight, utf8_decode($descripcion), 1);
     // Volver a la posición X al lado derecho de la MultiCell
     $pdf->SetXY($x + 95, $y);
-    $pdf->Cell(15, $descripcionHeight, number_format($item->cantidad, 2), 1, 0, 'R');
-    $pdf->Cell(10, $descripcionHeight, $item->simbolo, 1, 0, 'C');
-    $pdf->Cell(20, $descripcionHeight, number_format($item->precioUnitario, 4), 1, 0, 'R');
-    $pdf->Cell(20, $descripcionHeight, number_format($item->importe, 2), 1, 0, 'R');
-
-    $pdf->SetFont('Arial', '', 4);
-    $pdf->MultiCell(30,  $descripcionHeight, $textoFinal, 1);
+    $pdf->MultiCell(15, $lineHeightDescripcion, number_format($item->cantidad, 2), 1);
+    $pdf->SetXY($x + 110, $y);
+    $pdf->MultiCell(10, $lineHeightDescripcion, $item->simbolo, 1, 'C');
+    $pdf->SetXY($x + 120, $y);
+    $pdf->MultiCell(20, $lineHeightDescripcion, number_format($item->precioUnitario, 4), 1);
+    $pdf->SetXY($x + 140, $y);
+    $pdf->MultiCell(20, $lineHeightDescripcion, number_format($item->importe, 2), 1);
+    $pdf->SetXY($x + 160, $y);
+    $pdf->MultiCell(30,  $lineHeight, $nbLines <= 1?  $textoFinal: ($cantidadSaltos >1? $textoFinal : $textoFinal ."\n"), 1);
 }
 
 // Agrega las celdas vacías si hay menos de 20 filas
@@ -510,13 +522,6 @@ $pdf->SetXY(34, $espacio + 1);
 $pdf->SetFont('Arial', '', 7);
 $pdf->MultiCell(50, 3, $tiempo." ".utf8_decode($tiempo_entrega), 0, 'L', true);
 
-$pdf->SetXY(10, $espacio + 5);
-$pdf->SetFont('Arial', 'B', 7);
-$pdf->MultiCell(90, 8, 'Sumilla: ', 1, 'L', true);
-$pdf->SetXY(20, $espacio + 6);
-$pdf->SetFont('Arial', '', 6);
-// $pdf->MultiCell(75, 2, utf8_decode(str_replace('&nbsp;', ' ', $dataDocumento[0]['comentario'])), 0, 'L', true);
-$pdf->WriteHTML(str_replace('&nbsp;', ' ', $dataDocumento[0]['comentario']));
 
 $pdf->SetFont('Arial', 'B', 5);
 $pdf->SetXY(10, $espacio + 15);
@@ -526,8 +531,8 @@ $pdf->SetXY(10, $espacio + 19);
 $pdf->MultiCell(90, 4, utf8_decode('* Entrega del bien con GR,OC/OS  y  FACTURA, sino no se recepcionará.'), 1, 'L', true);
 $pdf->SetXY(10, $espacio + 23);
 $pdf->MultiCell(90, 4, '* En la guia de remision mencionar el numero de orden de compra', 1, 'L', true);
-$pdf->SetXY(10, $espacio + 27);
-$pdf->MultiCell(90, 4, '* incluye IGV', 1, 'L', true);
+// $pdf->SetXY(10, $espacio + 27);
+// $pdf->MultiCell(90, 4, '* incluye IGV', 1, 'L', true);
 
 $pdf->SetFont('Arial', '', 4);
 $pdf->SetXY(10, $espacio + 33);
@@ -554,7 +559,7 @@ $pdf->SetXY(10, $espacio + 63);
 $pdf->MultiCell(70, 3, utf8_decode('- Guía de remisión con sello de recepción o conformidad.'), 0, 'L', true);
 
 
-$matrizUsuario = RequerimientoNegocio::create()->generarMatrizDocumento($documentoTipoId, $documentoId, $dataDocumento[0]['movimiento_id'], $dataDocumento[0]['usuario_creacion'], $dataDocumento[0]['total']);
+$matrizUsuario = RequerimientoNegocio::create()->generarMatrizDocumento($documentoTipoId, $documentoId, $dataDocumento[0]['movimiento_id'], $dataDocumento[0]['usuario_creacion'], $dataDocumento);
 $usuario_estado = DocumentoNegocio::create()->obtenerDocumentoDocumentoEstadoXdocumentoId($documentoId, "0,1");
 
 $resultadoMatriz = [];
@@ -614,6 +619,9 @@ if (!ObjectUtil::isEmpty($resultadoMatriz[0]['firma_digital'])) {
 $pdf->SetFont('Arial', '', 6);
 $pdf->SetXY(110, $espacio + 30);
 $pdf->MultiCell(39, 3, 'COMPRADOR', 0, 'C', true);
+$pdf->SetFont('Arial', '', 5);
+$pdf->SetXY(110, $espacio + 33);
+$pdf->MultiCell(39, 3, $dataDocumento[0]['usuario'], 0, 'C', true);
 
 $pdf->SetFont('Arial', 'B', 8);
 $pdf->SetXY(110, $espacio + 38);
@@ -627,6 +635,9 @@ if (!ObjectUtil::isEmpty($resultadoMatriz[1]['firma_digital'])) {
 $pdf->SetFont('Arial', '', 6);
 $pdf->SetXY(110, $espacio + 43);
 $pdf->MultiCell(39, 3, 'JEFE LOGISTICA', 0, 'C', true);
+$pdf->SetFont('Arial', '', 5);
+$pdf->SetXY(110, $espacio + 46);
+$pdf->MultiCell(39, 3, $resultadoMatriz[1]['nombre'], 0, 'C', true);
 
 $pdf->SetFont('Arial', 'B', 8);
 $pdf->SetXY(110, $espacio + 51);
@@ -640,6 +651,9 @@ if (!ObjectUtil::isEmpty($resultadoMatriz[2]['firma_digital'])) {
 $pdf->SetFont('Arial', '', 6);
 $pdf->SetXY(110, $espacio + 56);
 $pdf->MultiCell(39, 3, 'GERENTE', 0, 'C', true);
+$pdf->SetFont('Arial', '', 5);
+$pdf->SetXY(110, $espacio + 59);
+$pdf->MultiCell(39, 3, $resultadoMatriz[2]['nombre'], 0, 'C', true);
 
 $total = $dataDocumento[0]['total'];
 if($dataDocumento[0]['moneda_id'] == 4){
@@ -653,24 +667,37 @@ if(floatval($total) > floatval($filtrado)){
     $pdf->MultiCell(50, 10, '', 1, 'C', true); //Revisar
     $pdf->SetXY(150, $espacio + 64);
     if (!ObjectUtil::isEmpty($resultadoMatriz[3]['firma_digital'])) {
-        // $pdf->Image($personaFirma3, 163,  $espacio + 51, 25, 10);
+        $pdf->Image($personaFirma3, 163,  $espacio + 64, 25, 10);
     }
     $pdf->SetFont('Arial', '', 6);
     $pdf->SetXY(110, $espacio + 68);
     $pdf->MultiCell(39, 3, 'JUNTA DIRECTIVA', 0, 'C', true);
+    $pdf->SetFont('Arial', '', 5);
+    $pdf->SetXY(110, $espacio + 71);
+    $pdf->MultiCell(39, 3, $resultadoMatriz[3]['nombre'], 0, 'C', true);
 }
 
 
 $pdf->SetFont('Arial', '', 4);
 $pdf->SetXY(10, $espacio + 66);
-$pdf->MultiCell(105, 2, utf8_decode('El horario de recepción es de lunes a viernes de 8:00 am a 1:00 pm; los documentos que envíen después de este horario o los días sábados, domingos y feriados serán considerados como recibidos a partir del siguiente día hábil y deberán ser remitidos a la siguiente dirección de correo electrónico'), 0, 'L', true);
+$pdf->MultiCell(100, 2, utf8_decode('El horario de recepción es de lunes a viernes de 8:00 am a 1:00 pm; los documentos que envíen después de este horario o los días sábados, domingos y feriados serán considerados como recibidos a partir del siguiente día hábil y deberán ser remitidos a la siguiente dirección de correo electrónico'), 0, 'L', true);
 $pdf->SetXY(10, $espacio + 70);
-$pdf->MultiCell(105, 3, utf8_decode('El pago es semanal todos los jueves, se programarán todos los comprobantes que cumplan con el procedimiento solicitado y hayan sido emitidos y registrados hasta el martes previo.'), 0, 'L', 1, 0, '', $espacio + 59, true, 0, false, true, 2, 'M');
+$pdf->MultiCell(100, 3, utf8_decode('El pago es semanal todos los jueves, se programarán todos los comprobantes que cumplan con el procedimiento solicitado y hayan sido emitidos y registrados hasta el martes previo.'), 0, 'L', 1, 0, '', $espacio + 59, true, 0, false, true, 2, 'M');
 
 
 
 $pdf->AddPage();
 $pdf->Ln(5); // Espacio antes del título
+
+$pdf->SetFont('Arial', 'B', 12);
+$pdf->Cell(0, 10, utf8_decode('SUMILLA'), 1, 1, 'C');
+$pdf->SetXY(10,25);
+$pdf->Cell(190, 35, '', 1, 0, 'C', true);
+$pdf->SetFont('Arial', '', 8);
+$pdf->SetXY(10,25);
+$pdf->WriteHTML(utf8_decode(str_replace('&nbsp;', ' ', $dataDocumento[0]['comentario'])));
+$pdf->Ln(45); // Espacio antes del título
+
 if($documentoTipoId == Configuraciones::ORDEN_SERVICIO && !ObjectUtil::isEmpty($dataDocumento[0]['monto_detraccion_retencion'])){
     $pdf->SetFont('Arial', 'B', 12);
     $pdf->Cell(0, 10, utf8_decode('DETRACCIÓN'), 0, 1, 'C');

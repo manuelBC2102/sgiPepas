@@ -49,8 +49,11 @@ class RequerimientoControlador extends AlmacenIndexControlador
                 $dataDocumento = DocumentoNegocio::create()->obtenerDetalleDocumento($data[$i]['id']);
                 foreach ($dataDocumento as $key => $value) {
                     if($value['descripcion'] == "Urgencia" && $value['valor'] == "Si") {
-                        $matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXDocumentoTipoUrgente($data[$i]['documento_tipo_id']);
+                        $matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXDocumentoTipoUrgente($data[$i]['documento_tipo_id'], 1);
                     }
+                    if($value['descripcion'] == "Urgencia" && $value['valor'] == "Si Junta") {
+                        $matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXDocumentoTipoUrgente($data[$i]['documento_tipo_id'], 3);
+                    }                    
                     if($value['tipo'] == "43") {
                         $areaId = $value['valorid'];
                     }
@@ -159,7 +162,10 @@ class RequerimientoControlador extends AlmacenIndexControlador
                                     $andera_sinaprobar = false;
                                 }
                             }
-                            $usuario_creacion = array_column($usuario_estado, 'usuario_creacion');
+                            $usuario_estado_ = array_filter($usuario_estado, function($item) {
+                                return $item['estado_descripcion'] != "Registrado";
+                            });
+                            $usuario_creacion = array_column($usuario_estado_, 'usuario_creacion');
                             if($andera_sinaprobar == false && !in_array($value["usuario_aprobador_id"], $usuario_creacion)){
                                 $sinAprobar [] = array("usuario_aprobador_id" => $value["usuario_aprobador_id"], "nivel"=> $value["nivel"]);
                             }
@@ -177,7 +183,10 @@ class RequerimientoControlador extends AlmacenIndexControlador
                                     $andera_sinaprobar = false;
                                 }
                             }
-                            $usuario_creacion = array_column($usuario_estado, 'usuario_creacion');
+                            $usuario_estado_ = array_filter($usuario_estado, function($item) {
+                                return $item['estado_descripcion'] != "Registrado";
+                            });
+                            $usuario_creacion = array_column($usuario_estado_, 'usuario_creacion');
                             if($andera_sinaprobar == false && !in_array($value["usuario_aprobador_id"], $usuario_creacion)){
                                 $sinAprobar [] = array("usuario_aprobador_id" => $value["usuario_aprobador_id"], "nivel"=> $value["nivel"]);
                             }
@@ -195,7 +204,10 @@ class RequerimientoControlador extends AlmacenIndexControlador
                                     $andera_sinaprobar = false;
                                 }
                             }
-                            $usuario_creacion = array_column($usuario_estado, 'usuario_creacion');
+                            $usuario_estado_ = array_filter($usuario_estado, function($item) {
+                                return $item['estado_descripcion'] != "Registrado";
+                            });
+                            $usuario_creacion = array_column($usuario_estado_, 'usuario_creacion');
                             if($andera_sinaprobar == false && !in_array($value["usuario_aprobador_id"], $usuario_creacion)){
                                 $sinAprobar [] = array("usuario_aprobador_id" => $value["usuario_aprobador_id"], "nivel"=> $value["nivel"]);
                             }
@@ -236,7 +248,7 @@ class RequerimientoControlador extends AlmacenIndexControlador
 
             $icon_aprobacion = "<i class='fa fa-eye' style='color:green;' title='Ver detalle'></i>";
             if (in_array($usuarioId, $arrayAprobadores) && !in_array($usuarioId, $arrayAprobaciones) && in_array($usuarioId, $valoresFiltro) && $data[$i]['estado_descripcion'] != "Rechazado") {
-                $data[$i]['uasurio_estado_descripcion'] = "Por Aprobar";
+                $data[$i]['usurio_estado_descripcion'] = "Por Aprobar";
                 $icon_aprobacion = "<i class='fa fa-check' style='color:blue;' title='Aprobar'></i>";
 
                 // if($data[$i]['documento_tipo_id'] == Configuraciones::SOLICITUD_REQUERIMIENTO){
@@ -247,7 +259,7 @@ class RequerimientoControlador extends AlmacenIndexControlador
             if(count($usuario_estado) < count($matrizUsuario) && $data[$i]['estado_descripcion'] != "Rechazado"){
                 $data[$i]['estado_descripcion'] = "Por Aprobar";
             }
-            $stringAcciones .= "<a href='#' onclick='visualizar(" . $data[$i]['id'] . ", " . $data[$i]['movimiento_id']. ", " . $data[$i]['documento_estado_id']. ", \"".$data[$i]['uasurio_estado_descripcion']."\", " . $data[$i]['documento_tipo_id']. ", \"".$data[$i]['documento_tipo_descripcion']."\")'>". $icon_aprobacion."</a>&nbsp;";
+            $stringAcciones .= "<a href='#' onclick='visualizar(" . $data[$i]['id'] . ", " . $data[$i]['movimiento_id']. ", " . $data[$i]['documento_estado_id']. ", \"".$data[$i]['usurio_estado_descripcion']."\", " . $data[$i]['documento_tipo_id']. ", \"".$data[$i]['documento_tipo_descripcion']."\")'>". $icon_aprobacion."</a>&nbsp;";
             $data[$i]['progreso'] = $stringProgressBar;
             $data[$i]['acciones'] = $stringAcciones;
         }

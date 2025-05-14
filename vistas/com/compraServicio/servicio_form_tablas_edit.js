@@ -2525,11 +2525,11 @@ function agregarCantidadDetalleTabla(i) {
     i +
     ");hallarStockSaldo(" +
     i +
-    ');" onkeyup ="hallarSubTotalDetalle(' +
+    ');hallarSubTotalPostorDetalleCantidad(' + i + ');" onkeyup ="hallarSubTotalDetalle(' +
     i +
     ");hallarStockSaldo(" +
     i +
-    ');"/ disabled></div><input type=\'hidden\' id=\'txtmovimiento_bien_ids_' + i + '\' name=\'txtmovimiento_bien_ids_' + i + '\' />';
+    ');hallarSubTotalPostorDetalleCantidad(' + i +');"/></div><input type=\'hidden\' id=\'txtmovimiento_bien_ids_' + i + '\' name=\'txtmovimiento_bien_ids_' + i + '\' /><input type=\'hidden\' id=\'txtCantidadPorAtender_' + i + '\' name=\'txtCantidadPorAtender_' + i + '\' />';
 
   return $html;
 }
@@ -3112,13 +3112,15 @@ function validarFormularioDetalleTablas(indice) {
   if (doc_TipoId == GENERAR_COTIZACION_SERVICIO) {
     arrayProveedor.forEach(function (proveedorID, idx) {
       var valor = $("#txtPrecioP" + proveedorID.indice + "_" + indice).val();
-      var postor_ganador = $('input[name="precioGanador_' + indice + '"]:checked').val();
-      var postor_ganador_id = null;
-      if (!isEmpty(postor_ganador)) {
-        postor_ganador_id = arrayProveedor[postor_ganador].proveedor_id;
+      if(Number(valor) > 0){
+        var postor_ganador = $('input[name="precioGanador_' + indice + '"]:checked').val();
+        var postor_ganador_id = null;
+        if (!isEmpty(postor_ganador)) {
+          postor_ganador_id = arrayProveedor[postor_ganador].proveedor_id;
+        }
+        objDetalle.postor_ganador_id = postor_ganador_id;
+        detDetalle.push({ columnaCodigo: 37, valorDet: valor, valorExtra: proveedorID.proveedor_id });
       }
-      objDetalle.postor_ganador_id = postor_ganador_id;
-      detDetalle.push({ columnaCodigo: 37, valorDet: valor, valorExtra: proveedorID.proveedor_id });
     });
     if(bandera_edicion != 1){
       var positivos = detDetalle.filter(item => Number(item.valorDet) > 0);
@@ -3144,6 +3146,7 @@ function validarFormularioDetalleTablas(indice) {
 
   objDetalle.comentarioBien = comentarioBien;
   objDetalle.agrupadorId = agrupador_id;
+  objDetalle.cantidadPorAtender = document.getElementById("txtCantidadPorAtender_" + indice).value;
 
   return objDetalle;
 }
@@ -4533,6 +4536,7 @@ function asignarValoresDetalleFormulario() {
           $("#txtCantidad_" + indexDetalle).val(
             devolverDosDecimales(valoresFormularioDetalle.cantidad)
           );
+          $('#txtCantidadPorAtender_' + indexDetalle).val(devolverDosDecimales(parseFloat(valoresFormularioDetalle.cantidad) + (Math.abs(valoresFormularioDetalle.cantidad_requerimientoEdit - valoresFormularioDetalle.cantidad_atendidaEdit))));
           break;
 
         //combos, seleccion
@@ -5503,11 +5507,13 @@ function guardar(accion) {
     "getValue"
   ); // switch activado: TRUE, switch activado: FALSE
   if (!banderaProductoDuplicado) {
-    if (validarDetalleRepetido()) {
-      mostrarValidacionLoaderClose(
-        "Detalle repetido, seleccione otro bien, organizador o unidad de medida."
-      );
-      return;
+    if(doc_TipoId != GENERAR_COTIZACION_SERVICIO){
+      if (validarDetalleRepetido()) {
+        mostrarValidacionLoaderClose(
+          "Detalle repetido, seleccione otro bien, organizador o unidad de medida."
+        );
+        return;
+      }
     }
   }
 
@@ -7389,7 +7395,9 @@ function cargarDetalleDocumentoRelacion(data) {
           item.precio_postor1,
           item.precio_postor2,
           item.precio_postor3,
-          item.postor_ganador_id
+          item.postor_ganador_id,
+          item.cantidad_requerimientoEdit,
+          item.cantidad_atendidaEdit
         )
       );
     });
@@ -7694,7 +7702,9 @@ function cargarFormularioDetalleACopiar(
   precio_postor1,
   precio_postor2,
   precio_postor3,
-  postor_ganador_id
+  postor_ganador_id,
+  cantidad_requerimientoEdit,
+  cantidad_atendidaEdit
 ) {
   //agregar logica de columnas dinamicas...
   //obtener los datos del detalle dinamico
@@ -7713,6 +7723,8 @@ function cargarFormularioDetalleACopiar(
           break;
         case 12: // CANTIDAD
           objDetalle.cantidad = cantidad;
+          objDetalle.cantidad_requerimientoEdit = cantidad_requerimientoEdit;
+          objDetalle.cantidad_atendidaEdit = cantidad_atendidaEdit;          
           break;
 
         //combos, seleccion
@@ -13050,7 +13062,10 @@ function calcularFooterTipoCambio(indice) {
       "datosExtras":[{"afecto_detraccion_retencion": afecto_detraccion_retencion, "porcentaje_afecto": porcentajeDetraccion, "monto_detraccion_retencion": montoDetraido}]
     };
     $('#datatable tbody tr').each(function (index) {
-      hallarSubTotalPostorDetalle(index, indice, 1);
+      var valorBien = select2.obtenerValor("cboBien_" + index);
+      if(!isEmpty(valorBien)){
+          hallarSubTotalPostorDetalle(index, indice, 1);
+      }
     });
   }
 }
@@ -13484,4 +13499,105 @@ function eliminarPDF2(url) {
   ax.setAccion("eliminarPDF2");
   ax.addParamTmp("url", url);
   ax.consumir();
+}
+
+function hallarSubTotalPostorDetalleCantidad(indice) {
+    if (!isEmpty(dataCofiguracionInicial.bien[0]['id']) && doc_TipoId == GENERAR_COTIZACION_SERVICIO) {
+        if (bandera == 1) {
+            valoresFormularioDetalle = validarFormularioDetalleTablas(indice);
+            valoresFormularioDetalle.index = indice;
+
+            var indexTemporal = -1;
+            $.each(detalle, function (i, item) {
+                if (parseInt(item.index) === parseInt(indice)) {
+                    indexTemporal = i;
+                    return false;
+                }
+            });
+            if (indexTemporal > -1) {
+                detalle[indexTemporal] = valoresFormularioDetalle;
+            } else {
+                detalle[detalle.length] = valoresFormularioDetalle;
+            }
+        }
+        var a = parseFloat(valoresFormularioDetalle.cantidad);
+        if (!Number.isInteger(a) && valoresFormularioDetalle.unidadMedidaDesc == "UN") {
+            $("#txtCantidad_"+indice).val(valoresFormularioDetalle.cantidadPorAtender);
+            mostrarAdvertencia("La cantidad tiene que ser entero, para:" + valoresFormularioDetalle.bienDesc);
+            return false;
+        }
+        if(parseFloat(valoresFormularioDetalle.cantidad) > parseFloat(valoresFormularioDetalle.cantidadPorAtender)){
+            $("#txtCantidad_"+indice).val(valoresFormularioDetalle.cantidadPorAtender);
+            arrayProveedor.forEach(function (proveedorID, idx) {
+                var precio = $('#txtPrecioP' + idx + '_' + indice).val();
+                var subTotal = valoresFormularioDetalle.cantidadPorAtender * precio;
+                $('#txtSubtotalP' + idx + '_' + indice).val(subTotal.toFixed(4));
+                if (isEmpty(precio)) {
+                    $('#txtPrecioP' + idx + '_' + indice).val("0");
+                    $('#txtSubtotalP' + idx + '_' + indice).val("0.00");
+                    return false;
+                }
+
+                let valorTotal = 0;
+                var tipo_cambio = 1;
+                $.each(detalle, function (i, item) {
+                    let val = $('#txtSubtotalP' + idx + '_' + item.index).val();
+                    let subtotal = val === "" ? 0 : parseFloat(val);
+                    valorTotal += subtotal;
+                });
+
+                var igv = $('#selectIGV_' + idx).is(":checked");
+                var tipoCambio = proveedorID.monedaId == 4 ? proveedorID.tipoCambio : 1;
+
+                var subTotal = igv ? valorTotal / 1.18 : valorTotal;
+                var total = igv ? valorTotal : subTotal * 1.18;
+                var IGV = total - subTotal;
+                var totalSoles = total * tipoCambio;
+                // Actualizar el footer
+                $('#tfootpostorSolesSubTotal' + proveedorID.indice).html(devolverDosDecimales(subTotal));
+                $('#tfootpostorSolesIgv' + proveedorID.indice).html(devolverDosDecimales(IGV));
+                $('#tfootpostorSoles' + proveedorID.indice).html(devolverDosDecimales(totalSoles));
+                $('#tfootpostorDolares' + proveedorID.indice).html("$ " + devolverDosDecimales(proveedorID.monedaId == 2 ? 0 : devolverDosDecimales(total, 2)));
+
+                totalesPostores[idx] = { indice: proveedorID.indice, total: proveedorID.monedaId == 2 ? totalSoles : total };
+            });
+            mostrarAdvertencia("La cantidad no tiene que ser mayor a la pendiente de atender, para:" + valoresFormularioDetalle.bienDesc);
+            return false;
+        }
+        arrayProveedor.forEach(function (proveedorID, idx) {
+            var precio = $('#txtPrecioP' + idx + '_' + indice).val();
+            var subTotal = valoresFormularioDetalle.cantidad * precio;
+            $('#txtSubtotalP' + idx + '_' + indice).val(subTotal.toFixed(4));
+            if (isEmpty(precio)) {
+                $('#txtPrecioP' + idx + '_' + indice).val("0");
+                $('#txtSubtotalP' + idx + '_' + indice).val("0.00");
+                return false;
+            }
+
+            let valorTotal = 0;
+            var tipo_cambio = 1;
+            $.each(detalle, function (i, item) {
+                let val = $('#txtSubtotalP' + idx + '_' + item.index).val();
+                let subtotal = val === "" ? 0 : parseFloat(val);
+                valorTotal += subtotal;
+            });
+
+            var igv = $('#selectIGV_' + idx).is(":checked");
+            var tipoCambio = proveedorID.monedaId == 4 ? proveedorID.tipoCambio : 1;
+
+            var subTotal = igv ? valorTotal / 1.18 : valorTotal;
+            var total = igv ? valorTotal : subTotal * 1.18;
+            var IGV = total - subTotal;
+            var totalSoles = total * tipoCambio;
+            // Actualizar el footer
+            $('#tfootpostorSolesSubTotal' + proveedorID.indice).html(devolverDosDecimales(subTotal));
+            $('#tfootpostorSolesIgv' + proveedorID.indice).html(devolverDosDecimales(IGV));
+            $('#tfootpostorSoles' + proveedorID.indice).html(devolverDosDecimales(totalSoles));
+            $('#tfootpostorDolares' + proveedorID.indice).html("$ " + devolverDosDecimales(proveedorID.monedaId == 2 ? 0 : devolverDosDecimales(total, 2)));
+
+            totalesPostores[idx] = { indice: proveedorID.indice, total: proveedorID.monedaId == 2 ? totalSoles : total };
+        });
+
+        asignarImportePago();
+    }
 }

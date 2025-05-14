@@ -203,9 +203,10 @@ class MatrizAprobacion extends ModeloBase {
         return $this->commandGetData();
     }
 
-    public function obtenerMatrizXDocumentoTipoUrgente($documentoTipoId){
+    public function obtenerMatrizXDocumentoTipoUrgente($documentoTipoId, $estado_negocioid){
         $this->commandPrepare("sp_matriz_obtenerMatrizXDocumentoTipoUrgente");
         $this->commandAddParameter(":vin_documento_tipo", $documentoTipoId);
+        $this->commandAddParameter(":vin_estado_negocio_id", $estado_negocioid);
         return $this->commandGetData();
     }    
 

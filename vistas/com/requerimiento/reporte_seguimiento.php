@@ -126,7 +126,7 @@
                                     </div>
 
                                     <div class="modal-footer">
-                                        <!-- <button type="button" onclick="exportarReporteKardexExcel();" value="Exportar" name="env" id="env" class="btn btn-success w-md" style="border-radius: 0px;">&ensp;Exportar reporte</button>&nbsp;&nbsp;   -->
+                                        <button type="button" onclick="exportarReporteSeguimiento();" value="Exportar" name="env" id="env" class="btn btn-success w-md" style="border-radius: 0px;">&ensp;Exportar reporte</button>&nbsp;&nbsp;  
                                         <button type="button" href="#bg-info" onclick="buscarSeguimiento(1)" value="enviar" class="btn btn-purple"> Buscar</button>
                                     </div>
                                 </div>
@@ -137,6 +137,8 @@
                 <div class="row"></div>
                 <div class="panel panel-body">
                     <div class="col-md-12 col-sm-12 col-xs-12">
+                        <button class="btn btn-primary" id="btn_mostrarColumnas">Mosttar Todas las columnas</button><br><br>
+                        <select id="miSelect" class="select2" multiple></select>
                         <table id="datatableSeguimiento" class="table table-striped table-bordered">
                             <thead>
                                 <tr>
@@ -145,6 +147,7 @@
                                     <th style='text-align:center;' rowspan="2">Producto</th>
                                     <th style='text-align:center;' rowspan="2">Unidad Medida</th>
                                     <th style='text-align:center;' rowspan="2">Cantidad</th> 
+                                    <th style='text-align:center;' rowspan="2">Grupo de producto</th> 
                                     <th style='text-align:center;' rowspan="2">Generador</th>
                                     <th style='text-align:center;' rowspan="2">N° de RQ</th>
                                     <th style='text-align:center;' rowspan="2">Tipo de RQ</th>

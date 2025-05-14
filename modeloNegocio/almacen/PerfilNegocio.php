@@ -19,6 +19,8 @@ class PerfilNegocio extends ModeloNegocioBase {
     const PERFIL_APROBADOR_SOLICITANTE_REQUERIMIENTO_URGENTE = 149;
     const PERFIL_LOGISTA = 155;
     const PERFIL_COMPRAS = 156;
+    const PERFIL_TODAS_AREAS = 159;
+    const PERFIL_TODOS_CECO = 160;
 
     const PERFIL_DDH = 154;
     const PERFIL_EQUIPOS = 153;

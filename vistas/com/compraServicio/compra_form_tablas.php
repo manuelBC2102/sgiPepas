@@ -1438,7 +1438,7 @@
                     <input type="hidden" id="indiceSumilla" value="0">     
                     <div class="modal-header">                   
                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>         
-                        <h4 class="modal-title">Sumilla</h4>          
+                        <h4 class="modal-title">Sumilla (maximo 500 caracteres incluidos espacios y saltos de linea)</h4>          
                     </div>                    
                     <div class="modal-body">     
                         <div class="row">                

@@ -237,8 +237,18 @@ class DocumentoTipoNegocio extends ModeloNegocioBase
               if($documentoTipoId == Configuraciones::REQUERIMIENTO_AREA){
                 $dtd[$index]["data"] = Documento::create()->obtenerAreaConSolicitudes();
               }else{
-                $dtd[$index]["data"] = PersonaNegocio::create()->getAllArea();
-                $dtd[$index]["lista_defecto"] = PersonaNegocio::create()->getAllAreaXUsuarioId($usuarioId)[0]["id"];
+                $dataPerfil = PerfilNegocio::create()->obtenerPerfilXUsuarioId($usuarioId);
+                $filtradosPerfil= array_values(array_filter($dataPerfil, function($itemPerfil){
+                  return ($itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_TI_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_LOGISTA || $itemPerfil['id'] == PerfilNegocio::PERFIL_JEFE_LOGISTA || $itemPerfil['id'] == PerfilNegocio::PERFIL_TODAS_AREAS);
+                }));
+                if(!ObjectUtil::isEmpty($filtradosPerfil)){
+                  $dtd[$index]["data"] = PersonaNegocio::create()->getAllArea();
+                  $dtd[$index]["listarAreas"] = 1;
+                }else{
+                  $dtd[$index]["data"] = PersonaNegocio::create()->getAllAreaXUsuarioId($usuarioId);
+                  $dtd[$index]["lista_defecto"] = PersonaNegocio::create()->getAllAreaXUsuarioId($usuarioId)[0]["id"];
+                  $dtd[$index]["listarAreas"] = 0;
+                }
               }
               break;
           case self::DATO_GRUPO_PRODUCTO:

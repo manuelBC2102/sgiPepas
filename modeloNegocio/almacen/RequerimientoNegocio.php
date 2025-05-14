@@ -44,7 +44,7 @@ class RequerimientoNegocio extends ModeloNegocioBase
             $mostrarTodasAreas = 0;
             $dataPerfil = PerfilNegocio::create()->obtenerPerfilXUsuarioId($usuarioId);
             foreach ($dataPerfil as $itemPerfil) {
-                if ($itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_TI_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_JEFE_LOGISTA || $itemPerfil['id'] == PerfilNegocio::PERFIL_APROBADOR_SOLICITANTE_REQUERIMIENTO_URGENTE) {
+                if ($itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_TI_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_JEFE_LOGISTA || $itemPerfil['id'] == PerfilNegocio::PERFIL_APROBADOR_SOLICITANTE_REQUERIMIENTO_URGENTE || $itemPerfil['id'] == PerfilNegocio::PERFIL_LOGISTA || $itemPerfil['id'] == PerfilNegocio::PERFIL_TODAS_AREAS) {
                     $mostrarTodasAreas = 1;
                 }
             }
@@ -271,7 +271,7 @@ class RequerimientoNegocio extends ModeloNegocioBase
         return  $respuesta;
     }
 
-    public function generarMatrizDocumento($documentoTipoId, $documentoId, $movimientoId, $usuarioId, $total = null)
+    public function generarMatrizDocumento($documentoTipoId, $documentoId, $movimientoId, $usuarioId, $datosDocumento)
     {
         $matrizUsuario = null;
         $areaId = null;
@@ -281,8 +281,11 @@ class RequerimientoNegocio extends ModeloNegocioBase
             $dataDocumento = DocumentoNegocio::create()->obtenerDetalleDocumento($documentoId);
             foreach ($dataDocumento as $key => $value) {
                 if ($value['descripcion'] == "Urgencia" && $value['valor'] == "Si") {
-                    $matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXDocumentoTipoUrgente($documentoTipoId);
+                    $matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXDocumentoTipoUrgente($documentoTipoId, 1);
                 }
+                if($value['descripcion'] == "Urgencia" && $value['valor'] == "Si Junta") {
+                    $matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXDocumentoTipoUrgente($documentoTipoId, 3);
+                }                  
                 if ($value['tipo'] == "43") {
                     $areaId = $value['valorid'];
                 }
@@ -306,6 +309,10 @@ class RequerimientoNegocio extends ModeloNegocioBase
         $filtrado = array_values(array_filter($matrizUsuario, function ($item) {
             return $item['nivel'] == 2;
         }))[0]['monto_aprobacion_max'];
+        $total = $datosDocumento[0]['total'];
+        if($datosDocumento[0]['moneda_id'] == 4){
+            $total = $datosDocumento[0]['total'] * $datosDocumento[0]['tipo_cambio'];
+        }         
         if (($documentoTipoId == Configuraciones::ORDEN_COMPRA || $documentoTipoId == Configuraciones::ORDEN_SERVICIO) && $filtrado > $total) {
             $nivelM = 2;
             $matrizUsuario = array_filter($matrizUsuario, function ($item) use ($nivelM) {

@@ -5,6 +5,14 @@ $(document).ready(function () {
     cargarComponetentes();
     ax.setSuccess("onResponseReporteBalance");
     obtenerConfiguracionesInicialesSeguimientoRequerimiento();
+
+    $('#btn_mostrarColumnas').click(function () {
+        var allValues = [];
+        $('#miSelect option').each(function () {
+            allValues.push($(this).val());
+        });
+        $('#miSelect').val(allValues).trigger('change');
+    });
 });
 
 function onResponseReporteBalance(response) {
@@ -17,18 +25,14 @@ function onResponseReporteBalance(response) {
             case 'obtenerDataSeguimientoRequerimiento':
                 loaderClose();
                 break;
-            case 'obtenerDetalleKardex':
-                onResponseDetalleKardex(response.data);
-                loaderClose();
-                break;
-            case 'obtenerReporteKardexExcel':
+            case 'obtenerReporteSeguimiento':
                 loaderClose();
                 location.href = URL_BASE + "util/formatos/reporte.xlsx";
                 break;
         }
     } else {
         switch (response[PARAM_ACCION_NAME]) {
-            case 'obtenerReporteKardexExcel':
+            case 'obtenerReporteSeguimiento':
                 loaderClose();
                 break;
         }
@@ -52,16 +56,18 @@ function fechasActuales() {
     // Colocar la fecha actual en el campo "finFechaEmision"
     $('#finFechaEmision').val(fechaFormateada);
 
-    // Calcular la fecha de hace un mes
-    fechaActual.setMonth(fechaActual.getMonth() - 1);
-    var diaInicio = ('0' + fechaActual.getDate()).slice(-2);
-    var mesInicio = ('0' + (fechaActual.getMonth() + 1)).slice(-2);
-    var anioInicio = fechaActual.getFullYear();
+    // Calcular la fecha de hace una semana (7 días)
+    var fechaInicio = new Date();
+    fechaInicio.setDate(fechaInicio.getDate() - 7);
+    var diaInicio = ('0' + fechaInicio.getDate()).slice(-2);
+    var mesInicio = ('0' + (fechaInicio.getMonth() + 1)).slice(-2);
+    var anioInicio = fechaInicio.getFullYear();
     var fechaInicioFormateada = diaInicio + '/' + mesInicio + '/' + anioInicio;
 
-    // Colocar la fecha de hace un mes en el campo "inicioFechaEmision"
+    // Colocar la fecha de hace una semana en el campo "inicioFechaEmision"
     $('#inicioFechaEmision').val(fechaInicioFormateada);
 }
+
 
 function obtenerConfiguracionesInicialesSeguimientoRequerimiento() {
     ax.setAccion("obtenerConfiguracionesInicialesSeguimientoRequerimiento");
@@ -195,6 +201,7 @@ function obtenerDataBusquedaSeguimiento() {
             { "data": "bien_descripcion", "width": "150px" },
             { "data": "unidad_medida_descripcion" },
             { "data": "cantidad", "sClass": "alignRight" },
+            { "data": "bien_tipo_descripcion" },
             { "data": "generador" },
             { "data": "serie_numero_requerimiento" },
             { "data": "tipo_requerimiento" },
@@ -222,49 +229,48 @@ function obtenerDataBusquedaSeguimiento() {
         destroy: true,
     });
     loaderClose();
+
+    
+    var tabla = $('#datatableSeguimiento').DataTable();
+    select2.iniciarElemento("miSelect");
+    var headers = [];
+    var headers_ = [];
+    $('#datatableSeguimiento thead th').each(function(index) {
+        if(index <=9){
+            headers.push($(this).text().trim());
+        }
+    });
+
+    var $select = $('#miSelect');
+    $select.empty(); // Limpiar opciones existentes si es necesario
+
+    headers.forEach(function(header, index) {
+        $select.append($('<option>', {
+            value: index, // o usar `header` si prefieres el texto como valor
+            text: header
+        }));
+        headers_.push({"index":index, "text": header});
+    });
+    var allValues = [];
+
+    $('#miSelect option').each(function () {
+        allValues.push($(this).val());
+    });
+    
+    $('#miSelect').val(allValues).trigger('change');
+    $select.on('change', function () {
+        var selected = ($(this).val() || []).map(Number);
+        selected.forEach(element => {
+            tabla.column(element).visible(true);
+        });
+        var noSeleccionados = headers_.filter(function(header, index) {
+            return !selected.includes(header.index);
+        });
+        noSeleccionados.forEach(function(element, index) {
+            tabla.column(element.index).visible(false);
+        });
+    });
 }
-
-// function onResponseGetDataGridSeguimiento(data) {
-//     var cont = 0;
-//     if (!isEmptyData(data)) {
-//         $('#datatable').dataTable({
-//             "order": [[3, "desc"]],
-//             "processing": true,
-//             "serverSide": true,
-//             "bFilter": false,
-//             "ajax": ax.getAjaxDataTable(),
-//             "scrollX": true,
-//             "columns": [
-//                 { "data": "documento_id" },
-//                 { "data": "bien_codigo" },
-//                 { "data": "bien_descripcion", "width": "50px "},
-//                 { "data": "unidad_medida_descripcion" },
-//                 { "data": "cantidad", "sClass": "alignRight"},
-//                 { "data": "generador" },
-//                 { "data": "serie_numero_requerimiento" },
-//                 { "data": "fecha_creacion", "sClass": "alignCenter"},
-//                 { "data": "area_descripcion", "sClass": "alignCenter" },
-//                 { "data": "aprobacionRQ", "sClass": "alignCenter" },
-//                 { "data": "aprobacionRQFecha", "sClass": "alignCenter" },
-//             ],
-//             columnDefs: [
-//                 {
-//                     "render": function (data, type, row) {
-//                         cont = 1 + cont;
-//                         return cont;
-//                     },
-//                     "targets": 0
-//                 },
-//             ],
-
-//             "destroy": true
-//         });
-//     }
-//     else {
-//         var table = $('#datatable').DataTable();
-//         table.clear().draw();
-//     }
-// }
 
 function loaderBuscarDeuda() {
     loaderShow();
@@ -275,52 +281,7 @@ function loaderBuscarDeuda() {
     loaderClose();
 }
 
-function verDetalleKardex(bienId, organizadorId, fechaInicio, fechaFin) {
-    loaderShow();
-    ax.setAccion("obtenerDetalleKardex");
-    ax.addParamTmp("id_bien", bienId);
-    ax.addParamTmp("id_organizador", organizadorId);
-    ax.addParamTmp("fecha_inicio", fechaInicio);
-    ax.addParamTmp("fecha_fin", fechaFin);
-    ax.consumir();
-}
-
-function onResponseDetalleKardex(data) {
-    if (!isEmptyData(data)) {
-        $('[data-toggle="popover"]').popover('hide');
-        var stringTituloStock = '<strong> ' + data[0]['organizador_descripcion'] + ' - ' + data[0]['bien_descripcion'] + '</strong>';
-
-        $('#datatableStock').dataTable({
-            order: [[0, "desc"]],
-            "ordering": false,
-            "data": data,
-            "columns": [
-                { "data": "unidad_medida_descripcion" },
-                { "data": "cantidad", "sClass": "alignRight" }
-            ],
-            "destroy": true
-        });
-        $('.modal-title').empty();
-        $('.modal-title').append(stringTituloStock);
-        $('#modal-detalle-kardex').modal('show');
-    }
-    else {
-        var table = $('#datatableStock').DataTable();
-        table.clear().draw();
-        mostrarAdvertencia("No se encontro detalles de este bien.")
-    }
-}
-
 var actualizandoBusqueda = false;
-function exportarReporteKardexExcel() {
-    loaderShow();
-    cargarDatosBusqueda();
-    ax.setAccion("obtenerReporteKardexExcel");
-    ax.addParamTmp("criterios", valoresBusquedaSeguimiento);
-    ax.addParamTmp("tipo", 1);
-    ax.consumir();
-}
-
 function loaderBuscar() {
     actualizandoBusqueda = true;
     loaderShow();
@@ -346,6 +307,7 @@ function colapsarBuscador() {
         $('#bg-info').addClass('in');
     }
 }
+
 function cargarComboBien(dataBien) {
     $("#cboBien").select2({
         placeholder: "Buscar producto",
@@ -390,4 +352,13 @@ function cargarComboBien(dataBien) {
 
 function negrita(cadena) {
     return "<b>" + cadena + "</b>";
+}
+
+function exportarReporteSeguimiento(){
+    loaderShow();
+    cargarDatosBusqueda();
+    ax.setAccion("obtenerReporteSeguimiento");
+    ax.addParamTmp("criterios", valoresBusquedaKardex);
+    ax.addParamTmp("tipo", 1);
+    ax.consumir();
 }

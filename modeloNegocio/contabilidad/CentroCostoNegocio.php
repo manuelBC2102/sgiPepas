@@ -56,7 +56,7 @@ class CentroCostoNegocio extends ModeloNegocioBase {
         $dataPerfil = PerfilNegocio::create()->obtenerPerfilXUsuarioId($usuarioId);
         $mostrarCeco = 0;
         foreach ($dataPerfil as $itemPerfil) {
-          if ($itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_TI_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_JEFE_LOGISTA || $itemPerfil['id'] == PerfilNegocio::PERFIL_LOGISTA) {
+          if ($itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_TI_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_JEFE_LOGISTA || $itemPerfil['id'] == PerfilNegocio::PERFIL_LOGISTA || $itemPerfil['id'] == PerfilNegocio::PERFIL_COMPRAS || $itemPerfil['id'] == PerfilNegocio::PERFIL_TODOS_CECO) {
             $mostrarCeco = 1;
           }
         }

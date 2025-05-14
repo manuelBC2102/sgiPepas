@@ -528,11 +528,13 @@ class MovimientoControlador extends AlmacenIndexControlador
 
     //SI HAY ACCION DE EDICION BUSCAR PERFIL
     $banderaPerfilAutorizado = FALSE; //El usuario solicitó el cambio.
-    // $dataPerfil = PerfilNegocio::create()->obtenerPerfilXUsuarioId($usuarioId);
-    // $arrayUnicoPerfil = ObjectUtil::arrayUniqueXNombreColumna($dataPerfil, 'id');
-    // if (in_array("" . PerfilNegocio::PERFIL_ADMINISTRADOR_ID, $arrayUnicoPerfil) || in_array("" . PerfilNegocio::PERFIL_ADMINISTRADOR_TI_ID, $arrayUnicoPerfil)) {
-    //   $banderaPerfilAutorizado = TRUE;
-    // }
+    $banderaPerfilAutorizadoAnular = FALSE; //El usuario solicitó el cambio.
+    $banderaAutorizadoAnular = FALSE; //El usuario solicitó el cambio.
+    $dataPerfil = PerfilNegocio::create()->obtenerPerfilXUsuarioId($usuarioId);
+    $arrayUnicoPerfil = ObjectUtil::arrayUniqueXNombreColumna($dataPerfil, 'id');
+    if (in_array("" . PerfilNegocio::PERFIL_ADMINISTRADOR_ID, $arrayUnicoPerfil) || in_array("" . PerfilNegocio::PERFIL_ADMINISTRADOR_TI_ID, $arrayUnicoPerfil) || in_array(PerfilNegocio::PERFIL_JEFE_LOGISTA, $arrayUnicoPerfil)) {
+      $banderaPerfilAutorizadoAnular = TRUE;
+    }
 
     // $response_cantidad_total = MovimientoNegocio::create()->obtenerCantidadDocumentosXCriterio($opcionId, $criterios, $elemntosFiltrados, $columns, $order, $start);
     // seccion de respuesta
@@ -549,10 +551,23 @@ class MovimientoControlador extends AlmacenIndexControlador
 
     for ($i = 0; $i < $tamanio; $i++) {
       $stringAcciones = '';
-      for ($j = 0; $j < count($responseAcciones); $j++) {
-        if($data[$i]['usuario_creacion'] == $usuarioId){
-          $banderaPerfilAutorizado = TRUE;
+      $dataRelacionada = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoId($data[$i]['documento_id']);
+      $arrayUnicoRelacionado = ObjectUtil::arrayUniqueXNombreColumna($dataRelacionada, 'documento_tipo_id');
+      if ($banderaPerfilAutorizadoAnular && in_array(Configuraciones::REQUERIMIENTO_AREA, $arrayUnicoRelacionado) || in_array(Configuraciones::GENERAR_COTIZACION, $arrayUnicoRelacionado) || in_array(Configuraciones::GENERAR_COTIZACION_SERVICIO, $arrayUnicoRelacionado)) {
+        $banderaAutorizadoAnular = FALSE;
+      }else{
+        if($banderaPerfilAutorizadoAnular){
+          $banderaAutorizadoAnular = TRUE;
+        }else{
+          $banderaAutorizadoAnular = FALSE;
         }
+      }
+      if($data[$i]['usuario_creacion'] == $usuarioId){
+        $banderaPerfilAutorizado = TRUE;
+      }else{
+        $banderaPerfilAutorizado = FALSE;
+      }
+      for ($j = 0; $j < count($responseAcciones); $j++) {
         if (($data[$i]['documento_estado_id'] == 2) &&
           ($responseAcciones[$j]['id'] == 3 || $responseAcciones[$j]['id'] == 4 || $responseAcciones[$j]['id'] == 13 || $responseAcciones[$j]['id'] == 14 || $responseAcciones[$j]['id'] == 19 || $responseAcciones[$j]['id'] == 33 || $responseAcciones[$j]['id'] == 34 || ($responseAcciones[$j]['id'] == 1 && $data[$i]['efact_ws_estado'] != 0) || ($responseAcciones[$j]['id'] == 28 && $data[$i]['efact_ws_estado'] != 0) || ($responseAcciones[$j]['id'] == 29 && $data[$i]['efact_ws_estado'] != 0))
         ) { //13 y 14 acciones para QR. 19 Editar
@@ -587,7 +602,7 @@ class MovimientoControlador extends AlmacenIndexControlador
         }elseif ($responseAcciones[$j]['id'] == 19 && $data[$i]['documento_tipo_id'] == 273) {
           //
           $stringAcciones .= '';
-        } elseif ((($data[$i]['documento_estado_id'] == 3) && ($responseAcciones[$j]['id'] == 3))) {
+        } elseif ((($data[$i]['documento_estado_id'] == 3) && ($responseAcciones[$j]['id'] == 3)) && !$banderaAutorizadoAnular) {
           //
           $stringAcciones .= '';
         } elseif ((($data[$i]['documento_estado_id'] == 3) && ($responseAcciones[$j]['id'] == 19))) {
