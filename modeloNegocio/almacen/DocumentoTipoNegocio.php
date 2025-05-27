@@ -58,6 +58,8 @@ class DocumentoTipoNegocio extends ModeloNegocioBase
   const CONDICION_PAGO = 50;
   const UNIDAD_MINERA = 51;
   const CUENTA_GASTOS = 52;
+  const ORGANIZADOR_ORIGEN = 53;
+  const ORGANIZADOR_DESTINO = 54;
 
   const DATO_FLETE_DOCUMENTO = 00;
   const DATO_SEGURO_DOCUMENTO = 33;
@@ -299,6 +301,9 @@ class DocumentoTipoNegocio extends ModeloNegocioBase
               }
             }
             $dtd[$index]["data"] = $filtrados;
+            break;
+          case self::ORGANIZADOR_DESTINO:
+            $dtd[$index]["data"] = Organizador::create()->getDataOrganizadorXOrganizadorTipo(10);
             break;
         }
       }

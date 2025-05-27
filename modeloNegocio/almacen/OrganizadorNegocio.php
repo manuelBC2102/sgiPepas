@@ -201,4 +201,44 @@ class OrganizadorNegocio extends ModeloNegocioBase {
     public function getDataUnidadMinera($organizadorId){
         return Organizador::create()->getDataUnidadMinera($organizadorId);        
     }
+
+    public function getDataOrganizadorHijos($organizadorId){
+        return Organizador::create()->getDataOrganizadorHijos($organizadorId);        
+    }
+
+    public function getDataOrganizadorPadre($organizadorId){
+        return Organizador::create()->getDataOrganizadorPadre($organizadorId);        
+    }
+
+    public function getDataOrganizadoresHijos($organizadorId){
+        $resultadoOrganizadorIds = [];
+        $pendientes[] = $organizadorId; // Cola de IDs a procesar
+        while (!empty($pendientes)) {
+          $idActual = array_shift($pendientes); // Tomamos el primero de la cola
+          // Obtener hijos del organizador actual
+          $hijos = $this->getDataOrganizadorHijos($idActual);
+          if (!ObjectUtil::isEmpty($hijos)) {
+            $clave = array_search($idActual, $resultadoOrganizadorIds);
+            if ($clave !== false) {
+              unset($resultadoOrganizadorIds[$clave]);
+            }
+          }
+          foreach ($hijos as $hijo) {
+            if ($hijo['organizador_tipo_id'] != 14) {
+              $resultadoOrganizadorIds[] = $hijo['id'];              // Agregamos el hijo al resultado
+              $pendientes[] = $hijo['id'];       // Agregamos el hijo a la cola para procesar sus hijos
+            }
+          }
+        }
+        $resultadoOrganizador = [];
+        foreach($resultadoOrganizadorIds as $item){
+            $resultadoOrganizadorIds = Organizador::create()->getOrganizador($item);
+            array_push($resultadoOrganizador, $resultadoOrganizadorIds[0]);
+        }
+        return $resultadoOrganizador;
+    }
+
+    public function getDataOrganizadorXUnidadMinera($unidadMineraId){
+        return Organizador::create()->getDataOrganizadorXUnidadMinera($unidadMineraId);        
+    }
 }

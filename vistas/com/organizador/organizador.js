@@ -295,8 +295,11 @@ function onResponseAjaxpGetDataGridOrganizador(data) {
                     "<td style='text-align:center;'><a href='#' onclick = 'cambiarEstado(" + item.id + ")' ><b><i id='" + item.id + "' class='" + item.icono + "' style='color:" + item.color + ";'></i><b></a></td>" +
                     "<td style='text-align:center;'>" +
                     "<a href='#' onclick='editarOrganizador(" + item.id + ")'><b><i class='fa fa-edit' style='color:#E8BA2F;'></i><b></a>&nbsp;\n" +
-                    "<a href='#' onclick='confirmarDeleteOrganizador(" + item.id + ", \"" + item.a_descripcion + "\")'><b><i class='fa fa-trash-o' style='color:#cb2a2a;'></i><b></a>" +
-                    "</td>" +
+                    "<a href='#' onclick='confirmarDeleteOrganizador(" + item.id + ", \"" + item.a_descripcion + "\")'><b><i class='fa fa-trash-o' style='color:#cb2a2a;'></i><b></a>&nbsp;\n";
+                    if(item.esHijo == 1 && (item.organizador_tipo_id != 14)){
+                        cuerpo += "<a href='#' onclick='generarQROrganizador(" + item.id + ")'><b><i class='fa fa-qrcode' style='color:#2a47cb;'></i><b></a>";
+                    }
+            cuerpo += "</td>" +
                     "</tr>";
             cuerpo_total = cuerpo_total + cuerpo;
         });
@@ -551,4 +554,11 @@ function cargarPantallaListar()
 {
     loaderShow(null);
     cargarDivTitulo("#window", "vistas/com/organizador/organizador_listar.php",tituloGlobal);
+}
+
+function generarQROrganizador(id){
+    const link = document.createElement('a');
+    link.href = URL_BASE + "vistas/com/organizador/generar_OrganizadorQr_pdf.php?id=" + id;
+    link.target = '_blank';
+    link.click();
 }

@@ -426,7 +426,7 @@ class Documento extends ModeloBase {
         return $this->commandGetData();
     }
 
-    function insertarActualizarDocumentoAdjunto($archivoAdjuntoId, $documentoId, $nombreArchivo, $nombreGenerado, $usuarioCreacionId, $estado = null, $tipo_archivoId  = null, $contenido_archivo = null) {
+    function insertarActualizarDocumentoAdjunto($archivoAdjuntoId, $documentoId, $nombreArchivo, $nombreGenerado, $usuarioCreacionId, $estado = null, $tipo_archivoId  = null, $contenido_archivo = null, $serie_numero = null, $codigo_detraccion = null, $porcentaje_detraccion = null, $monto_detraccion = null, $monedaId = null) {
         $this->commandPrepare("sp_documento_adjunto_insertarActualizar");
         $this->commandAddParameter(":vin_id", $archivoAdjuntoId);
         $this->commandAddParameter(":vin_documento_id", $documentoId);
@@ -436,6 +436,11 @@ class Documento extends ModeloBase {
         $this->commandAddParameter(":vin_estado", $estado);
         $this->commandAddParameter(":vin_tipo_archivoId", $tipo_archivoId);
         $this->commandAddParameter(":vin_contenido_archivo", $contenido_archivo);
+        $this->commandAddParameter(":vin_serie_numero", $serie_numero);
+        $this->commandAddParameter(":vin_codigo_detraccion", $codigo_detraccion);
+        $this->commandAddParameter(":vin_porcentaje_detraccion", $porcentaje_detraccion);
+        $this->commandAddParameter(":vin_monto_detraccion", $monto_detraccion);
+        $this->commandAddParameter(":vin_moneda_id", $monedaId);
         return $this->commandGetData();
     }
 
@@ -834,7 +839,7 @@ class Documento extends ModeloBase {
         return $this->commandGetData();
     }
 
-    function editar_documento_detalle($documentoId, $personaId, $monedaId, $tipoCambio, $igv, $uoId, $tiempoEntrega, $tiempo, $condicionPago, $diasPago, $sumilla, $usuarioId) {
+    function editar_documento_detalle($documentoId, $personaId, $monedaId, $tipoCambio, $igv, $uoId, $tiempoEntrega, $tiempo, $condicionPago, $diasPago, $sumilla, $usuarioId, $banderaIgv, $porcentajeIgv) {
         $this->commandPrepare("sp_documento_detalle_editar");
         $this->commandAddParameter(":vin_documento_id", $documentoId);
         $this->commandAddParameter(":vin_persona_id", $personaId);
@@ -848,6 +853,8 @@ class Documento extends ModeloBase {
         $this->commandAddParameter(":vin_dias_pago", $diasPago);
         $this->commandAddParameter(":vin_sumilla", $sumilla);
         $this->commandAddParameter(":vin_usuario_registro", $usuarioId);
+        $this->commandAddParameter(":vin_bandera_igv", $banderaIgv);
+        $this->commandAddParameter(":vin_porcentaje_igv", $porcentajeIgv);
         return $this->commandGetData();
     }
 

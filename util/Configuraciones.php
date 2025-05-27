@@ -127,7 +127,8 @@ class Configuraciones
   const DIAS_VENCIMIENTO_DEFAULT = 0;
   const DIAS_VENCIMIENTO_PROXIMO = 7;
 
-
+  const RUC_EMPRESA = 20490115804;
+  const ORGANIZADOR_TRANSITO = 83;
   //Documento tipo ids
   const COTIZACIONES = 104;
   const SOLICITUD_REQUERIMIENTO = 280;
@@ -139,9 +140,13 @@ class Configuraciones
   const INGRESO_RESERVA_STOCK = 286;
   const SALIDA_RESERVA_STOCK = 287;
   const GENERAR_COTIZACION_SERVICIO = 288;
-  const RECEPCION = 10;
+  const RECEPCION = 265;
+  const DESPACHO = 289;
+  const ENTREGA = 290;
   
   const MOVIMIENTO_TIPO_SOLICITUD_REQUERIMIENTO= 144;
+
+  const ALMACEN_LIMA = 71;
 
   // URL de facturacion electrónica
   // const EFACT_URL = 'http://www.apifact2.facturasunat.com/EfacturaWsBeta.asmx?WSDL';

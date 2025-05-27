@@ -13,7 +13,7 @@ class OrdenCompraServicio extends ModeloBase
         return parent::create();
     }
 
-    public function obtenerOrdenCompraServicioXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $almacenId = null, $columnaOrdenar, $formaOrdenar, $elementosFiltrados, $start)
+    public function obtenerOrdenCompraServicioXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $almacenId = null, $atencion, $columnaOrdenar, $formaOrdenar, $elementosFiltrados, $start)
     {
         $this->commandPrepare("sp_ordenCompraServicio_obtenerXCriterios");
         $this->commandAddParameter(":vin_fecha_emision_desde", $fechaEmisionInicio);
@@ -21,6 +21,7 @@ class OrdenCompraServicio extends ModeloBase
         $this->commandAddParameter(":vin_estado_id", $estadoId);
         $this->commandAddParameter(":vin_tipo_id", $tipoId);
         $this->commandAddParameter(":vin_entrega_destino_id", $almacenId);
+        $this->commandAddParameter(":vin_atencion", $atencion);
         $this->commandAddParameter(":vin_columna_ordenar", $columnaOrdenar);
         $this->commandAddParameter(":vin_forma_ordenar", $formaOrdenar);
         $this->commandAddParameter(":vin_limite", $elementosFiltrados);
@@ -28,7 +29,7 @@ class OrdenCompraServicio extends ModeloBase
         return $this->commandGetData();
     }
 
-    public function obtenerCantidadOrdenCompraServicioXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $almacenId, $columnaOrdenar, $formaOrdenar)
+    public function obtenerCantidadOrdenCompraServicioXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $almacenId, $atencion, $columnaOrdenar, $formaOrdenar)
     {
         $this->commandPrepare("sp_ordenCompraServicio_obtenerXCriterios_contador");
         $this->commandAddParameter(":vin_fecha_emision_desde", $fechaEmisionInicio);
@@ -36,6 +37,7 @@ class OrdenCompraServicio extends ModeloBase
         $this->commandAddParameter(":vin_estado_id", $estadoId);
         $this->commandAddParameter(":vin_tipo_id", $tipoId);
         $this->commandAddParameter(":vin_entrega_destino_id", $almacenId);
+        $this->commandAddParameter(":vin_atencion", $atencion);
         $this->commandAddParameter(":vin_columna_ordenar", $columnaOrdenar);
         $this->commandAddParameter(":vin_forma_ordenar", $formaOrdenar);
         return $this->commandGetData();
@@ -76,12 +78,31 @@ class OrdenCompraServicio extends ModeloBase
         return $this->commandGetData();
     }
 
-    public function aprobarRechazarDocumentoAdjunto($documentoAdjuntoId, $estado, $comentario)
+    public function aprobarRechazarDocumentoAdjunto($documentoAdjuntoId, $estado, $comentario, $usuarioId)
     {
         $this->commandPrepare("sp_documento_adjuntoAprobarRechazar");
         $this->commandAddParameter(":vin_id", $documentoAdjuntoId);
         $this->commandAddParameter(":vin_estado", $estado);
         $this->commandAddParameter(":vin_comentario", $comentario);
+        $this->commandAddParameter(":vin_usuario_id", $usuarioId);
+        return $this->commandGetData();
+    }
+
+    public function facturacion_proveedor_registrar( $facturadorSerie, $facturadorCorrelativo, $subtotal, $igv, $totalFactura, $detraccion, $netoPago, $usuarioId, $comentarioEfact, $transportistaId, $monedaId = null, $detraccion_porcentaje, $codigo_detracion){
+        $this->commandPrepare("sp_facturacion_proveedor_registrar");
+        $this->commandAddParameter(":vin_serie", $facturadorSerie);
+        $this->commandAddParameter(":vin_correlativo", $facturadorCorrelativo);
+        $this->commandAddParameter(":vin_subtotal", $subtotal);
+        $this->commandAddParameter(":vin_igv", $igv);
+        $this->commandAddParameter(":vin_totalFactura", $totalFactura);
+        $this->commandAddParameter(":vin_detraccion", $detraccion);
+        $this->commandAddParameter(":vin_netoPago", $netoPago);
+        $this->commandAddParameter(":vin_usuario", $usuarioId);
+        $this->commandAddParameter(":vin_comentarioEfact", $comentarioEfact);
+        $this->commandAddParameter(":vin_persona", $transportistaId);
+        $this->commandAddParameter(":vin_moneda_id", $monedaId);
+        $this->commandAddParameter(":vin_detraccion_porcentaje", $detraccion_porcentaje);
+        $this->commandAddParameter(":vin_codigo_detracion", $codigo_detracion);
         return $this->commandGetData();
     }
 }

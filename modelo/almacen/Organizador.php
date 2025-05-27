@@ -197,4 +197,33 @@ class Organizador extends ModeloBase {
         $this->commandPrepare("sp_unidad_minera_getCombo");
         return $this->commandGetData();
     }
+
+    public function getDataOrganizadorHijos($organizadorId) {
+        $this->commandPrepare("sp_organizadorHijos");
+        $this->commandAddParameter(":vin_organizador_id", $organizadorId);
+        return $this->commandGetData();
+    }   
+    
+    public function getDataOrganizadorPadre($organizadorId) {
+        $this->commandPrepare("sp_organizador_obtenerOrganizadorpadre");
+        $this->commandAddParameter(":vin_organizador_hijo_id", $organizadorId);
+        return $this->commandGetData();
+    }    
+
+    public function getDataOrganizadorXUnidadMineraXId($unidadMineraId) {
+        $this->commandPrepare("sp_organizador_unidad_mineraById");
+        $this->commandAddParameter(":vin_unidad_minera_id", $unidadMineraId);
+        return $this->commandGetData();
+    }   
+
+    public function getDataOrganizadorXUnidadMinera() {
+        $this->commandPrepare("sp_organizador_unidad_mineraGetAll");
+        return $this->commandGetData();
+    }
+
+    public function getDataOrganizadorXOrganizadorTipo($organizadorTipoId) {
+        $this->commandPrepare("sp_organizador_ObtenerXOrganizadorTipo");
+        $this->commandAddParameter(":vin_organizador_tipo_id", $organizadorTipoId);
+        return $this->commandGetData();
+    } 
 }

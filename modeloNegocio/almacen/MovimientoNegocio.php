@@ -135,6 +135,10 @@ class MovimientoNegocio extends ModeloNegocioBase
       if ($movimientoTipoId != "146" && $movimientoTipoId != "68" && $movimientoTipoId != "148" && $movimientoTipoId != "149" && $movimientoTipoId != "145" && $movimientoTipoId != "152") {
         $respuesta->organizador = OrganizadorNegocio::create()->obtenerXMovimientoTipo($movimientoTipoId);
       }
+      if($documentoTipoDefectoId == Configuraciones::ENTREGA){
+        $respuesta->organizador = AlmacenesNegocio::create()->obtenerConfiguracionInicialListadoDocumentos($usuarioId)->almacenes;
+        $respuesta->organizadores = AlmacenesNegocio::create()->getDataOrganizadoresHijos($respuesta->organizador[0]['id']);
+      }
     }
 
     $respuesta->uo = null;
@@ -498,7 +502,7 @@ class MovimientoNegocio extends ModeloNegocioBase
       }
     }
 
-    $respuesta = $this->guardarXAccionEnvio($opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $documentoARelacionar, $valorCheck, $comentario, $checkIgv, $monedaId, $accionEnvio, $tipoPago, $listaPagoProgramacion, $bandAtiende, $periodoId, $percepcion, $datosExtras, $contOperacionTipoId, $igv_porcentaje);
+    $respuesta = $this->guardarXAccionEnvio($opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $documentoARelacionar, $valorCheck, $comentario, $checkIgv, $monedaId, $accionEnvio, $tipoPago, $listaPagoProgramacion, $bandAtiende, $periodoId, $percepcion, $datosExtras, $contOperacionTipoId, $igv_porcentaje, $dataStockReservaOk);
     $respuesta->bandera_historial = $documentoTipo[0]['bandera_historial'];
 
     if (!ObjectUtil::isEmpty($detalleDistribucion)) {
@@ -1790,7 +1794,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     // throw new WarningException("TODO BIEN");
   }
 
-  public function guardarXAccionEnvio($opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $documentoARelacionar, $valorCheck, $comentario, $checkIgv, $monedaId, $accionEnvio, $tipoPago = null, $listaPagoProgramacion = null, $atiende = null, $periodoId = null, $percepcion = null, $datosExtras = null, $contOperacionTipoId = null, $igv_porcentaje = null)
+  public function guardarXAccionEnvio($opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $documentoARelacionar, $valorCheck, $comentario, $checkIgv, $monedaId, $accionEnvio, $tipoPago = null, $listaPagoProgramacion = null, $atiende = null, $periodoId = null, $percepcion = null, $datosExtras = null, $contOperacionTipoId = null, $igv_porcentaje = null, $dataStockReservaOk = null)
   {
     // VALIDAR RELACIONES DE DOCUMENTOS
     $res = MovimientoNegocio::create()->validarDocumentoARelacionar($opcionId, $documentoTipoId, $documentoARelacionar, $valorCheck);
@@ -1838,7 +1842,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     }
 
     // Guardar documento
-    $documento = $this->guardar($opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $documentoARelacionar, $valorCheck, $comentario, $checkIgv, $monedaId, $tipoPago, $periodoId, $datosExtras, $contOperacionTipoId, null, $igv_porcentaje);
+    $documento = $this->guardar($opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $documentoARelacionar, $valorCheck, $comentario, $checkIgv, $monedaId, $tipoPago, $periodoId, $datosExtras, $contOperacionTipoId, null, $igv_porcentaje,  null,$dataStockReservaOk);
 
     if (
       $documentoTipoId == ContDistribucionContableNegocio::DOCUMENTO_TIPO_ID_FACTURA_VENTA ||
@@ -2170,7 +2174,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     return false;
   }
 
-  public function guardar($opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $documentoARelacionar, $valorCheck, $comentario = NULL, $checkIgv = 1, $monedaId = null, $tipoPago = null, $periodoId = null, $datosExtras = null, $contOperacionTipoId = null, $afectoAImpuesto = null, $igv_porcentaje = null, $tipoCambio = null)
+  public function guardar($opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $documentoARelacionar, $valorCheck, $comentario = NULL, $checkIgv = 1, $monedaId = null, $tipoPago = null, $periodoId = null, $datosExtras = null, $contOperacionTipoId = null, $afectoAImpuesto = null, $igv_porcentaje = null, $tipoCambio = null, $dataStockReservaOk = null)
   {
     $movimientoTipoId = $this->obtenerIdXOpcion($opcionId);
     $dataDocumentoTipo = DocumentoTipoNegocio::create()->obtenerDocumentoTipoXId($documentoTipoId);
@@ -2189,14 +2193,14 @@ class MovimientoNegocio extends ModeloNegocioBase
     }
 
     // 2. Insertamos el documento
-    $documento = DocumentoNegocio::create()->guardar($documentoTipoId, $movimientoId, null, $camposDinamicos, 1, $usuarioId, $monedaId, $comentario, null, $detalle[0]['utilidadTotal'], $detalle[0]['utilidadPorcentajeTotal'], $tipoPago, $periodoId, $datosExtras, $contOperacionTipoId, $afectoAImpuesto, $igv_porcentaje, $tipoCambio);
+    $documento = DocumentoNegocio::create()->guardar($documentoTipoId, $movimientoId, null, $camposDinamicos, 1, $usuarioId, $monedaId, $comentario, null, $detalle[0]['utilidadTotal'], $detalle[0]['utilidadPorcentajeTotal'], $tipoPago, $periodoId, $datosExtras, $contOperacionTipoId, null,$afectoAImpuesto, $igv_porcentaje, $tipoCambio);
 
     $documentoId = $this->validateResponse($documento);
     if (ObjectUtil::isEmpty($documentoId) || $documentoId < 1) {
       throw new WarningException("No se pudo guardar el documento");
     }
 
-    if (!in_array($documentoTipoId * 1, $this->arrayDocumentoTipoSinDetalle)) {
+    if (!in_array($documentoTipoId * 1, $this->arrayDocumentoTipoSinDetalle) && $documentoTipoId != Configuraciones::ENTREGA) {
       // 3. Insertamos el detalle
       if($documentoTipoId == Configuraciones::GENERAR_COTIZACION || $documentoTipoId == Configuraciones::GENERAR_COTIZACION_SERVICIO){
         if(ObjectUtil::isEmpty($detalle)){
@@ -2440,7 +2444,21 @@ class MovimientoNegocio extends ModeloNegocioBase
           }
         }
         //Fin logica de correo
+
+        //Inicio Despacho
+        if($documentoTipoId == Configuraciones::DESPACHO){
+          $tipo = 3; //Despacho
+          $respuestaEstado = Almacenes::create()->paquete_traking_cambiarEstadoXPaqueteId($item["paqueteId"], 0);
+          $respuestaTraking = Almacenes::create()->registrarPaqueteTraking($movimientoBienId, $item["paqueteId"], Configuraciones::ORGANIZADOR_TRANSITO, $tipo, null, $usuarioId);
+        }
+
+        //FIn Despacho
       }
+    }else{
+      foreach ($dataStockReservaOk as $item) {
+        $respuestPaqueteDetalle = Almacenes::create()->registrarPaqueteDetalle($movimientoId, null, $item['bien_id'], $item['organizador_id'], 2, $item['reserva'], $item['unidad_medida_id'], null, $usuarioId);
+      }
+
     }
     //si el documento se a copiado guardamos las relaciones
     foreach ($documentoARelacionar as $documentoRelacion) {
@@ -3779,6 +3797,7 @@ class MovimientoNegocio extends ModeloNegocioBase
         array_push($arrayDataBien, $datos);
       }
       if($documentoTipoOrigenId == Configuraciones::SOLICITUD_REQUERIMIENTO){
+        $documentoDetalle[$index]['cantidad_entrega'] = $item['cantidad'];
         $documentoDetalle[$index]['cantidad'] = abs($item['cantidad'] - $item['cantidad_atendida']);
       }
     }
@@ -8215,7 +8234,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     if(!ObjectUtil::isEmpty($dataPostorProveedor)){
       $respuestaDataPostorProveedorEstado = Documento::create()->editar_documento_detalleEstado($documentoId);
       foreach($dataPostorProveedor as $itemPostor){
-        $respuestaDataPostorProveedor = Documento::create()->editar_documento_detalle($documentoId, $itemPostor['proveedor_id'], $itemPostor['monedaId'], $itemPostor['tipoCambio'], $itemPostor['igv'], $itemPostor['uoId'],$itemPostor['tiempoEntrega'], $itemPostor['tiempo'], $itemPostor['condicionPago'], $itemPostor['diasPago'],$itemPostor['sumilla'], $usuarioId);
+        $respuestaDataPostorProveedor = Documento::create()->editar_documento_detalle($documentoId, $itemPostor['proveedor_id'], $itemPostor['monedaId'], $itemPostor['tipoCambio'], $itemPostor['igv'], $itemPostor['uoId'],$itemPostor['tiempoEntrega'], $itemPostor['tiempo'], $itemPostor['condicionPago'], $itemPostor['diasPago'],$itemPostor['sumilla'], $usuarioId, $itemPostor['banderaIgv'], $itemPostor['porcentajeIgv']);
         
         $pagoProgramacion = $listaPagoProgramacionPostores[intval($itemPostor['indice'])];
         $resEstado = Documento::create()->editarDocumentoDetalleDistribucionPagosEstado($respuestaDataPostorProveedor[0]['vout_id']);
@@ -8255,7 +8274,7 @@ class MovimientoNegocio extends ModeloNegocioBase
           $filtrados = array_values(array_filter($detalle, function($item) use($proveedor_id){
             return $item['postor_ganador_id'] === $proveedor_id;
           }));
-          $arraydetalleXpostor[$index] = array($filtrados, "proveedor_id" => $proveedor_id, "monedaId" => $itemPostores['monedaId'], "tipoCambio" => $itemPostores['tipoCambio'], "igv" => $itemPostores['igv'], "uoId" => $itemPostores['uoId'], "tiempoEntrega" => $itemPostores['tiempoEntrega'], "tiempoEntregaText" => $itemPostores['tiempoEntregaText'], "tiempo" => $itemPostores['tiempo'], "condicionPago" => $itemPostores['condicionPago'], "condicionPagoText" => $itemPostores['condicionPagoText'],"diasPago" => $itemPostores['diasPago'],"referencia" => $itemPostores['referencia'], "sumilla" => $itemPostores['sumilla']);
+          $arraydetalleXpostor[$index] = array($filtrados, "proveedor_id" => $proveedor_id, "monedaId" => $itemPostores['monedaId'], "tipoCambio" => $itemPostores['tipoCambio'], "igv" => $itemPostores['igv'], "uoId" => $itemPostores['uoId'], "tiempoEntrega" => $itemPostores['tiempoEntrega'], "tiempoEntregaText" => $itemPostores['tiempoEntregaText'], "tiempo" => $itemPostores['tiempo'], "condicionPago" => $itemPostores['condicionPago'], "condicionPagoText" => $itemPostores['condicionPagoText'],"diasPago" => $itemPostores['diasPago'],"referencia" => $itemPostores['referencia'], "sumilla" => $itemPostores['sumilla'], "banderaIgv" => $itemPostores['banderaIgv'], "porcentajeIgv" => $itemPostores['porcentajeIgv']);
         }
 
         $cont = count($camposDinamicos);
@@ -11427,12 +11446,18 @@ class MovimientoNegocio extends ModeloNegocioBase
       return $acumulador + ($precio[0]['valorDet'] * $seleccion['cantidad']);
     }, 0);
 
+    $bandera_igv = ObjectUtil::isEmpty($arraydetalleXpostor["banderaIgv"])? 1 : $arraydetalleXpostor["banderaIgv"];
+    $porcentaje_igv = ObjectUtil::isEmpty($arraydetalleXpostor["porcentajeIgv"])? 18: $arraydetalleXpostor["porcentajeIgv"];
+    $operador_igv = 1;
+    if($bandera_igv == 1){
+      $operador_igv = ($porcentaje_igv / 100) + 1;
+    }
     if($arraydetalleXpostor["igv"] == "1"){
-      $subTotalPostor1 = $sumaMontosprecioPostor1 /1.18;
+      $subTotalPostor1 = $sumaMontosprecioPostor1 /$operador_igv;
       $igvPostor1 = $sumaMontosprecioPostor1 - $subTotalPostor1;
     }else{
       $subTotalPostor1 = $sumaMontosprecioPostor1;
-      $sumaMontosprecioPostor1 = $sumaMontosprecioPostor1 * 1.18;
+      $sumaMontosprecioPostor1 = $sumaMontosprecioPostor1 * $operador_igv;
       $igvPostor1 = $sumaMontosprecioPostor1 - $subTotalPostor1;
     }
 
@@ -11731,7 +11756,7 @@ class MovimientoNegocio extends ModeloNegocioBase
         );
       }
 
-      $documento = $this->guardar($opcionId, $usuarioId, $documentoTipoId, $camposDinamicosCotizacion, $detalleCotizacion, $documentoARelacionarSalida, 1, $arraydetalleXpostor["sumilla"], $arraydetalleXpostor["igv"], $monedaId, null, $periodoId, $datosExtras, null, null, null, $arraydetalleXpostor["tipoCambio"]);
+      $documento = $this->guardar($opcionId, $usuarioId, $documentoTipoId, $camposDinamicosCotizacion, $detalleCotizacion, $documentoARelacionarSalida, 1, $arraydetalleXpostor["sumilla"], $arraydetalleXpostor["igv"], $monedaId, null, $periodoId, $datosExtras, null, $bandera_igv, $porcentaje_igv, $arraydetalleXpostor["tipoCambio"]);
     
       if($documentoTipoId == Configuraciones::COTIZACIONES || $documentoTipoId == Configuraciones::COTIZACION_SERVICIO){
         $respuestaActualizarDocumentoEstado = DocumentoNegocio::create()->ActualizarDocumentoEstadoId($documento[0]['vout_id'], 16, $usuarioId);
@@ -11944,31 +11969,43 @@ class MovimientoNegocio extends ModeloNegocioBase
 
     $tabla .= '<tfoot>';
     $tabla .= '<tr>'
-                  .'<th colspan="4" style="text-align:right"></th>';
+                  .'<th colspan="4" style="text-align:right">Sub total</th>';
         foreach($documento_detalle as $index => $item){
+          $porcentaje_igv = ObjectUtil::isEmpty($item['porcentaje_igv'])? 18 : $item['porcentaje_igv'];
+          $bandera_igv = ObjectUtil::isEmpty($item['bandera_igv'])? 1 : $item['bandera_igv'];
+          $igv_operador = $bandera_igv == 1? ($porcentaje_igv / 100) + 1 : 1;
           $subTotal = 0;
-          if($item['igv'] == "1"){
-            $subTotal = $totales[$index] /1.18;
-          }else{
-            $subTotal = $totales[$index];
+          if($bandera_igv == 1){
+            if($item['igv'] == "1"){
+              $subTotal = $totales[$index] /$igv_operador;
+            }else{
+              $subTotal = $totales[$index];
+            }
           }
           $tabla .= '<th style="text-align:right" colspan="2" >'. number_format($subTotal, 2).'</th>';
         }
 
     $tabla .= '</tr>'; 
     $tabla .= '<tr>'
-                  .'<th colspan="4" style="text-align:right">Igv (18 %):</th>';
+                  .'<th colspan="4" style="text-align:right">Igv:</th>';
                   foreach($documento_detalle as $index => $item){
+                    $textoIgv = '';
+                    $porcentaje_igv = ObjectUtil::isEmpty($item['porcentaje_igv'])? 18 : $item['porcentaje_igv'];
+                    $bandera_igv = ObjectUtil::isEmpty($item['bandera_igv'])? 1 : $item['bandera_igv'];
+                    $igv_operador = $bandera_igv == 1? ($porcentaje_igv / 100) + 1 : 1;
                     $igv = 0;
-                    if($item['igv'] == "1"){
-                      $subTotal = $totales[$index] /1.18;
-                      $igv = $totales[$index] - $subTotal;
-                    }else{
-                      $subTotal = $totales[$index];
-                      $valorTotal = $totales[$index] * 1.18;
-                      $igv = $valorTotal - $subTotal;
+                    if($bandera_igv == 1){
+                      $textoIgv = '('.$porcentaje_igv.'%) ';
+                      if($item['igv'] == "1"){
+                        $subTotal = $totales[$index] /$igv_operador;
+                        $igv = $totales[$index] - $subTotal;
+                      }else{
+                        $subTotal = $totales[$index];
+                        $valorTotal = $totales[$index] * $igv_operador;
+                        $igv = $valorTotal - $subTotal;
+                      }
                     }
-                    $tabla .= '<th style="text-align:right" colspan="2" >'. number_format($igv, 2).'</th>';
+                    $tabla .= '<th style="text-align:right" colspan="2" > '. $textoIgv . number_format($igv, 2).'</th>';
                   }
     $tabla .= '</tr>'; 
     // $tabla .= '<tr>'
@@ -11979,11 +12016,14 @@ class MovimientoNegocio extends ModeloNegocioBase
                   .'<th colspan="4" style="text-align:right">Total dólares:</th>';
                   foreach($documento_detalle as $index => $item){
                     $valorTotal = 0;
+                    $porcentaje_igv = ObjectUtil::isEmpty($item['porcentaje_igv'])? 18 : $item['porcentaje_igv'];
+                    $bandera_igv = ObjectUtil::isEmpty($item['bandera_igv'])? 1 : $item['bandera_igv'];
+                    $igv_operador = $bandera_igv == 1? ($porcentaje_igv / 100) + 1 : 1;
                     if($item['moneda_id'] == "4"){
                       if($item['igv'] == "1"){
                         $valorTotal = $totales[$index];
                       }else{
-                        $valorTotal = $totales[$index] * 1.18;
+                        $valorTotal = $totales[$index] * $igv_operador;
                       }
                     }
                     $tabla .= '<th style="text-align:right" colspan="2" >'."$ ".number_format($valorTotal, 2).'</th>';
@@ -11992,10 +12032,13 @@ class MovimientoNegocio extends ModeloNegocioBase
     $tabla .= '<tr>'
                   .'<th colspan="4" style="text-align:right">Total soles:</th>';
                   foreach($documento_detalle as $index => $item){
+                    $porcentaje_igv = ObjectUtil::isEmpty($item['porcentaje_igv'])? 18 : $item['porcentaje_igv'];
+                    $bandera_igv = ObjectUtil::isEmpty($item['bandera_igv'])? 1 : $item['bandera_igv'];
+                    $igv_operador = $bandera_igv == 1? ($porcentaje_igv / 100) + 1 : 1;
                     if($item['igv'] == "1"){
                       $valorTotal = $totales[$index];
                     }else{
-                      $valorTotal = $totales[$index] * 1.18;
+                      $valorTotal = $totales[$index] * $igv_operador;
                     }
                     $texMoneda = "S/";
                     if($item['moneda_id'] == "4"){
