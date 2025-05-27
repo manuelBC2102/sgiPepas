@@ -95,12 +95,12 @@
                                         </select>                                  
                                     </h4>                             
                                 </div>
-                                <div class="portlet-widgets col-lg-1 col-md-1 col-sm-2 col-xs-2" style="padding-left: 0px;">                     
+                                <!-- <div class="portlet-widgets col-lg-1 col-md-1 col-sm-2 col-xs-2" style="padding-left: 0px;">                     
                                     <span class="divider"></span>                    
                                     <a onclick="cargarBuscadorDocumentoACopiar()" id="cargarBuscadorDocumentoACopiar">   
                                         <i class="fa fa-files-o" tooltip-btndata-toggle='tooltip' title="Bandeja de documentos a relacionar" style="color: #5CB85C;"></i> 
                                     </a>                              
-                                </div>
+                                </div> -->
                             </div>
                             <label class='' id="nombreArchivo" style="color: black" hidden="true"></label>    
                         </div>                 
@@ -119,7 +119,7 @@
                                                 <th style='text-align:center;'>Razón social *</th>      
                                                 <th style='text-align:center;'>Moneda *</th>  
                                                 <th style='text-align:center;'>Tipo cambio *</th>             
-                                                <th style='text-align:center;'>IGV *</th>
+                                                <th style='text-align:center;'>Precio incl. IGV *</th>
                                                 <th style='text-align:center;'>Entrega en destino *</th>
                                                 <th style='text-align:center;'>Tiempo de entrega *</th>
                                                 <th style='text-align:center;'>Tiempo</th>
@@ -218,7 +218,13 @@
                                         </ul> 
                                         <div id="div_contenido_tab" class="tab-content">
                                             <div id="exportarPdfCotizacion" hidden>
-                                                <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12" style="text-align:right;">
+                                                <div class="portlet-widgets col-lg-6 col-md-1 col-sm-2 col-xs-2" style="padding-left: 0px;">                     
+                                                    <span class="divider"></span>                    
+                                                    <a onclick="cargarBuscadorDocumentoACopiar()" id="cargarBuscadorDocumentoACopiar">
+                                                        <i class="fa fa-files-o" tooltip-btndata-toggle='tooltip' title="Bandeja de documentos a relacionar" style="color: #5CB85C;"></i> Copiar requerimiento 
+                                                    </a>                              
+                                                </div>                                                
+                                                <div class="input-group col-lg-6 col-md-12 col-sm-12 col-xs-12" style="text-align:right;">
                                                     <a href="#" onclick="exportarExcelCotizacion()"><i class="fa fa-file-excel-o" style="color:red;" title="Exportar excel cotización"></i> Exportar excel cotización</a>
                                                     &nbsp;&nbsp;<a href="#" onclick="exportarPdfCotizacion()"><i class="fa fa-print" style="color:red;" title="Exportar pdf cotización"></i> Exportar pdf cotización</a>
                                                 </div>

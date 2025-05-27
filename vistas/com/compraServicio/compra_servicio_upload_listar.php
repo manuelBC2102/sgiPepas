@@ -47,7 +47,7 @@
                                                     </div>
                                                 </div>
                                             </li>
-                                            <li>
+                                            <!-- <li>
                                                 <div class="form-group col-md-2">
                                                     <label style="color: #141719;">Estado</label>
                                                 </div>
@@ -66,7 +66,7 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </li>
+                                            </li> -->
                                             <li>
                                                 <div style="float: right">
                                                     <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
@@ -172,7 +172,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                <h4 class="modal-title">Detalle documentos</h4>
+                <h4 class="modal-title-upload">Detalle documentos</h4>
             </div>
             <div class="modal-body">
                 <div class="row">

@@ -21,16 +21,17 @@ function onResponseAprobacionOrdenCompraServicio(response) {
                 onResponsevisualizarOrdenCompraServicio(response.data, response.tag);
                 break;
             case 'obtenerDocumentoAdjuntoXDocumentoId':
-                if(!isEmpty(response.data)){
+                if (!isEmpty(response.data)) {
                     lstDocumentoArchivos = response.data;
                 }
                 onResponseListarArchivosDocumento(response.data);
                 break;
             case 'cargarArchivosAdjuntos':
                 swal({
-                    title: "Documentos actualizados",
+                    title: response.data.bandera_respuesta == 1 ? "Respuesta" : "Documentos actualizados",
                     text: response.data.mensaje,
-                    type: "success",
+                    html: true,
+                    type: response.data.bandera_respuesta == 1 ? "warning" : "success",
                     showCancelButton: false,
                     confirmButtonColor: "#33b86c",
                     confirmButtonText: "Aceptar",
@@ -43,7 +44,7 @@ function onResponseAprobacionOrdenCompraServicio(response) {
             case 'aprobarRechazar':
                 $("#modalRechazarDocumento").modal('hide');
                 swal({
-                    title: "Documentos "+ response.data.accion +" correctamente",
+                    title: "Documentos " + response.data.accion + " correctamente",
                     text: response.data.mensaje,
                     type: "success",
                     showCancelButton: false,
@@ -56,13 +57,13 @@ function onResponseAprobacionOrdenCompraServicio(response) {
                 onResponseListarArchivosDocumento(response.data.data);
                 break;
         }
-    }else{
+    } else {
         switch (response[PARAM_ACCION_NAME]) {
             case 'cargarArchivosAdjuntos':
-                subirArchivosAdjuntos(documentoIdGlobal);
+                subirArchivosAdjuntos(documentoIdGlobal, monto_totalGlobal, moneda_descripcionGlobal);
                 lstDocumentoArchivos = [];
                 break;
-        
+
         }
     }
 }
@@ -145,7 +146,7 @@ function buscarOrdenCompraServicio() {
                 "render": function (data, type, row) {
                     var acciones = "";
                     acciones += "<a href='#' onclick='visualizarOrdenCompraServicio(" + row.id + ", " + row.movimiento_id + ", " + row.documento_estado_id + ")'><i class='fa fa-eye' style='color:green;' title='Ver detalle programación'></i></a>&nbsp;&nbsp;";
-                    acciones += "<a href='#' onclick='subirArchivosAdjuntos(" + row.id + ", " + row.documento_id + ")'><i class='fa fa-cloud-upload' style='color:blue;' title='Subir archivos adjuntos'></i></a>&nbsp;";
+                    acciones += "<a href='#' onclick='subirArchivosAdjuntos(" + row.id + ", \"" + row.total + "\", \"" + row.descripcion_moneda + "\")'><i class='fa fa-cloud-upload' style='color:blue;' title='Subir archivos adjuntos'></i></a>&nbsp;";
                     return acciones;
                 },
                 "targets": 6
@@ -190,7 +191,8 @@ function buscarPorCriterios() {
         fin: $('#finFechaEmision').val()
     };
 
-    var estadoId = select2.obtenerValor("cboEstado");
+    // var estadoId = select2.obtenerValor("cboEstado");
+    var estadoId = 3;
 
     llenarParametrosBusqueda(fechaEmision, estadoId, documento_tipo);
 
@@ -377,13 +379,18 @@ function iniciarArchivoAdjuntoMultiple() {
 
 var documentoIdGlobal = null;
 var distribucionPagosIdGlobal = null;
-
-function subirArchivosAdjuntos(id, movimientoId) {
+var monto_totalGlobal = 0;
+var moneda_descripcionGlobal = 0;
+function subirArchivosAdjuntos(id, total, descripcion_moneda) {
     loaderShow();
+    monto_totalGlobal = total;
+    moneda_descripcionGlobal = descripcion_moneda;
     $("#dataList2").empty();
     $("#modalDetalleArchivos").modal('show');
+    $(".modal-title-upload").empty();
+    $(".modal-title-upload").append("Detalle documento, con un total de <strong>" + formatearNumero(total) + " " + descripcion_moneda + "</strong>");
     documentoIdGlobal = id;
-    
+
     ax.setAccion("obtenerDocumentoAdjuntoXDocumentoId");
     ax.addParamTmp("documentoId", id);
     ax.consumir();
@@ -413,38 +420,38 @@ $("#btnAgregarDoc").click(function fileIsLoaded(e) {
     if (!isEmpty($("#archivoAdjuntoMulti").val())) {
         var filePath = $("#dataArchivoMulti").val();
         var cboTipoArchivo = parseInt(select2.obtenerValor('cboTipoArchivo'));
-        switch(cboTipoArchivo){
-            case 1 : //pdf
-            case 3 : //pdf factura
+        switch (cboTipoArchivo) {
+            case 1: //pdf
+            case 3: //pdf factura
                 var mimeType = filePath.match(/^data:(.*?);base64/);
-                if(mimeType[1] != "application/pdf"){
+                if (mimeType[1] != "application/pdf") {
                     mostrarAdvertencia('El archivo tiene que ser de extensión .pdf o .PDF');
                     loaderClose();
                     return;
                 }
-            break;
-            case 2 : //excel
+                break;
+            case 2: //excel
                 var mimeType = filePath.match(/^data:(.*?);base64/);
-                if(mimeType[1] != "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"){
+                if (mimeType[1] != "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") {
                     mostrarAdvertencia('El archivo tiene que ser de extensión .xlsx');
                     loaderClose();
                     return;
                 }
-            break;
-            case 4 : //Xml factura y Cdr factura
-            var mimeType = filePath.match(/^data:(.*?);base64/);
-                if(mimeType[1] != "text/xml"){
+                break;
+            case 4: //Xml factura y Cdr factura
+                var mimeType = filePath.match(/^data:(.*?);base64/);
+                if (mimeType[1] != "text/xml") {
                     mostrarAdvertencia('El archivo tiene que ser de extensión .xml');
                     loaderClose();
                     return;
                 }
-            break;
+                break;
         }
 
         var esUnico = false;
         if (!isEmpty(lstDocumentoArchivos)) {
             for (let i = 0; i < lstDocumentoArchivos.length; i++) {
-                if(lstDocumentoArchivos[i].tipo_archivoId != 4){
+                if (lstDocumentoArchivos[i].tipo_archivoId != 4) {
                     if (lstDocumentoArchivos[i].tipo_archivoId == select2.obtenerValor('cboTipoArchivo')) {
                         esUnico = true;
                         break;
@@ -457,7 +464,7 @@ $("#btnAgregarDoc").click(function fileIsLoaded(e) {
             mostrarAdvertencia('Existe un tipo archivo ' + select2.obtenerText('cboTipoArchivo') + ' ');
             loaderClose();
             return;
-        }else{
+        } else {
             if ($("#archivoAdjuntoMulti").val().slice(12).length > 0) {
                 var documento = {};
                 documento.data = $("#dataArchivoMulti").val();
@@ -493,7 +500,8 @@ function imageIsLoadedMulti(e) {
 }
 
 function onResponseListarArchivosDocumento(data) {
-
+    $(".modal-title-upload").empty();
+    $(".modal-title-upload").append("Detalle documento, con un total de <strong>" + formatearNumero(monto_totalGlobal) + " " + moneda_descripcionGlobal + "</strong>");
     $("#dataList2").empty();
     var cuerpo_total = "";
     var cuerpo = "";
@@ -518,17 +526,24 @@ function onResponseListarArchivosDocumento(data) {
                 + "<td style='text-align:center;'>" + (index + 1) + "</td>"
                 + "<td style='text-align:center;'>" + item.tipo_archivo + "</td>"
                 + "<td style='text-align:center;'>" + item.archivo + "</td>"
-                + "<td style='text-align:center;'>" +  (item.contenido_archivo == null ? "":item.contenido_archivo)  + "</td>"
-                + "<td style='text-align:center;'>" + item.estado_descripcion + "</td>";
+                + "<td style='text-align:center;'>" + (item.contenido_archivo == null ? "" : item.contenido_archivo) + "</td>";
+            if (item.estado_descripcion == "Rechazado") {
+                cuerpo += "<td style='text-align:center;" + (item.estado_descripcion == "Rechazado" ? "color:red;" : "") + "' title='" + item.estado_descripcion + ", por : " + item.nombre_completo + "'>" + item.estado_descripcion + "</td>";
+            } else {
+                cuerpo += "<td style='text-align:center;' title='" + item.estado_descripcion + ", por : " + item.nombre_completo_reg + "'>" + item.estado_descripcion + "</td>";
+            }
 
             cuerpo += "<td style='text-align:center;'>"
                 + "<a href='" + item.data + "' download='" + item.archivo + "' target='_blank'><i class='fa fa-cloud-download' style='color:#1ca8dd;'></i></a>&nbsp;\n";
-            if(item.estado == 1 && item.tipo_archivoId == 4){
+            if (item.estado == 1 && item.tipo_archivoId == 4) {
                 cuerpo += "<a href='#' onclick='eliminarDocumento(\"" + item.id + "\")'><i class='fa fa-trash-o' style='color:#cb2a2a;'></i></a>&nbsp;\n";
                 // if (!item.id.match(/t/g)) {
-                    cuerpo += "<a href='#' onclick='rechazarDocumento(\"" + item.id + "\")'><i class='fa fa-times' style='color:red;'></i></a>&nbsp;\n";
-                    cuerpo += "<a href='#' onclick='aprobarDocumento(\"" + item.id + "\")'><i class='fa fa-check' style='color:blue;'></i></a>&nbsp;\n";
+                cuerpo += "<a href='#' onclick='rechazarDocumento(\"" + item.id + "\")'><i class='fa fa-times' style='color:red;'></i></a>&nbsp;\n";
+                cuerpo += "<a href='#' onclick='aprobarDocumento(\"" + item.id + "\")'><i class='fa fa-check' style='color:blue;'></i></a>&nbsp;\n";
                 // }
+            }
+            if (item.estado_descripcion == "Rechazado") {
+                cuerpo += "<a href='#' onclick='visualizarRechazo(\"" + item.comentario + "\")'><i class='fa fa-eye' style='color:black;'></i></a>&nbsp;\n";
             }
             cuerpo += "</td>"
                 + "</tr>";
@@ -541,10 +556,10 @@ function onResponseListarArchivosDocumento(data) {
     $("#datatable3").DataTable();
 }
 
-function AgregarActualizar(){
+function AgregarActualizar() {
     loaderShow();
     var documentoId = documentoIdGlobal;
-    if(isEmpty(documentoId)){
+    if (isEmpty(documentoId)) {
         mostrarAdvertencia('Debe seleccionar una Orden de compra o servicio');
         loaderClose();
         return;
@@ -557,9 +572,9 @@ function AgregarActualizar(){
     ax.consumir();
 }
 
-function fechasActuales(){
+function fechasActuales() {
     var fechaActual = new Date();
-    
+
     // Formatear la fecha en formato dd/mm/yyyy
     var dia = ('0' + fechaActual.getDate()).slice(-2);
     var mes = ('0' + (fechaActual.getMonth() + 1)).slice(-2);
@@ -586,7 +601,7 @@ function subirArchivosAdjuntosDistribucionPagos(id, documentoId) {
     $("#modalDetalleArchivosDistribucionPagos").modal('show');
     distribucionPagosIdGlobal = id;
     documentoIdGlobal = documentoId;
-    
+
     ax.setAccion("obtenerDocumentoAdjuntoXDistribucionPagos");
     ax.addParamTmp("distribucionPagoId", id);
     ax.consumir();
@@ -634,13 +649,12 @@ function onResponseListarArchivosDistribucionPago(data) {
     $("#datatable3DistribucionPagos").DataTable();
 }
 
-function rechazarDocumento(id){
+function rechazarDocumento(id) {
     $("#modalRechazarDocumento").modal("show");
     $("#documentoAdjuntoId").val(id);
 }
 
 function confirmarRechazo() {
-    debugger;
     var inputValue = $("#txtMotivoRechazo").val();
     var documentoAdjuntoId = $("#documentoAdjuntoId").val();
     if (inputValue === "" || isEmpty(inputValue.trim())) {
@@ -662,6 +676,39 @@ function aprobarRechazarVistoBueno(accion, documentoAdjuntoId, razonRechazo) {
     ax.consumir();
 }
 
-function aprobarDocumento(documentoAdjuntoId){
-    aprobarRechazarVistoBueno('AP', documentoAdjuntoId, null);
+function aprobarDocumento(documentoAdjuntoId) {
+    swal(
+        {
+            title: "¿Desea continuar?",
+            text: "Al aprobar el documento no se podrá revertir.",
+            type: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#33b86c",
+            confirmButtonText: "Si!",
+            cancelButtonColor: "#d33",
+            cancelButtonText: "No!",
+            closeOnConfirm: true,
+            closeOnCancel: true,
+        },
+        function (isConfirm) {
+            if (isConfirm) {
+                aprobarRechazarVistoBueno('AP', documentoAdjuntoId, null);
+            } else {
+                loaderClose();
+            }
+        }
+    );
+}
+
+function visualizarRechazo(comentario) {
+    swal({
+        title: "El motivo de rechazo es:",
+        text: comentario,
+        type: "warning",
+        showCancelButton: false,
+        confirmButtonColor: "#33b86c",
+        confirmButtonText: "Aceptar",
+        closeOnConfirm: false,
+        closeOnCancel: false
+    });
 }

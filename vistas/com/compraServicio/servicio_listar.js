@@ -880,11 +880,18 @@ function colapsarBuscador() {
 }
 function imprimirDocumento(id, documentoTipo)
 {
-    loaderShow();
-    ax.setAccion("imprimir");
-    ax.addParamTmp("id", id);
-    ax.addParamTmp("documento_tipo_id", documentoTipo);
-    ax.consumir();
+    if(documentoTipo == ORDEN_COMPRA || documentoTipo == ORDEN_SERVICIO){
+            const link = document.createElement('a');
+            link.href = URL_BASE + "vistas/com/compraServicio/compra_servicio_pdf.php?id=" + id + "&documentoTipoId=" + documentoTipo;
+            link.target = '_blank';
+            link.click();
+    }else{
+        loaderShow();
+        ax.setAccion("imprimir");
+        ax.addParamTmp("id", id);
+        ax.addParamTmp("documento_tipo_id", documentoTipo);
+        ax.consumir();
+    }
 }
 function generarXml(id, documentoTipo)
 {
