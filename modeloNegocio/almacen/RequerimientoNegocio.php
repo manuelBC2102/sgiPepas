@@ -283,9 +283,9 @@ class RequerimientoNegocio extends ModeloNegocioBase
                 if ($value['descripcion'] == "Urgencia" && $value['valor'] == "Si") {
                     $matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXDocumentoTipoUrgente($documentoTipoId, 1);
                 }
-                if($value['descripcion'] == "Urgencia" && $value['valor'] == "Si Junta") {
+                if ($value['descripcion'] == "Urgencia" && $value['valor'] == "Si Junta") {
                     $matrizUsuario = MatrizAprobacionNegocio::create()->obtenerMatrizXDocumentoTipoUrgente($documentoTipoId, 3);
-                }                  
+                }
                 if ($value['tipo'] == "43") {
                     $areaId = $value['valorid'];
                 }
@@ -310,9 +310,9 @@ class RequerimientoNegocio extends ModeloNegocioBase
             return $item['nivel'] == 2;
         }))[0]['monto_aprobacion_max'];
         $total = $datosDocumento[0]['total'];
-        if($datosDocumento[0]['moneda_id'] == 4){
+        if ($datosDocumento[0]['moneda_id'] == 4) {
             $total = $datosDocumento[0]['total'] * $datosDocumento[0]['tipo_cambio'];
-        }         
+        }
         if (($documentoTipoId == Configuraciones::ORDEN_COMPRA || $documentoTipoId == Configuraciones::ORDEN_SERVICIO) && $filtrado > $total) {
             $nivelM = 2;
             $matrizUsuario = array_filter($matrizUsuario, function ($item) use ($nivelM) {
@@ -363,27 +363,41 @@ class RequerimientoNegocio extends ModeloNegocioBase
     public function obtenerConfiguracionesInicialesSeguimientoRequerimiento($idEmpresa)
     {
         $respuesta = new stdClass();
-        $respuesta->bien = BienNegocio::create()->obtenerBienKardexXEmpresa($idEmpresa);
+        // $respuesta->bien = BienNegocio::create()->obtenerBienKardexXEmpresa($idEmpresa);
+        $respuesta->bien = [["id" => "", "text" => ""]];
         $respuesta->bien_tipo = BienTipo::create()->obtener();
         return $respuesta;
     }
 
-    public function obtenerSeguimientoRequerimientoXCriterios($bienIds, $bienTipoIds, $fechaInicio, $fechaFin, $serie, $numero)
+    public function obtenerSeguimientoRequerimientoXCriterios($bienIds, $bienTipoIds, $fechaInicio, $fechaFin, $serie, $numero, $bandera = null)
     {
         $respuesta = new stdClass();
         $bienIds = Util::convertirArrayXCadena($bienIds);
         $bienTipoIds = Util::convertirArrayXCadena($bienTipoIds);
+        $fechaInicio = $this->formatearFechaBD($fechaInicio);
+        $fechaFin = $this->formatearFechaBD($fechaFin);
         $data = Requerimiento::create()->obtenerSeguimientoRequerimientoXCriterios($bienIds, $bienTipoIds, $fechaInicio, $fechaFin, $serie, $numero);
-        foreach ($data as $index => $dataItem) {
-            $usuario_estado = DocumentoNegocio::create()->obtenerDocumentoDocumentoEstadoXdocumentoId($dataItem['documento_id'], "0,1");
+        $ids = array_values(array_unique(array_column($data, 'documento_id')));
+        $bien_ids = array_values(array_unique(array_column($data, 'bien_id')));
+
+        $arrayDocumentos = [];
+        $arrayDocumentosCotizacion = [];
+        $arrayDocumentosOC = [];
+        foreach ($ids as $item) {
+            $usuario_estado = DocumentoNegocio::create()->obtenerDocumentoDocumentoEstadoXdocumentoId($item, "0,1");
             $dataEsatdoRQ = "";
             $dataEsatdoRQFecha = "";
             foreach ($usuario_estado as $indexUsuarioEstado => $usuario_estadoItem) {
-                $dataEsatdoRQ .= "<br><strong>".($indexUsuarioEstado + 1) . "." . $usuario_estadoItem['estado_descripcion'] . ":</strong> " . $usuario_estadoItem['nombre'];
-                $dataEsatdoRQFecha .= "<br><strong>".($indexUsuarioEstado + 1) . ".</strong> " . $usuario_estadoItem['fecha_creacion'];
+                if ($bandera == 1) {
+                    $dataEsatdoRQ .= ($indexUsuarioEstado + 1) . "." . $usuario_estadoItem['estado_descripcion'] . ": " . $usuario_estadoItem['nombre'] . "\n";
+                    $dataEsatdoRQFecha .= ($indexUsuarioEstado + 1) . ": " . $usuario_estadoItem['fecha_creacion'] . "\n";
+                } else {
+                    $dataEsatdoRQ .= "<strong>" . ($indexUsuarioEstado + 1) . "." . $usuario_estadoItem['estado_descripcion'] . ":</strong> " . $usuario_estadoItem['nombre'] . "<br>";
+                    $dataEsatdoRQFecha .= "<strong>" . ($indexUsuarioEstado + 1) . ".</strong> " . $usuario_estadoItem['fecha_creacion'] . "<br>";
+                }
             }
-            $data[$index]['aprobacionRQ'] = $dataEsatdoRQ;
-            $data[$index]['aprobacionRQFecha'] = $dataEsatdoRQFecha;
+
+            $arrayDocumentos [$item ] = array("aprobacionRQ" => $dataEsatdoRQ, "aprobacionRQFecha" => $dataEsatdoRQFecha);
 
             $dataUsuarioGenerador = "";
             $dataUsuarioGeneradorEstado = "";
@@ -391,28 +405,230 @@ class RequerimientoNegocio extends ModeloNegocioBase
             $dataOC = "";
             $dataOCEstado = "";
             $dataOCFecha = "";
-            $dataRelacionada = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoIdSeguimiento($dataItem['documento_id']);
-            foreach ($dataRelacionada as $itemRelacion) {
+            $dataRelacionada = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoIdSeguimiento($item);
+            foreach ($dataRelacionada as $indexUsuarioEstado => $itemRelacion) {
+                $movimientoBien = MovimientoBien::create()->obtenerXIdMovimiento($itemRelacion['movimiento_id']);
+                $bien_idsmovimiento = array_values(array_unique(array_column($movimientoBien, 'bien_id')));
+
+                $bandera_agregar = false;
+                foreach ($bien_idsmovimiento as $itemd) {
+                    if (in_array($itemd, $bien_ids)) {
+                        $bandera_agregar = true;
+                    }
+                }
                 if ($itemRelacion['documento_tipo_id'] == Configuraciones::GENERAR_COTIZACION || $itemRelacion['documento_tipo_id'] == Configuraciones::GENERAR_COTIZACION_SERVICIO) {
-                    $dataUsuarioGenerador .= $itemRelacion['solicitante_nombre_completo'];
-                    $dataUsuarioGeneradorEstado .= $itemRelacion['documento_estado'];
-                    $dataUsuarioGeneradorFecha .= $itemRelacion['fecha_creacion'];
+                //     foreach ($movimientoBien as $itemd) {
+                //         if ($dataItem['bien_id'] == $itemd['bien_id']) {
+                //             $bandera_agregar = true;
+                //         }
+                //     }
+                    if ($bandera_agregar) {
+                        if ($bandera == 1) {
+                            $dataUsuarioGenerador .= $itemRelacion['solicitante_nombre_completo'] . "\n";
+                            $dataUsuarioGeneradorEstado .= $itemRelacion['documento_estado'] . "\n";
+                            $dataUsuarioGeneradorFecha .= $itemRelacion['fecha_creacion'] . "\n";
+                        } else {
+                            $dataUsuarioGenerador .= $itemRelacion['solicitante_nombre_completo'] . "<br>";
+                            $dataUsuarioGeneradorEstado .= $itemRelacion['documento_estado'] . "<br>";
+                            $dataUsuarioGeneradorFecha .= $itemRelacion['fecha_creacion'] . "<br>";
+                        }
+                        $arrayDocumentosCotizacion [$item ] = array("usuarioGenerador" => $dataUsuarioGenerador, "usuarioGeneradorEstado" => $dataUsuarioGeneradorEstado, "usuarioGeneradorFecha" => $dataUsuarioGeneradorFecha);
+                    }
                 }
                 if ($itemRelacion['documento_tipo_id'] == Configuraciones::ORDEN_COMPRA || $itemRelacion['documento_tipo_id'] == Configuraciones::ORDEN_SERVICIO) {
-                    $dataOC .= $itemRelacion['serie_numero'];
-                    $dataOCEstado .= $itemRelacion['documento_estado'];
-                    $dataOCFecha .= $itemRelacion['fecha_creacion'];
+                    if($bandera_agregar){
+                        if($bandera == 1){
+                            $dataOC .= $itemRelacion['serie_numero']. "\n";
+                            $dataOCEstado .= $itemRelacion['documento_estado']. "\n";
+                            $dataOCFecha .= $itemRelacion['fecha_creacion']. "\n";
+                        }else{
+                            $dataOC .= $itemRelacion['serie_numero']. "<br>";
+                            $dataOCEstado .= $itemRelacion['documento_estado']. "<br>";
+                            $dataOCFecha .= $itemRelacion['fecha_creacion']. "<br>";
+                        }
+                        $arrayDocumentosOC [$item ] = array("OC" => $dataOC, "OCEstado" => $dataOCEstado, "OCFecha" => $dataOCFecha);
+                    }
                 }
             }
-            $data[$index]['usuarioGenerador'] = $dataUsuarioGenerador;
-            $data[$index]['usuarioGeneradorEstado'] = $dataUsuarioGeneradorEstado;
-            $data[$index]['usuarioGeneradorFecha'] = $dataUsuarioGeneradorFecha;
-            $data[$index]['OC'] = $dataOC;
-            $data[$index]['OCEstado'] = $dataOCEstado;
-            $data[$index]['OCFecha'] = $dataOCFecha;
         }
 
+        foreach ($data as $index => $dataItem) {
+            $documentoId = $dataItem['documento_id'];
+
+            $data[$index]['aprobacionRQ'] = $arrayDocumentos[$documentoId]['aprobacionRQ'];
+            $data[$index]['aprobacionRQFecha'] = $arrayDocumentos[$documentoId]['aprobacionRQFecha'];
+
+            $data[$index]['usuarioGenerador'] = $arrayDocumentosCotizacion[$documentoId]['usuarioGenerador'];
+            $data[$index]['usuarioGeneradorEstado'] = $arrayDocumentosCotizacion[$documentoId]['usuarioGeneradorEstado'];
+            $data[$index]['usuarioGeneradorFecha'] = $arrayDocumentosCotizacion[$documentoId]['usuarioGeneradorFecha'];
+
+            $data[$index]['OC'] = $arrayDocumentosOC[$documentoId]['OC'];
+            $data[$index]['OCEstado'] = $arrayDocumentosOC[$documentoId]['OCEstado'];
+            $data[$index]['OCFecha'] = $arrayDocumentosOC[$documentoId]['OCFecha'];
+        }
 
         return $respuesta->data = $data;
+    }
+
+    public function exportarSeguimientoRequerimientoXCriterios($bienIds, $bienTipoIds, $fechaInicio, $fechaFin, $serie, $numero)
+    {
+        $data = $this->obtenerSeguimientoRequerimientoXCriterios($bienIds, $bienTipoIds, $fechaInicio, $fechaFin, $serie, $numero, 1);
+
+        $objPHPExcel = new PHPExcel();
+        $i = 1;
+
+        $estilos_tabla = array(
+            'font' => array(
+                'name' => 'Arial',
+                'bold' => true,
+                'italic' => false,
+                'strike' => false,
+                'size' => 11,
+                'color' => array('rgb' => 'FFFFFF'),
+            ),
+            'borders' => array(
+                'allborders' => array(
+                    'style' => PHPExcel_Style_Border::BORDER_THIN
+                )
+            ),
+            'fill' => array('type' => PHPExcel_Style_Fill::FILL_SOLID, 'color' => array('rgb' => 'febf00'))
+        );
+
+        $estilos_filas = array(
+            'fill' => array(
+                'type' => PHPExcel_Style_Fill::FILL_SOLID,
+                'color' => array('rgb' => 'FFFBE5'),
+            ),
+            'borders' => array(
+                'allborders' => array(
+                    'style' => PHPExcel_Style_Border::BORDER_THIN
+                )
+            )
+        );
+
+        $estiloDetCabecera = array(
+            'font' => array(
+                'name' => 'Arial',
+                'bold' => true,
+                'size' => 17,
+                'color' => array('rgb' => '000000'),
+            ),
+            'alignment' => array(
+                'horizontal' => PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
+                'vertical' => PHPExcel_Style_Alignment::VERTICAL_CENTER,
+                'wrap' => FALSE
+            )
+        );
+
+        $i++;
+
+        // Insertar una imagen en la celda A$i
+        $drawing = new PHPExcel_Worksheet_Drawing();
+        $drawing->setName('Logo');
+        $drawing->setDescription('Logo');
+        $drawing->setPath(__DIR__ . '/../../vistas/images/logo_pepas_de_oro.png'); // Ruta a la imagen
+        $drawing->setHeight(70); // Altura en píxeles
+        $drawing->setCoordinates('K' . $i); // Celda donde se insertará
+        $drawing->setWorksheet($objPHPExcel->getActiveSheet());
+
+
+        $objPHPExcel->setActiveSheetIndex()->setCellValue('B' . $i, 'Reporte de Seguimiento');
+        $objPHPExcel->getActiveSheet()->mergeCells("B$i:M$i");
+        $objPHPExcel->getActiveSheet()->getStyle('B' . $i . ':T' . $i)->applyFromArray($estiloDetCabecera);
+        $i++;
+
+        //ANCHOS DE COLUMNAS        
+        $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('B')->setWidth(5.7);
+        $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('C')->setWidth(15);
+        $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('D')->setWidth(100);
+        $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('E')->setWidth(12.14);
+        $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('F')->setWidth(24.29);
+        $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('G')->setWidth(20);
+        $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('H')->setWidth(30);
+        $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('I')->setWidth(50);
+        $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('J')->setWidth(30);
+        $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('K')->setWidth(30);
+        $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('L')->setWidth(30);
+        $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('M')->setWidth(60);
+        $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('N')->setWidth(50);
+        $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('O')->setWidth(30);
+        $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('P')->setWidth(30);
+        $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('Q')->setWidth(30);
+        $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('R')->setWidth(30);
+        $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('S')->setWidth(30);
+        $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('T')->setWidth(30);
+
+        $i = $i + 3;
+        $objPHPExcel->setActiveSheetIndex()->setCellValue('B' . $i, '#');
+        $objPHPExcel->setActiveSheetIndex()->setCellValue('C' . $i, 'COD. PRODUCTO');
+        $objPHPExcel->setActiveSheetIndex()->setCellValue('D' . $i, 'PRODUCTO');
+        $objPHPExcel->setActiveSheetIndex()->setCellValue('E' . $i, 'UNIDAD MEDIDA');
+        $objPHPExcel->setActiveSheetIndex()->setCellValue('F' . $i, 'CANTIDAD');
+        $objPHPExcel->setActiveSheetIndex()->setCellValue('G' . $i, 'GRUPO PRODUCTO');
+        $objPHPExcel->setActiveSheetIndex()->setCellValue('H' . $i, 'GENERADOR');
+        $objPHPExcel->setActiveSheetIndex()->setCellValue('I' . $i, 'N° DE RQ');
+        $objPHPExcel->setActiveSheetIndex()->setCellValue('J' . $i, 'TIPO DE RQ');
+        $objPHPExcel->setActiveSheetIndex()->setCellValue('K' . $i, 'F. CREACIÓN');
+        $objPHPExcel->setActiveSheetIndex()->setCellValue('L' . $i, 'AREA');
+        $objPHPExcel->setActiveSheetIndex()->setCellValue('M' . ($i - 1), 'CONDICION 1 APROBACION DE RQ');
+        $objPHPExcel->getActiveSheet()->mergeCells("M5:N5");
+        $objPHPExcel->setActiveSheetIndex()->setCellValue('M' . $i, 'ESTADO');
+        $objPHPExcel->setActiveSheetIndex()->setCellValue('N' . $i, 'FECHA');
+
+        $objPHPExcel->setActiveSheetIndex()->setCellValue('O' . ($i - 1), 'CONDICION 2 GENERACION DE COTIZACION');
+        $objPHPExcel->getActiveSheet()->mergeCells("O5:Q5");
+        $objPHPExcel->setActiveSheetIndex()->setCellValue('O' . $i, 'USUARIO GENERADOR');
+        $objPHPExcel->setActiveSheetIndex()->setCellValue('P' . $i, 'ESTADO');
+        $objPHPExcel->setActiveSheetIndex()->setCellValue('Q' . $i, 'FECHA');
+
+        $objPHPExcel->setActiveSheetIndex()->setCellValue('R' . ($i - 1), 'Condicion 3 Generacion de OC');
+        $objPHPExcel->getActiveSheet()->mergeCells("R5:T5");
+        $objPHPExcel->setActiveSheetIndex()->setCellValue('R' . $i, 'N° OC/OS');
+        $objPHPExcel->setActiveSheetIndex()->setCellValue('S' . $i, 'ESTADO');
+        $objPHPExcel->setActiveSheetIndex()->setCellValue('T' . $i, 'FECHA');
+
+        $objPHPExcel->getActiveSheet()->getStyle('B' . $i . ':T' . $i)->applyFromArray($estilos_tabla);
+        $objPHPExcel->getActiveSheet()->getStyle('O' . ($i - 1) . ':T' . ($i - 1))->applyFromArray($estilos_tabla);
+        $objPHPExcel->getActiveSheet()->getStyle("B$i:T$i")->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER)->setVertical(PHPExcel_Style_Alignment::VERTICAL_CENTER);
+        $objPHPExcel->getActiveSheet()->getStyle("O" . ($i - 1) . ":T" . ($i - 1))->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER)->setVertical(PHPExcel_Style_Alignment::VERTICAL_CENTER);
+
+        $i++;
+
+        foreach ($data as $index => $item) {
+            $objPHPExcel->setActiveSheetIndex()->setCellValue('B' . $i, ($index + 1));
+            $objPHPExcel->setActiveSheetIndex()->setCellValue('C' . $i, $item['bien_codigo']);
+            $objPHPExcel->setActiveSheetIndex()->setCellValue('D' . $i, $item['bien_descripcion']);
+            $objPHPExcel->setActiveSheetIndex()->setCellValue('E' . $i, $item['unidad_medida_descripcion']);
+            $objPHPExcel->setActiveSheetIndex()->setCellValue('F' . $i, $item['cantidad']);
+            $objPHPExcel->setActiveSheetIndex()->setCellValue('G' . $i, $item['bien_tipo_descripcion']);
+            $objPHPExcel->setActiveSheetIndex()->setCellValue('H' . $i, $item['generador']);
+            $objPHPExcel->setActiveSheetIndex()->setCellValue('I' . $i, $item['serie_numero_requerimiento']);
+            $objPHPExcel->setActiveSheetIndex()->setCellValue('J' . $i, $item['tipo_requerimiento']);
+            $objPHPExcel->setActiveSheetIndex()->setCellValue('K' . $i, $item['fecha_creacion']);
+            $objPHPExcel->setActiveSheetIndex()->setCellValue('L' . $i, $item['area_descripcion']);
+            $objPHPExcel->setActiveSheetIndex()->setCellValue('M' . $i, $item['aprobacionRQ']);
+            $objPHPExcel->setActiveSheetIndex()->setCellValue('N' . $i, $item['aprobacionRQFecha']);
+
+            $objPHPExcel->setActiveSheetIndex()->setCellValue('O' . $i, $item['usuarioGenerador']);
+            $objPHPExcel->setActiveSheetIndex()->setCellValue('P' . $i, $item['usuarioGeneradorEstado']);
+            $objPHPExcel->setActiveSheetIndex()->setCellValue('Q' . $i, $item['usuarioGeneradorFecha']);
+
+            $objPHPExcel->setActiveSheetIndex()->setCellValue('R' . $i, $item['OC']);
+            $objPHPExcel->setActiveSheetIndex()->setCellValue('S' . $i, $item['OCEstado']);
+            $objPHPExcel->setActiveSheetIndex()->setCellValue('T' . $i, $item['OCFecha']);
+
+
+            $objPHPExcel->getActiveSheet()->getStyle('M' . $i)->getAlignment()->setWrapText(true);
+            $objPHPExcel->getActiveSheet()->getStyle('N' . $i)->getAlignment()->setWrapText(true);
+            $objPHPExcel->getActiveSheet()->getStyle('O' . $i)->getAlignment()->setWrapText(true);
+
+            $objPHPExcel->getActiveSheet()->getStyle('B' . $i . ':T' . $i)->applyFromArray($estilos_filas);
+
+            $i++;
+        }
+
+        $objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
+        $objWriter->save(__DIR__ . '/../../util/formatos/reporteSeguimiento.xlsx');
+        return 1;
     }
 }

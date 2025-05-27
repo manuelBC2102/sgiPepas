@@ -390,4 +390,15 @@ class RequerimientoControlador extends AlmacenIndexControlador
 
         return $this->obtenerRespuestaDataTable($data, count($data), count($data));
     }
+
+    public function obtenerReporteSeguimiento(){
+        $criterios = $this->getParametro("criterios");
+        $bienIds = $criterios[0]['bienIds'];
+        $bienTipoIds = $criterios[0]['bienTipoIds'];
+        $fechaInicio = $criterios[0]['fechaInicio'];
+        $fechaFin = $criterios[0]['fechaFin'];
+        $serie = $criterios[0]['serie'];
+        $numero = $criterios[0]['numero'];
+        return RequerimientoNegocio::create()->exportarSeguimientoRequerimientoXCriterios($bienIds, $bienTipoIds, $fechaInicio, $fechaFin, $serie, $numero);
+    }
 }

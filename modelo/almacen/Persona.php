@@ -358,7 +358,7 @@ class Persona extends ModeloBase {
         return $this->commandGetData();
     }
 
-    public function obtenerPersonasMayorMovimiento($opcionId, $area) {
+    public function obtenerPersonasMayorMovimiento($opcionId, $area = null) {
         $this->commandPrepare("sp_persona_obtenerXMayorMovimiento");
         $this->commandAddParameter(":vin_opcion_id", $opcionId);
         $this->commandAddParameter(":vin_area_id", $area);

@@ -2,6 +2,7 @@ $(document).ready(function () {
     $('[data-toggle="popover"]').popover({ html: true }).popover();
     cargarTitulo("titulo", "");
     select2.iniciarElemento("cboTipoBien");
+    select2.iniciarElemento("cboTipoRequerimiento");
     cargarComponetentes();
     ax.setSuccess("onResponseReporteBalance");
     obtenerConfiguracionesInicialesSeguimientoRequerimiento();
@@ -27,7 +28,7 @@ function onResponseReporteBalance(response) {
                 break;
             case 'obtenerReporteSeguimiento':
                 loaderClose();
-                location.href = URL_BASE + "util/formatos/reporte.xlsx";
+                location.href = URL_BASE + "util/formatos/reporteSeguimiento.xlsx";
                 break;
         }
     } else {
@@ -97,7 +98,7 @@ function onResponseObtenerConfiguracionesInicialesSeguimientoRequerimiento(data)
     loaderClose();
 }
 
-var valoresBusquedaSeguimiento = [{bienIds: "", bienTipoIds: "", fechaInicio: "", fechaFin: "", serie: "", numero: "" }];//bandera 0 es balance
+var valoresBusquedaSeguimiento = [{ bienIds: "", bienTipoIds: "", fechaInicio: "", fechaFin: "", serie: "", numero: "" }];//bandera 0 es balance
 
 function cargarDatosBusqueda() {
 
@@ -230,13 +231,13 @@ function obtenerDataBusquedaSeguimiento() {
     });
     loaderClose();
 
-    
+
     var tabla = $('#datatableSeguimiento').DataTable();
     select2.iniciarElemento("miSelect");
     var headers = [];
     var headers_ = [];
-    $('#datatableSeguimiento thead th').each(function(index) {
-        if(index <=9){
+    $('#datatableSeguimiento thead th').each(function (index) {
+        if (index <= 9) {
             headers.push($(this).text().trim());
         }
     });
@@ -244,29 +245,29 @@ function obtenerDataBusquedaSeguimiento() {
     var $select = $('#miSelect');
     $select.empty(); // Limpiar opciones existentes si es necesario
 
-    headers.forEach(function(header, index) {
+    headers.forEach(function (header, index) {
         $select.append($('<option>', {
             value: index, // o usar `header` si prefieres el texto como valor
             text: header
         }));
-        headers_.push({"index":index, "text": header});
+        headers_.push({ "index": index, "text": header });
     });
     var allValues = [];
 
     $('#miSelect option').each(function () {
         allValues.push($(this).val());
     });
-    
+
     $('#miSelect').val(allValues).trigger('change');
     $select.on('change', function () {
         var selected = ($(this).val() || []).map(Number);
         selected.forEach(element => {
             tabla.column(element).visible(true);
         });
-        var noSeleccionados = headers_.filter(function(header, index) {
+        var noSeleccionados = headers_.filter(function (header, index) {
             return !selected.includes(header.index);
         });
-        noSeleccionados.forEach(function(element, index) {
+        noSeleccionados.forEach(function (element, index) {
             tabla.column(element.index).visible(false);
         });
     });
@@ -313,7 +314,8 @@ function cargarComboBien(dataBien) {
         placeholder: "Buscar producto",
         allowClear: true,
         //            minimumInputLength: 1,
-        data: dataBien,
+        multiple: true,
+        data: dataBien || [],
         width: "100%",
         initSelection: function (element, callback) {
             var initialData = {
@@ -322,31 +324,35 @@ function cargarComboBien(dataBien) {
             };
             callback(initialData);
         },
-
-        // NOT NEEDED: These are just css for the demo data
-        dropdownCssClass: 'capitalize',
-        containerCssClass: 'capitalize',
-        // configure as multiple select
-        multiple: true,
-        // NOT NEEDED: text for loading more results
-        formatLoadMore: 'Cargando más...',
-        // query with pagination
-        query: function (q) {
-            var pageSize,
-                results;
-            pageSize = 20; // or whatever pagesize
-            results = [];
-            if (q.term && q.term !== "") {
-                // HEADS UP; for the _.filter function i use underscore (actually lo-dash) here
-                results = dataBien.filter(itemProducto => itemProducto.text.toUpperCase().indexOf(q.term.toUpperCase()) >= 0);
-            } else if (q.term === "") {
-                results = this.data;
-            }
-            q.callback({
-                results: results.slice((q.page - 1) * pageSize, q.page * pageSize),
-                more: results.length >= q.page * pageSize
-            });
-        }
+        ajax: {
+            url: URL_BASE + "script/almacen/buscarProducto.php",
+            dataType: "json",
+            delay: 250,
+            data: function (params) {
+                return {
+                    q: params,
+                    movimiento_tipo_id: 145,
+                    empresa: commonVars.empresa,
+                    tipoRequerimiento: select2.obtenerValor('cboTipoRequerimiento'),
+                    tipoRequerimientoText: select2.obtenerText('cboTipoRequerimiento')
+                };
+            },
+            results: function (data) {
+                dataBienBusquedaOnchange = data || [];
+                if (!isEmpty(data)) {
+                    return {
+                        results: $.map(data, function (obj) {
+                            return {
+                                id: obj.id,
+                                text: obj.text
+                            };
+                        }),
+                    };
+                }
+                return { results: [] };
+            },
+            cache: true,
+        },
     });
 }
 
@@ -354,11 +360,11 @@ function negrita(cadena) {
     return "<b>" + cadena + "</b>";
 }
 
-function exportarReporteSeguimiento(){
+function exportarReporteSeguimiento() {
     loaderShow();
     cargarDatosBusqueda();
     ax.setAccion("obtenerReporteSeguimiento");
-    ax.addParamTmp("criterios", valoresBusquedaKardex);
+    ax.addParamTmp("criterios", valoresBusquedaSeguimiento);
     ax.addParamTmp("tipo", 1);
     ax.consumir();
 }
