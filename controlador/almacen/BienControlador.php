@@ -209,7 +209,8 @@ class BienControlador extends AlmacenIndexControlador {
         $empresaId = $this->getParametro("empresaId");
         $respuesta = new stdClass();
         // Obtengo las configuraciones comunes 
-        $respuesta->unidadMedidaTipo = ($bienTipoId == 1) ? UnidadNegocio::create()->obtenerUnidadMedidaTipoXId(14) : UnidadNegocio::create()->obtenerUnidadMedidaTipo(); // UnidadMedidaTipo
+        // $respuesta->unidadMedidaTipo = ($bienTipoId == 1) ? UnidadNegocio::create()->obtenerUnidadMedidaTipoXId(14) : UnidadNegocio::create()->obtenerUnidadMedidaTipo(); // UnidadMedidaTipo
+        $respuesta->unidadMedidaTipo = UnidadNegocio::create()->obtenerUnidadMedidaTipo(); // UnidadMedidaTipo
         //$respuesta->empresa = EmpresaNegocio::create()->getAllEmpresaByUsuarioId($usuarioId); // Empresas
         $respuesta->empresa = EmpresaNegocio::create()->getEmpresaActivas(); //todas las empresas
         $respuesta->bienTipo = BienNegocio::create()->obtenerXIdPadre($bienTipoId); // BienTipo 
