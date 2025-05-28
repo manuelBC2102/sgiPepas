@@ -332,7 +332,7 @@ function onResponseObtenerDocumentoTipoDato(data) {
                     }
 
                     $("#contenedorSerieDiv").show();
-                    $("#contenedorSerie").html('<input type="text" id="txt_' + item.id + '" name="txt_' + item.id + '" class="form-control" value="' + value + '" maxlength="' + longitudMaxima + '" placeholder="Serie"  style="text-align: right;"/>');
+                    $("#contenedorSerie").html('<input type="text" id="txt_' + item.id + '" name="txt_' + item.id + '" class="form-control" value="' + value + '" maxlength="' + longitudMaxima + '" placeholder="Serie"  style="text-align: right;" disabled/>');
                     break;
 
                 case 8:
@@ -345,7 +345,7 @@ function onResponseObtenerDocumentoTipoDato(data) {
                     }
 
                     $("#contenedorNumeroDiv").show();
-                    $("#contenedorNumero").html('<input type="text" id="txt_' + item.id + '" name="txt_' + item.id + '" class="form-control" value="' + value + '" maxlength="' + longitudMaxima + '" placeholder="Número"  style="text-align: right;"/>');
+                    $("#contenedorNumero").html('<input type="text" id="txt_' + item.id + '" name="txt_' + item.id + '" class="form-control" value="' + value + '" maxlength="' + longitudMaxima + '" placeholder="Número"  style="text-align: right;" disabled/>');
                     break;
 
                 case 14:

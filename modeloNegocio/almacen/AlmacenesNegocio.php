@@ -171,11 +171,19 @@ class AlmacenesNegocio extends ModeloNegocioBase
       $detalle[$index]['cantidad_recepcion'] = ObjectUtil::isEmpty($detalle[$index]['cantidad_recepcion']) ? $detalle[$index]['cantidad_por_recepcionar'] : $detalle[$index]['cantidad_recepcion'];
 
       $cantidad_recepcionada = Almacenes::create()->cantidadRecepcion($itemDetalle['movimiento_bien_id'])[0]['cantidad_recepcionada'];
-      $detalle[$index]['cantidad_por_recepcionar'] = $cantidad - $cantidad_recepcionada;
-      $detalle[$index]['cantidad_recepcionada'] = $cantidad_recepcionada;
-      $detalle[$index]['cantidad_recepcion'] = ObjectUtil::isEmpty($detalle[$index]['cantidad_recepcion']) ? $detalle[$index]['cantidad_por_recepcionar'] : $detalle[$index]['cantidad_recepcion'];
-      $detalle[$index]['doc_tipo_id'] = $respuesta->dataDocumento[0]['doc_tipo_id'];
-      $detalle[$index]['bandera_despacho'] = $banderaDespacho;
+      if(!ObjectUtil::isEmpty($cantidad_recepcionada)){
+        $detalle[$index]['cantidad_por_recepcionar'] = $cantidad - $cantidad_recepcionada;
+        $detalle[$index]['cantidad_recepcionada'] = $cantidad_recepcionada;
+        $detalle[$index]['cantidad_recepcion'] = ObjectUtil::isEmpty($detalle[$index]['cantidad_recepcion']) ? $detalle[$index]['cantidad_por_recepcionar'] : $detalle[$index]['cantidad_recepcion'];
+        $detalle[$index]['doc_tipo_id'] = $respuesta->dataDocumento[0]['doc_tipo_id'];
+        $detalle[$index]['bandera_despacho'] = $banderaDespacho;
+        $detalle[$index]['bandera_despacho_cantidad'] = 1;
+      }else{
+        $detalle[$index]['cantidad_por_recepcionar'] = $cantidad - floatval($detalle[$index]['cantidad_recepcion']);
+        $detalle[$index]['cantidad_recepcionada'] = $detalle[$index]['cantidad_recepcion'];
+        $detalle[$index]['bandera_despacho_cantidad'] = 0;
+      }
+
     }
 
     $respuesta->detalle = $detalle;

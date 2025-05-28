@@ -30,7 +30,7 @@ $(document).ready(function () {
 
         filasSeleccionadas.forEach(function (detalleItem, idx) {
             var cantidadRecepcion = devolverDosDecimales($("#cantidad_recepcion_" + detalleItem.movimiento_bien_id).val());
-            if (parseFloat(devolverDosDecimales(cantidadRecepcion)) > parseFloat(devolverDosDecimales(detalleItem.cantidad_por_recepcionar))) {
+            if (parseFloat(devolverDosDecimales(cantidadRecepcion)) < parseFloat(devolverDosDecimales(detalleItem.cantidad_por_recepcionar))) {
                 mostrarAdvertencia("Cantidad de recepción tiene que ser menor a la cantidad de la orden de compra para el item: " + detalleItem.bien_descripcion);
                 bandera_copia = false;
                 loaderClose();
@@ -67,7 +67,7 @@ $(document).ready(function () {
 
         filasSeleccionadas.forEach(function (detalleItem, idx) {
             var cantidadRecepcion = detalleItem.doc_tipo_id == DESPACHO ? detalleItem.cantidad : devolverDosDecimales($("#cantidad_recepcion_" + detalleItem.movimiento_bien_id).val());
-            if (parseFloat(devolverDosDecimales(cantidadRecepcion)) > parseFloat(devolverDosDecimales(detalleItem.cantidad_por_recepcionar))) {
+            if (parseFloat(devolverDosDecimales(cantidadRecepcion)) < parseFloat(devolverDosDecimales(detalleItem.cantidad_por_recepcionar))) {
                 mostrarAdvertencia("Cantidad de recepción tiene que ser menor a la cantidad de la orden de compra para el item: " + (idx + 1));
                 bandera_copia = false;
                 loaderClose();
@@ -474,7 +474,7 @@ function onResponseVisualizarOrdenCompra(data) {
                     "data": "movimiento_bien_id",
                     render: function (data, type, row) {
                         var checked = row.bandera_recepcion == 2 ? "checked" : "";
-                        if (row.cantidad_por_recepcionar > 0) {
+                        if (row.bandera_despacho_cantidad == 0) {
                             if (type === 'display') {
                                 return '<input type="checkbox" name="checkselect" class="select-checkbox" value="' + row.movimiento_bien_id + '" ' + checked + '>';
                             }
@@ -541,7 +541,7 @@ function onResponseVisualizarOrdenCompra(data) {
                             }
                         }
 
-                        if (row.cantidad_por_recepcionar > 0) {
+                        if (row.bandera_despacho_cantidad == 0) {
                             return "<div class=\"input-group col-lg-12 col-md-12 col-sm-12 col-xs-12\" style=\"display: flex; align-items: center; gap: 8px;\">" +
                                 "<input type=\"number\" id=\"cantidad_recepcion_" + row.movimiento_bien_id + "\" name=\"cantidad_recepcion_" + row.movimiento_bien_id + "\" class=\"form-control\" style=\"text-align: right;\"  value='" + devolverDosDecimales(row.cantidad_recepcion) + "' /></div>";
                         } else {
@@ -828,8 +828,8 @@ function agregardistribucion(unidad_minera_id, inicial, count_fila, count_distri
 
     cuerpo += "<div class=\"input-group col-lg-12 col-md-12 col-sm-12 col-xs-12\" style=\"display: flex; align-items: center; gap: 8px;\" id='div_" + count_fila + "_" + count_distribucion + "_" + indice + "_" + unidad_minera_id + "'>";
 
-    cuerpo += "<label id='paq_" + count_fila + "_" + count_distribucion + "_" + indice + "_" + unidad_minera_id + "' class='" + class_ + "'>paq.</label><input type=\"text\" oninput=\"this.value = this.value.replace(/[^0-9/,]/g, '')\"  id=\"cantidad_recepcion_a_" + count_fila + "_" + count_distribucion + "_" + indice + "_" + unidad_minera_id + "\" name=\"cantidad_recepcion_b_" + count_fila + "_" + count_distribucion + "_" + indice + "_" + unidad_minera_id + "\" class=\"form-control " + class_ + "\" style=\"text-align: right;\" value='1' " + disabled_ + "/> X";
-    cuerpo += "<input type=\"text\" oninput=\"this.value = this.value.replace(/[^0-9/,]/g, '')\"  id=\"cantidad_recepcion_b_" + count_fila + "_" + count_distribucion + "_" + indice + "_" + unidad_minera_id + "\" name=\"cantidad_recepcion_b_" + count_fila + "_" + count_distribucion + "_" + indice + "_" + unidad_minera_id + "\" class=\"form-control\" style=\"text-align: right;\" />";
+    cuerpo += "<input type=\"text\" oninput=\"this.value = this.value.replace(/[^0-9/,]/g, '')\"  id=\"cantidad_recepcion_a_" + count_fila + "_" + count_distribucion + "_" + indice + "_" + unidad_minera_id + "\" name=\"cantidad_recepcion_b_" + count_fila + "_" + count_distribucion + "_" + indice + "_" + unidad_minera_id + "\" class=\"form-control " + class_ + "\" style=\"text-align: right;\" value='1' " + disabled_ + "/> X";
+    cuerpo += "<label id='paq_" + count_fila + "_" + count_distribucion + "_" + indice + "_" + unidad_minera_id + "' class='" + class_ + "'>paq.</label><input type=\"text\" oninput=\"this.value = this.value.replace(/[^0-9/,]/g, '')\"  id=\"cantidad_recepcion_b_" + count_fila + "_" + count_distribucion + "_" + indice + "_" + unidad_minera_id + "\" name=\"cantidad_recepcion_b_" + count_fila + "_" + count_distribucion + "_" + indice + "_" + unidad_minera_id + "\" class=\"form-control\" style=\"text-align: right;\" />";
     if (inicial == 0) {
         cuerpo += "<input type='hidden' id='count_" + count_fila + "_" + count_distribucion + "_" + unidad_minera_id + "' value='0' />";
         cuerpo += "<a href='#' onclick='return false;' style='pointer-events: none; color: gray; text-decoration: none;display:none;' id=\"chk_" + count_fila + "_" + count_distribucion + "_0_" + unidad_minera_id + "\" name=\"chk_" + count_fila + "_" + count_distribucion + "_0_" + unidad_minera_id + "\"><i class='fa fa-plus' style='color:blue;' title='Agregar distribución'></i></a>&nbsp;";
