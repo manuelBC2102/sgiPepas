@@ -399,14 +399,34 @@ class RequerimientoNegocio extends ModeloNegocioBase
 
             $arrayDocumentos [$item ] = array("aprobacionRQ" => $dataEsatdoRQ, "aprobacionRQFecha" => $dataEsatdoRQFecha);
 
-            $dataUsuarioGenerador = "";
-            $dataUsuarioGeneradorEstado = "";
-            $dataUsuarioGeneradorFecha = "";
-            $dataOC = "";
-            $dataOCEstado = "";
-            $dataOCFecha = "";
-            $dataRelacionada = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoIdSeguimiento($item);
-            foreach ($dataRelacionada as $indexUsuarioEstado => $itemRelacion) {
+            $arrayDocumentosRelacionados = [];
+            $dataRelacionada = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoIdXDt($item, "".Configuraciones::GENERAR_COTIZACION.",".Configuraciones::GENERAR_COTIZACION_SERVICIO."");
+            $dataRelacionadaArea = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoIdXDt($item, Configuraciones::REQUERIMIENTO_AREA);
+
+            $generarCotizacionBase = empty($dataRelacionadaArea) ? $dataRelacionada : 
+                DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoIdXDt($dataRelacionadaArea[0]['documento_relacionado_id'], "".Configuraciones::GENERAR_COTIZACION.",".Configuraciones::GENERAR_COTIZACION_SERVICIO."");
+
+            if (!empty($generarCotizacionBase)) {
+                $cotizacionDoc = $generarCotizacionBase[0];
+                $arrayDocumentosRelacionados[] = $cotizacionDoc;
+
+                $cotizaciones = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoIdXDt($cotizacionDoc['documento_relacionado_id'], "".Configuraciones::COTIZACIONES.",". Configuraciones::COTIZACION_SERVICIO."");
+                if (!empty($cotizaciones)) {
+                    $ordenes = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoIdXDt($cotizaciones[0]['documento_relacionado_id'], "".Configuraciones::ORDEN_COMPRA.",".Configuraciones::ORDEN_SERVICIO."");
+
+                    if (!empty($ordenes)) {
+                        $arrayDocumentosRelacionados[] = $ordenes[0];
+                    }
+                }
+            }
+
+            foreach ($arrayDocumentosRelacionados as $indexUsuarioEstado => $itemRelacion) {
+                $dataUsuarioGenerador = "";
+                $dataUsuarioGeneradorEstado = "";
+                $dataUsuarioGeneradorFecha = "";
+                $dataOC = "";
+                $dataOCEstado = "";
+                $dataOCFecha = "";
                 $movimientoBien = MovimientoBien::create()->obtenerXIdMovimiento($itemRelacion['movimiento_id']);
                 $bien_idsmovimiento = array_values(array_unique(array_column($movimientoBien, 'bien_id')));
 

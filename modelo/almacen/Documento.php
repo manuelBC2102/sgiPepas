@@ -918,4 +918,11 @@ class Documento extends ModeloBase {
         $this->commandAddParameter(":vin_documento_id", $documentoId);
         return $this->commandGetData();
     }
+
+    function obtenerDocumentosRelacionadosXDocumentoIdXDt($documentoId, $documentoTipoId) {
+        $this->commandPrepare("sp_documento_relacionado_obtenerXDocumentoIdXDt");
+        $this->commandAddParameter(":vin_documento_id", $documentoId);
+        $this->commandAddParameter(":vin_documento_tipo_id", $documentoTipoId);
+        return $this->commandGetData();
+    }
 }

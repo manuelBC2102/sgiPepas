@@ -1554,4 +1554,9 @@ class DocumentoNegocio extends ModeloNegocioBase
   {
     return Documento::create()->obtenerDocumentosRelacionadosXDocumentoIdSeguimiento($documentoId);
   }
+
+  function obtenerDocumentosRelacionadosXDocumentoIdXDt($documentoId, $documentoTipoId)
+  {
+    return Documento::create()->obtenerDocumentosRelacionadosXDocumentoIdXDt($documentoId, $documentoTipoId);
+  }
 }
