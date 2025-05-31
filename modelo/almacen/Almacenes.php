@@ -322,7 +322,7 @@ class Almacenes extends ModeloBase
     }
 
     //Entrega
-    public function obtenerEntregaXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $almacenId = null, $columnaOrdenar, $formaOrdenar, $elementosFiltrados, $start)
+    public function obtenerEntregaXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $almacenId = null, $bandera, $columnaOrdenar, $formaOrdenar, $elementosFiltrados, $start)
     {
         $this->commandPrepare("sp_entrega_obtenerXCriterios");
         $this->commandAddParameter(":vin_fecha_emision_desde", $fechaEmisionInicio);
@@ -330,6 +330,7 @@ class Almacenes extends ModeloBase
         $this->commandAddParameter(":vin_estado_id", $estadoId);
         $this->commandAddParameter(":vin_tipo_id", $tipoId);
         $this->commandAddParameter(":vin_organizador_id", $almacenId);
+        $this->commandAddParameter(":vin_bandera", $bandera);
         $this->commandAddParameter(":vin_columna_ordenar", $columnaOrdenar);
         $this->commandAddParameter(":vin_forma_ordenar", $formaOrdenar);
         $this->commandAddParameter(":vin_limite", $elementosFiltrados);
@@ -337,7 +338,7 @@ class Almacenes extends ModeloBase
         return $this->commandGetData();
     }
 
-    public function obtenerCantidadEntregaXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $almacenId = null, $columnaOrdenar, $formaOrdenar)
+    public function obtenerCantidadEntregaXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $almacenId = null, $bandera, $columnaOrdenar, $formaOrdenar)
     {
         $this->commandPrepare("sp_entrega_obtenerXCriterios_contador");
         $this->commandAddParameter(":vin_fecha_emision_desde", $fechaEmisionInicio);
@@ -345,6 +346,7 @@ class Almacenes extends ModeloBase
         $this->commandAddParameter(":vin_estado_id", $estadoId);
         $this->commandAddParameter(":vin_tipo_id", $tipoId);
         $this->commandAddParameter(":vin_organizador_id", $almacenId);
+        $this->commandAddParameter(":vin_bandera", $bandera);
         $this->commandAddParameter(":vin_columna_ordenar", $columnaOrdenar);
         $this->commandAddParameter(":vin_forma_ordenar", $formaOrdenar);
         return $this->commandGetData();
@@ -381,10 +383,27 @@ class Almacenes extends ModeloBase
         return $this->commandGetData();
     }
 
-        public function getDataVehiculoXPlacaId($placaId)
+    public function getDataVehiculoXPlacaId($placaId)
     {
         $this->commandPrepare("sp_vehiculo_obtenerXPlacaId");
         $this->commandAddParameter(":vin_placa_id", $placaId);
+        return $this->commandGetData();
+    }
+
+    public function obtenerBienXTextoXOrganizadorIds($texto1, $texto2, $organizadorIds)
+    {
+        $this->commandPrepare("sp_paquete_detalle_buscarXTexto");
+        $this->commandAddParameter(":vin_texto1", $texto1);
+        $this->commandAddParameter(":vin_texto2", $texto2);
+        $this->commandAddParameter(":vin_organizador_ids", $organizadorIds);
+        return $this->commandGetData();
+    }
+
+    public function obtenerStockActualLogico($bienId, $organizadorId)
+    {
+        $this->commandPrepare("sp_movimiento_bien_obtenerStockLogico");
+        $this->commandAddParameter(":vin_bien_id", $bienId);
+        $this->commandAddParameter(":vin_organizador_id", $organizadorId);
         return $this->commandGetData();
     }
 }

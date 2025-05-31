@@ -108,6 +108,7 @@ if (isset($f_tipo)) {
                                                 <select name="cboTipo" id="cboTipo" class="select2">
                                                     <option value="1">Servicio</option>
                                                     <option value="2">Compra</option>
+                                                    <option value="3">Consignación</option>
                                                 </select>
                                                 <span id='msj_tipo' class="control-label"
                                                 style='color:red;font-style: normal;' hidden></span>

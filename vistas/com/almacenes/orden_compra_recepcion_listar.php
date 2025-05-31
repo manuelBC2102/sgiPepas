@@ -302,8 +302,25 @@
             <div class="modal-footer" style="padding-bottom:  0px;padding-top: 10px;clear:left">
                 <div class="form-group">
                     <div class="col-md-6" style="text-align: left;">
+                        <div class="input-group">
+                            <label class="col-sm-4 control-label"> Serie y número de Guía:</label>
+                            <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12" style="display: flex; align-items: center; gap: 8px;margin-bottom:10px;">
+                                <input type="text" id="serie_numeroGuia" name="serie_numeroGuia" class="form-control" style="text-align: right;" />
+                            </div>
+                            <label class="col-sm-4 control-label"> Peso:</label>
+                            <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12" style="display: flex; align-items: center; gap: 8px;margin-bottom:10px;">
+                                <input type="number" id="peso" name="peso" class="form-control" style="text-align: right;" />
+                            </div>
+                            <label class="col-sm-4 control-label"> Volumen:</label>
+                            <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12" style="display: flex; align-items: center; gap: 8px;margin-bottom:10px;">
+                                <input type="number" id="volumen" name="volumen" class="form-control" style="text-align: right;" />
+                            </div>
+                        </div>
                     </div>
                     <div class="col-md-6">
+                        <input type="file" id="inputFilePdfGuia" accept="application/pdf" style="display:none;">
+                        <span id="text_archivo"></span>&nbsp;&nbsp;
+                        <button type="button" class="btn btn-warning" id="btn_subirPdfGuia" onclick="$('#inputFilePdfGuia').click();"><i class="fa fa-cloud-upload"></i> Subir Guía</button>
                         <button type="button" class="btn btn-primary" id="btn_generarDistribucionQR"><i class="fa fa-qrcode"></i> Generar distribución QR</button>
                         <button type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-close"></i> Cerrar</button>
                     </div>

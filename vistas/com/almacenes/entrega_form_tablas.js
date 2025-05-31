@@ -343,15 +343,9 @@ function onResponseMovimientoFormTablas(response) {
                 loaderClose();
                 location.href = URL_BASE + "util/formatos/SolicitudCotizacion.xlsx";
                 break;
-            case 'obtenerAreRequerimiento':
-                onResponseObtenerAreRequerimiento(response.data);
-                break;
             case 'obtenerDetalleRequerimiento':
                 detalle = [];
                 onResponseObtenerDocumentoRelacion(response.data);
-                break;
-            case 'cargarOrganizadoresDetalle':
-                onResponseCargarOrganizadoresDetalle(response.data);
                 break;
         }
     } else {
@@ -460,6 +454,7 @@ function onResponseObtenerDataCbo(cboId, itemId, itemDes, data) {
 
 function onResponseObtenerStockActual(data) {
     var stock = parseFloat(data[0]['stock']);
+    var stockLogico = parseFloat(data[0]['stockLogico']);
     var cantidadMinima = parseFloat(data[0]['cantidad_minima']);
     var indice = parseInt(data[0]['indice']);
     var saldo = 0;
@@ -502,6 +497,7 @@ function onResponseObtenerStockActual(data) {
     if (!isEmpty(bienId)) {
         if (existeColumnaCodigo(7)) {
             $('#txtStock_' + indice).html(devolverDosDecimales(stock));
+            $('#txtStockLogico_' + indice).html(devolverDosDecimales((stock - stockLogico)));
         }
         if (existeColumnaCodigo(8)) {
             $('#txtStockSugerido_' + indice).html(devolverDosDecimales(cantidadMinima));
@@ -1487,7 +1483,6 @@ function llenarComboOrganizadorCabecera(data) {
         $("#cboOrganizador").select2({
             width: "100%"
         }).on("change", function (e) {
-            cargarOrganizadoresDetalle(e.val);
             confirmarCambioOrganizador();
             //PARA OBTENER LA DIRECCION DE ORGANIZADOR
             obtenerDireccionOrganizador(1);
@@ -1543,7 +1538,7 @@ function confirmarCambioOrganizador() {
         if (!isEmpty(detalle)) {
             swal({
                 title: "Confirmación de cambio de almacén",
-                text: "¿Está seguro de cambiar el almacén, se va a actualizar el stock?",
+                text: "¿Está seguro de cambiar el almacén, se va a perder la información cargada?",
                 type: "warning",
                 showCancelButton: true,
                 confirmButtonColor: "#33b86c",
@@ -1556,6 +1551,9 @@ function confirmarCambioOrganizador() {
                 if (isConfirm) {
                     organizadorIdAntes = select2.obtenerValor("cboOrganizador");
                     actualizarStockDetalle();
+                    detalle = [];
+                    reinicializarDataTableDetalle();
+                    limpiarDetalle();
                 } else {
                     select2.asignarValor("cboOrganizador", organizadorIdAntes);
                 }
@@ -1726,6 +1724,10 @@ function llenarCabeceraDetalle() {
                     break;
                 case 34://Cantidad aceptada
                     fila += "<th style='text-align:center; width: " + item.ancho + "px;' id='tb_cantidad_aceptada_" + item.id + "'>" + item.descripcion + "</th>";
+                    anchoDinamicoTabla += parseInt(item.ancho);
+                    break;
+                case 39:// 40px STOCK logico
+                    fila += "<th style='text-align:center; width: " + item.ancho + "px;vertical-align: middle;' id='tb_stock_" + item.id + "'>" + item.descripcion + "</th>";
                     anchoDinamicoTabla += parseInt(item.ancho);
                     break;
             }
@@ -2001,16 +2003,13 @@ function cargarBienDetalleCombo(data, indice, valorInicial) {
                 callback(initialData);
             },
             ajax: {
-                url: URL_BASE + "script/almacen/buscarProducto.php",
+                url: URL_BASE + "script/almacen/buscarProductoXAlmacenId.php",
                 dataType: "json",
                 delay: 250,
                 data: function (params) {
                     return {
                         q: params,
-                        movimiento_tipo_id: dataCofiguracionInicial.movimientoTipo[0].id,
-                        empresa: commonVars.empresa,
-                        tipoRequerimiento: tipoRequerimientoGlobal,
-                        tipoRequerimientoText: tipoRequerimientoGlobalText
+                        almacenId: select2.obtenerValor("cboOrganizador")
                     };
                 },
                 results: function (data) {
@@ -2371,6 +2370,9 @@ function llenarFilaDetalleTabla(indice) {
                 case 34://Cantidad aceptada
                     fila += "<td class='dtdetalle_cantidad_aceptada' style='border:0; width: " + item.ancho + "px; vertical-align: middle; padding: " + KPADINGTD + "px;'>" + agregarCantidadAprobadaDetalleTabla(indice) + "</td>";
                     break;
+                case 39://Stock lógico
+                    fila += "<td class='dtdetalle_stockLogico' style='border:0; width: " + item.ancho + "px; vertical-align: middle; padding: " + KPADINGTD + "px;' id=\"txtStockLogico_" + indice + "\" name=\"txtStockLogico_" + indice + "\" align='right'></td>";
+                    break;
             }
         });
     }
@@ -2392,11 +2394,11 @@ function agregarAccionesDetalleTabla(i) {
     var $html = '<div class="btn-toolbar" role="toolbar">' +
         '&nbsp;<a onclick=\"confirmarEliminar(' + i + ');\">' +
         '<i class=\"fa fa-trash-o\" style=\"color:#cb2a2a;\" title=\"Eliminar\"></i></a>' + accionComentario +
-        '<div class="btn-group" style="float: right">' +
-        '<a  class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false" onclick=\"eliminarOverflowDataTable();\">' +
-        '<i class="ion-gear-a"></i>  <span class="caret"></span>' +
-        '</a>' +
-        '<ul class="dropdown-menu dropdown-menu-right">';
+        '<div class="btn-group" style="float: right">';
+    // $html += '<a  class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false" onclick=\"eliminarOverflowDataTable();\">' +
+    //     '<i class="ion-gear-a"></i>  <span class="caret"></span>' +
+    //     '</a>';
+    // $html += '<ul class="dropdown-menu dropdown-menu-right">';
     // '<li>' +
     // '<a onclick=\"verificarTipoUnidadMedida(' + i + ');\">' +
     // '<i class=\"ion-ios7-toggle\"   style=\"color:#1ca8dd;\"   title=\"Registrar tramo\"></i>&nbsp;Registrar tramo</a>' +
@@ -2405,10 +2407,10 @@ function agregarAccionesDetalleTabla(i) {
     // '<a onclick=\"listarTramosBien(' + i + ');\">' +
     // '<i class=\"fa  fa-tasks\"    style=\"color:#0366b0;\"  title=\"Listar tramo\"></i>&nbsp;Listar tramo</a>' +
     // '</li>' +
-    $html += '<li>' +
-        '<a onclick=\"verificarStockBien(' + i + ');\">' +
-        '<i class=\"fa fa-cubes\"    style=\"color:#5cb85c;\" title=\"Verificar stock\"></i>&nbsp;Verificar stock</a>' +
-        '</li>';
+    // $html += '<li>' +
+    //     '<a onclick=\"verificarStockBien(' + i + ');\">' +
+    //     '<i class=\"fa fa-cubes\"    style=\"color:#5cb85c;\" title=\"Verificar stock\"></i>&nbsp;Verificar stock</a>' +
+    //     '</li>';
 
     // $html += '<li>';
     //         '<a onclick=\"verificarPrecioBien(' + i + ');\">' +
@@ -2421,8 +2423,8 @@ function agregarAccionesDetalleTabla(i) {
         '</li>';
     }
 
-    $html += '</ul>' +
-        '</div>' +
+    // $html += '</ul>';
+    $html += '</div>' +
         '</div>';
     return $html;
 }
@@ -2934,6 +2936,10 @@ function validarFormularioDetalleTablas(indice) {
         if (muestraOrganizador) {
             objDetalle.organizadorId = select2.obtenerValor('cboOrganizador');
         }
+    }
+    
+    if(doc_TipoId == SOLICITUD_ENTREGA){
+        objDetalle.banderaEntrega = '1';
     }
 
     if (!correcto) {
@@ -3666,7 +3672,6 @@ function onResponseObtenerDocumentoTipoDato(data) {
                         if (doc_TipoId == ORDEN_COMPRA || doc_TipoId == ORDEN_SERVICIO || doc_TipoId == COTIZACIONES || doc_TipoId == COTIZACION_SERVICIO) {
                             obtenerCuentaPersona(e.val);
                         }
-                        obtenerAreRequerimiento(e.val);
                     });
                     break;
                 case 17:
@@ -4343,7 +4348,7 @@ function insertarAgrupadorBien(index) {
     }
 }
 function cargarPantallaListarEntrega() {
-    cargarDiv("#window", "vistas/com/compraServicio/entrega_listar.php?tipoInterfaz=" + tipoInterfaz);
+    cargarDiv("#window", "vistas/com/almacenes/entrega_listar.php?documento_tipo=290");
 }
 
 function enviar(accion) {
@@ -12114,13 +12119,6 @@ function hallarTotales() {
     });
 }
 
-function obtenerAreRequerimiento(id) {
-    loaderShow();
-    ax.setAccion('obtenerAreRequerimiento');
-    ax.addParamTmp("id", id);
-    ax.consumir();
-}
-
 function onResponseObtenerAreRequerimiento(data) {
     var dtdareaId = obtenerDocumentoTipoDatoIdXTipo(43);
     var dtdrequerimientoId = obtenerDocumentoTipoDatoIdXTipo(48);
@@ -12145,12 +12143,6 @@ function obtenerDetalleRequerimiento(id) {
     ax.setAccion('obtenerDetalleRequerimiento');
     ax.addParamTmp("documentoId", id);
     ax.addParamTmp("almacenId", select2.obtenerValor("cboOrganizador"));
-    ax.consumir();
-}
-
-function cargarOrganizadoresDetalle(almacenId) {
-    ax.setAccion('cargarOrganizadoresDetalle');
-    ax.addParamTmp("almacenId", almacenId);
     ax.consumir();
 }
 

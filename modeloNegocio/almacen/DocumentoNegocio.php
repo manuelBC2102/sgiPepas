@@ -110,7 +110,11 @@ class DocumentoNegocio extends ModeloNegocioBase
                 $codigo = $valor;
                 break;
               case DocumentoTipoNegocio::DATO_PERSONA:
-                $personaId = $valor;
+                if($documentoTipoId == Configuraciones::SOLICITUD_ENTREGA){
+                  array_push($cadenas, $valorDtd);
+                }else{
+                  $personaId = $valor;
+                }
                 break;
               case DocumentoTipoNegocio::DATO_SERIE:
                 $serie = $valor;
@@ -268,7 +272,7 @@ class DocumentoNegocio extends ModeloNegocioBase
                   if($documentoTipoId == Configuraciones::DESPACHO){
                     $organizadorId = Organizador::create()->getDataOrganizadorXOrganizadorTipo(15)[0]['id']; //15 = Transito    
                   }
-                  if($documentoTipoId == Configuraciones::ENTREGA){
+                  if($documentoTipoId == Configuraciones::SOLICITUD_ENTREGA){
                     $organizadorId = $valorDtd['valor']; 
                   }
                 break;
@@ -383,7 +387,7 @@ class DocumentoNegocio extends ModeloNegocioBase
       $importeSubTotal = 0.0;
     }
 
-    if($documentoTipoId == Configuraciones::SOLICITUD_REQUERIMIENTO || $documentoTipoId == Configuraciones::GENERAR_COTIZACION || $documentoTipoId == Configuraciones::REQUERIMIENTO_AREA || $documentoTipoId == Configuraciones::GENERAR_COTIZACION_SERVICIO || $documentoTipoId == Configuraciones::GENERAR_COTIZACION_SERVICIO || $documentoTipoId == Configuraciones::DESPACHO){
+    if($documentoTipoId == Configuraciones::SOLICITUD_REQUERIMIENTO || $documentoTipoId == Configuraciones::GENERAR_COTIZACION || $documentoTipoId == Configuraciones::REQUERIMIENTO_AREA || $documentoTipoId == Configuraciones::GENERAR_COTIZACION_SERVICIO || $documentoTipoId == Configuraciones::GENERAR_COTIZACION_SERVICIO || $documentoTipoId == Configuraciones::DESPACHO || $documentoTipoId == Configuraciones::SOLICITUD_ENTREGA){
       $personaId = PersonaNegocio::create()->obtenerPersonaXUsuarioId($usuarioCreacionId)[0]['id'];
     }
     
@@ -1558,5 +1562,10 @@ class DocumentoNegocio extends ModeloNegocioBase
   function obtenerDocumentosRelacionadosXDocumentoIdXDt($documentoId, $documentoTipoId)
   {
     return Documento::create()->obtenerDocumentosRelacionadosXDocumentoIdXDt($documentoId, $documentoTipoId);
+  }
+
+  function obtenerUltimoAprobadorXDocumentoIdXDocumentoTipoId($documentoId, $documentoTipoId)
+  {
+    return Documento::create()->obtenerUltimoAprobadorXDocumentoIdXDocumentoTipoId($documentoId, $documentoTipoId);
   }
 }

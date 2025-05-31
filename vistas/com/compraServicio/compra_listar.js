@@ -337,7 +337,16 @@ function onResponseMovimientoListar(response) {
                 } else {
                     abrirDocumentoPDF(response.data, 'vistas/com/movimiento/documentos/');
                 }
-                break;                
+                break;
+            case 'imprimirDocumentoAdjunto':
+                    const link = document.createElement('a');
+                    link.href = URL_BASE+"util/uploads/documentoAdjunto/"+ response.data[0]['nombre'];
+                    link.target = '_blank';
+                    link.click();
+                    setTimeout(function () {
+                        eliminarPDF(contenedor + data.pdf);
+                    }, 4000);
+                break;              
         }
     } else {
         switch (response[PARAM_ACCION_NAME]) {
@@ -396,6 +405,9 @@ function onResponseMovimientoListar(response) {
                 loaderClose();
                 break;
             case 'ordenarArribaEstadoListaComprobacion':
+                loaderClose();
+                break;
+            case 'imprimirDocumentoAdjunto':
                 loaderClose();
                 break;
         }
@@ -880,8 +892,23 @@ function colapsarBuscador() {
 }
 function imprimirDocumento(id, documentoTipo)
 {
+    if(documentoTipo == ORDEN_COMPRA || documentoTipo == ORDEN_SERVICIO){
+            const link = document.createElement('a');
+            link.href = URL_BASE + "vistas/com/compraServicio/compra_servicio_pdf.php?id=" + id + "&documentoTipoId=" + documentoTipo;
+            link.target = '_blank';
+            link.click();
+    }else{
+        loaderShow();
+        ax.setAccion("imprimir");
+        ax.addParamTmp("id", id);
+        ax.addParamTmp("documento_tipo_id", documentoTipo);
+        ax.consumir();
+    }
+}
+function imprimirDocumentoAdjunto(id, documentoTipo)
+{
     loaderShow();
-    ax.setAccion("imprimir");
+    ax.setAccion("imprimirDocumentoAdjunto");
     ax.addParamTmp("id", id);
     ax.addParamTmp("documento_tipo_id", documentoTipo);
     ax.consumir();
@@ -2083,8 +2110,11 @@ function onResponseObtenerDocumentosRelacionados(data)
             $('#linkDocumentoRelacionado').append("<label style='color:#0000FF'>Documentos relacionados desde el sistema</label><br>");
             $.each(dataDocumentosRelacionados, function (index, item) {
                 $('#linkDocumentoRelacionado').append("<a onclick='visualizarDocumentoRelacion(" + item.documento_relacionado_id + "," + item.movimiento_id + ")' style='color:#0000FF'>[" + item.documento_tipo + ": " + item.serie_numero + "]</a>");
-                $('#linkDocumentoRelacionado').append('&nbsp;&nbsp;<a onclick="imprimirDocumento(' + item.documento_relacionado_id + ',' + item.documento_tipo_id + ')" title="Imprimir"><b><i class="fa fa-print" style="color:#088A08"></i></b></a><br>');
-
+                if(item.documento_tipo_id == COTIZACIONES){
+                    $('#linkDocumentoRelacionado').append('&nbsp;&nbsp;<a onclick="imprimirDocumentoAdjunto(' + item.documento_relacionado_id + ',' + item.documento_tipo_id + ')" title="Imprimir"><b><i class="fa fa-print" style="color:#088A08"></i></b></a><br>');
+                }else{
+                    $('#linkDocumentoRelacionado').append('&nbsp;&nbsp;<a onclick="imprimirDocumento(' + item.documento_relacionado_id + ',' + item.documento_tipo_id + ')" title="Imprimir"><b><i class="fa fa-print" style="color:#088A08"></i></b></a><br>');
+                }
             });
 
         }

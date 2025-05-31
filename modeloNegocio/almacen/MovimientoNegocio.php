@@ -90,12 +90,24 @@ class MovimientoNegocio extends ModeloNegocioBase
       throw new WarningException("El movimiento no cuenta con tipos de documentos asociados");
     }
 
+    $dataPerfil = PerfilNegocio::create()->obtenerPerfilXUsuarioId($usuarioId);
     if($respuesta->documento_tipo[0]["id"] == Configuraciones::SOLICITUD_REQUERIMIENTO || $respuesta->documento_tipo[0]["id"] == Configuraciones::REQUERIMIENTO_AREA  || $respuesta->documento_tipo[0]["id"] == Configuraciones::GENERAR_COTIZACION || $respuesta->documento_tipo[0]["id"] == Configuraciones::GENERAR_COTIZACION_SERVICIO){
       //validar perfil
       $mostrarAccNuevo = 0;
-      $dataPerfil = PerfilNegocio::create()->obtenerPerfilXUsuarioId($usuarioId);
       foreach ($dataPerfil as $itemPerfil) {
         if ($itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_TI_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_JEFE_LOGISTA || $itemPerfil['id'] == PerfilNegocio::PERFIL_SOLICITANTE_REQUERIMIENTO || $itemPerfil['id'] == PerfilNegocio::PERFIL_LOGISTA || $itemPerfil['id'] == PerfilNegocio::PERFIL_COMPRAS) {
+          $mostrarAccNuevo = 1;
+        }
+      }
+      if($mostrarAccNuevo != 1){
+        throw new WarningException("No tiene perfil necesario para realizar esta acción");
+      }
+    }
+    if($respuesta->documento_tipo[0]["id"] == Configuraciones::REQUERIMIENTO_AREA){
+      //validar perfil
+      $mostrarAccNuevo = 0;
+      foreach ($dataPerfil as $itemPerfil) {
+        if ($itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_TI_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_JEFE_LOGISTA) {
           $mostrarAccNuevo = 1;
         }
       }
@@ -135,7 +147,7 @@ class MovimientoNegocio extends ModeloNegocioBase
       if ($movimientoTipoId != "146" && $movimientoTipoId != "68" && $movimientoTipoId != "148" && $movimientoTipoId != "149" && $movimientoTipoId != "145" && $movimientoTipoId != "152") {
         $respuesta->organizador = OrganizadorNegocio::create()->obtenerXMovimientoTipo($movimientoTipoId);
       }
-      if($documentoTipoDefectoId == Configuraciones::ENTREGA){
+      if($documentoTipoDefectoId == Configuraciones::SOLICITUD_ENTREGA){
         $respuesta->organizador = AlmacenesNegocio::create()->obtenerConfiguracionInicialListadoDocumentos($usuarioId)->almacenes;
         $respuesta->organizadores = AlmacenesNegocio::create()->getDataOrganizadoresHijos($respuesta->organizador[0]['id']);
       }
@@ -543,6 +555,13 @@ class MovimientoNegocio extends ModeloNegocioBase
       //Generar ingreso a almacen Reserva
       $this->guardarDocumnentoReservaEntradaSalida($usuarioId, Configuraciones::SALIDA_RESERVA_STOCK,$dataStockReservaOk, $respuesta, $periodoId, 404, 78, 2);
 
+    }
+
+    //Generar OC para requerimiento de consiganción
+    if($respuesta->tipo_rq == Configuraciones::dtdTipoRequerimientoListaConsignacion){
+      $dataDocumentoTipo = DocumentoTipoNegocio::create()->obtenerDocumentoTipoXId($documentoTipoId);
+      $empresaId = $dataDocumentoTipo[0]['empresa_id'];
+      $this->generarOrdenCompraConsignacion($documentoTipoId, $empresaId, $usuarioId, $camposDinamicos, $detalle, $respuesta);
     }
 
     $this->guardarAnticipos($respuesta, $anticiposAAplicar, $usuarioId, $camposDinamicos, $monedaId);
@@ -1842,7 +1861,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     }
 
     // Guardar documento
-    $documento = $this->guardar($opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $documentoARelacionar, $valorCheck, $comentario, $checkIgv, $monedaId, $tipoPago, $periodoId, $datosExtras, $contOperacionTipoId, null, $igv_porcentaje,  null,$dataStockReservaOk);
+    $documento = $this->guardar($opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $documentoARelacionar, $valorCheck, $comentario, $checkIgv, $monedaId, $tipoPago, $periodoId, $datosExtras, $contOperacionTipoId, null, $igv_porcentaje,  null);
 
     if (
       $documentoTipoId == ContDistribucionContableNegocio::DOCUMENTO_TIPO_ID_FACTURA_VENTA ||
@@ -1951,6 +1970,7 @@ class MovimientoNegocio extends ModeloNegocioBase
       $dataDocumentoTipo = DocumentoTipoNegocio::create()->obtenerDocumentoTipoXId($documentoTipoId);
       $respuesta->documentoId = $documento[0]['vout_id'];
       $respuesta->serieNumero = $documento[0]['serie']."-".$documento[0]['numero'];
+      $respuesta->tipo_rq = $documento[0]['tipo_rq'];
       $respuesta->documentoTipoDescripcion = $dataDocumentoTipo[0]['descripcion'];
       return $respuesta;
     }
@@ -2174,7 +2194,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     return false;
   }
 
-  public function guardar($opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $documentoARelacionar, $valorCheck, $comentario = NULL, $checkIgv = 1, $monedaId = null, $tipoPago = null, $periodoId = null, $datosExtras = null, $contOperacionTipoId = null, $afectoAImpuesto = null, $igv_porcentaje = null, $tipoCambio = null, $dataStockReservaOk = null)
+  public function guardar($opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalle, $documentoARelacionar, $valorCheck, $comentario = NULL, $checkIgv = 1, $monedaId = null, $tipoPago = null, $periodoId = null, $datosExtras = null, $contOperacionTipoId = null, $afectoAImpuesto = null, $igv_porcentaje = null, $tipoCambio = null)
   {
     $movimientoTipoId = $this->obtenerIdXOpcion($opcionId);
     $dataDocumentoTipo = DocumentoTipoNegocio::create()->obtenerDocumentoTipoXId($documentoTipoId);
@@ -2200,7 +2220,7 @@ class MovimientoNegocio extends ModeloNegocioBase
       throw new WarningException("No se pudo guardar el documento");
     }
 
-    if (!in_array($documentoTipoId * 1, $this->arrayDocumentoTipoSinDetalle) && $documentoTipoId != Configuraciones::ENTREGA) {
+    if (!in_array($documentoTipoId * 1, $this->arrayDocumentoTipoSinDetalle)) {
       // 3. Insertamos el detalle
       if($documentoTipoId == Configuraciones::GENERAR_COTIZACION || $documentoTipoId == Configuraciones::GENERAR_COTIZACION_SERVICIO){
         if(ObjectUtil::isEmpty($detalle)){
@@ -2266,7 +2286,9 @@ class MovimientoNegocio extends ModeloNegocioBase
           }
         }
 
-        MovimientoNegocio::create()->obtenerStockAControlar($opcionId, $item["bienId"], $item["organizadorId"], $item["unidadMedidaId"], $item["cantidad"], $fechaEmision, $organizadorDestinoId);
+        if($documentoTipoId != Configuraciones::SOLICITUD_ENTREGA){
+          MovimientoNegocio::create()->obtenerStockAControlar($opcionId, $item["bienId"], $item["organizadorId"], $item["unidadMedidaId"], $item["cantidad"], $fechaEmision, $organizadorDestinoId);
+        }
 
         //validacion el precio unitario tiene que ser mayor al precio de compra.
         $precioCompra = 0;
@@ -2351,7 +2373,7 @@ class MovimientoNegocio extends ModeloNegocioBase
           $itemPrecio = 0.0;
         }
 
-        $movimientoBien = MovimientoBien::create()->guardar($movimientoId, $item["organizadorId"], $item["bienId"], $item["unidadMedidaId"], $item["cantidad"], $itemPrecio, 1, $usuarioId, $item["precioTipoId"], $item["utilidad"], $item["utilidadPorcentaje"], $checkIgv, $item["adValorem"], $item["comentarioBien"], $item["agenciaId"], $agrupadorDetalle, $ticket, $item["CeCoId"], ($item["precioPostor1"] == "" ? null : $item["precioPostor1"]), ($item["precioPostor2"] == "" ? null : $item["precioPostor2"]), ($item["precioPostor3"] == "" ? null : $item["precioPostor3"]), $item["esCompra"], $item["cantidadAceptada"], $item["postor_ganador_id"]);
+        $movimientoBien = MovimientoBien::create()->guardar($movimientoId, $item["organizadorId"], $item["bienId"], $item["unidadMedidaId"], $item["cantidad"], $itemPrecio, 1, $usuarioId, $item["precioTipoId"], $item["utilidad"], $item["utilidadPorcentaje"], $checkIgv, $item["adValorem"], $item["comentarioBien"], $item["agenciaId"], $agrupadorDetalle, $ticket, $item["CeCoId"], ($item["precioPostor1"] == "" ? null : $item["precioPostor1"]), ($item["precioPostor2"] == "" ? null : $item["precioPostor2"]), ($item["precioPostor3"] == "" ? null : $item["precioPostor3"]), $item["esCompra"], $item["cantidadAceptada"], $item["postor_ganador_id"], $item["banderaEntrega"]);
         $movimientoBienId = $this->validateResponse($movimientoBien);
         if (ObjectUtil::isEmpty($movimientoBienId) || $movimientoBienId < 1) {
           throw new WarningException("No se pudo guardar un detalle del movimiento");
@@ -2454,11 +2476,6 @@ class MovimientoNegocio extends ModeloNegocioBase
 
         //FIn Despacho
       }
-    }else{
-      foreach ($dataStockReservaOk as $item) {
-        $respuestPaqueteDetalle = Almacenes::create()->registrarPaqueteDetalle($movimientoId, null, $item['bien_id'], $item['organizador_id'], 2, $item['reserva'], $item['unidad_medida_id'], null, $usuarioId);
-      }
-
     }
     //si el documento se a copiado guardamos las relaciones
     foreach ($documentoARelacionar as $documentoRelacion) {
@@ -8336,7 +8353,7 @@ class MovimientoNegocio extends ModeloNegocioBase
               $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::ORDEN_COMPRA,$itemPostor[0], $respuesta, $periodoId, 395, 2, $listaPagoProgramacionPostores[$indexPostor], $respuestaCotizacion,$arraydetalleXpostor[$indexPostor]);
             }else if($documentoTipoId == Configuraciones::GENERAR_COTIZACION_SERVICIO){
               $respuestaCotizacion = $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::COTIZACION_SERVICIO,$itemPostor[0], $respuesta, $periodoId, 402, 1, null, null,$arraydetalleXpostor[$indexPostor], $itemPostores['datosExtras'][0]);
-              //generamos OC
+              //generamos OS
               $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::ORDEN_SERVICIO,$itemPostor[0], $respuesta, $periodoId, 401, 2, $listaPagoProgramacionPostores[$indexPostor], $respuestaCotizacion,$arraydetalleXpostor[$indexPostor], $itemPostores['datosExtras'][0]);
             }
           }
@@ -11735,7 +11752,7 @@ class MovimientoNegocio extends ModeloNegocioBase
           "precioCompra" => "",
           "organizadorId" => null,
           "precioTipoId" => $itemDetalle['precioTipoId'],
-          "precio" => $precioItem
+          "precio" => ObjectUtil::isEmpty($precioItem)? 0: $precioItem
         );
         $detalleCotizacion[] = $arrayItem;
       }
@@ -11757,7 +11774,7 @@ class MovimientoNegocio extends ModeloNegocioBase
       }
 
       $documento = $this->guardar($opcionId, $usuarioId, $documentoTipoId, $camposDinamicosCotizacion, $detalleCotizacion, $documentoARelacionarSalida, 1, $arraydetalleXpostor["sumilla"], $arraydetalleXpostor["igv"], $monedaId, null, $periodoId, $datosExtras, null, $bandera_igv, $porcentaje_igv, $arraydetalleXpostor["tipoCambio"]);
-    
+      $documentosIdCotizaciones [] = $documento[0]['vout_id'];
       if($documentoTipoId == Configuraciones::COTIZACIONES || $documentoTipoId == Configuraciones::COTIZACION_SERVICIO){
         $respuestaActualizarDocumentoEstado = DocumentoNegocio::create()->ActualizarDocumentoEstadoId($documento[0]['vout_id'], 16, $usuarioId);
         $documentosIdCotizaciones [] = $documento[0]['vout_id'];
@@ -12388,4 +12405,80 @@ class MovimientoNegocio extends ModeloNegocioBase
     $objWriter->save(__DIR__ . '/../../util/formatos/SolicitudCotizacion.xlsx');
     return 1;
   }
+
+  public function imprimirDocumentoAdjunto($documentoTipoId, $documentoId, $usuarioId){
+    $relacionadosDocumentoActual = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoId($documentoId);
+    foreach($relacionadosDocumentoActual as $item){
+      if($item['documento_tipo_id'] == Configuraciones::GENERAR_COTIZACION || $item['documento_tipo_id'] == Configuraciones::GENERAR_COTIZACION_SERVICIO){
+        return Documento::create()->obtenerDocumentoAdjuntoXDocumentoCotizacion($item['documento_relacionado_id'], $documentoId);
+      }
+    }
+  }
+
+  public function generarOrdenCompraConsignacion($documentoTipoId, $empresaId, $usuarioId, $camposDinamicosRespuesta, $detalle, $respuesta){
+    $respuestaActualizarDocumentoEstado = DocumentoNegocio::create()->ActualizarDocumentoEstadoId($respuesta->documentoId , 3, $usuarioId);
+
+    $configuraciones = DocumentoTipoNegocio::create()->obtenerDocumentoTipoDato($documentoTipoId, $usuarioId);
+    $periodoId = PeriodoNegocio::create()->obtenerUltimoPeriodoActivoXEmpresa($empresaId)[0]['id'];
+
+    if (ObjectUtil::isEmpty($periodoId)) {
+      throw new WarningException("No existe periodo abierto.");
+    }
+
+    $camposDinamicos = [];
+    $proveedor_id = null;
+    $tipoRequerimiento = null;
+    foreach ($configuraciones as $item) {
+      foreach($camposDinamicosRespuesta as $itemCamposDinamicos){
+        $valor = null;
+        if($item['tipo'] == $itemCamposDinamicos['tipo']){
+          switch ($item['tipo']) {
+            case 2:
+              $valor = "";
+              break;
+            case 7: // Serie
+              $valor = $item['cadena_defecto'];
+              break;
+            case 8: // Número
+            case 9: // Fecha
+              $valor = $item['data'];
+              break;
+            case 23:
+              $proveedor_id = $itemCamposDinamicos['valor'];
+              $valor = $itemCamposDinamicos['valor'];
+              break;
+            case 42:
+              $tipoRequerimiento = $itemCamposDinamicos['valor'];
+              break;
+            case 45: //Almacén origen
+              $valor = $itemCamposDinamicos['valor'];
+              break;
+            default:
+              continue 2; // Salta al siguiente $item si el tipo no es manejado
+          }
+          $camposDinamicos[] = [
+            "id" => $item['id'],
+            "tipo" => $item['tipo'],
+            "opcional" =>  $item['opcional'],
+            "descripcion" => $item['descripcion'],
+            "codigo" => $item['codigo'],
+            "valor" => $valor
+          ];
+        }
+      }
+    }
+
+    if($tipoRequerimiento == "Consignación"){
+      $requerimientoEstado = DocumentoNegocio::create()->ActualizarDocumentoEstadoId($respuesta->documentoId, 3, $usuarioId);
+    }
+    $arraydetalleXpostor [] = array("proveedor_id" => $proveedor_id, "monedaId" => 2, "tipoCambio" => null, "igv" => 1, "uoId" => null, "tiempoEntrega" => null, "tiempoEntregaText" => null, "tiempo" => null, "condicionPago" => 1, "condicionPagoText" => "Crédito","diasPago" => null,"referencia" => "Compra consignación", "sumilla" => null, "banderaIgv" => 1, "porcentajeIgv" => 18);
+    $respuestaCotizacion = $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::COTIZACIONES, $detalle, $respuesta, $periodoId, 160, 1, null, null,$arraydetalleXpostor[0]);
+    
+    $ultimoAprobador = DocumentoNegocio::create()->obtenerUltimoAprobadorXDocumentoIdXDocumentoTipoId($respuestaCotizacion[0], Configuraciones::ORDEN_COMPRA);
+    $cotizacionEstado = DocumentoNegocio::create()->ActualizarDocumentoEstadoId($respuestaCotizacion[0], 3, $ultimoAprobador[0]['aprobador']);
+    //generamos OC
+    $respuestaOrdenCompra = $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::ORDEN_COMPRA, $detalle, $respuesta, $periodoId, 395, 2, null, $respuestaCotizacion,$arraydetalleXpostor[0]);
+    $ordenCompraEstado = DocumentoNegocio::create()->ActualizarDocumentoEstadoId($respuestaOrdenCompra[0], 3, $ultimoAprobador[0]['aprobador']);
+  }
+  
 }

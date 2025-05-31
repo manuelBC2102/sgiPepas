@@ -165,25 +165,28 @@ class AlmacenesNegocio extends ModeloNegocioBase
         $cantidad = $res[0]['cantidad'];
       }
 
+      if ($respuesta->dataDocumento[0]['doc_tipo_id'] ==  Configuraciones::RECEPCION) {
+        $respuesta->dataDocumentoAdjunto = DocumentoNegocio::create()->obtenerDocumentoAdjuntoXDocumentoId($id);
+      }
+
       $detalle[$index]['distribucion_unidad_minera'] = $distribucionUnidadMInera;
       $detalle[$index]['distribucion_requerimiento'] = $textoFinal;
       $detalle[$index]['cantidad_distribucion_requerimiento'] = count($resultado);
       $detalle[$index]['cantidad_recepcion'] = ObjectUtil::isEmpty($detalle[$index]['cantidad_recepcion']) ? $detalle[$index]['cantidad_por_recepcionar'] : $detalle[$index]['cantidad_recepcion'];
 
       $cantidad_recepcionada = Almacenes::create()->cantidadRecepcion($itemDetalle['movimiento_bien_id'])[0]['cantidad_recepcionada'];
-      if(!ObjectUtil::isEmpty($cantidad_recepcionada)){
+      if (!ObjectUtil::isEmpty($cantidad_recepcionada)) {
         $detalle[$index]['cantidad_por_recepcionar'] = $cantidad - $cantidad_recepcionada;
         $detalle[$index]['cantidad_recepcionada'] = $cantidad_recepcionada;
         $detalle[$index]['cantidad_recepcion'] = ObjectUtil::isEmpty($detalle[$index]['cantidad_recepcion']) ? $detalle[$index]['cantidad_por_recepcionar'] : $detalle[$index]['cantidad_recepcion'];
         $detalle[$index]['doc_tipo_id'] = $respuesta->dataDocumento[0]['doc_tipo_id'];
         $detalle[$index]['bandera_despacho'] = $banderaDespacho;
         $detalle[$index]['bandera_despacho_cantidad'] = 1;
-      }else{
+      } else {
         $detalle[$index]['cantidad_por_recepcionar'] = $cantidad - floatval($detalle[$index]['cantidad_recepcion']);
         $detalle[$index]['cantidad_recepcionada'] = $detalle[$index]['cantidad_recepcion'];
         $detalle[$index]['bandera_despacho_cantidad'] = 0;
       }
-
     }
 
     $respuesta->detalle = $detalle;
@@ -206,7 +209,7 @@ class AlmacenesNegocio extends ModeloNegocioBase
     return $respuesta;
   }
 
-  public function generarRecepcion($documentoId, $almacenId, $filasSeleccionadas, $usuarioId, $empresaId)
+  public function generarRecepcion($documentoId, $almacenId, $filasSeleccionadas, $usuarioId, $empresaId, $datosGuia)
   {
     $resEstado = Almacenes::create()->guardarDetalleRecepcionEstado($filasSeleccionadas[0]['movimiento_id']);
 
@@ -234,6 +237,15 @@ class AlmacenesNegocio extends ModeloNegocioBase
       $valor = null;
 
       switch ($item['tipo']) {
+        case 2:
+          if($item['descripcion'] == "Serie numero guia"){
+            $valor = $datosGuia[0]['serie_numeroGuia'];
+          }else if($item['descripcion'] == "Peso"){
+            $valor = $datosGuia[0]['peso'];
+          }else {
+            $valor = $datosGuia[0]['volumen'];
+          }
+          break;
         case 5: // Recepcionado por
           $valor = UsuarioNegocio::create()->getUsuario($usuarioId)[0]['persona_id'];
           break;
@@ -293,6 +305,8 @@ class AlmacenesNegocio extends ModeloNegocioBase
     );
 
     $documentoId = MovimientoNegocio::create()->guardar($opcionId, $usuarioId, $documentoTipoId, $camposDinamicos, $detalleRecepcion, $documentoARelacionar, 1, "Movimiento de recepción", 1, 2, null, $periodoId, null, null, null, null);
+
+    $resAdjunto = MovimientoNegocio::create()->guardarArchivosXDocumentoID($documentoId[0]['vout_id'], $datosGuia[0]['pdfGuia'], null, $usuarioId);
 
     $documento_movimientoId =  MovimientoBien::create()->obtenerMovimientoIdXDocumentoId($documentoId[0]['vout_id']);
     $movimiento_detalle =  MovimientoBien::create()->obtenerXIdMovimiento($documento_movimientoId[0]['movimiento_id']);
@@ -369,9 +383,9 @@ class AlmacenesNegocio extends ModeloNegocioBase
     return $respuesta;
   }
 
-  public function generarDistribucionQR($arrayDatoFila, $usuarioId, $documentoId, $almacenId, $dataFilasSeleccionadas, $empresaId)
+  public function generarDistribucionQR($arrayDatoFila, $usuarioId, $documentoId, $almacenId, $dataFilasSeleccionadas, $empresaId, $datosGuia)
   {
-    $respuesta = AlmacenesNegocio::create()->generarRecepcion($documentoId, $almacenId, $dataFilasSeleccionadas, $usuarioId, $empresaId);
+    $respuesta = AlmacenesNegocio::create()->generarRecepcion($documentoId, $almacenId, $dataFilasSeleccionadas, $usuarioId, $empresaId, $datosGuia);
 
     $tipo = 1; //Almacenaje
     $persona_id = UsuarioNegocio::create()->getUsuario($usuarioId)[0]['persona_id'];
@@ -699,7 +713,7 @@ class AlmacenesNegocio extends ModeloNegocioBase
   }
 
   //Entrega
-  public function obtenerEntregaXCriterios($criterios, $elementosFiltrados, $columns, $order, $start, $usuarioId)
+  public function obtenerEntregaXCriterios($criterios, $elementosFiltrados, $opcionId, $columns, $order, $start, $usuarioId)
   {
     $fechaEmisionInicio = $this->formatearFechaBD($criterios['fechaEmision']['inicio']);
     $fechaEmisionFin = $this->formatearFechaBD($criterios['fechaEmision']['fin']);
@@ -711,10 +725,15 @@ class AlmacenesNegocio extends ModeloNegocioBase
     $formaOrdenar = $order[0]['dir'];
     $columnaOrdenar = $columns[$columnaOrdenarIndice]['data'];
 
-    return Almacenes::create()->obtenerEntregaXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $almacenId, $columnaOrdenar, $formaOrdenar, $elementosFiltrados, $start);
+    $bandera = null;
+    if ($opcionId == 416) {
+      $bandera = $usuarioId;
+    }
+
+    return Almacenes::create()->obtenerEntregaXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $almacenId, $bandera, $columnaOrdenar, $formaOrdenar, $elementosFiltrados, $start);
   }
 
-  public function obtenerCantidadEntregaXCriterios($criterios, $columns, $order, $usuarioId)
+  public function obtenerCantidadEntregaXCriterios($criterios, $opcionId, $columns, $order, $usuarioId)
   {
     $fechaEmisionInicio = $this->formatearFechaBD($criterios['fechaEmision']['inicio']);
     $fechaEmisionFin = $this->formatearFechaBD($criterios['fechaEmision']['fin']);
@@ -726,7 +745,17 @@ class AlmacenesNegocio extends ModeloNegocioBase
     $formaOrdenar = $order[0]['dir'];
     $columnaOrdenar = $columns[$columnaOrdenarIndice]['data'];
 
-    return Almacenes::create()->obtenerCantidadEntregaXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $almacenId, $columnaOrdenar, $formaOrdenar);
+    $dataPerfil = PerfilNegocio::create()->obtenerPerfilXUsuarioId($usuarioId);
+    $filtradosPerfil = array_values(array_filter($dataPerfil, function ($itemPerfil) {
+      return ($itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_TI_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_JEFE_LOGISTA);
+    }));
+
+    $bandera = null;
+    if ($opcionId == 416 && ObjectUtil::isEmpty($filtradosPerfil)) {
+      $bandera = $usuarioId;
+    }
+
+    return Almacenes::create()->obtenerCantidadEntregaXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $almacenId, $bandera, $columnaOrdenar, $formaOrdenar);
   }
 
   public function obtenerAreRequerimiento($id)
@@ -748,13 +777,15 @@ class AlmacenesNegocio extends ModeloNegocioBase
     return $documentoDetalle;
   }
 
-  public function obtenerStockActual($bienId, $indice, $unidadMedidaId, $organizadorId = null, $bandera)
+  public function obtenerStockActual($bienId, $indice, $unidadMedidaId, $organizadorId = null, $bandera, $banderaLogico = null)
   {
     $stock = Almacenes::create()->obtenerStockActual($bienId, $organizadorId, $unidadMedidaId, $bandera);
     $stock = ObjectUtil::isEmpty($stock) ? [array("stock" => 0)] : $stock;
 
     $stock[0]['indice'] = $indice;
-    $stock[0]['indice'] = $indice;
+    if (!ObjectUtil::isEmpty($banderaLogico)) {
+      $stock[0]['stockLogico'] = Almacenes::create()->obtenerStockActualLogico($bienId, $banderaLogico)[0]['cantidad'];
+    }
 
     return $stock;
   }
@@ -789,27 +820,10 @@ class AlmacenesNegocio extends ModeloNegocioBase
   {
     $respuesta = new stdClass();
     $respuesta->dataDocumento = DocumentoNegocio::create()->obtenerDetalleDocumento($id);
-    $respuesta->detalle = Almacenes::create()->obtenerpaquete_detalleXIdMovimiento($movimientoId);
+    // $respuesta->detalle = Almacenes::create()->obtenerpaquete_detalleXIdMovimiento($movimientoId);
+    $respuesta->detalle = MovimientoBien::create()->obtenerXIdMovimiento($movimientoId);
 
     return $respuesta;
-  }
-
-  //MinaApp
-  public function obtener_datosOrganizador($organizadorId)
-  {
-    return Organizador::create()->getOrganizador($organizadorId);
-  }
-
-  public function obtener_datosPaquete($paqueteId)
-  {
-    return Almacenes::create()->obtener_datosPaquete($paqueteId);
-  }
-
-  public function almacenarPaquete($organizadorId, $paqueteId, $usuarioId)
-  {
-    $tipo = 2;
-    $respuestaEstado = Almacenes::create()->paquete_traking_cambiarEstadoXdetallePaqueteId($paqueteId);
-    return Almacenes::create()->registrarPaqueteTraking(null, $paqueteId, $organizadorId, $tipo, null, $usuarioId);
   }
 
   public function generarDespacho($almacenDestino, $vehiculoId, $pesaje, $usuarioId, $detalle)
@@ -930,5 +944,80 @@ class AlmacenesNegocio extends ModeloNegocioBase
       $respuesta->mensaje = $mensaje;
     }
     return $respuesta;
+  }
+
+  public function obtenerBienXTextoXOrganizadorIds($texto1, $texto2, $almacenId)
+  {
+    $organizadorIds = str_replace(["(", ")"], "", $this->obtenerOrganizadorHijos($almacenId));
+    return Almacenes::create()->obtenerBienXTextoXOrganizadorIds($texto1, $texto2, $organizadorIds);
+  }
+
+  public function generarSalidaSolicitud($dataStockOk, $usuarioId)
+  {
+    //estado de bandera_entrega
+    //1 = registro
+    //2 = parcialmente atemndido
+    //3 = atendido
+    $respuesta = new stdClass();
+    $banderaEntrega = 1;
+    foreach ($dataStockOk as $item) {
+      $dataMoviBien = MovimientoBien::create()->obtenerMovimientoBienXId($item['movimiento_bien_id']);
+      $cantidadEntrega = $dataMoviBien[0]['cantidad_entrega'] + $item['reserva'];
+      if ($cantidadEntrega == $dataMoviBien[0]['cantidad']) {
+        $banderaEntrega = 3;
+      } else {
+        $banderaEntrega = 2;
+      }
+      $resEdit = MovimientoBien::create()->editarBanderaCantidadEntrega($item['movimiento_bien_id'], $banderaEntrega, $cantidadEntrega);
+      $respuestPaqueteDetalle = Almacenes::create()->registrarPaqueteDetalle($dataStockOk[0]['movimiento_id'], null, $item['bien_id'], $item['organizador_id'], 2, $item['reserva'], $item['unidad_medida_id'], null, $usuarioId);
+    }
+
+    $respuestaDetalle = MovimientoBien::create()->obtenerXIdMovimiento($dataStockOk[0]['movimiento_id']);
+
+    $filtraEstado2 = array_values(array_filter($respuestaDetalle, function ($item) {
+      return $item['bandera_entrega'] == 2;
+    }));
+    $filtraEstado3 = array_values(array_filter($respuestaDetalle, function ($item) {
+      return $item['bandera_entrega'] == 3;
+    }));
+
+    if (!ObjectUtil::isEmpty($filtraEstado2) && !ObjectUtil::isEmpty($filtraEstado3)) {
+      $respuestaDocumentoEstado = DocumentoNegocio::create()->ActualizarDocumentoEstadoId($dataStockOk[0]['documento_id'], 19, $usuarioId);
+    }
+    if (ObjectUtil::isEmpty($filtraEstado2) && !ObjectUtil::isEmpty($filtraEstado3)) {
+      $respuestaDocumentoEstado = DocumentoNegocio::create()->ActualizarDocumentoEstadoId($dataStockOk[0]['documento_id'], 20, $usuarioId);
+    } else {
+      $respuestaDocumentoEstado = DocumentoNegocio::create()->ActualizarDocumentoEstadoId($dataStockOk[0]['documento_id'], 19, $usuarioId);
+    }
+
+
+    if (ObjectUtil::isEmpty($respuestPaqueteDetalle)) {
+      throw new WarningException("Hubo un problema al relaizar la operación");
+    } else {
+      $mensaje = 'Operacion registrada Exitosamente';
+      $tipo_mensaje = 1;
+
+      $respuesta->tipo_mensaje = $tipo_mensaje;
+      $respuesta->mensaje = $mensaje;
+    }
+    return $respuesta;
+  }
+
+  //MinaApp
+  public function obtener_datosOrganizador($organizadorId)
+  {
+    return Organizador::create()->getOrganizador($organizadorId);
+  }
+
+  public function obtener_datosPaquete($paqueteId)
+  {
+    return Almacenes::create()->obtener_datosPaquete($paqueteId);
+  }
+
+  public function almacenarPaquete($organizadorId, $paqueteId, $usuarioId)
+  {
+    $tipo = 2;
+    $respuestaEstado = Almacenes::create()->paquete_traking_cambiarEstadoXdetallePaqueteId($paqueteId);
+    return Almacenes::create()->registrarPaqueteTraking(null, $paqueteId, $organizadorId, $tipo, null, $usuarioId);
   }
 }

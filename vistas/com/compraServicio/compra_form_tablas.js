@@ -1006,7 +1006,7 @@ function onResponseObtenerConfiguracionesIniciales(data) {
                 var dtdTipoTipoRequerimiento = obtenerDocumentoTipoDatoIdXTipo(42);
                 if (doc_TipoId == SOLICITUD_REQUERIMIENTO) {
                     tipoRequerimientoGlobalText = select2.obtenerText("cboTipoRequerimiento_" + dtdTipoTipoRequerimiento);
-                    if (e.val == 455) {
+                    if (e.val == dtdTipoRequerimientoListaServicio) {
                         loaderShow();
                         detalle = [];
                         indiceLista = [];
@@ -1033,7 +1033,11 @@ function onResponseObtenerConfiguracionesIniciales(data) {
                             }
                         }
                         $("#switchProductoDuplicado").btnSwitch("setValue", true);
-                    } else {
+                        var dtdTipoProveedor = obtenerDocumentoTipoDatoIdXTipo(23);
+                        $("#id_" + dtdTipoProveedor).hide();
+                        var dtdTipoEntregaDestino = obtenerDocumentoTipoDatoIdXTipo(45);
+                        $("#id_" + dtdTipoEntregaDestino).hide();                           
+                    } else if(e.val == dtdTipoRequerimientoListaCompra){
                         loaderShow();
                         detalle = [];
                         indiceLista = [];
@@ -1042,6 +1046,44 @@ function onResponseObtenerConfiguracionesIniciales(data) {
                         nroFilasInicial = parseInt(dataDocumentoTipo[0]['cantidad_detalle']);
                         limpiarDetalle();
                         loaderClose();
+
+                        $("#id_" + dtdTipoClase.id).show();
+                        $("#id_" + dtdTipoClase.id + " label").html("Clase *");
+                        $("#id_" + dtdTipoTipo.id).hide();
+                        select2.asignarValor("cbo_" + dtdTipoTipo.id, "");
+                        $("#id_" + dtdTipoOtros).hide();
+                        $("#id_" + dtdTipoUrgencia.id).show();
+
+                        var dtdTipoCuentaText = select2.obtenerText("cbo_" + dtdTipoCuenta);
+                        let arrayCuenta = ["DDH", "EQUIPOS", "PROYECTOS"];
+                        if (arrayCuenta.includes(dtdTipoCuentaText)) {
+                            var dtdTipoTipoRequerimiento = obtenerDocumentoTipoDatoIdXTipo(42);
+                            if (select2.obtenerValor("cboTipoRequerimiento_" + dtdTipoTipoRequerimiento) != 455) {
+                                select2.asignarValor("cbo_" + dtdTipoUrgencia.id, 472);
+                            } else {
+                                select2.asignarValor("cbo_" + dtdTipoUrgencia.id, 473);
+                            }
+                        }
+                        var dtdTipoProveedor = obtenerDocumentoTipoDatoIdXTipo(23);
+                        $("#id_" + dtdTipoProveedor).hide();
+                        var dtdTipoEntregaDestino = obtenerDocumentoTipoDatoIdXTipo(45);
+                        $("#id_" + dtdTipoEntregaDestino).hide();
+                    } else if(e.val == dtdTipoRequerimientoListaConsignacion){
+                        loaderShow();
+                        detalle = [];
+                        indiceLista = [];
+                        banderaCopiaDocumento = 0;
+                        indexDetalle = 0;
+                        nroFilasInicial = parseInt(dataDocumentoTipo[0]['cantidad_detalle']);
+                        limpiarDetalle();
+                        loaderClose();     
+
+                        var dtdTipoProveedor = obtenerDocumentoTipoDatoIdXTipo(23);
+                        $("#id_" + dtdTipoProveedor).show();
+                        $("#id_" + dtdTipoProveedor + " label").html("Proveedor *");
+                        var dtdTipoEntregaDestino = obtenerDocumentoTipoDatoIdXTipo(45);
+                        $("#id_" + dtdTipoEntregaDestino).show();
+                        $("#id_" + dtdTipoEntregaDestino + " label").html("Entrega en destino *");
 
                         $("#id_" + dtdTipoClase.id).show();
                         $("#id_" + dtdTipoClase.id + " label").html("Clase *");
@@ -2137,7 +2179,7 @@ function cargarAgenciaDetalleCombo(data, indice) {
 function cargarCeCoDetalleCombo(data, indice) {
     if (existeColumnaCodigo(26)) {
         $("#cboCeCo_" + indice).select2({
-            width: anchoCeCoTD + "px"
+            width:"100%"
         }).on("change", function (e) {
             actualizarTotalesGenerales(indice);
         });
@@ -2146,7 +2188,7 @@ function cargarCeCoDetalleCombo(data, indice) {
             select2.cargar("cboCeCo_" + indice, data, "id", ["codigo", "descripcion"]);
             select2.asignarValor("cboCeCo_" + indice, "");
         }
-        $("#cboCeCo_" + indice).select2({ width: anchoCeCoTD + "px" });
+        // $("#cboCeCo_" + indice).select2({ width: anchoCeCoTD + "px" });
     }
 }
 
@@ -3199,7 +3241,7 @@ function onResponseObtenerDocumentoTipoDato(data) {
                     var hidden_4 = "";
                     var btn_upload = "";
                     if (doc_TipoId == SOLICITUD_REQUERIMIENTO) {
-                        if (item.descripcion == "Tipo" || item.descripcion == "Otros") {
+                        if (item.descripcion == "Tipo" || item.descripcion == "Otros" || item.descripcion == "Proveedor" || item.descripcion == "Entrega en destino") {
                             hidden_4 = "hidden";
                         }
                     }
@@ -3795,6 +3837,12 @@ function onResponseObtenerDocumentoTipoDato(data) {
                         $("#cbo_" + item.id).prop("disabled", false);
                     }
                     break;
+                case 54:
+                   select2.cargar("cbo_" + item.id, item.data, "id", ["codigo","descripcion"]);
+                    $("#cbo_" + item.id).select2({
+                        width: '100%'
+                    });
+                    break;
             }
         });
         $("#id_3044").hide();
@@ -4227,14 +4275,14 @@ function eliminar(index) {
         return;
     }
     
-    valoresFormularioDetalle = validarFormularioDetalleTablas(indexTemporal);
+    // valoresFormularioDetalle = validarFormularioDetalleTablas(indexTemporal);
     if (indexTemporal > -1) {
         detalle.splice(indexTemporal, 1);
         eliminarDetalleFormularioTabla(index);
         asignarImporteDocumento();
         obtenerUtilidadesGenerales();
+        hallarTotales();
     }
-
     loaderClose();
 }
 function confirmarEliminar(index) {
@@ -4671,7 +4719,7 @@ function obtenerValoresCamposDinamicos() {
                 camposDinamicos[index]["valor"] = tipo_requerimiento;
 
                 if (doc_TipoId == SOLICITUD_REQUERIMIENTO) {
-                    if (tipo_requerimiento == 454) {
+                    if (tipo_requerimiento == dtdTipoRequerimientoListaCompra) {
                         var dtdTipoClase = obtenerDocumentoTipoDatoXTipoXCodigo(4, "01");
                         var clase = select2.obtenerValor('cbo_' + dtdTipoClase.id);
                         if (isEmpty(clase)) {
@@ -4679,11 +4727,26 @@ function obtenerValoresCamposDinamicos() {
                             isOk = false;
                             return false;
                         }
-                    } else {
+                    } else if(doc_TipoId == dtdTipoRequerimientoListaServicio) {
                         var dtdTipoTipo = obtenerDocumentoTipoDatoXTipoXCodigo(4, "02");
                         var tipo = select2.obtenerValor('cbo_' + dtdTipoTipo.id);
                         if (isEmpty(tipo)) {
                             mostrarValidacionLoaderClose("Debe ingresar " + dtdTipoTipo.descripcion);
+                            isOk = false;
+                            return false;
+                        }
+                    } else if(doc_TipoId == dtdTipoRequerimientoListaConsignacion){
+                        var dtdTipoProveedor = obtenerDocumentoTipoDatoIdXTipo(23);
+                        var proveedor = select2.obtenerValor('cbo_' + dtdTipoProveedor);
+                        if (isEmpty(proveedor)) {
+                            mostrarValidacionLoaderClose("Debe ingresar " + dtdTipoProveedor);
+                            isOk = false;
+                            return false;
+                        }
+                        var dtdTipoEntregaDestino = obtenerDocumentoTipoDatoIdXTipo(45);
+                        var entregaDestino = select2.obtenerValor('cbo_' + dtdTipoEntregaDestino);
+                        if (isEmpty(entregaDestino)) {
+                            mostrarValidacionLoaderClose("Debe ingresar " + dtdTipoEntregaDestino);
                             isOk = false;
                             return false;
                         }
@@ -11710,7 +11773,7 @@ function llenarFilaDetalleTablaProveedor(indice) {
         boton_eliminarProveedor = "&nbsp;&nbsp;<a id='btn_EliminarProveedor_" + indice + "' onclick='confirmarEliminarProveedor(" + indice + ");' hidden><i class='fa fa-trash-o' style='color:#cb2a2a;' title='Eliminar'></i></a>";
     }
     var fila = "<tr id=\"trDetalleProveedor_" + indice + "\">";
-    fila = fila + "<td style='border:0; width: 200px; vertical-align: middle; padding-right: 10px;'id=\"txtNumItem_" + indice + "\" name=\"txtNumItem_" + indice + "\" align='right'><div class'input-group col-lg-12 col-md-12 col-sm-12 col-xs-12' style='text-align: center;'>" + (indice + 1) + boton_eliminarProveedor + "</div></td>";
+    fila = fila + "<td style='border:0; width: 200px; vertical-align: middle; padding-right: 10px;' align='right'><div class'input-group col-lg-12 col-md-12 col-sm-12 col-xs-12' style='text-align: center;'>" + (indice + 1) + boton_eliminarProveedor + "</div></td>";
     //Razón social
     fila += "<td style='border:0; width: " + widthProveedor + "px; vertical-align: middle; padding: " + KPADINGTD + "px;' id=\"tdProveedor_" + indice + "\">" + agregarRazonSocialProveedor(indice) + "</td>";
     //Moneda
@@ -11990,22 +12053,20 @@ function eliminarPDF2(url) {
 
 function hallarSubTotalPostorDetalleCantidad(indice) {
     if (!isEmpty(dataCofiguracionInicial.bien[0]['id']) && doc_TipoId == GENERAR_COTIZACION) {
-        if (bandera == 1) {
-            valoresFormularioDetalle = validarFormularioDetalleTablas(indice);
-            valoresFormularioDetalle.index = indice;
+        valoresFormularioDetalle = validarFormularioDetalleTablas(indice);
+        valoresFormularioDetalle.index = indice;
 
-            var indexTemporal = -1;
-            $.each(detalle, function (i, item) {
-                if (parseInt(item.index) === parseInt(indice)) {
-                    indexTemporal = i;
-                    return false;
-                }
-            });
-            if (indexTemporal > -1) {
-                detalle[indexTemporal] = valoresFormularioDetalle;
-            } else {
-                detalle[detalle.length] = valoresFormularioDetalle;
+        var indexTemporal = -1;
+        $.each(detalle, function (i, item) {
+            if (parseInt(item.index) === parseInt(indice)) {
+                indexTemporal = i;
+                return false;
             }
+        });
+        if (indexTemporal > -1) {
+            detalle[indexTemporal] = valoresFormularioDetalle;
+        } else {
+            detalle[detalle.length] = valoresFormularioDetalle;
         }
         var a = parseFloat(valoresFormularioDetalle.cantidad);
         if (!Number.isInteger(a) && valoresFormularioDetalle.unidadMedidaDesc == "UN") {
@@ -12087,4 +12148,20 @@ function hallarSubTotalPostorDetalleCantidad(indice) {
 
         asignarImportePago();
     }
+}
+
+function hallarTotales(){
+    $('#datatable tbody tr').each(function (index) {
+      var indexTemporal = -1;
+      $.each(detalle, function (i, item) {
+        if (parseInt(item.index) === parseInt(index)) {
+          indexTemporal = i;
+          return false;
+        }
+      });
+        var valorBien = select2.obtenerValor("cboBien_" + indexTemporal);
+        if(!isEmpty(valorBien)){
+            hallarSubTotalPostorDetalleCantidad(indexTemporal);
+        }
+    });
 }

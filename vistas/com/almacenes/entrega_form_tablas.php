@@ -97,9 +97,6 @@
                                 </div>
                                 <div class="portlet-widgets col-lg-1 col-md-1 col-sm-2 col-xs-2" style="padding-left: 0px;">                     
                                     <span class="divider"></span>                    
-                                    <a onclick="cargarBuscadorDocumentoACopiar()" id="cargarBuscadorDocumentoACopiar">   
-                                        <i class="fa fa-files-o" tooltip-btndata-toggle='tooltip' title="Bandeja de documentos a relacionar" style="color: #5CB85C;"></i> 
-                                    </a>                              
                                 </div>
                             </div>
                             <label class='' id="nombreArchivo" style="color: black" hidden="true"></label>    

@@ -162,6 +162,7 @@ class DocumentoTipoNegocio extends ModeloNegocioBase
 
   public function obtenerDocumentoTipoDato($documentoTipoId, $usuarioId = null)
   {
+    $dataPerfil = PerfilNegocio::create()->obtenerPerfilXUsuarioId($usuarioId);
     $dtd = $this->obtenerDocumentoTipoDatoSimple($documentoTipoId);
     if (!ObjectUtil::isEmpty($dtd)) {
       foreach ($dtd as $index => $itemDtd) {
@@ -181,7 +182,6 @@ class DocumentoTipoNegocio extends ModeloNegocioBase
             $persona = $dtd[$index]["data"];
             break;
           case self::DATO_LISTA:
-          case self::DATO_TIPO_REQUERIMIENTO:
           case self::CONDICION_PAGO:
             $dtd[$index]["data"] = DocumentoTipoDatoListaNegocio::create()->obtenerXDocumentoTipoDato($itemDtd["id"]);
             break;
@@ -235,11 +235,24 @@ class DocumentoTipoNegocio extends ModeloNegocioBase
           case self::DATO_NUM_LICENCIA_CONDUCIR:
             $dtd[$index]["data"] = PersonaNegocio::create()->obtenerPersonaConductor();
             break;
+          case self::DATO_TIPO_REQUERIMIENTO:
+            $filtradosPerfil= array_values(array_filter($dataPerfil, function($itemPerfil){
+                return ($itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_TI_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_JEFE_LOGISTA);
+            }));
+            if(!ObjectUtil::isEmpty($filtradosPerfil)){
+              $dtd[$index]["data"] = DocumentoTipoDatoListaNegocio::create()->obtenerXDocumentoTipoDato($itemDtd["id"]);
+            }else{
+              $dataTipo = DocumentoTipoDatoListaNegocio::create()->obtenerXDocumentoTipoDato($itemDtd["id"]);
+              $filtrados= array_values(array_filter($dataTipo, function($item){
+                return ($item['descripcion'] != 'Consignación');
+              }));
+              $dtd[$index]["data"] = $filtrados;
+            }
+            break;
           case self::DATO_AREA:
               if($documentoTipoId == Configuraciones::REQUERIMIENTO_AREA){
                 $dtd[$index]["data"] = Documento::create()->obtenerAreaConSolicitudes();
               }else{
-                $dataPerfil = PerfilNegocio::create()->obtenerPerfilXUsuarioId($usuarioId);
                 $filtradosPerfil= array_values(array_filter($dataPerfil, function($itemPerfil){
                   return ($itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_TI_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_LOGISTA || $itemPerfil['id'] == PerfilNegocio::PERFIL_JEFE_LOGISTA || $itemPerfil['id'] == PerfilNegocio::PERFIL_TODAS_AREAS);
                 }));
@@ -260,9 +273,13 @@ class DocumentoTipoNegocio extends ModeloNegocioBase
             break;
           case self::DATO_ENTREGA_EN_DESTINO:
           case self::DATO_UO:
-            $movimientoTipo = MovimientoTipoNegocio::create()->obtenerXDocumentoTipoId($documentoTipoId);
-            $movimientoTipoId = $movimientoTipo[0]["movimiento_tipo_id"];
-            $dtd[$index]["data"] = OrganizadorNegocio::create()->obtenerXMovimientoTipo($movimientoTipoId);
+            if($documentoTipoId == Configuraciones::SOLICITUD_REQUERIMIENTO){
+              $dtd[$index]["data"] = Organizador::create()->getDataOrganizadorXOrganizadorTipo(10);
+            }else{
+              $movimientoTipo = MovimientoTipoNegocio::create()->obtenerXDocumentoTipoId($documentoTipoId);
+              $movimientoTipoId = $movimientoTipo[0]["movimiento_tipo_id"];
+              $dtd[$index]["data"] = OrganizadorNegocio::create()->obtenerXMovimientoTipo($movimientoTipoId);
+            }
             break;
           case self::UNIDAD_MINERA:
             $dtd[$index]["data"] = OrganizadorNegocio::create()->getDataUnidadMinera();

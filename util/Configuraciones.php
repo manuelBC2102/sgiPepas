@@ -142,11 +142,15 @@ class Configuraciones
   const GENERAR_COTIZACION_SERVICIO = 288;
   const RECEPCION = 265;
   const DESPACHO = 289;
-  const ENTREGA = 290;
+  const SOLICITUD_ENTREGA = 290;
   
   const MOVIMIENTO_TIPO_SOLICITUD_REQUERIMIENTO= 144;
 
   const ALMACEN_LIMA = 71;
+
+  const dtdTipoRequerimientoListaCompra = 454;
+  const dtdTipoRequerimientoListaServicio = 455;
+  const dtdTipoRequerimientoListaConsignacion = 512;
 
   // URL de facturacion electrónica
   // const EFACT_URL = 'http://www.apifact2.facturasunat.com/EfacturaWsBeta.asmx?WSDL';

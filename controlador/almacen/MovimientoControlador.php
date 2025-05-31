@@ -2052,4 +2052,12 @@ class MovimientoControlador extends AlmacenIndexControlador
     unlink($url);
     return 1;
   }
+  
+  public function imprimirDocumentoAdjunto(){
+    $documentoId = $this->getParametro("id");
+    $documentoTipoId = $this->getParametro("documento_tipo_id");
+    $usuarioId = $this->getUsuarioId();
+
+    return MovimientoNegocio::create()->imprimirDocumentoAdjunto($documentoTipoId, $documentoId, $usuarioId);
+  }
 }

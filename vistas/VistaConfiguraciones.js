@@ -48,6 +48,10 @@ var persona_sunat_id=622;
   var GENERAR_COTIZACION_SERVICIO = 288;
   var RECEPCION = 265;
   var DESPACHO = 289;
-  var TRASLADO = 290;
+  var SOLICITUD_ENTREGA = 290;
 
   var AREA_LOGISTICA = 10;
+
+  var dtdTipoRequerimientoListaCompra = 454;
+  var dtdTipoRequerimientoListaServicio = 455;
+  var dtdTipoRequerimientoListaConsignacion = 512;

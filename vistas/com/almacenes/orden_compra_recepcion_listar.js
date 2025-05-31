@@ -3,6 +3,7 @@ var documento_tipo1 = document.getElementById("documento_tipo1").value;
 
 var tabActivo = 1;
 var documentoTipoActivo = null;
+var lstDocumentoArchivos = [];
 
 $(document).ready(function () {
     criterioBusquedaDocumentos = [];
@@ -164,6 +165,34 @@ $(document).ready(function () {
         loaderShow();
         var bandera_generar = true;
         var arrayDatoFila = [];
+        var almacen = select2.obtenerValor("cboAlmacen");
+
+        if(alamcen == 71){
+            if (isEmpty($("#serie_numeroGuia").val())) {
+                mostrarAdvertencia("Debe ingresar serie y número de Guía");
+                bandera_generar = false;
+                loaderClose();
+                return false;
+            }
+            if (isEmpty($("#peso").val())) {
+                mostrarAdvertencia("Debe ingresar peso de Guía");
+                bandera_generar = false;
+                loaderClose();
+                return false;
+            }    
+            if (isEmpty($("#volumen").val())) {
+                mostrarAdvertencia("Debe ingresar volumen de Guía");
+                bandera_generar = false;
+                loaderClose();
+                return false;
+            }  
+            if (isEmpty($("#inputFilePdfGuia").val())) {
+                mostrarAdvertencia("Debe adjuntar pdf de Guía");
+                bandera_generar = false;
+                loaderClose();
+                return false;
+            }               
+        }
 
         dataFilasSeleccionadas.forEach(function (detalleItem, idx) {
             var arrayDistribucionQR = [];
@@ -230,6 +259,30 @@ $(document).ready(function () {
                     }
                 }
             );
+        }
+    });
+
+
+    $('#inputFilePdfGuia').change(function () {
+        lstDocumentoArchivos = [];
+        var archivo = $(this).val().split('\\').pop();  // Obtener solo el nombre del archivo
+        var nombreReducido = archivo.length > 25 ? archivo.slice(0, 10) + "..." + archivo.slice(-10) : archivo;
+
+        $("#text_archivo").html(nombreReducido);
+
+        if (this.files && this.files[0]) {
+            var documento = {};
+            var reader = new FileReader();
+
+            reader.onload = function (e) {
+                documento.data = e.target.result;
+                documento.archivo = archivo;
+                documento.id = "t0";
+                documento.contenido_archivo = "";
+                lstDocumentoArchivos = [documento];
+            };
+
+            reader.readAsDataURL(this.files[0]);
         }
     });
 });
@@ -448,9 +501,11 @@ function visualizarOrdenCompra(id, movimientoId) {
 }
 
 var dataOrganizadorXUnidadMinera = [];
+var dataDocumentoAdjunto = [];
 function onResponseVisualizarOrdenCompra(data) {
     var cont = 0;
     dataOrganizadorXUnidadMinera = data.dataOrganizadorXUnidadMinera;
+    dataDocumentoAdjunto = data.dataDocumentoAdjunto;
 
     cargarDataDocumento(data.dataDocumento);
 
@@ -632,7 +687,11 @@ function cargarDataDocumento(data) {
             html += '</div></div>';
             appendFormDetalle(html);
         });
-        appendFormDetalle('</div>');
+        var html_ = '';
+        if (!isEmpty(dataDocumentoAdjunto)) {
+            html_ = '<div class="form-group col-md-12"><div class="col-lg-4 col-md-4 col-sm-6 col-xs-6"><label>Pdf Guía</label></div><div class="col-lg-8 col-md-8 col-sm-6 col-xs-6">' + dataDocumentoAdjunto[0]['archivo'] + '&nbsp;&nbsp;<a href="util/uploads/documentoAdjunto/' + dataDocumentoAdjunto[0]['nombre'] + '" download="' + dataDocumentoAdjunto[0]['archivo'] + '" target="_blank"><i class="fa fa-cloud-download" style="color:#1ca8dd;"></i></a>' + '</div></div>';
+        }
+        appendFormDetalle(html_ + '</div>');
     }
 }
 
@@ -852,12 +911,14 @@ function eliminardistribucion(count_fila, count_distribucion, indice, unidad_min
 }
 
 function generarDistribucionQR(arrayDatoFila, dataFilasSeleccionadas) {
+    var arrayDatosGuia = [{ "serie_numeroGuia": $("#serie_numeroGuia").val(), "peso": $("#peso").val(), "volumen": $("#volumen").val(), "pdfGuia": lstDocumentoArchivos }]
     ax.setAccion("generarDistribucionQR");
     ax.addParamTmp("arrayDatoFila", arrayDatoFila);
     ax.addParamTmp("documentoId", $("#documentoId").val());
     ax.addParamTmp("almacenId", $("#cboAlmacen").val());
     ax.addParamTmp("dataFilasSeleccionadas", dataFilasSeleccionadas);
     ax.addParamTmp("empresaId", commonVars.empresa);
+    ax.addParamTmp("datosGuia", arrayDatosGuia);
     ax.consumir();
 }
 
@@ -875,6 +936,10 @@ function onResponsegenerarDistribucionQR(data) {
         timer: 2000
     });
     $("#modalDetalle").modal('hide');
+    $("#serie_numeroGuia").val("");
+    $("#peso").val("");
+    $("#volumen").val("");
+    $("#inputFilePdfGuia").val("");
 }
 
 function imprimirPdfQR(id) {
@@ -886,7 +951,7 @@ function imprimirPdfQR(id) {
 
 function importarPdfGuia(data) {
 
-    
+
     ax.setAccion("uploadAdjunto");
     ax.addParamTmp("dataUpload", data);
     ax.consumir();

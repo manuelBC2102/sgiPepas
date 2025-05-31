@@ -14,8 +14,9 @@ if($tipoRequerimientoText == "Compra"){
     $bien_tipo = 2;
 }else if($tipoRequerimientoText == "Servicio"){
     $bien_tipo = 1;
+}else if($tipoRequerimientoText == "Consignación"){
+    $bien_tipo = 3;
 }
-
 $buscar1=  str_replace(' ', '%',$buscar);
 
 $buscarArray=explode(" ", $buscar);

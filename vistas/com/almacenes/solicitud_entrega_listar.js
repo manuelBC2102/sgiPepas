@@ -26,13 +26,6 @@ function onResponseAlmacenar(response) {
             case 'visualizarDetalleEntrega':
                 onResponseVisualizarEntrega(response.data);
                 break;
-            case 'obtenerStockPorBien':
-                onResponseObtenerStockPorBienReserva(response.data, response[PARAM_TAG]);
-                break;
-            case 'generarSalidaSolicitud':
-                dataStockOk = [];
-                onResponseGenerarSalidaSolicitud(response.data);
-                break;
         }
     } else {
         switch (response[PARAM_ACCION_NAME]) {
@@ -226,10 +219,8 @@ function buscarEntregas() {
             {
                 "render": function (data, type, row) {
                     var acciones = "";
-                    if(row.estado_descripcion != "Atendido"){
-                        acciones += "<a href='#' onclick='visualizarEntrega(" + row.id + ", " + row.movimiento_id + ")'><i class='fa fa-ticket' style='color:green;' title='Realizar entrega'></i></a>&nbsp;&nbsp;";
-                    }
-                    acciones += "<a href='#' onclick='imprimirPdfDespacho(" + row.id + ", " + row.documento_tipo_id + ")'><i class='fa fa-print' style='color:blue;' title='Imprimir pdf'></i></a>&nbsp;";
+                    acciones += "<a href='#' onclick='visualizarEntrega(" + row.id + ", " + row.movimiento_id + ")'><i class='fa fa-eye' style='color:green;' title='Ver detalle programación'></i></a>&nbsp;&nbsp;";
+                    acciones += "<a href='#' onclick='imprimirPdfSolicitudEntrega(" + row.id + ", " + row.documento_tipo_id + ")'><i class='fa fa-print' style='color:blue;' title='Imprimir Qr de paquetes'></i></a>&nbsp;";
                     return acciones;
                 },
                 "targets": 6
@@ -244,25 +235,24 @@ function buscarEntregas() {
     });
 }
 
+function nuevoFormSolicitudEntrega() {
+    cargarDiv('#window', 'vistas/com/almacenes/entrega_form_tablas.php?almacenId=' + select2.obtenerValor("cboAlmacen"));
+}
 
 function visualizarEntrega(id, movimientoId) {
     loaderShow();
-    $("#documentoId").val(id);
     ax.setAccion("visualizarDetalleEntrega");
     ax.addParamTmp("id", id);
     ax.addParamTmp("movimientoId", movimientoId);
     ax.consumir();
 }
 
-var dataDetalle = [];
 function onResponseVisualizarEntrega(data) {
     var cont = 0;
-    var cont_ = 0;
 
     cargarDataDocumento(data.dataDocumento);
 
     if (!isEmpty(data.detalle)) {
-        dataDetalle = data.detalle;
         $('input[type=checkbox]').prop('checked', false);
         $("#modalDetalle").modal('show');
         $('#dtmodalDetalle').dataTable({
@@ -275,7 +265,6 @@ function onResponseVisualizarEntrega(data) {
                 { "data": "bien_descripcion", "width": "24%", "sClass": "alignLeft" },
                 { "data": "unidad_medida_descripcion", "width": "10%", "sClass": "alignCenter" },
                 { "data": "cantidad", "width": "9%", "sClass": "alignCenter" },
-                { "data": "movimiento_bien_id", "width": "5%", "sClass": "alignCenter" },
             ],
             columnDefs: [
                 {
@@ -299,21 +288,9 @@ function onResponseVisualizarEntrega(data) {
                 },
                 {
                     "render": function (data, type, row) {
-                        var cantidad_entrega = row.cantidad_entrega;
-                        return devolverDosDecimales((data - cantidad_entrega));
+                        return devolverDosDecimales(data);
                     },
                     "targets": 3
-                },
-                {
-                    "render": function (data, type, row) {
-                        var acciones  = "";
-                        if(row.bandera_entrega != 3){
-                            acciones = "<a href='#' onclick='registrarEntrega(" + row.bien_id + ", " + cont_ + "," + row.unidad_medida_id + ")'><i class='fa fa-random' style='color:green;' title='Visualizar stock'></i></a>&nbsp;&nbsp;";
-                        }
-                        cont_++;
-                        return acciones;
-                    },
-                    "targets": 4
                 },
             ],
             "dom": '<"top">rt<"bottom"<"col-md-3"l><"col-md-9"p><"col-md-12"i>><"clear">',
@@ -400,203 +377,9 @@ function appendFormDetalle(html) {
     $("#formularioDetalleDocumento").append(html);
 }
 
-
-function registrarEntrega(bienId, indice, unidadMedidaId) {
-    $('#modalDetalle').modal('hide');
-    ax.setAccion("obtenerStockPorBien");
-    ax.addParamTmp("bienId", bienId);
-    ax.addParamTmp("indice", indice);
-    ax.addParamTmp("almacenId", select2.obtenerValor("cboAlmacen"));
-    ax.addParamTmp("unidadMedidaId", unidadMedidaId);
-    ax.setTag(indice);
-    ax.consumir();
-}
-
-var dataStockReserva = null;
-function onResponseObtenerStockPorBienReserva(dataStock, indice) {
-    $("#txtFila").val(indice);
-    dataStockReserva = dataStock;
-    var dataFiltrado = dataDetalle.filter(function (obj) {
-        return obj.bien_id == dataStock[0].bien_id;
-    });
-    $("#txtCantidad").val(dataFiltrado[0].cantidad);
-    $("#txtMovimientoBienId").val(dataFiltrado[0].movimiento_bien_id);
-    $("#txtMovimientoId").val(dataFiltrado[0].movimiento_id);
-
-
-    if (!isEmpty(dataStockOk)) {
-        var dataFiltradoStockModal = dataStockOk.filter(function (obj) {
-            return obj.bien_id == dataFiltrado[0].bien_id;
-        });
-        var dataFiltradoStock = dataStockOk.filter(function (obj) {
-            return obj.bien_id != dataFiltrado[0].bien_id;
-        });
-        dataStockOk = dataFiltradoStock;
-    }
-
-    var tituloModal = '<strong>Strock</strong><br><strong>' + dataFiltrado[0].bien_descripcion + '</strong>';
-    $('.modal-title-stock').empty();
-    $('.modal-title-stock').append(tituloModal);
-
-    var data = [];
-
-    if (!isEmpty(dataStock)) {
-        $.each(dataStock, function (i, item) {
-            if (item.stock != 0) {
-                data.push(item);
-            }
-        });
-    }
-    var i = 0;
-
-    if (!isEmptyData(data)) {
-        $('#datatableReservaStock').dataTable({
-            order: [[0, "desc"]],
-            "ordering": false,
-            "data": data,
-            "columns": [
-                { "data": "organizador_descripcion" },
-                { "data": "unidad_medida_descripcion" },
-                { "data": "stock", "sClass": "alignRight" },
-                { "data": "stock", "sClass": "alignRight" }
-            ],
-            columnDefs: [
-                {
-                    "render": function (data, type, row) {
-                        return parseFloat(data).formatMoney(2, '.', ',');
-                    },
-                    "targets": 2
-                },
-                {
-                    "render": function (data, type, row) {
-                        var html = "";
-
-                        var cantidad = '';
-                        if (!isEmpty(dataFiltradoStockModal)) {
-                            dataFiltradoStockModal.forEach(element => {
-                                if (element.bien_id == row.bien_id && element.organizador_id == row.organizador_id) {
-                                    cantidad = element.reserva;
-                                }
-                            });
-                        }
-                        html = "<div class=\"input-group col-lg-6 col-md-6 col-sm-6 col-xs-6\">" +
-                            "<input type=\"number\" id=\"txtCantidadReserva_" + row.organizador_id + "\" name=\"txtCantidadReserva_" + row.organizador_id + "\" class=\"form-control\" required=\"\" aria-required=\"true\" style=\"text-align: right;\" value='" + cantidad + "' /></div><input type=\"hidden\" id=\"txtorganizadorReserva_" + row.organizador_id + "\" name=\"txtorganizadorReserva_" + row.organizador_id + "\" />";
-                        i++;
-                        return html;
-                    },
-                    "targets": 3
-                },
-            ],
-            "destroy": true
-        });
-    } else {
-        var table = $('#datatableReservaStock').DataTable();
-        table.clear().draw();
-    }
-
-    $('#modalReservaStockBien').modal('show');
-}
-
-var dataStockModal = {};
-var dataStockOk = [];
-function generarReserva() {
-    var bandera_modalReserva = true;
-    var indice = $("#txtFila").val();
-    var reserva_validacion = [];
-    $.each(dataStockReserva, function (i, item) {
-        var reserva = parseInt($("#txtCantidadReserva_" + item.organizador_id).val());
-        if (reserva > 0 && !isEmpty(reserva)) {
-            reserva_validacion.push(item.organizador_id);
-        }
-    });
-
-    if (reserva_validacion.length == 0) {
-        mostrarAdvertencia("No se puede guardar la distribucion, porque no se ha registrado un valor");
-        return false;
-    }
-    var total_reserva = 0;
-    $.each(dataStockReserva, function (i, item) {
-        dataStockModal = {};
-        if (reserva_validacion.includes(item.organizador_id)) {
-            var reserva = parseInt($("#txtCantidadReserva_" + item.organizador_id).val());
-            total_reserva += reserva;
-
-            dataStockModal.reserva = reserva;
-            dataStockModal.bien_id = item.bien_id;
-            dataStockModal.bien_descripcion = item.bien_descripcion;
-            dataStockModal.organizador_id = item.organizador_id;
-            dataStockModal.unidad_medida_id = item.unidad_medida_id;
-            dataStockModal.movimiento_bien_id = $("#txtMovimientoBienId").val();
-            dataStockModal.movimiento_id = $("#txtMovimientoId").val();
-            dataStockModal.documento_id = $("#documentoId").val();
-            dataStockOk.push(dataStockModal);
-        }
-    });
-    var cantidad_ = parseInt($("#txtCantidad").val());
-
-    if (total_reserva > cantidad_) {
-        bandera_modalReserva = false;
-        mostrarAdvertencia("La suma de la cantidad a entregar no es igual a la solicitada");
-        return false;
-    }
-
-    if (bandera_modalReserva) {
-        $('#modalReservaStockBien').modal('hide');
-        $('#modalDetalle').modal('show');
-        var tabla = $('#dtmodalDetalle').DataTable();
-        var fila = tabla.row(indice).node();
-        $(fila).css('background-color', 'mediumspringgreen');
-    }
-}
-
-function generarSalidaSolicitud() {
-    ax.setAccion("generarSalidaSolicitud");
-    ax.addParamTmp("dataStockOk", dataStockOk);
-    ax.consumir();
-}
-
-function cerrarReserva() {
-    swal(
-        {
-            title: "¿Desea continuar?",
-            text: "Al cancelar se perderan los datos a entregar.",
-            type: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#33b86c",
-            confirmButtonText: "Si!",
-            cancelButtonColor: "#d33",
-            cancelButtonText: "No!",
-            closeOnConfirm: true,
-            closeOnCancel: true,
-        },
-        function (isConfirm) {
-            if (isConfirm) {
-                $('#modalReservaStockBien').modal('hide');
-                $('#modalDetalle').modal('show');
-                var indice = $("#txtFila").val();
-                var tabla = $('#dtmodalDetalle').DataTable();
-                var fila = tabla.row(indice).node();
-                $(fila).css('background-color', '');
-            } else {
-                loaderClose();
-            }
-        }
-    );
-}
-
-function onResponseGenerarSalidaSolicitud(data) {
-    swal({
-        title: data.tipo_mensaje == 1 ? "Confirmación" : "Advertencia",
-        text: data.mensaje,
-        type: data.tipo_mensaje == 1 ? "success" : "warning",
-        html: true,
-        showCancelButton: false,
-        confirmButtonColor: "#33b86c",
-        confirmButtonText: "Aceptar",
-        closeOnConfirm: true,
-        closeOnCancel: true,
-        timer: 2000
-    });
-     $('#modalDetalle').modal('hide');
-    buscarPorCriterios();
+function imprimirPdfSolicitudEntrega(id) {
+    const link = document.createElement('a');
+    link.href = URL_BASE + "vistas/com/almacenes/solicitud_entrega_pdf.php?id=" + id;
+    link.target = '_blank';
+    link.click();
 }

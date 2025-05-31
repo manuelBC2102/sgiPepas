@@ -117,7 +117,8 @@ class AlmacenesControlador extends AlmacenIndexControlador
         $almacenId = $this->getParametro("almacenId");
         $dataFilasSeleccionadas = $this->getParametro("dataFilasSeleccionadas");
         $empresaId = $this->getParametro("empresaId");
-        return AlmacenesNegocio::create()->generarDistribucionQR($arrayDatoFila, $usuarioId, $documentoId, $almacenId, $dataFilasSeleccionadas, $empresaId);
+        $datosGuia = $this->getParametro("datosGuia");
+        return AlmacenesNegocio::create()->generarDistribucionQR($arrayDatoFila, $usuarioId, $documentoId, $almacenId, $dataFilasSeleccionadas, $empresaId, $datosGuia);
     }
 
     public function uploadAdjunto()
@@ -248,6 +249,7 @@ class AlmacenesControlador extends AlmacenIndexControlador
     //Entrega
     public function obtenerEntrega()
     {
+        $opcionId = $this->getOpcionId();
         $usuarioId = $this->getUsuarioId();
         $criterios = $this->getParametro("criterios");
         $elementosFiltrados = $this->getParametro("length");
@@ -255,8 +257,8 @@ class AlmacenesControlador extends AlmacenIndexControlador
         $columns = $this->getParametro("columns");
         $start = $this->getParametro("start");
 
-        $data = AlmacenesNegocio::create()->obtenerEntregaXCriterios($criterios, $elementosFiltrados, $columns, $order, $start, $usuarioId);
-        $response_cantidad_total = AlmacenesNegocio::create()->obtenerCantidadEntregaXCriterios($criterios, $columns, $order, $usuarioId);
+        $data = AlmacenesNegocio::create()->obtenerEntregaXCriterios($criterios, $elementosFiltrados, $opcionId, $columns, $order, $start, $usuarioId);
+        $response_cantidad_total = AlmacenesNegocio::create()->obtenerCantidadEntregaXCriterios($criterios, $opcionId, $columns, $order, $usuarioId);
         $response_cantidad_total[0]['total'];
         $elementosFiltrados = $response_cantidad_total[0]['total'];
         $elementosTotales = $response_cantidad_total[0]['total'];
@@ -305,7 +307,7 @@ class AlmacenesControlador extends AlmacenIndexControlador
         $indice = $this->getParametro("indice");
         $unidadMedidaId = $this->getParametro("unidadMedidaId");
         $organizadorIds = AlmacenesNegocio::create()->obtenerOrganizadorHijos($organizadorId);
-        $stock = AlmacenesNegocio::create()->obtenerStockActual($bienId, $indice, $unidadMedidaId, $organizadorIds, 1);
+        $stock = AlmacenesNegocio::create()->obtenerStockActual($bienId, $indice, $unidadMedidaId, $organizadorIds, 1, $organizadorId);
         return $stock;
     }
 
@@ -365,6 +367,25 @@ class AlmacenesControlador extends AlmacenIndexControlador
         return AlmacenesNegocio::create()->visualizarDetalleEntrega($id, $movimientoId);
     }
 
+    public function obtenerUnidadMedida()
+    {
+        //        $indice = $this->getParametro("indice");
+        $bienId = $this->getParametro("bienId");
+        $unidadMedidaId = $this->getParametro("unidadMedidaId");
+        $precioTipoId = $this->getParametro("precioTipoId");
+        $monedaId = $this->getParametro("monedaId");
+        $fechaEmision = $this->getParametro("fechaEmision");
+        //        $opcionId = $this->getOpcionId();
+
+        return MovimientoNegocio::create()->obtenerUnidadMedida($bienId, $unidadMedidaId, $precioTipoId, $monedaId, $fechaEmision);
+    }
+
+    public function generarSalidaSolicitud(){
+        $this->setTransaction();
+        $usuarioId = $this->getUsuarioId();
+        $dataStockOk = $this->getParametro("dataStockOk");
+        return AlmacenesNegocio::create()->generarSalidaSolicitud($dataStockOk, $usuarioId);
+    }
     //MinaApp
     public function obtener_datosOrganizador()
     {

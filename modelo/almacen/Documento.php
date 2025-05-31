@@ -925,4 +925,19 @@ class Documento extends ModeloBase {
         $this->commandAddParameter(":vin_documento_tipo_id", $documentoTipoId);
         return $this->commandGetData();
     }
+
+    function obtenerDocumentoAdjuntoXDocumentoCotizacion($Id, $documentoId) {
+        $this->commandPrepare("sp_documento_adjunto_obtenerXDocumentoCotizacion");
+        $this->commandAddParameter(":vin_id", $Id);
+        $this->commandAddParameter(":vin_documento_id", $documentoId);
+        return $this->commandGetData();
+    }
+
+    function obtenerUltimoAprobadorXDocumentoIdXDocumentoTipoId($documentoId, $documentoTipoId) {
+        $this->commandPrepare("sp_obtener_ultimoAprobadorDocumentoIdXDocumentoTipoId");
+        $this->commandAddParameter(":vin_documento_id", $documentoId);
+        $this->commandAddParameter(":vin_documento_tipo_id", $documentoTipoId);
+        return $this->commandGetData();
+    }
+    
 }
