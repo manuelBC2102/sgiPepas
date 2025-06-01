@@ -271,7 +271,7 @@ class RequerimientoNegocio extends ModeloNegocioBase
         return  $respuesta;
     }
 
-    public function generarMatrizDocumento($documentoTipoId, $documentoId, $movimientoId, $usuarioId, $datosDocumento)
+    public function generarMatrizDocumento($documentoTipoId, $documentoId, $movimientoId, $usuarioId, $datosDocumento = null)
     {
         $matrizUsuario = null;
         $areaId = null;
@@ -379,10 +379,8 @@ class RequerimientoNegocio extends ModeloNegocioBase
         $data = Requerimiento::create()->obtenerSeguimientoRequerimientoXCriterios($bienIds, $bienTipoIds, $fechaInicio, $fechaFin, $serie, $numero);
         $ids = array_values(array_unique(array_column($data, 'documento_id')));
         $bien_ids = array_values(array_unique(array_column($data, 'bien_id')));
-
+            
         $arrayDocumentos = [];
-        $arrayDocumentosCotizacion = [];
-        $arrayDocumentosOC = [];
         foreach ($ids as $item) {
             $usuario_estado = DocumentoNegocio::create()->obtenerDocumentoDocumentoEstadoXdocumentoId($item, "0,1");
             $dataEsatdoRQ = "";
@@ -396,87 +394,106 @@ class RequerimientoNegocio extends ModeloNegocioBase
                     $dataEsatdoRQFecha .= "<strong>" . ($indexUsuarioEstado + 1) . ".</strong> " . $usuario_estadoItem['fecha_creacion'] . "<br>";
                 }
             }
-
             $arrayDocumentos [$item ] = array("aprobacionRQ" => $dataEsatdoRQ, "aprobacionRQFecha" => $dataEsatdoRQFecha);
-
-            $arrayDocumentosRelacionados = [];
-            $dataRelacionada = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoIdXDt($item, "".Configuraciones::GENERAR_COTIZACION.",".Configuraciones::GENERAR_COTIZACION_SERVICIO."");
-            $dataRelacionadaArea = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoIdXDt($item, Configuraciones::REQUERIMIENTO_AREA);
-
-            $generarCotizacionBase = empty($dataRelacionadaArea) ? $dataRelacionada : 
-                DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoIdXDt($dataRelacionadaArea[0]['documento_relacionado_id'], "".Configuraciones::GENERAR_COTIZACION.",".Configuraciones::GENERAR_COTIZACION_SERVICIO."");
-
-            if (!empty($generarCotizacionBase)) {
-                $cotizacionDoc = $generarCotizacionBase[0];
-                $arrayDocumentosRelacionados[] = $cotizacionDoc;
-
-                $cotizaciones = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoIdXDt($cotizacionDoc['documento_relacionado_id'], "".Configuraciones::COTIZACIONES.",". Configuraciones::COTIZACION_SERVICIO."");
-                if (!empty($cotizaciones)) {
-                    $ordenes = DocumentoNegocio::create()->obtenerDocumentosRelacionadosXDocumentoIdXDt($cotizaciones[0]['documento_relacionado_id'], "".Configuraciones::ORDEN_COMPRA.",".Configuraciones::ORDEN_SERVICIO."");
-
-                    if (!empty($ordenes)) {
-                        $arrayDocumentosRelacionados[] = $ordenes[0];
-                    }
-                }
-            }
-
-            foreach ($arrayDocumentosRelacionados as $indexUsuarioEstado => $itemRelacion) {
-                $dataUsuarioGenerador = "";
-                $dataUsuarioGeneradorEstado = "";
-                $dataUsuarioGeneradorFecha = "";
-                $dataOC = "";
-                $dataOCEstado = "";
-                $dataOCFecha = "";
-                $movimientoBien = MovimientoBien::create()->obtenerXIdMovimiento($itemRelacion['movimiento_id']);
-                $bien_idsmovimiento = array_values(array_unique(array_column($movimientoBien, 'bien_id')));
-
-                $bandera_agregar = false;
-                foreach ($bien_idsmovimiento as $itemd) {
-                    if (in_array($itemd, $bien_ids)) {
-                        $bandera_agregar = true;
-                    }
-                }
-                if ($itemRelacion['documento_tipo_id'] == Configuraciones::GENERAR_COTIZACION || $itemRelacion['documento_tipo_id'] == Configuraciones::GENERAR_COTIZACION_SERVICIO) {
-                //     foreach ($movimientoBien as $itemd) {
-                //         if ($dataItem['bien_id'] == $itemd['bien_id']) {
-                //             $bandera_agregar = true;
-                //         }
-                //     }
-                    if ($bandera_agregar) {
-                        if ($bandera == 1) {
-                            $dataUsuarioGenerador .= $itemRelacion['solicitante_nombre_completo'] . "\n";
-                            $dataUsuarioGeneradorEstado .= $itemRelacion['documento_estado'] . "\n";
-                            $dataUsuarioGeneradorFecha .= $itemRelacion['fecha_creacion'] . "\n";
-                        } else {
-                            $dataUsuarioGenerador .= $itemRelacion['solicitante_nombre_completo'] . "<br>";
-                            $dataUsuarioGeneradorEstado .= $itemRelacion['documento_estado'] . "<br>";
-                            $dataUsuarioGeneradorFecha .= $itemRelacion['fecha_creacion'] . "<br>";
-                        }
-                        $arrayDocumentosCotizacion [$item ] = array("usuarioGenerador" => $dataUsuarioGenerador, "usuarioGeneradorEstado" => $dataUsuarioGeneradorEstado, "usuarioGeneradorFecha" => $dataUsuarioGeneradorFecha);
-                    }
-                }
-                if ($itemRelacion['documento_tipo_id'] == Configuraciones::ORDEN_COMPRA || $itemRelacion['documento_tipo_id'] == Configuraciones::ORDEN_SERVICIO) {
-                    if($bandera_agregar){
-                        if($bandera == 1){
-                            $dataOC .= $itemRelacion['serie_numero']. "\n";
-                            $dataOCEstado .= $itemRelacion['documento_estado']. "\n";
-                            $dataOCFecha .= $itemRelacion['fecha_creacion']. "\n";
-                        }else{
-                            $dataOC .= $itemRelacion['serie_numero']. "<br>";
-                            $dataOCEstado .= $itemRelacion['documento_estado']. "<br>";
-                            $dataOCFecha .= $itemRelacion['fecha_creacion']. "<br>";
-                        }
-                        $arrayDocumentosOC [$item ] = array("OC" => $dataOC, "OCEstado" => $dataOCEstado, "OCFecha" => $dataOCFecha);
-                    }
-                }
-            }
         }
 
+        $convertirCadena = str_replace(["(", ")"], "",  Util::convertirArrayXCadena(array_values($bien_ids)));
         foreach ($data as $index => $dataItem) {
             $documentoId = $dataItem['documento_id'];
-
+                        
             $data[$index]['aprobacionRQ'] = $arrayDocumentos[$documentoId]['aprobacionRQ'];
             $data[$index]['aprobacionRQFecha'] = $arrayDocumentos[$documentoId]['aprobacionRQFecha'];
+
+            $resMovimientoArea_CuadroComparativo = MovimientoBien::create()->movimientoBienDetalleXValorCadena($dataItem['movimiento_bien_id']);
+            $dataUsuarioGenerador = "";
+            $dataUsuarioGeneradorEstado = "";
+            $dataUsuarioGeneradorFecha = "";
+            $dataOC = "";
+            $dataOCEstado = "";    
+            $dataOCFecha = "";
+            $arrayDocumentosCotizacion = [];
+            $arrayDocumentosOC = [];
+            if(!ObjectUtil::isEmpty($resMovimientoArea_CuadroComparativo)){
+                if($resMovimientoArea_CuadroComparativo[0]['documento_tipo_id'] == Configuraciones::REQUERIMIENTO_AREA){
+                    $resMovimientoBienDetalle_ = MovimientoBien::create()->movimientoBienDetalleXValorCadena($resMovimientoArea_CuadroComparativo[0]['id']);
+                    foreach($resMovimientoBienDetalle_ as $indexDetalle => $itemMovimientoBienDetalle){
+                        $movimientoBien = MovimientoBien::create()->obtenerXIdMovimientoXBienId($itemMovimientoBienDetalle['movimiento_id'], $convertirCadena);
+                        $bandera_agregar = false;
+                        if(!ObjectUtil::isEmpty($movimientoBien)) {
+                            $bandera_agregar = true;
+                        }
+                        if ($bandera == 1) {
+                            $dataUsuarioGenerador .= $itemMovimientoBienDetalle['nombre_completo'] . "\n";
+                            $dataUsuarioGeneradorEstado .= $itemMovimientoBienDetalle['documento_estado'] . "\n";
+                            $dataUsuarioGeneradorFecha .= $itemMovimientoBienDetalle['fecha_creacion'] . "\n";
+                        } else {
+                            $dataUsuarioGenerador .= "<strong>" . ($indexDetalle + 1) . ".</strong> " . $itemMovimientoBienDetalle['nombre_completo'] . "<br>";
+                            $dataUsuarioGeneradorEstado .= "<strong>" . ($indexDetalle + 1) . ".</strong> " . $itemMovimientoBienDetalle['documento_estado'] . "<br>";
+                            $dataUsuarioGeneradorFecha .= "<strong>" . ($indexDetalle + 1) . ".</strong> " . $itemMovimientoBienDetalle['fecha_creacion'] . "<br>";
+                        }
+                        $arrayDocumentosCotizacion [$documentoId ] = array("usuarioGenerador" => $dataUsuarioGenerador, "usuarioGeneradorEstado" => $dataUsuarioGeneradorEstado, "usuarioGeneradorFecha" => $dataUsuarioGeneradorFecha);
+
+                        $resMovimientoBienDetalleOC = MovimientoBien::create()->movimientoBienDetalleXValorCadena($itemMovimientoBienDetalle['id']);
+                        foreach($resMovimientoBienDetalleOC as $itemOC){
+                            $movimientoBien = MovimientoBien::create()->obtenerXIdMovimientoXBienId($itemOC['movimiento_id'], $convertirCadena);
+                            $bandera_agregar = false;
+                            if(!ObjectUtil::isEmpty($movimientoBien)) {
+                                $bandera_agregar = true;
+                            }
+                            if($bandera_agregar){
+                                if($bandera == 1){
+                                    $dataOC .= $itemOC['serie_numero']. "\n";
+                                    $dataOCEstado .= $itemOC['documento_estado']. "\n";
+                                    $dataOCFecha .= $itemOC['fecha_creacion']. "\n";
+                                }else{
+                                    $dataOC .= "<strong>" . ($indexDetalle + 1) . ".</strong> " . $itemOC['serie_numero']. "<br>";
+                                    $dataOCEstado .= "<strong>" . ($indexDetalle + 1) . ".</strong> " . $itemOC['documento_estado']. "<br>";
+                                    $dataOCFecha .= "<strong>" . ($indexDetalle + 1) . ".</strong> " . $itemOC['fecha_creacion']. "<br>";
+                                }
+                                $arrayDocumentosOC [$documentoId ] = array("OC" => $dataOC, "OCEstado" => $dataOCEstado, "OCFecha" => $dataOCFecha);
+                            }
+                        }
+                    }
+                }else{
+                    // $resMovimientoBienDetalleOC = MovimientoBien::create()->movimientoBienDetalleXValorCadena($resMovimientoArea_CuadroComparativo[0]['id']);
+                    $movimientoBien = MovimientoBien::create()->obtenerXIdMovimientoXBienId($resMovimientoArea_CuadroComparativo[0]['movimiento_id'], $convertirCadena);
+                    $bandera_agregar = false;
+                    if(!ObjectUtil::isEmpty($movimientoBien)) {
+                        $bandera_agregar = true;
+                    }
+                    if ($bandera == 1) {
+                        $dataUsuarioGenerador .= $resMovimientoArea_CuadroComparativo[0]['nombre_completo'] . "\n";
+                        $dataUsuarioGeneradorEstado .= $resMovimientoArea_CuadroComparativo[0]['documento_estado'] . "\n";
+                        $dataUsuarioGeneradorFecha .= $resMovimientoArea_CuadroComparativo[0]['fecha_creacion'] . "\n";
+                    } else {
+                        $dataUsuarioGenerador .= $resMovimientoArea_CuadroComparativo[0]['nombre_completo'] . "<br>";
+                        $dataUsuarioGeneradorEstado .= $resMovimientoArea_CuadroComparativo[0]['documento_estado'] . "<br>";
+                        $dataUsuarioGeneradorFecha .= $resMovimientoArea_CuadroComparativo[0]['fecha_creacion'] . "<br>";
+                    }
+                    $arrayDocumentosCotizacion [$documentoId ] = array("usuarioGenerador" => $dataUsuarioGenerador, "usuarioGeneradorEstado" => $dataUsuarioGeneradorEstado, "usuarioGeneradorFecha" => $dataUsuarioGeneradorFecha);
+
+                    $resMovimientoBienDetalleOC = MovimientoBien::create()->movimientoBienDetalleXValorCadena($resMovimientoArea_CuadroComparativo[0]['id']);
+                    foreach($resMovimientoBienDetalleOC as $indexDetalle => $itemMovimientoBienDetalle){
+                        $movimientoBien = MovimientoBien::create()->obtenerXIdMovimientoXBienId($itemMovimientoBienDetalle['movimiento_id'], $convertirCadena);
+                        $bandera_agregar = false;
+                        if(!ObjectUtil::isEmpty($movimientoBien)) {
+                            $bandera_agregar = true;
+                        }
+                        if($bandera_agregar){
+                            if($bandera == 1){
+                                $dataOC .= $itemMovimientoBienDetalle['serie_numero']. "\n";
+                                $dataOCEstado .= $itemMovimientoBienDetalle['documento_estado']. "\n";
+                                $dataOCFecha .= $itemMovimientoBienDetalle['fecha_creacion']. "\n";
+                            }else{
+                                $dataOC .= "<strong>" . ($indexDetalle + 1) . ".</strong> " . $itemMovimientoBienDetalle['serie_numero']. "<br>";
+                                $dataOCEstado .= "<strong>" . ($indexDetalle + 1) . ".</strong> " . $itemMovimientoBienDetalle['documento_estado']. "<br>";
+                                $dataOCFecha .= "<strong>" . ($indexDetalle + 1) . ".</strong> " . $itemMovimientoBienDetalle['fecha_creacion']. "<br>";
+                            }
+                            $arrayDocumentosOC [$documentoId ] = array("OC" => $dataOC, "OCEstado" => $dataOCEstado, "OCFecha" => $dataOCFecha);
+                        }
+                    }
+                }
+            }
 
             $data[$index]['usuarioGenerador'] = $arrayDocumentosCotizacion[$documentoId]['usuarioGenerador'];
             $data[$index]['usuarioGeneradorEstado'] = $arrayDocumentosCotizacion[$documentoId]['usuarioGeneradorEstado'];

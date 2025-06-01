@@ -21,7 +21,7 @@ function onResponseReporteBalance(response) {
         switch (response[PARAM_ACCION_NAME]) {
             case 'obtenerConfiguracionesInicialesSeguimientoRequerimiento':
                 onResponseObtenerConfiguracionesInicialesSeguimientoRequerimiento(response.data);
-                buscarSeguimiento();
+                // buscarSeguimiento();
                 break;
             case 'obtenerDataSeguimientoRequerimiento':
                 loaderClose();
