@@ -12,10 +12,17 @@ class AlmacenesControlador extends AlmacenIndexControlador
     {
         $usuarioId = $this->getUsuarioId();
         $documento_tipo = $this->getParametro("documento_tipo");
+        $recepcion = $this->getParametro("recepcion");
         if (!ObjectUtil::isEmpty($documento_tipo)) {
             $data->almacenes = OrganizadorNegocio::create()->getOrganizador(Configuraciones::ALMACEN_LIMA);
         } else {
             $data = AlmacenesNegocio::create()->obtenerConfiguracionInicialListadoDocumentos($usuarioId);
+            if (!ObjectUtil::isEmpty($recepcion)) {
+                $filtradoAlmacenes = array_values(array_filter($data->almacenes, function ($item) {
+                    return $item['id'] != Configuraciones::ALMACEN_LIMA;
+                }));
+                $data->almacenes = $filtradoAlmacenes;
+            }
         }
 
         return $data;
@@ -121,12 +128,12 @@ class AlmacenesControlador extends AlmacenIndexControlador
         return AlmacenesNegocio::create()->generarDistribucionQR($arrayDatoFila, $usuarioId, $documentoId, $almacenId, $dataFilasSeleccionadas, $empresaId, $datosGuia);
     }
 
-    public function uploadAdjunto()
+    public function editarDistribucionQR()
     {
         $this->setTransaction();
         $usuarioId = $this->getUsuarioId();
-        $dataUpload = $this->getParametro("dataUpload");
-        return AlmacenesNegocio::create()->uploadAdjunto($dataUpload, $usuarioId);
+        $arrayDatoFila = $this->getParametro("arrayDatoFila");
+        return AlmacenesNegocio::create()->editarDistribucionQR($arrayDatoFila, $usuarioId);
     }
 
     //Despacho Lima
@@ -279,7 +286,7 @@ class AlmacenesControlador extends AlmacenIndexControlador
         $almacenId = $this->getParametro("almacenId");
         $movimientoId = Documento::create()->obtenerDocumentoDatos($documentoId)[0]['movimiento_id'];
 
-        $data =  MovimientoNegocio::create()->obtenerDocumentoRelacion(Configuraciones::SOLICITUD_REQUERIMIENTO, Configuraciones::ENTREGA, $movimientoId, $documentoId, $opcionId, null);
+        $data =  MovimientoNegocio::create()->obtenerDocumentoRelacion(Configuraciones::SOLICITUD_REQUERIMIENTO, Configuraciones::SOLICITUD_ENTREGA, $movimientoId, $documentoId, $opcionId, null);
         $data->organizadoresDetalle = AlmacenesNegocio::create()->getDataOrganizadoresHijos($almacenId);
         return $data;
     }
@@ -316,11 +323,9 @@ class AlmacenesControlador extends AlmacenIndexControlador
         $bienId = $this->getParametro("bienId");
         $unidadMedidaId = $this->getParametro("unidadMedidaId");
         $indice = $this->getParametro("indice");
-        $empresaId = $this->getParametro("empresaId");
         $almacenId = $this->getParametro("almacenId");
         return AlmacenesNegocio::create()->obtenerStockPorBien($bienId, $unidadMedidaId, $indice, $almacenId);
     }
-
 
     public function enviar()
     {
@@ -380,11 +385,87 @@ class AlmacenesControlador extends AlmacenIndexControlador
         return MovimientoNegocio::create()->obtenerUnidadMedida($bienId, $unidadMedidaId, $precioTipoId, $monedaId, $fechaEmision);
     }
 
-    public function generarSalidaSolicitud(){
+    public function generarSalidaSolicitud()
+    {
         $this->setTransaction();
         $usuarioId = $this->getUsuarioId();
         $dataStockOk = $this->getParametro("dataStockOk");
         return AlmacenesNegocio::create()->generarSalidaSolicitud($dataStockOk, $usuarioId);
+    }
+    //Reporte inventario
+    public function obtenerConfiguracionesInicialesInventario()
+    {
+        $usuarioId = $this->getUsuarioId();
+        return AlmacenesNegocio::create()->obtenerConfiguracionesInicialesInventario($usuarioId);
+    }
+
+    public function obtenerDataInventario()
+    {
+        $criterios = $this->getParametro("criterios");
+        $elementosFiltrados = $this->getParametro("length");
+        $order = $this->getParametro("order");
+        $columns = $this->getParametro("columns");
+        $start = $this->getParametro("start");
+
+        $data = AlmacenesNegocio::create()->obtenerDataInventarioXCriterios($criterios, $elementosFiltrados, $columns, $order, $start);
+        $response_cantidad_total = AlmacenesNegocio::create()->obtenerCantidadDataInventarioXCriterios($criterios, $columns, $order);
+        $response_cantidad_total[0]['total'];
+        $elementosFiltrados = $response_cantidad_total[0]['total'];
+        $elementosTotales = $response_cantidad_total[0]['total'];
+
+        return $this->obtenerRespuestaDataTable($data, $elementosFiltrados, $elementosTotales);
+    }
+
+    public function obtenerReporteStockExcel()
+    {
+        $criterios = $this->getParametro("criterios");
+        return AlmacenesNegocio::create()->obtenerReporteStockExcel($criterios);
+    }
+
+    //Distribucion recepcion mina
+    public function obtenerPaqueteRecepcionMina()
+    {
+        $usuarioId = $this->getUsuarioId();
+        $criterios = $this->getParametro("criterios");
+        $elementosFiltrados = $this->getParametro("length");
+        $order = $this->getParametro("order");
+        $columns = $this->getParametro("columns");
+        $start = $this->getParametro("start");
+
+        $data = AlmacenesNegocio::create()->obtenerPaqueteRecepcionMinaXCriterios($criterios, $elementosFiltrados, $columns, $order, $start, $usuarioId);
+        $response_cantidad_total = AlmacenesNegocio::create()->obtenerCantidadPaqueteRecepcionMinaXCriterios($criterios, $columns, $order, $usuarioId);
+        $response_cantidad_total[0]['total'];
+        $elementosFiltrados = $response_cantidad_total[0]['total'];
+        $elementosTotales = $response_cantidad_total[0]['total'];
+
+        return $this->obtenerRespuestaDataTable($data, $elementosFiltrados, $elementosTotales);
+    }
+
+    public function generarDistribucionRecepcionMina()
+    {
+        $this->setTransaction();
+        $usuarioId = $this->getUsuarioId();
+        $documentoId = $this->getParametro("documentoId");
+        $dataFilasSeleccionadas = $this->getParametro("dataFilasSeleccionadas");
+        return AlmacenesNegocio::create()->generarDistribucionRecepcionMina($documentoId, $dataFilasSeleccionadas, $usuarioId);
+    }
+
+    public function anular()
+    {
+        $this->setTransaction();
+        $documentoId = $this->getParametro("id");
+        $documentoTipoId = $this->getParametro("documentoTipoId");
+        $documentoEstadoId = 2;
+        $usuarioId = $this->getUsuarioId();
+
+        $documentoTipo = DocumentoTipoNegocio::create()->obtenerDocumentoTipoXDocumentoId($documentoId);
+        $idNegocio = $documentoTipo[0]['identificador_negocio'];
+        $documento = DocumentoNegocio::create()->obtenerXId($documentoId, $documentoTipo[0]['id']);
+        $serie = $documento[0]['serie'];
+
+        $respuestaAnular = MovimientoNegocio::create()->anularDocumento($documentoId, $documentoEstadoId, $usuarioId, $idNegocio, $serie);
+
+        return $respuestaAnular;
     }
     //MinaApp
     public function obtener_datosOrganizador()

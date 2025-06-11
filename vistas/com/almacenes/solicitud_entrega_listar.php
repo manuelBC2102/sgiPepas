@@ -71,6 +71,27 @@
                                                 </div>
                                             </li>
                                             <li>
+                                                <div class="form-group col-md-2">
+                                                    <label style="color: #141719;">Serie/Número</label>
+                                                </div>
+                                                <div class="form-group col-md-10">
+                                                    <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                                        <div class="row">
+                                                            <div class="form-group col-md-6">
+                                                                <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                                                    <input type="text" class="form-control" placeholder="Serie" id="txtSerie">
+                                                                </div>
+                                                            </div>
+                                                            <div class="form-group col-md-6">
+                                                                <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                                                    <input type="text" class="form-control" placeholder="Número" id="txtNumero">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </li>                            
+                                            <li>
                                                 <div style="float: right">
                                                     <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                                                         <button id="btnBusqueda" type="button" href="#bg-info" onclick="limpiarBuscadores()" class="btn btn-danger"> <i class="fa fa-close"></i>Cancelar</button>

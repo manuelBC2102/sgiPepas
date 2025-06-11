@@ -272,13 +272,19 @@ function onResponseObtenerMenuXEmpresa(data) {
                         dataMenu += '<a data-toggle="reload" onclick="cargarDivIndex(\'#window\',\'' + URL_BASE + valueHijo.url + '\',\'' + idOpcion + '\',\'' + valueHijo.nombre + '\');';
                         dataMenu += ' active(' + valueHijo.id + ',' + value.id + ');"style="display: table-cell;padding-left: 0px;">';
                         dataMenu += '<i class="' + valueHijo.icono + ' "style="width: 15px;"></i>' + valueHijo.nombre + '</a></li>';
-                    }else if(value.id == 391 || value.id == 405 || value.id == 406){
+                    }else if(value.id == 391 || value.id == 405 || value.id == 406  || value.id == 411){
                         if(valueHijo.id == 409){
                             urlNuevoMov='servicio_form_tablas.php?tipoInterfaz=2';
+                        }else if(valueHijo.id == 414){
+                            urlNuevoMov='despacho_lima_form_tablas.php?tipoInterfaz=2';
+                       }else if(valueHijo.id == 416){
+                            urlNuevoMov='entrega_form_tablas.php?tipoInterfaz=2';
                         }else if(valueHijo.url.indexOf('tipoInterfaz=4')!=-1){
                             urlNuevoMov='movimiento_form_dua.php?tipoInterfaz=2';
                         }else if(valueHijo.url.indexOf('tipoInterfaz=3')!=-1){
                             urlNuevoMov='movimiento_form_tablas_atencion.php?tipoInterfaz=3';
+                        }else if(valueHijo.id == 278){
+                            urlNuevoMov='movimiento_form_tablas.php?tipoInterfaz=2';
                         }else {
                             urlNuevoMov='compra_form_tablas.php?tipoInterfaz=2';
                         }
@@ -286,9 +292,17 @@ function onResponseObtenerMenuXEmpresa(data) {
                         idOpcion = (isEmpty(valueHijo["opcion_id"])) ? valueHijo.id : valueHijo["opcion_id"];
                         $id_li_hijo = "m" + valueHijo.id;
                         dataMenu += '<li id="' + $id_li_hijo + '">';
-                        if(!(valueHijo.nombre).includes("Aprobación") && !(valueHijo.nombre).includes("factura") && valueHijo.nombre != "Cotizaciones de servicio" && valueHijo.nombre != "Cotizaciones" && !(valueHijo.nombre).includes("Seguimiento")){
+                        if((valueHijo.id == 414) || (valueHijo.id == 416)){
+                            dataMenu += '<a style="display: table-cell; padding-right: 5px;"';                                 
+                            dataMenu += ' onclick="cargarDivIndex(\'#window\',\'' + URL_BASE + 'vistas/com/almacenes/'+ urlNuevoMov + '\',\'' + idOpcion + '\',\'' + valueHijo.nombre + '\');active(' + valueHijo.id + ',' + value.id + ');">';
+                            dataMenu += '<span class="badge bg-primary">+</span></a>';
+                        }else if(!(valueHijo.nombre).includes("Aprobación") && !(valueHijo.nombre).includes("factura") && valueHijo.nombre != "Cotizaciones de servicio" && valueHijo.nombre != "Cotizaciones" && !(valueHijo.nombre).includes("Seguimiento") && value.id != 411){
                             dataMenu += '<a style="display: table-cell; padding-right: 5px;"';                                 
                             dataMenu += ' onclick="cargarDivIndex(\'#window\',\'' + URL_BASE + 'vistas/com/compraServicio/'+ urlNuevoMov + '\',\'' + idOpcion + '\',\'' + valueHijo.nombre + '\');active(' + valueHijo.id + ',' + value.id + ');">';
+                            dataMenu += '<span class="badge bg-primary">+</span></a>';
+                        }else if((valueHijo.id == 278)){
+                            dataMenu += '<a style="display: table-cell; padding-right: 5px;"';                                 
+                            dataMenu += ' onclick="cargarDivIndex(\'#window\',\'' + URL_BASE + 'vistas/com/movimiento/'+ urlNuevoMov + '\',\'' + idOpcion + '\',\'' + valueHijo.nombre + '\');active(' + valueHijo.id + ',' + value.id + ');">';
                             dataMenu += '<span class="badge bg-primary">+</span></a>';
                         }else{
                             dataMenu += '<a style="display: table-cell; padding-right: 5px;"';                                 

@@ -31,7 +31,7 @@ $(document).ready(function () {
 
         filasSeleccionadas.forEach(function (detalleItem, idx) {
             var cantidadRecepcion = devolverDosDecimales($("#cantidad_recepcion_" + detalleItem.movimiento_bien_id).val());
-            if (parseFloat(devolverDosDecimales(cantidadRecepcion)) < parseFloat(devolverDosDecimales(detalleItem.cantidad_por_recepcionar))) {
+            if (parseFloat(devolverDosDecimales(cantidadRecepcion)) > parseFloat(devolverDosDecimales(detalleItem.cantidad_por_recepcionar))) {
                 mostrarAdvertencia("Cantidad de recepción tiene que ser menor a la cantidad de la orden de compra para el item: " + detalleItem.bien_descripcion);
                 bandera_copia = false;
                 loaderClose();
@@ -68,7 +68,7 @@ $(document).ready(function () {
 
         filasSeleccionadas.forEach(function (detalleItem, idx) {
             var cantidadRecepcion = detalleItem.doc_tipo_id == DESPACHO ? detalleItem.cantidad : devolverDosDecimales($("#cantidad_recepcion_" + detalleItem.movimiento_bien_id).val());
-            if (parseFloat(devolverDosDecimales(cantidadRecepcion)) < parseFloat(devolverDosDecimales(detalleItem.cantidad_por_recepcionar))) {
+            if (parseFloat(devolverDosDecimales(cantidadRecepcion)) > parseFloat(devolverDosDecimales(detalleItem.cantidad_por_recepcionar))) {
                 mostrarAdvertencia("Cantidad de recepción tiene que ser menor a la cantidad de la orden de compra para el item: " + (idx + 1));
                 bandera_copia = false;
                 loaderClose();
@@ -167,7 +167,7 @@ $(document).ready(function () {
         var arrayDatoFila = [];
         var almacen = select2.obtenerValor("cboAlmacen");
 
-        if(alamcen == 71){
+        if (almacen == 71) {
             if (isEmpty($("#serie_numeroGuia").val())) {
                 mostrarAdvertencia("Debe ingresar serie y número de Guía");
                 bandera_generar = false;
@@ -179,19 +179,19 @@ $(document).ready(function () {
                 bandera_generar = false;
                 loaderClose();
                 return false;
-            }    
+            }
             if (isEmpty($("#volumen").val())) {
                 mostrarAdvertencia("Debe ingresar volumen de Guía");
                 bandera_generar = false;
                 loaderClose();
                 return false;
-            }  
+            }
             if (isEmpty($("#inputFilePdfGuia").val())) {
                 mostrarAdvertencia("Debe adjuntar pdf de Guía");
                 bandera_generar = false;
                 loaderClose();
                 return false;
-            }               
+            }
         }
 
         dataFilasSeleccionadas.forEach(function (detalleItem, idx) {
@@ -306,6 +306,10 @@ function onResponseAprobacionOrdenCompraServicio(response) {
                 $("#modalDetalleRecepcionado").modal('hide');
                 buscarPorCriterios();
                 break;
+            case 'anular':
+                onResponseAnular(response.data);
+                loaderClose();
+                break;
         }
     } else {
         switch (response[PARAM_ACCION_NAME]) {
@@ -379,7 +383,7 @@ function buscarOrdenCompra() {
         "columns": [
             { "data": "serie_numero", "class": "alignCenter" },
             { "data": "documento_tipo_descripcion", "class": "alignCenter" },
-            { "data": "proveedor_nombre_completo", "class": "alignCenter" },
+            { "data": "proveedor_nombre_completo", "class": "alignLeft" },
             { "data": "fecha_creacion", "class": "alignCenter" },
             { "data": "usuario_creacion", "class": "alignCenter" },
             { "data": "estado_descripcion", "class": "alignCenter" },
@@ -461,25 +465,32 @@ function buscarPorCriterios() {
 
     var almacen = select2.obtenerValor("cboAlmacen");
     var arrayDocumentoTipo = documento_tipo;
+    var serie = $("#txtSerieRecepcionOC").val();
+    var numero = $("#txtNumeroRecepcionOC").val();
 
-    llenarParametrosBusqueda(fechaEmision, 3, arrayDocumentoTipo, almacen);
+    llenarParametrosBusqueda(fechaEmision, 3, arrayDocumentoTipo, almacen, serie, numero);
 
     buscarOrdenCompra();
 }
 
 var criterioBusquedaDocumentos = {};
 
-function llenarParametrosBusqueda(fechaEmision, estadoId, tipoId, almacen) {
+function llenarParametrosBusqueda(fechaEmision, estadoId, tipoId, almacen, serie, numero) {
     criterioBusquedaDocumentos = {};
     criterioBusquedaDocumentos.fechaEmision = fechaEmision;
     criterioBusquedaDocumentos.estadoId = estadoId;
     criterioBusquedaDocumentos.tipoId = tipoId;
     criterioBusquedaDocumentos.almacen = almacen;
+    criterioBusquedaDocumentos.serie = serie;
+    criterioBusquedaDocumentos.numero = numero;
 }
 
 function cambiarAnchoBusquedaDesplegable() {
     var ancho = $("#divBuscador").width();
     $("#ulBuscadorDesplegable").width((ancho - 5) + "px");
+
+    var ancho = $("#divBuscador").width();
+    $("#ulBuscadorDesplegableRecepcion").width((ancho - 5) + "px");
 }
 
 
@@ -529,7 +540,7 @@ function onResponseVisualizarOrdenCompra(data) {
                     "data": "movimiento_bien_id",
                     render: function (data, type, row) {
                         var checked = row.bandera_recepcion == 2 ? "checked" : "";
-                        if (row.bandera_despacho_cantidad == 0) {
+                        if (row.cantidad_por_recepcionar > 0) {
                             if (type === 'display') {
                                 return '<input type="checkbox" name="checkselect" class="select-checkbox" value="' + row.movimiento_bien_id + '" ' + checked + '>';
                             }
@@ -596,7 +607,7 @@ function onResponseVisualizarOrdenCompra(data) {
                             }
                         }
 
-                        if (row.bandera_despacho_cantidad == 0) {
+                        if (row.cantidad_por_recepcionar > 0) {
                             return "<div class=\"input-group col-lg-12 col-md-12 col-sm-12 col-xs-12\" style=\"display: flex; align-items: center; gap: 8px;\">" +
                                 "<input type=\"number\" id=\"cantidad_recepcion_" + row.movimiento_bien_id + "\" name=\"cantidad_recepcion_" + row.movimiento_bien_id + "\" class=\"form-control\" style=\"text-align: right;\"  value='" + devolverDosDecimales(row.cantidad_recepcion) + "' /></div>";
                         } else {
@@ -606,7 +617,6 @@ function onResponseVisualizarOrdenCompra(data) {
                     "targets": 6
                 },
             ],
-            "dom": '<"top">rt<"bottom"<"col-md-3"l><"col-md-9"p><"col-md-12"i>><"clear">',
             destroy: true
         });
         loaderClose();
@@ -716,6 +726,7 @@ function fechasActuales() {
 
     // Colocar la fecha actual en el campo "finFechaEmision"
     $('#finFechaEmision').val(fechaFormateada);
+    $('#finFechaEmisionRecepcion').val(fechaFormateada);
 
     // Calcular la fecha de hace un mes
     fechaActual.setMonth(fechaActual.getMonth() - 1);
@@ -726,6 +737,7 @@ function fechasActuales() {
 
     // Colocar la fecha de hace un mes en el campo "inicioFechaEmision"
     $('#inicioFechaEmision').val(fechaInicioFormateada);
+    $('#inicioFechaEmisionRecepcion').val(fechaInicioFormateada);
 }
 
 function imprimirOrdenCompra(documentoId, documentoTipoId) {
@@ -770,20 +782,24 @@ function buscarPorCriterios2() {
     };
 
     var almacen = select2.obtenerValor("cboAlmacen");
-    var estadoId = 1; //Registrado
+    var estadoId = select2.obtenerValor("cboEstado");
+    var serie = $("#txtSerieRecepcion").val();
+    var numero = $("#txtNumeroRecepcion").val();
 
-    llenarParametrosBusquedaRecepcion(fechaEmision, estadoId, documento_tipo1, almacen);
+    llenarParametrosBusquedaRecepcion(fechaEmision, estadoId, documento_tipo1, almacen, serie, numero);
 
     buscarRecepcion();
 }
 
 criterioBusquedaDocumentosRecepcion = {};
-function llenarParametrosBusquedaRecepcion(fechaEmision, estadoId, tipoId, almacen) {
+function llenarParametrosBusquedaRecepcion(fechaEmision, estadoId, tipoId, almacen, serie, numero) {
     criterioBusquedaDocumentosRecepcion = {};
     criterioBusquedaDocumentosRecepcion.fechaEmision = fechaEmision;
     criterioBusquedaDocumentosRecepcion.estadoId = estadoId;
     criterioBusquedaDocumentosRecepcion.tipoId = tipoId;
     criterioBusquedaDocumentosRecepcion.almacen = almacen;
+    criterioBusquedaDocumentosRecepcion.serie = serie;
+    criterioBusquedaDocumentosRecepcion.numero = numero;
 }
 
 function buscarRecepcion() {
@@ -842,10 +858,12 @@ function buscarRecepcion() {
                 "render": function (data, type, row) {
                     var acciones = "";
                     acciones += "<a href='#' onclick='visualizarRecepcion(" + row.id + ", " + row.movimiento_id + ")'><i class='fa fa-eye' style='color:green;' title='Ver detalle programación'></i></a>&nbsp;&nbsp;";
-                    acciones += "<a href='#' onclick='imprimirPdfRecepción(" + row.id + ", " + row.documento_tipo_id + ")'><i class='fa fa-print' style='color:blue;' title='Imprimir Qr de paquetes'></i></a>&nbsp;&nbsp;";
-                    // acciones += "<a href='#' onclick=\"$('#fileInput_" + row.id + "').click();\"><i class='fa fa-cloud-upload' style='color:blue;' title='Subir Guía'></i></a><input type='file' id='fileInput_" + row.id + "' style='display:none;'>&nbsp;&nbsp;";
-                    if (row.relacion_despacho == 0) {
-                        acciones += "<a href='#' onclick='imprimirPdfQR(" + row.id + ", " + row.documento_tipo_id + ")'><i class='fa fa-qrcode' style='color:orange;' title='Imprimir Qr de paquetes'></i></a>&nbsp;";
+                    if (row.documento_estado_id != 2) {
+                        acciones += "<a href='#' onclick='imprimirPdfRecepción(" + row.id + ", " + row.documento_tipo_id + ")'><i class='fa fa-print' style='color:blue;' title='Imprimir Qr de paquetes'></i></a>&nbsp;&nbsp;";
+                        if (row.relacion_despacho == 0) {
+                            acciones += "<a href='#' onclick='imprimirPdfQR(" + row.id + ", " + row.documento_tipo_id + ")'><i class='fa fa-qrcode' style='color:orange;' title='Imprimir Qr de paquetes'></i></a>&nbsp;&nbsp;";
+                        }
+                        acciones += "<a href='#' onclick='anularDocumento(" + row.id + ", " + row.documento_tipo_id + ")'><i class='fa fa-ban' style='color:#cb2a2a' title='Imprimir Qr de paquetes'></i></a>&nbsp;&nbsp;";
                     }
                     return acciones;
                 },
@@ -949,10 +967,44 @@ function imprimirPdfQR(id) {
     link.click();
 }
 
-function importarPdfGuia(data) {
+function anularDocumento(id, documentoTipoId) {
+    confirmarAnularMovimiento(id, documentoTipoId);
+}
 
+function confirmarAnularMovimiento(id, documentoTipoId) {
+    bandera_eliminar = false;
+    swal({
+        title: "Est\xe1s seguro?",
+        text: "Anulara un documento, esta anulación no podra revertirse.",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#33b86c",
+        confirmButtonText: "Si, anular!",
+        cancelButtonColor: '#d33',
+        cancelButtonText: "No, cancelar !",
+        closeOnConfirm: true,
+        closeOnCancel: false
+    }, function (isConfirm) {
 
-    ax.setAccion("uploadAdjunto");
-    ax.addParamTmp("dataUpload", data);
+        if (isConfirm) {
+            anular(id, documentoTipoId);
+        } else {
+            if (bandera_eliminar == false) {
+                swal("Cancelado", "La anulaci\xf3n fue cancelada", "error");
+            }
+        }
+    });
+}
+
+function anular(id, documentoTipoId) {
+    loaderShow();
+    ax.setAccion("anular");
+    ax.addParamTmp("id", id);
+    ax.addParamTmp("documentoTipoId", documentoTipoId);
     ax.consumir();
+}
+function onResponseAnular(data) {
+    swal("Anulado!", "Documento anulado correctamente.", "success");
+    bandera_eliminar = true;
+    buscarRecepcion();
 }

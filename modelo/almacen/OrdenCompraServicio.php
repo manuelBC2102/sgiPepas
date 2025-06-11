@@ -13,7 +13,7 @@ class OrdenCompraServicio extends ModeloBase
         return parent::create();
     }
 
-    public function obtenerOrdenCompraServicioXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $almacenId = null, $atencion, $columnaOrdenar, $formaOrdenar, $elementosFiltrados, $start)
+    public function obtenerOrdenCompraServicioXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $almacenId = null, $atencion, $serie = null, $numero = null, $columnaOrdenar, $formaOrdenar, $elementosFiltrados, $start)
     {
         $this->commandPrepare("sp_ordenCompraServicio_obtenerXCriterios");
         $this->commandAddParameter(":vin_fecha_emision_desde", $fechaEmisionInicio);
@@ -22,6 +22,8 @@ class OrdenCompraServicio extends ModeloBase
         $this->commandAddParameter(":vin_tipo_id", $tipoId);
         $this->commandAddParameter(":vin_entrega_destino_id", $almacenId);
         $this->commandAddParameter(":vin_atencion", $atencion);
+        $this->commandAddParameter(":vin_serie", $serie);
+        $this->commandAddParameter(":vin_numero", $numero);
         $this->commandAddParameter(":vin_columna_ordenar", $columnaOrdenar);
         $this->commandAddParameter(":vin_forma_ordenar", $formaOrdenar);
         $this->commandAddParameter(":vin_limite", $elementosFiltrados);
@@ -29,7 +31,7 @@ class OrdenCompraServicio extends ModeloBase
         return $this->commandGetData();
     }
 
-    public function obtenerCantidadOrdenCompraServicioXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $almacenId, $atencion, $columnaOrdenar, $formaOrdenar)
+    public function obtenerCantidadOrdenCompraServicioXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $almacenId, $atencion, $serie, $numero, $columnaOrdenar, $formaOrdenar)
     {
         $this->commandPrepare("sp_ordenCompraServicio_obtenerXCriterios_contador");
         $this->commandAddParameter(":vin_fecha_emision_desde", $fechaEmisionInicio);
@@ -38,6 +40,8 @@ class OrdenCompraServicio extends ModeloBase
         $this->commandAddParameter(":vin_tipo_id", $tipoId);
         $this->commandAddParameter(":vin_entrega_destino_id", $almacenId);
         $this->commandAddParameter(":vin_atencion", $atencion);
+        $this->commandAddParameter(":vin_serie", $serie);
+        $this->commandAddParameter(":vin_numero", $numero);        
         $this->commandAddParameter(":vin_columna_ordenar", $columnaOrdenar);
         $this->commandAddParameter(":vin_forma_ordenar", $formaOrdenar);
         return $this->commandGetData();

@@ -9,7 +9,7 @@ $movimiento_tipoId = $_GET['movimiento_tipo_id'];
 $tipoRequerimiento = $_GET['tipoRequerimiento'];
 $tipoRequerimientoText = $_GET['tipoRequerimientoText'];
 
-$bien_tipo = 0;
+$bien_tipo = '2,3';
 if($tipoRequerimientoText == "Compra"){
     $bien_tipo = 2;
 }else if($tipoRequerimientoText == "Servicio"){

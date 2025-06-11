@@ -196,14 +196,17 @@ class DocumentoTipoNegocio extends ModeloNegocioBase
             $dtd[$index]["data"] = ($itemDtd["autoincrementable"] == 1) ? $itemDtd["cadena_defecto"] . DocumentoNegocio::create()->obtenerNumeroAutoXDocumentoTipo($documentoTipoId) : $itemDtd["cadena_defecto"];
             break;
           case self::DATO_ORGANIZADOR_DESTINO:
-            $movimientoTipo = MovimientoTipoNegocio::create()->obtenerXDocumentoTipoId($documentoTipoId);
-            $movimientoTipoId = $movimientoTipo[0]["movimiento_tipo_id"];
+            if($documentoTipoId == Configuraciones::CARGA_INICIAL){
+              $dtd[$index]["data"] = Organizador::create()->getDataOrganizadorXOrganizadorTipo(10);
+            }else{
+              $movimientoTipo = MovimientoTipoNegocio::create()->obtenerXDocumentoTipoId($documentoTipoId);
+              $movimientoTipoId = $movimientoTipo[0]["movimiento_tipo_id"];
 
-            // if($itemDtd['codigo']==3){
-            //   $dtd[$index]["data"] = OrganizadorNegocio::create()->obtenerXMovimientoTipo2($movimientoTipoId,$itemDtd['cadena_defecto']);
-            // }else{
-            $dtd[$index]["data"] = OrganizadorNegocio::create()->obtenerXMovimientoTipo($movimientoTipoId);
-
+              // if($itemDtd['codigo']==3){
+              //   $dtd[$index]["data"] = OrganizadorNegocio::create()->obtenerXMovimientoTipo2($movimientoTipoId,$itemDtd['cadena_defecto']);
+              // }else{
+              $dtd[$index]["data"] = OrganizadorNegocio::create()->obtenerXMovimientoTipo($movimientoTipoId);
+            }
             // $organizador=$dtd[$index]["data"];
             break;
           case self::DATO_CUENTA:

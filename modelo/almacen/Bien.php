@@ -604,4 +604,9 @@ class Bien extends ModeloBase {
       $this->commandAddParameter(":vin_bien_id", $bienId);
       return $this->commandGetData();
     }
+
+    public function obtenerBienActivosInventario() {
+        $this->commandPrepare("sp_bien_obtenerActivosInventario");
+        return $this->commandGetData();
+    }
 }

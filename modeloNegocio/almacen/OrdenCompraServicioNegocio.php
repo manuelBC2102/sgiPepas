@@ -42,7 +42,7 @@ class OrdenCompraServicioNegocio extends ModeloNegocioBase
         $formaOrdenar = $order[0]['dir'];
         $columnaOrdenar = $columns[$columnaOrdenarIndice]['data'];
 
-        return OrdenCompraServicio::create()->obtenerOrdenCompraServicioXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, null, null, $columnaOrdenar, $formaOrdenar, $elementosFiltrados, $start);
+        return OrdenCompraServicio::create()->obtenerOrdenCompraServicioXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, null, null, null, null, $columnaOrdenar, $formaOrdenar, $elementosFiltrados, $start);
     }
 
     public function obtenerCantidadOrdenCompraServicioXCriterios($criterios, $columns, $order)
@@ -57,7 +57,7 @@ class OrdenCompraServicioNegocio extends ModeloNegocioBase
         $columnaOrdenar = $columns[$columnaOrdenarIndice]['data'];
 
 
-        return OrdenCompraServicio::create()->obtenerCantidadOrdenCompraServicioXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, null, null, $columnaOrdenar, $formaOrdenar);
+        return OrdenCompraServicio::create()->obtenerCantidadOrdenCompraServicioXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, null, null, null, null, $columnaOrdenar, $formaOrdenar);
     }
 
     private function formatearFechaBD($cadena)

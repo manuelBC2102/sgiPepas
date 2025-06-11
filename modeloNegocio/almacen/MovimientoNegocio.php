@@ -115,6 +115,22 @@ class MovimientoNegocio extends ModeloNegocioBase
         throw new WarningException("No tiene perfil necesario para realizar esta acción");
       }
     }
+
+    //validar fecha para habilitar solictud de requerimiento
+    if($respuesta->documento_tipo[0]["id"]  == Configuraciones::SOLICITUD_REQUERIMIENTO){
+            //validar perfil
+      $mostrarAccNuevo = 0;
+      foreach ($dataPerfil as $itemPerfil) {
+        if ($itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_ADMINISTRADOR_TI_ID || $itemPerfil['id'] == PerfilNegocio::PERFIL_JEFE_LOGISTA || $itemPerfil['id'] == PerfilNegocio::PERFIL_SOLICITANTE_REQUERIMIENTO_URGENCIA) {
+          $mostrarAccNuevo = 1;
+        }
+      }
+
+      if($mostrarAccNuevo != 1){
+        $this->validarFechasSolicitudRequerimiento();
+      }
+    }
+
     // identificador_negocio
     $documentoTipoDefectoId = $respuesta->documento_tipo[0]["id"];
     if (!ObjectUtil::isEmpty($movimientoTipo[0]['documento_tipo_defecto_id'])) {
@@ -159,8 +175,8 @@ class MovimientoNegocio extends ModeloNegocioBase
       $movimientoTipoId = $movimientoTipo[0]["movimiento_tipo_id"];
       $respuesta->uo = OrganizadorNegocio::create()->obtenerXMovimientoTipo($movimientoTipoId);
     }
-    $respuesta->dataAgencia = AgenciaNegocio::create()->listarAgenciaActiva($empresaId);
-    $respuesta->dataAgrupador = Tabla::create()->obtenerXPadreId(88);
+    // $respuesta->dataAgencia = AgenciaNegocio::create()->listarAgenciaActiva($empresaId);
+    // $respuesta->dataAgrupador = Tabla::create()->obtenerXPadreId(88);
     $respuesta->movimientoTipo = $movimientoTipo;
     // $respuesta->precioTipo = BienPrecioNegocio::create()->obtenerPrecioTipoActivo();
 
@@ -175,12 +191,13 @@ class MovimientoNegocio extends ModeloNegocioBase
 
     // obtener datos para las columnas del detalle
     $respuesta->movimientoTipoColumna = MovimientoTipoNegocio::create()->obtenerMovimientoTipoColumna($movimientoTipoId);
-    $respuesta->contOperacionTipo = ContOperacionTipoNegocio::create()->obtenerDocumentoTipoContOperacionTipoXMovimientoTipoId($movimientoTipoId);
-    $respuesta->cuentaContable = PlanContableNegocio::create()->obtenerXEmpresaId($empresaId);
-    $respuesta->centroCosto = CentroCostoNegocio::create()->listarCentroCosto($empresaId);
+    // $respuesta->contOperacionTipo = ContOperacionTipoNegocio::create()->obtenerDocumentoTipoContOperacionTipoXMovimientoTipoId($movimientoTipoId);
+    // $respuesta->cuentaContable = PlanContableNegocio::create()->obtenerXEmpresaId($empresaId);
+    if($documentoTipoDefectoId == Configuraciones::SOLICITUD_REQUERIMIENTO){
+      $respuesta->centroCosto = CentroCostoNegocio::create()->listarCentroCosto($empresaId);
+      $respuesta->centroCostoRequerimiento = CentroCostoNegocio::create()->listarCentroCostoXArea($empresaId, $usuarioId);
+    }
     $respuesta->bienActivoFijo = BienNegocio::create()->obtenerActivosFijosXEmpresa($empresaId);
-    $respuesta->dataDetraccion = DetraccionNegocio::create()->obtenerDetraccionXEmpresaId($empresaId);
-    $respuesta->dataRetencion = $this->dataRetencion;
     $respuesta->periodo = null;
     if (!ObjectUtil::isEmpty($documentoId)) {
       $respuesta->periodo = PeriodoNegocio::create()->obtenerPeriodoXEmpresa($empresaId);
@@ -194,6 +211,8 @@ class MovimientoNegocio extends ModeloNegocioBase
 
     $respuesta->dataTipoCambio = null;
     if ($documentoTipoDefectoId == Configuraciones::GENERAR_COTIZACION || $documentoTipoDefectoId == Configuraciones::GENERAR_COTIZACION_SERVICIO) {
+      $respuesta->dataDetraccion = DetraccionNegocio::create()->obtenerDetraccionXEmpresaId($empresaId);
+      $respuesta->dataRetencion = $this->dataRetencion;
       $respuesta->postores = PersonaNegocio::create()->obtenerComboPersonaXPersonaClaseId('-1');
       $fechaActual = DateUtil::formatearCadenaACadenaBD(date("d/m/Y"));
       $respuesta->dataTipoCambio = TipoCambioNegocio::create()->obtenerTipoCambioXfecha($fechaActual);
@@ -201,7 +220,6 @@ class MovimientoNegocio extends ModeloNegocioBase
         throw new WarningException("No existe tipo de cambio para la fecha actual.");
       }
     }
-    $respuesta->centroCostoRequerimiento = CentroCostoNegocio::create()->listarCentroCostoXArea($empresaId, $usuarioId);
     return $respuesta;
   }
 
@@ -2220,7 +2238,7 @@ class MovimientoNegocio extends ModeloNegocioBase
       throw new WarningException("No se pudo guardar el documento");
     }
 
-    if (!in_array($documentoTipoId * 1, $this->arrayDocumentoTipoSinDetalle)) {
+    if (!in_array($documentoTipoId * 1, $this->arrayDocumentoTipoSinDetalle) && $documentoTipoId != Configuraciones::CARGA_INICIAL) {
       // 3. Insertamos el detalle
       if($documentoTipoId == Configuraciones::GENERAR_COTIZACION || $documentoTipoId == Configuraciones::GENERAR_COTIZACION_SERVICIO){
         if(ObjectUtil::isEmpty($detalle)){
@@ -2475,6 +2493,10 @@ class MovimientoNegocio extends ModeloNegocioBase
         }
 
         //FIn Despacho
+      }
+    }else{
+      foreach ($detalle as $item) {
+        Almacenes::create()->registrarPaqueteDetalle($movimientoId, null, $item['bienId'], $item["organizadorId"], 1, $item["cantidad"], $item["unidadMedidaId"], null, $usuarioId);
       }
     }
     //si el documento se a copiado guardamos las relaciones
@@ -8413,7 +8435,7 @@ class MovimientoNegocio extends ModeloNegocioBase
     $dataDocumentoTipo = DocumentoTipoNegocio::create()->obtenerDocumentoTipoXId($documentoTipoId);
 
     //valdiar
-    if($documentoTipoId == Configuraciones::GENERAR_COTIZACION || $documentoTipoId == Configuraciones::GENERAR_COTIZACION_SERVICIO){
+    if($documentoTipoId == Configuraciones::GENERAR_COTIZACION){
       $mensaje = '';
       $documentoDetalle = MovimientoBien::create()->obtenerXIdMovimiento($dataDocumento[0]['movimiento_id']);
       foreach($documentoDetalle as $itemDetalle){
@@ -8421,10 +8443,25 @@ class MovimientoNegocio extends ModeloNegocioBase
           if($itemDetalleEdicion['bienId'] == $itemDetalle['bien_id']){
             $cantidad_ = floatval($itemDetalle['cantidad']) + abs($itemDetalle['cantidad_requerimientoEdit'] - $itemDetalle['cantidad_atendidaEdit']);
             if(floatval($itemDetalleEdicion['cantidad']) > ($cantidad_)){
-              $mensaje .= "El detalle no debe ser mayor que ".  round($itemDetalle['cantidad'])." que es la solicitada, para la fila: ". ($itemDetalle['index'] + 1) . "<br>";
+              $mensaje .= "El detalle no debe ser mayor que ".  round($itemDetalle['cantidad'])." que es la solicitada, para la fila: ". ($itemDetalleEdicion['index'] + 1) . "<br>";
             }
   
           }
+        }
+      }
+      if (!ObjectUtil::isEmpty($mensaje)) {
+        throw new WarningException($mensaje);
+      }
+    }
+    if($documentoTipoId == Configuraciones::GENERAR_COTIZACION_SERVICIO){
+      $mensaje = '';
+      $documentoDetalle = MovimientoBien::create()->obtenerXIdMovimiento($dataDocumento[0]['movimiento_id']);
+      foreach($documentoDetalle as $index => $itemDetalle){
+        if($detalle[$index]['bienId'] == $itemDetalle['bien_id']){
+          $cantidad_ = floatval($itemDetalle['cantidad']) + abs($itemDetalle['cantidad_requerimientoEdit'] - $itemDetalle['cantidad_atendidaEdit']);
+          if(floatval($detalle[$index]['cantidad']) > ($cantidad_)){
+            $mensaje .= "El detalle no debe ser mayor que ".  round($itemDetalle['cantidad'])." que es la solicitada, para la fila: ". ($index + 1) . "<br>";
+           }
         }
       }
       if (!ObjectUtil::isEmpty($mensaje)) {
@@ -12479,6 +12516,30 @@ class MovimientoNegocio extends ModeloNegocioBase
     //generamos OC
     $respuestaOrdenCompra = $this->guardarDocumentoCotizacion($camposDinamicos, $usuarioId, Configuraciones::ORDEN_COMPRA, $detalle, $respuesta, $periodoId, 395, 2, null, $respuestaCotizacion,$arraydetalleXpostor[0]);
     $ordenCompraEstado = DocumentoNegocio::create()->ActualizarDocumentoEstadoId($respuestaOrdenCompra[0], 3, $ultimoAprobador[0]['aprobador']);
+  }
+
+  public function validarFechasSolicitudRequerimiento(){
+    date_default_timezone_set('America/Lima'); // Zona horaria de Perú
+
+    // Fecha actual (con hora en 00:00:00)
+    $hoy = new DateTime();
+    $hoy->setTime(0, 0, 0);
+
+    // Obtener el 25 del mes anterior a las 00:00:00
+    $inicio = new DateTime('first day of this month');
+    $inicio->modify('-1 month')->setDate($inicio->format('Y'), $inicio->format('m'), 25)->setTime(0, 0, 0);
+
+    // Obtener el 5 del mes actual a las 00:00:00
+    $fin = new DateTime();
+    $fin->setDate($hoy->format('Y'), $hoy->format('m'), 1)->setTime(0, 0, 0);
+
+    // Verificar si hoy está entre el 25 del mes anterior y el 5 del mes actual
+    if ($hoy >= $inicio && $hoy <= $fin) {
+        // echo "La fecha actual está entre el 25 del mes anterior y el 5 del mes actual.";
+    } else {
+        throw new WarningException("Opción se habilitará a partir del 25 del presente mes");
+        // echo "La fecha actual NO está en ese rango.";
+    }
   }
   
 }

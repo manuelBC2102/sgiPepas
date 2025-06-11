@@ -24,6 +24,7 @@
 </div>
 
 <div class="panel panel-default">
+    <input type="hidden" id="recepcion" value="<?php echo $_GET['recepcion']; ?>" />
     <div class="row">
         <div class="panel panel-default m-t-20 p-t-0" style="padding-left: 0px;padding-bottom: 1px;padding-right: 0px;">
             <div class="tab-content" style="margin: 0px;padding: 15px">
@@ -33,7 +34,7 @@
                             <div class="btn-toolbar" role="toolbar" style="float: right">
                                 <div class="input-group-btn">
                                     <button class="btn btn-info btn-block" id="btn_guardar">
-                                        <i class=" fa fa-plus-square-o"></i> Nuevo
+                                        <i class=" fa fa-paper-plane"></i> Generar recepción
                                     </button>
                                 </div>
                             </div>
@@ -63,6 +64,27 @@
                                                                 <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
                                                                     <input type="text" class="form-control fecha" placeholder="dd/mm/yyyy" id="finFechaEmisionAlmacenado">
                                                                     <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li>
+                                                <div class="form-group col-md-2">
+                                                    <label style="color: #141719;">Serie/Número</label>
+                                                </div>
+                                                <div class="form-group col-md-10">
+                                                    <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                                        <div class="row">
+                                                            <div class="form-group col-md-6">
+                                                                <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                                                    <input type="text" class="form-control" placeholder="Serie" id="txtSerieDespacho">
+                                                                </div>
+                                                            </div>
+                                                            <div class="form-group col-md-6">
+                                                                <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                                                    <input type="text" class="form-control" placeholder="Número" id="txtNumeroDespacho">
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -122,7 +144,7 @@
 </div>
 
 <!--modal para detalle alamcenado -->
-<div id="modalDetalleRecepcionDespacho" class="modal fade" role="dialog" aria-labelledby="myModalLabel2" aria-hidden="true" style="display: none;">
+<!-- <div id="modalDetalleRecepcionDespacho" class="modal fade" role="dialog" aria-labelledby="myModalLabel2" aria-hidden="true" style="display: none;">
     <div class="modal-dialog modal-full">
         <div class="modal-content">
             <div class="modal-header">
@@ -138,8 +160,8 @@
                                 <th style='text-align:center;'>Producto</th>
                                 <th style='text-align:center;'>Organizador actual</th>
                                 <th style='text-align:center;'>Cantidad</th>
-                                <th style='text-align:center;'>Distribucion</th>
-                            </tr>
+                                <!-- <th style='text-align:center;'>Distribucion</th> -->
+<!-- </tr>
                         </thead>
                         <tbody id="dgDetalleRecepcionado">
                         </tbody>
@@ -151,13 +173,13 @@
                     <div class="col-md-6" style="text-align: left;">
                     </div>
                     <div class="col-md-6">
-                        <button type="button" class="btn btn-primary" id="btn_generarDistribucionDespacho"><i class="fa fa-paper-plane"></i> Generar distribución</button>
+                        <button type="button" class="btn btn-primary" id="btn_generarDistribucionDespacho"><i class="fa fa-paper-plane"></i> Generar recepción</button>
                         <button type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-close"></i> Cerrar</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</div> --> -->
 
 <script src="vistas/com/almacenes/recepcion_despacho_listar.js"></script>

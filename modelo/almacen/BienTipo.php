@@ -49,4 +49,9 @@ class BienTipo extends ModeloBase {
         $this->commandAddParameter("vin_id", $id);
         return $this->commandGetData();
     }
+
+    public function obtenerBienTipoXTipo() {
+        $this->commandPrepare("sp_bien_tipo_obtenerXtipo");
+        return $this->commandGetData();
+    }
 }

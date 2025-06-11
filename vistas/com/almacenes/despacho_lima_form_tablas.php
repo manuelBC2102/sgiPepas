@@ -22,7 +22,7 @@
                 <div class="portlet-heading">
                     <div class="row">
                         <div class="col-md-10" style="margin-top: -12px; margin-left: -32px;">
-                            <div class="col-md-6">
+                            <div class="col-md-8">
                                 <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12" style="margin-top: -10px;">
                                     <h3 class="text-dark text-uppercase">
                                         <select name="cboDocumentoTipo" id="cboDocumentoTipo" class="select2"></select>
@@ -39,8 +39,8 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div id="divContenedorOrganizador" class="col-lg-4 col-md-4 col-sm-6 col-xs-6" hidden="true">
+                            <div class="col-md-4">
+                                <div id="divContenedorOrganizador" class="col-lg-12 col-md-12 col-sm-6 col-xs-6" hidden="true">
                                     <h4>
                                         <select id="cboOrganizador" name="cboOrganizador" class="select2" disabled>
                                         </select>
@@ -51,7 +51,7 @@
                         <div class="col-md-2" style="margin-left: 32px;">
                             <div class="col-lg-10 col-md-10 col-sm-6 col-xs-6" style="margin-top: -12px;">
                                 <h4>
-                                    <select id="cboPeriodo" name="cboPeriodo" class="select2" onchange="onChangePeriodo()" style="width: 100%">
+                                    <select id="cboPeriodo" name="cboPeriodo" class="select2" onchange="onChangePeriodo()" style="width: 100%" disabled>
                                     </select>
                                 </h4>
                             </div>
@@ -174,7 +174,7 @@
 
 
     <div id="datosImpresion" hidden="true"></div>
-    <script src="vistas/com/almacenes/despacho_form_tablas.js"></script>
+    <script src="vistas/com/almacenes/despacho_lima_form_tablas.js"></script>
 </body>
 
 </html>

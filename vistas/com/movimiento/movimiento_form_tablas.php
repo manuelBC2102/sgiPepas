@@ -22,7 +22,7 @@
                     <div class="portlet-heading">               
                         <div class="row">                    
                             <div class="col-md-10" style="margin-top: -12px; margin-left: -32px;">  
-                                <div class="col-md-8">
+                                <div class="col-md-7">
                                     <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12" style="margin-top: -10px;">
                                         <h3 class="text-dark text-uppercase">                           
                                             <select name="cboDocumentoTipo" id="cboDocumentoTipo" class="select2"></select>
@@ -46,7 +46,7 @@
                                         </div>                    
                                     </div>    
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-5">
                                     <div class="col-lg-4 col-md-4 col-sm-6 col-xs-6" id="contenedorMoneda">  
                                         <h4>                                   
                                             <select id="cboMoneda" name="cboMoneda" class="select2" style="font-weight: bold;font-style: italic;width: 100%" > 

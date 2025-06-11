@@ -101,20 +101,23 @@ function buscarPorCriterios() {
     };
 
     var almacen = select2.obtenerValor("cboAlmacen");
+    var serie = $("#txtSerie").val();
+    var numero = $("#txtNumero").val();
 
-    llenarParametrosBusqueda(fechaEmision, documento_tipo, almacen);
+    llenarParametrosBusqueda(fechaEmision, documento_tipo, almacen, serie, numero);
 
     buscarEntregas();
 }
 
 var criterioBusquedaDocumentos = {};
 
-function llenarParametrosBusqueda(fechaEmision, tipoId, almacen) {
+function llenarParametrosBusqueda(fechaEmision, tipoId, almacen, serie, numero) {
     criterioBusquedaDocumentos = {};
     criterioBusquedaDocumentos.fechaEmision = fechaEmision;
     criterioBusquedaDocumentos.almacen = almacen;
     criterioBusquedaDocumentos.tipoId = tipoId;
-
+    criterioBusquedaDocumentos.serie = serie;
+    criterioBusquedaDocumentos.numero = numero;
 }
 
 function cambiarAnchoBusquedaDesplegable() {

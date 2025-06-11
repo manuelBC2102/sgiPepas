@@ -24,12 +24,21 @@
 </div>
 
 <div class="panel panel-default">
-    <input type="hidden" id="documento_tipo" value="<?php echo $_GET['documento_tipo']; ?>" />
+    <input type="hidden" id="recepcion" value="<?php echo $_GET['recepcion']; ?>" />
     <div class="row">
         <div class="panel panel-default m-t-20 p-t-0" style="padding-left: 0px;padding-bottom: 1px;padding-right: 0px;">
             <div class="tab-content" style="margin: 0px;padding: 15px">
                 <div class="row">
                     <div class="input-group m-t-10">
+                        <div class="input-group-btn" style="padding-left: 0px;padding-right: 10px;">
+                            <div class="btn-toolbar" role="toolbar" style="float: right">
+                                <div class="input-group-btn">
+                                    <button class="btn btn-info btn-block" id="btn_guardar">
+                                        <i class=" fa fa-plus-square-o"></i> Nuevo
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                         <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 " style="padding-left: 0px;">
                             <div id="cabeceraBuscador" name="cabeceraBuscador">
                                 <div class="input-group" id="divBuscador">
@@ -108,16 +117,14 @@
                 </div>
                 <div class="row">
                     <div class="col-lg-12 col-md-12 col-sm-12" style="padding-top: 20px">
-                        <table id="datatableEntregas" class="table table-small-font table-striped table-hover" style="width: 1205px;">
+                        <table id="datatableRecepcionDespacho" class="table table-small-font table-striped table-hover" style="width: 1205px;">
                             <thead>
                                 <tr>
-                                    <th style='text-align:center;'>S/N</th>
-                                    <th style='text-align:center;'>Documento Tipo</th>
-                                    <th style='text-align:center;'>Responsable</th>
-                                    <th style='text-align:center;'>F.Creación</th>
-                                    <th style='text-align:center;'>Usuario</th>
-                                    <th style='text-align:center;'>Estado</th>
-                                    <th style='text-align:center;'>Acciones</th>
+                                    <th style='text-align:center;'>S/N Recepción</th>
+                                    <th style='text-align:center;'>Correlativo</th>
+                                    <th style='text-align:center;'>Producto</th>
+                                    <th style='text-align:center;'>Cantidad</th>
+                                    <th style='text-align:center;'><input type="checkbox" id="selectAll"></th>
                                 </tr>
                             </thead>
                         </table>
@@ -126,8 +133,7 @@
                             <p id="divLeyenda">
                                 <br>
                                 <b>Leyenda:</b>&nbsp;&nbsp;
-                                <i class='fa fa-ticket' style='color:green;'></i> Realizar entrega &nbsp;&nbsp;&nbsp;
-                                <i class='fa fa-print' style='color:blue;'></i> Imprimir pdf &nbsp;&nbsp;&nbsp;
+                                <i class='fa fa-eye' style='color:green;'></i> Ver detalle &nbsp;&nbsp;&nbsp;
                             </p>
                         </div>
                     </div>
@@ -137,33 +143,28 @@
     </div>
 </div>
 
-<!--modal para detalle -->
-<div id="modalDetalle" class="modal fade" role="dialog" aria-labelledby="myModalLabel2" aria-hidden="true" style="display: none;">
+<!--modal para detalle alamcenado -->
+<div id="modalDetalleRecepcionDespacho" class="modal fade" role="dialog" aria-labelledby="myModalLabel2" aria-hidden="true" style="display: none;">
     <div class="modal-dialog modal-full">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                <h4 class="modal-title">Detalle</h4>
+                <h4 class="modal-title-almacenado">Detalle Paquetes</h4>
             </div>
             <div class="modal-body">
-                <div id="portlet1" class="panel-collapse collapse in">
-                    <div class="portlet-body">
-                        <input type="hidden" id="documentoId" name="documentoId" />
-                        <form id="formularioDetalleDocumento" method="post" class="form" enctype="multipart/form-data;charset=UTF-8" style="min-height: 75px;height: auto;">
-                        </form>
-                    </div>
-                </div>
                 <div class="row">
-                    <table id="dtmodalDetalle" class="table table-striped table-bordered" style="width: 100%">
+                    <table id="dtmodalDetallePaquete" class="table table-striped table-bordered" style="width: 100%">
                         <thead>
                             <tr>
-                                <th style='text-align:center;'>#</th>
+                                <th style='text-align:center;'>Correlativo</th>
                                 <th style='text-align:center;'>Producto</th>
-                                <th style='text-align:center;'>U. Medida</th>
+                                <th style='text-align:center;'>Organizador actual</th>
                                 <th style='text-align:center;'>Cantidad</th>
-                                <th style='text-align:center;'>Acciones</th>
+                                <th style='text-align:center;'>Distribucion</th>
                             </tr>
                         </thead>
+                        <tbody id="dgDetalleRecepcionado">
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -172,7 +173,7 @@
                     <div class="col-md-6" style="text-align: left;">
                     </div>
                     <div class="col-md-6">
-                        <button id="btn_reserva" type="button" href="#bg-info" onclick="generarSalidaSolicitud()" class="btn btn-purple"> <i class="fa fa-floppy-o"></i>&ensp;Generar</button>
+                        <button type="button" class="btn btn-primary" id="btn_generarDistribucionDespacho"><i class="fa fa-paper-plane"></i> Generar distribución</button>
                         <button type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-close"></i> Cerrar</button>
                     </div>
                 </div>
@@ -181,41 +182,4 @@
     </div>
 </div>
 
-<div id="modalReservaStockBien" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;"
-    data-backdrop="static" data-keyboard="false">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                <h4 class="modal-title-stock">Verificación de stock</h4>
-                <input type="hidden" id="txtCantidad" name="txtCantidad" />
-                <input type="hidden" id="txtMovimientoBienId" name="txtMovimientoBienId" />
-                <input type="hidden" id="txtMovimientoId" name="txtMovimientoId" />
-                <input type="hidden" id="txtFila" name="txtFila" />
-            </div>
-            <div class="modal-body">
-                <div class="table">
-                    <table id="datatableReservaStock" class="table table-striped table-bordered">
-                        <thead>
-                            <tr>
-                                <th style='text-align:center;'>Organizador</th>
-                                <th style='text-align:center;'>Unidad de medida</th>
-                                <th style='text-align:center;'>Stock</th>
-                                <th style='text-align:center;'>Entregar</th>
-                            </tr>
-                        </thead>
-                    </table>
-                </div>
-                <div id="div_resumenStock">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-danger" id="id" style="border-radius: 0px;" onclick="cerrarReserva()">
-                    <i class="fa fa-close"></i>&ensp;Cerrar
-                </button>
-                <button id="btn_reserva" type="button" href="#bg-info" onclick="generarReserva()" class="btn btn-purple"> <i class="fa fa-floppy-o"></i>&ensp;Guardar</button>
-            </div>
-        </div>
-    </div>
-</div>
-<script src="vistas/com/almacenes/entrega_listar.js"></script>
+<script src="vistas/com/almacenes/distribucion_recepcion_mina_listar.js"></script>

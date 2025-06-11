@@ -1139,4 +1139,8 @@ class BienNegocio extends ModeloNegocioBase {
     public function obtenerXIdPadre($id) {
         return BienTipo::create()->obtenerXIdPadre($id);
     }
+
+    public function obtenerBienActivosInventario() {
+        return Bien::create()->obtenerBienActivosInventario();
+    }
 }

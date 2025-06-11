@@ -21,6 +21,7 @@ class PerfilNegocio extends ModeloNegocioBase {
     const PERFIL_COMPRAS = 156;
     const PERFIL_TODAS_AREAS = 159;
     const PERFIL_TODOS_CECO = 160;
+    const PERFIL_SOLICITANTE_REQUERIMIENTO_URGENCIA = 162;
 
     const PERFIL_DDH = 154;
     const PERFIL_EQUIPOS = 153;

@@ -335,6 +335,9 @@ function onResponseMovimientoFormTablas(response) {
             case 'obtenerDetalleBienRequerimiento':
                 onResponseobtenerDetalleBienRequerimiento(response.data);
                 break;
+            case 'obtenerOrganizadoresHijos':
+                onResponseObtenerOrganizadoresHijos(response.data);
+                break;
         }
     } else {
         switch (response[PARAM_ACCION_NAME]) {
@@ -385,6 +388,9 @@ function onResponseMovimientoFormTablas(response) {
             case 'obtenerCuentaPersona':
                 loaderClose();
                 break;
+            case 'obtenerOrganizadoresHijos':
+                loaderClose();
+                break;                
         }
     }
 }
@@ -887,7 +893,7 @@ function onResponseObtenerConfiguracionesIniciales(data) {
 //        if(documentoTipoTipo==1){
 //            $("#contenedorUtilidadesTotales").show();
 //        }
-        if (isEmpty(data.organizador)) {
+        if (isEmpty(data.organizador) && doc_TipoId != 58) {
             muestraOrganizador = false;
         }
 
@@ -1481,7 +1487,7 @@ function onResponseObtenerConfiguracionesIniciales(data) {
             }
         });
     }
-
+    $("#cargarBuscadorDocumentoACopiar").hide();
 }
 
 function imageIsLoaded(e) {
@@ -1936,6 +1942,17 @@ function obtenerStockActual(indice) {
             }
         }
 
+        if (dataCofiguracionInicial.movimientoTipo[0]["codigo"] == '00') { //Carga inicial
+            var dtdOrganizadorId = obtenerDocumentoTipoDatoIdXTipo(17);
+            if (!isEmpty(dtdOrganizadorId)) {
+                organizadorId = select2.obtenerValor('cbo_' + dtdOrganizadorId);
+                if(isEmpty(organizadorId)){
+                    mostrarAdvertencia("Seleccione un almacén");
+                    return false;
+                }
+            }
+        }
+
         ax.addParamTmp("organizadorId", organizadorId);
         ax.addParamTmp("unidadMedidaId", select2.obtenerValor("cboUnidadMedida_" + indice));
         ax.addParamTmp("bienId", select2.obtenerValor("cboBien_" + indice));
@@ -2000,8 +2017,11 @@ function cargarOrganizadorDetalleCombo(data, i) {
             select2.asignarValor("cboOrganizador_" + i, data[0].id);
 
     } else {
-        $("#contenedorOrganizador_" + i).hide();
-        validacion.organizadorExistencia = false;
+        // $("#contenedorOrganizador_" + i).hide();
+        // validacion.organizadorExistencia = false;
+        $("#cboOrganizador_" + i).select2({
+            width: "100%"
+        });
     }
 }
 
@@ -3436,7 +3456,7 @@ function onResponseObtenerDocumentoTipoDato(data) {
                     break;
                 case 17:
                     var htmlOrg = '';
-                    htmlOrg += '<div id ="div_organizador_destino" ><select name="cbo_' + item.id + '" id="cbo_' + item.id + '" class="select2" placeholder="Seleccione almacén de llegada" onchange="onChangeOrganizadorDestino()">';
+                    htmlOrg += '<div id ="div_organizador_destino" ><select name="cbo_' + item.id + '" id="cbo_' + item.id + '" class="select2" placeholder="Seleccione almacén" onchange="onChangeOrganizadorDestino()">';
 
                     id_cboDestino = (dataCofiguracionInicial.movimientoTipo[0]["codigo"] == 20) ? item.id : null;
                     htmlOrg += '<option></option>';
@@ -3447,6 +3467,7 @@ function onResponseObtenerDocumentoTipoDato(data) {
 
                     $("#h4OrganizadorDestino").append(htmlOrg);
                     $("#divContenedorOrganizadorDestino").show();
+                    muestraOrganizador = true;
                     break;
                 case 18:
                     personaDireccionId = item.id;
@@ -3692,6 +3713,8 @@ function onResponseObtenerDocumentoTipoDato(data) {
                 case 17:
                     $("#cbo_" + item.id).select2({
                         width: '100%'
+                    }).on("change", function (e) {
+                        obtenerOrganizadoresHijos(e.val);
                     });
                     break;
                 case 18:
@@ -7813,7 +7836,7 @@ function agregarFila() {
         $('#datatable tbody').append(fila);
 
         //LLENAR COMBOS
-        cargarOrganizadorDetalleCombo(dataCofiguracionInicial.organizador, nroFilasReducida);
+        cargarOrganizadorDetalleCombo(arrayOrganizadoresHijos, nroFilasReducida);
         cargarUnidadMedidadDetalleCombo(nroFilasReducida);
         cargarBienDetalleCombo(dataCofiguracionInicial.bien, nroFilasReducida);
         cargarPrecioTipoDetalleCombo(dataCofiguracionInicial.precioTipo, nroFilasReducida);
@@ -11350,4 +11373,19 @@ function limpiarBuscadores_movimiento_form_tablas(){
     
     select2.asignarValor('cboDocumentoTipoM', -1);
     select2.asignarValor('cboPersonaM', -1);
+}
+
+function obtenerOrganizadoresHijos(id){
+    loaderShow();
+    ax.setAccion("obtenerOrganizadoresHijos");
+    ax.addParamTmp("almacenId", id);
+    ax.consumir();
+}
+
+var arrayOrganizadoresHijos;
+function onResponseObtenerOrganizadoresHijos(data){
+    arrayOrganizadoresHijos = data;
+    for (var i = 0; i < nroFilasReducida; i++) {
+        cargarOrganizadorDetalleCombo(data, i);
+    }
 }

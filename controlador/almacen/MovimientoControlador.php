@@ -19,6 +19,7 @@ require_once __DIR__ . '/../../modeloNegocio/almacen/OrganizadorNegocio.php';
 //require_once __DIR__ . '/../commons/tcpdf/tcpdf.php';
 require_once __DIR__ . '/../../modeloNegocio/almacen/DocumentoTipoDatoNegocio.php';
 require_once __DIR__ . '/../../modeloNegocio/almacen/PagoNegocio.php';
+require_once __DIR__ . '/../../modeloNegocio/almacen/AlmacenesNegocio.php';
 
 class MovimientoControlador extends AlmacenIndexControlador
 {
@@ -147,9 +148,11 @@ class MovimientoControlador extends AlmacenIndexControlador
     $indice = $this->getParametro("indice");
     $organizadorId = $this->getParametro("organizadorId");
     $unidadMedidaId = $this->getParametro("unidadMedidaId");
-    $organizadorDestinoId = $this->getParametro("organizadorDestinoId");
+    // $organizadorDestinoId = $this->getParametro("organizadorDestinoId");
 
-    $stock = MovimientoNegocio::create()->obtenerStockActual($bienId, $indice, $organizadorId, $unidadMedidaId, $organizadorDestinoId);
+    $organizadorIds = AlmacenesNegocio::create()->obtenerOrganizadorHijos($organizadorId);
+    // $stock = MovimientoNegocio::create()->obtenerStockActual($bienId, $indice, $organizadorId, $unidadMedidaId, $organizadorDestinoId);
+    $stock = AlmacenesNegocio::create()->obtenerStockActual($bienId, $indice, $unidadMedidaId, $organizadorIds, 1, $organizadorId);
     return $stock;
   }
 
@@ -2059,5 +2062,10 @@ class MovimientoControlador extends AlmacenIndexControlador
     $usuarioId = $this->getUsuarioId();
 
     return MovimientoNegocio::create()->imprimirDocumentoAdjunto($documentoTipoId, $documentoId, $usuarioId);
+  }
+
+  public function obtenerOrganizadoresHijos(){
+    $almacenId = $this->getParametro("almacenId");
+    return AlmacenesNegocio::create()->getDataOrganizadoresHijos($almacenId);
   }
 }

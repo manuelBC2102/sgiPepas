@@ -387,7 +387,7 @@ class DocumentoNegocio extends ModeloNegocioBase
       $importeSubTotal = 0.0;
     }
 
-    if($documentoTipoId == Configuraciones::SOLICITUD_REQUERIMIENTO || $documentoTipoId == Configuraciones::GENERAR_COTIZACION || $documentoTipoId == Configuraciones::REQUERIMIENTO_AREA || $documentoTipoId == Configuraciones::GENERAR_COTIZACION_SERVICIO || $documentoTipoId == Configuraciones::GENERAR_COTIZACION_SERVICIO || $documentoTipoId == Configuraciones::DESPACHO || $documentoTipoId == Configuraciones::SOLICITUD_ENTREGA){
+    if($documentoTipoId == Configuraciones::SOLICITUD_REQUERIMIENTO || $documentoTipoId == Configuraciones::GENERAR_COTIZACION || $documentoTipoId == Configuraciones::REQUERIMIENTO_AREA || $documentoTipoId == Configuraciones::GENERAR_COTIZACION_SERVICIO || $documentoTipoId == Configuraciones::GENERAR_COTIZACION_SERVICIO || $documentoTipoId == Configuraciones::DESPACHO || $documentoTipoId == Configuraciones::SOLICITUD_ENTREGA || $documentoTipoId == Configuraciones::CARGA_INICIAL){
       $personaId = PersonaNegocio::create()->obtenerPersonaXUsuarioId($usuarioCreacionId)[0]['id'];
     }
     

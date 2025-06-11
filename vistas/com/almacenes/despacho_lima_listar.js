@@ -175,20 +175,24 @@ function buscarPorCriterios() {
 
     var almacen = select2.obtenerValor("cboAlmacen");
     var estadoId = select2.obtenerValor("cboEstadoDespacho");
+    var serie = $("#txtSerieDespacho").val();
+    var numero = $("#txtNumeroDespacho").val();
 
-    llenarParametrosBusquedaDespacho(fechaEmision, estadoId, documento_tipo, almacen);
+    llenarParametrosBusquedaDespacho(fechaEmision, estadoId, documento_tipo, almacen, serie, numero);
 
     buscarDespacho();
 }
 
 var criterioBusquedaDespacho = {};
 
-function llenarParametrosBusquedaDespacho(fechaEmision, estadoId, tipoId, almacen) {
+function llenarParametrosBusquedaDespacho(fechaEmision, estadoId, tipoId, almacen, serie, numero) {
     criterioBusquedaDespacho = {};
     criterioBusquedaDespacho.fechaEmision = fechaEmision;
     criterioBusquedaDespacho.estadoId = estadoId;
     criterioBusquedaDespacho.tipoId = tipoId;
     criterioBusquedaDespacho.almacen = almacen;
+    criterioBusquedaDespacho.serie = serie;
+    criterioBusquedaDespacho.numero = numero;
 }
 
 function cambiarAnchoBusquedaDesplegable() {
@@ -562,5 +566,5 @@ function onResponseObtenerMovimientoPaqueteTraking(data) {
 }
 
 function nuevoFormDespacho() {
-    cargarDiv('#window', 'vistas/com/almacenes/despacho_form_tablas.php?almacenId=' + select2.obtenerValor("cboAlmacen"));
+    cargarDiv('#window', 'vistas/com/almacenes/despacho_lima_form_tablas.php?almacenId=' + select2.obtenerValor("cboAlmacen"));
 }

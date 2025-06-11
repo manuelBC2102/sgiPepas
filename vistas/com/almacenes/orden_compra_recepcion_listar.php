@@ -65,13 +65,13 @@
                                                             <div class="row">
                                                                 <div class="form-group col-md-6">
                                                                     <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                                                                        <input type="text" class="form-control fecha" placeholder="dd/mm/yyyy" id="inicioFechaEmisionRecepcion">
+                                                                        <input type="text" class="form-control fecha" placeholder="dd/mm/yyyy" id="inicioFechaEmision">
                                                                         <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
                                                                     </div>
                                                                 </div>
                                                                 <div class="form-group col-md-6">
                                                                     <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                                                                        <input type="text" class="form-control fecha" placeholder="dd/mm/yyyy" id="finFechaEmisionRecepcion">
+                                                                        <input type="text" class="form-control fecha" placeholder="dd/mm/yyyy" id="finFechaEmision">
                                                                         <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
                                                                     </div>
                                                                 </div>
@@ -79,6 +79,27 @@
                                                         </div>
                                                     </div>
                                                 </li>
+                                                <li>
+                                                    <div class="form-group col-md-2">
+                                                        <label style="color: #141719;">Serie/Número</label>
+                                                    </div>
+                                                    <div class="form-group col-md-10">
+                                                        <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                                            <div class="row">
+                                                                <div class="form-group col-md-6">
+                                                                    <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                                                        <input type="text" class="form-control" placeholder="Serie" id="txtSerieRecepcionOC">
+                                                                    </div>
+                                                                </div>
+                                                                <div class="form-group col-md-6">
+                                                                    <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                                                        <input type="text" class="form-control" placeholder="Número" id="txtNumeroRecepcionOC">
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </li>                                                
                                                 <li>
                                                     <div style="float: right">
                                                         <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
@@ -137,12 +158,12 @@
                         <div class="input-group m-t-10">
                             <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 " style="padding-left: 0px;">
                                 <div id="cabeceraBuscador" name="cabeceraBuscador">
-                                    <div class="input-group" id="divBuscador">
+                                    <div class="input-group" id="divBuscadorRecepcion">
                                         <span class="input-group-btn" id="spanBuscador">
                                             <a type="button" data-toggle="dropdown" class="dropdown-toggle btn btn-effect-ripple btn-primary col-lg-12 col-md-12 col-sm-12 col-xs-12" href="#">
                                                 Buscar<div style="float: right"><i class="caret"></i></div>
                                             </a>
-                                            <ul class="dropdown-menu extended fadeInUp animated nicescroll" tabindex="5001" style="overflow: hidden; outline: none;width: 1052px;" id="ulBuscadorDesplegable">
+                                            <ul class="dropdown-menu extended fadeInUp animated nicescroll" tabindex="5001" style="overflow: hidden; outline: none;width: 1052px;" id="ulBuscadorDesplegableRecepcion">
                                                 <li>
                                                     <div class="form-group col-md-2">
                                                         <label style="color: #141719;">Fecha </label>
@@ -160,6 +181,47 @@
                                                                     <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
                                                                         <input type="text" class="form-control fecha" placeholder="dd/mm/yyyy" id="finFechaEmisionRecepcion">
                                                                         <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                                <li>
+                                                    <div class="form-group col-md-2">
+                                                        <label style="color: #141719;">Serie/Número</label>
+                                                    </div>
+                                                    <div class="form-group col-md-10">
+                                                        <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                                            <div class="row">
+                                                                <div class="form-group col-md-6">
+                                                                    <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                                                        <input type="text" class="form-control" placeholder="Serie" id="txtSerieRecepcion">
+                                                                    </div>
+                                                                </div>
+                                                                <div class="form-group col-md-6">
+                                                                    <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                                                        <input type="text" class="form-control" placeholder="Número" id="txtNumeroRecepcion">
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                                <li id="liEstado">
+                                                    <div class="form-group col-md-2">
+                                                        <label style="color: #141719;">Estado</label>
+                                                    </div>
+                                                    <div class="form-group col-md-4">
+                                                        <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                                            <div class="row">
+                                                                <div class="form-group col-md-12">
+                                                                    <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                                                        <select name="cboEstado" id="cboEstado" class="select2">
+                                                                            <option value="0">Todos</option>
+                                                                            <option value="1" selected>Registrado</option>
+                                                                            <option value="2">Anulado</option>
+                                                                        </select>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -249,7 +311,7 @@
                                 <th style='text-align:center;'>U. Medida</th>
                                 <th style='text-align:center;'>Cantidad</th>
                                 <th style='text-align:center;'>Cant. recepcionada</th>
-                                <th style='text-align:center;'>Cant. por recepcionnar</th>
+                                <th style='text-align:center;'>Cant. por recepcionar</th>
                                 <th style='text-align:center;'>Cant. a recepcionar</th>
                                 <th style='text-align:center;'><input type="checkbox" id="selectAll"></th>
                             </tr>
@@ -289,7 +351,7 @@
                                 <th style='text-align:center;'>Producto</th>
                                 <th style='text-align:center;'>Cantidad recepcionada</th>
                                 <th style='text-align:center;'>Unidad Minera</th>
-                                <th style='text-align:center;'>Organizador destino</th>
+                                <th style='text-align:center;'>Almacen destino</th>
                                 <th style='text-align:center;'>Tipo Distribución</th>
                                 <th style='text-align:center;'>Asignar Distribución QR</th>
                             </tr>

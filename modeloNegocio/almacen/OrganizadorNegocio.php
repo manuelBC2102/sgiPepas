@@ -224,7 +224,7 @@ class OrganizadorNegocio extends ModeloNegocioBase {
             }
           }
           foreach ($hijos as $hijo) {
-            if ($hijo['organizador_tipo_id'] != 14) {
+            if ($hijo['organizador_tipo_id'] != 12) { // recepcion
               $resultadoOrganizadorIds[] = $hijo['id'];              // Agregamos el hijo al resultado
               $pendientes[] = $hijo['id'];       // Agregamos el hijo a la cola para procesar sus hijos
             }

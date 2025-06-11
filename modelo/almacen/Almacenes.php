@@ -47,7 +47,7 @@ class Almacenes extends ModeloBase
         return $this->commandGetData();
     }
 
-    public function obtenerRecepcionXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $almacenId = null, $columnaOrdenar, $formaOrdenar, $elementosFiltrados, $start)
+    public function obtenerRecepcionXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $almacenId = null, $serie, $numero, $columnaOrdenar, $formaOrdenar, $elementosFiltrados, $start)
     {
         $this->commandPrepare("sp_recepcion_obtenerXCriterios");
         $this->commandAddParameter(":vin_fecha_emision_desde", $fechaEmisionInicio);
@@ -55,6 +55,8 @@ class Almacenes extends ModeloBase
         $this->commandAddParameter(":vin_estado_id", $estadoId);
         $this->commandAddParameter(":vin_tipo_id", $tipoId);
         $this->commandAddParameter(":vin_organizador_id", $almacenId);
+        $this->commandAddParameter(":vin_serie", $serie);
+        $this->commandAddParameter(":vin_numero", $numero);
         $this->commandAddParameter(":vin_columna_ordenar", $columnaOrdenar);
         $this->commandAddParameter(":vin_forma_ordenar", $formaOrdenar);
         $this->commandAddParameter(":vin_limite", $elementosFiltrados);
@@ -62,7 +64,7 @@ class Almacenes extends ModeloBase
         return $this->commandGetData();
     }
 
-    public function obtenerCantidadRecepcionXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $almacenId, $columnaOrdenar, $formaOrdenar)
+    public function obtenerCantidadRecepcionXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $almacenId = null, $serie, $numero, $columnaOrdenar, $formaOrdenar)
     {
         $this->commandPrepare("sp_recepcion_obtenerXCriterios_contador");
         $this->commandAddParameter(":vin_fecha_emision_desde", $fechaEmisionInicio);
@@ -70,6 +72,8 @@ class Almacenes extends ModeloBase
         $this->commandAddParameter(":vin_estado_id", $estadoId);
         $this->commandAddParameter(":vin_tipo_id", $tipoId);
         $this->commandAddParameter(":vin_organizador_id", $almacenId);
+        $this->commandAddParameter(":vin_serie", $serie);
+        $this->commandAddParameter(":vin_numero", $numero);
         $this->commandAddParameter(":vin_columna_ordenar", $columnaOrdenar);
         $this->commandAddParameter(":vin_forma_ordenar", $formaOrdenar);
         return $this->commandGetData();
@@ -165,6 +169,14 @@ class Almacenes extends ModeloBase
         return $this->commandGetData();
     }
 
+    public function paquete_cambiarEstadoXPaqueteId($paqueteId, $estadoId)
+    {
+        $this->commandPrepare("sp_paquete_cambiarEstadoXPaqueteId");
+        $this->commandAddParameter(":vin_paquete_id", $paqueteId);
+        $this->commandAddParameter(":vin_estado", $estadoId);
+        return $this->commandGetData();
+    }
+
     public function obtenerMovimientoPaqueteTraking($id)
     {
         $this->commandPrepare("sp_obtener_detalle_movimientoPaqueteTraking");
@@ -200,7 +212,7 @@ class Almacenes extends ModeloBase
     }
 
     //Despacho
-    public function obtenerDespachoXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $almacenTransitoId, $almacenId = null, $columnaOrdenar, $formaOrdenar, $elementosFiltrados, $start)
+    public function obtenerDespachoXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $almacenTransitoId, $almacenId = null, $serie, $numero, $columnaOrdenar, $formaOrdenar, $elementosFiltrados, $start)
     {
         $this->commandPrepare("sp_despacho_obtenerXCriterios");
         $this->commandAddParameter(":vin_fecha_emision_desde", $fechaEmisionInicio);
@@ -209,6 +221,8 @@ class Almacenes extends ModeloBase
         $this->commandAddParameter(":vin_tipo_id", $tipoId);
         $this->commandAddParameter(":vin_organizador_transito_id", $almacenTransitoId);
         $this->commandAddParameter(":vin_organizador_id", $almacenId);
+        $this->commandAddParameter(":vin_serie", $serie);
+        $this->commandAddParameter(":vin_numero", $numero);
         $this->commandAddParameter(":vin_columna_ordenar", $columnaOrdenar);
         $this->commandAddParameter(":vin_forma_ordenar", $formaOrdenar);
         $this->commandAddParameter(":vin_limite", $elementosFiltrados);
@@ -216,7 +230,7 @@ class Almacenes extends ModeloBase
         return $this->commandGetData();
     }
 
-    public function obtenerCantidadDespachoXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $almacenTransitoId, $almacenId = null, $columnaOrdenar, $formaOrdenar)
+    public function obtenerCantidadDespachoXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $almacenTransitoId, $almacenId = null, $serie, $numero, $columnaOrdenar, $formaOrdenar)
     {
         $this->commandPrepare("sp_despacho_obtenerXCriterios_contador");
         $this->commandAddParameter(":vin_fecha_emision_desde", $fechaEmisionInicio);
@@ -225,6 +239,8 @@ class Almacenes extends ModeloBase
         $this->commandAddParameter(":vin_tipo_id", $tipoId);
         $this->commandAddParameter(":vin_organizador_transito_id", $almacenTransitoId);
         $this->commandAddParameter(":vin_organizador_id", $almacenId);
+        $this->commandAddParameter(":vin_serie", $serie);
+        $this->commandAddParameter(":vin_numero", $numero);
         $this->commandAddParameter(":vin_columna_ordenar", $columnaOrdenar);
         $this->commandAddParameter(":vin_forma_ordenar", $formaOrdenar);
         return $this->commandGetData();
@@ -280,12 +296,14 @@ class Almacenes extends ModeloBase
     }
 
     //Recepcion despacho
-    public function obtenerPaqueteRecepcionDespachoXCriterios($fechaEmisionInicio, $fechaEmisionFin, $almacenIds = null, $columnaOrdenar, $formaOrdenar, $elementosFiltrados, $start, $id = null)
+    public function obtenerPaqueteRecepcionDespachoXCriterios($fechaEmisionInicio, $fechaEmisionFin, $almacenIds = null, $serie, $numero, $columnaOrdenar, $formaOrdenar, $elementosFiltrados, $start, $id = null)
     {
         $this->commandPrepare("sp_recepcion_despacho_obtenerXCriterios");
         $this->commandAddParameter(":vin_fecha_emision_desde", $fechaEmisionInicio);
         $this->commandAddParameter(":vin_fecha_emision_hasta", $fechaEmisionFin);
         $this->commandAddParameter(":vin_organizador_ids", $almacenIds);
+        $this->commandAddParameter(":vin_serie", $serie);
+        $this->commandAddParameter(":vin_numero", $numero);
         $this->commandAddParameter(":vin_columna_ordenar", $columnaOrdenar);
         $this->commandAddParameter(":vin_forma_ordenar", $formaOrdenar);
         $this->commandAddParameter(":vin_limite", $elementosFiltrados);
@@ -294,12 +312,14 @@ class Almacenes extends ModeloBase
         return $this->commandGetData();
     }
 
-    public function obtenerCantidadPaqueteRecepcionDespachoXCriterios($fechaEmisionInicio, $fechaEmisionFin, $almacenIds, $columnaOrdenar, $formaOrdenar, $id = null)
+    public function obtenerCantidadPaqueteRecepcionDespachoXCriterios($fechaEmisionInicio, $fechaEmisionFin, $almacenIds, $serie, $numero, $columnaOrdenar, $formaOrdenar, $id = null)
     {
         $this->commandPrepare("sp_recepcion_despacho_obtenerXCriterios_contador");
         $this->commandAddParameter(":vin_fecha_emision_desde", $fechaEmisionInicio);
         $this->commandAddParameter(":vin_fecha_emision_hasta", $fechaEmisionFin);
         $this->commandAddParameter(":vin_organizador_ids", $almacenIds);
+        $this->commandAddParameter(":vin_serie", $serie);
+        $this->commandAddParameter(":vin_numero", $numero);
         $this->commandAddParameter(":vin_columna_ordenar", $columnaOrdenar);
         $this->commandAddParameter(":vin_forma_ordenar", $formaOrdenar);
         $this->commandAddParameter(":vin_id", $id);
@@ -322,7 +342,7 @@ class Almacenes extends ModeloBase
     }
 
     //Entrega
-    public function obtenerEntregaXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $almacenId = null, $bandera, $columnaOrdenar, $formaOrdenar, $elementosFiltrados, $start)
+    public function obtenerEntregaXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $almacenId = null, $bandera, $serie, $numero, $columnaOrdenar, $formaOrdenar, $elementosFiltrados, $start)
     {
         $this->commandPrepare("sp_entrega_obtenerXCriterios");
         $this->commandAddParameter(":vin_fecha_emision_desde", $fechaEmisionInicio);
@@ -331,6 +351,8 @@ class Almacenes extends ModeloBase
         $this->commandAddParameter(":vin_tipo_id", $tipoId);
         $this->commandAddParameter(":vin_organizador_id", $almacenId);
         $this->commandAddParameter(":vin_bandera", $bandera);
+        $this->commandAddParameter(":vin_serie", $serie);
+        $this->commandAddParameter(":vin_numero", $numero);
         $this->commandAddParameter(":vin_columna_ordenar", $columnaOrdenar);
         $this->commandAddParameter(":vin_forma_ordenar", $formaOrdenar);
         $this->commandAddParameter(":vin_limite", $elementosFiltrados);
@@ -338,7 +360,7 @@ class Almacenes extends ModeloBase
         return $this->commandGetData();
     }
 
-    public function obtenerCantidadEntregaXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $almacenId = null, $bandera, $columnaOrdenar, $formaOrdenar)
+    public function obtenerCantidadEntregaXCriterios($fechaEmisionInicio, $fechaEmisionFin, $estadoId, $tipoId, $almacenId = null, $bandera, $serie, $numero, $columnaOrdenar, $formaOrdenar)
     {
         $this->commandPrepare("sp_entrega_obtenerXCriterios_contador");
         $this->commandAddParameter(":vin_fecha_emision_desde", $fechaEmisionInicio);
@@ -347,6 +369,8 @@ class Almacenes extends ModeloBase
         $this->commandAddParameter(":vin_tipo_id", $tipoId);
         $this->commandAddParameter(":vin_organizador_id", $almacenId);
         $this->commandAddParameter(":vin_bandera", $bandera);
+        $this->commandAddParameter(":vin_serie", $serie);
+        $this->commandAddParameter(":vin_numero", $numero);
         $this->commandAddParameter(":vin_columna_ordenar", $columnaOrdenar);
         $this->commandAddParameter(":vin_forma_ordenar", $formaOrdenar);
         return $this->commandGetData();
@@ -404,6 +428,79 @@ class Almacenes extends ModeloBase
         $this->commandPrepare("sp_movimiento_bien_obtenerStockLogico");
         $this->commandAddParameter(":vin_bien_id", $bienId);
         $this->commandAddParameter(":vin_organizador_id", $organizadorId);
+        return $this->commandGetData();
+    }
+
+    //Inventario
+    public function obtenerDataInventarioXCriterios($fechaEmisionInicio, $fechaEmisionFin, $resultadoOrganizadorIds, $bienIdFormateado, $bienTipoIdFormateado, $columnaOrdenar, $formaOrdenar, $elementosFiltrados, $start)
+    {
+        $this->commandPrepare("sp_inventario_obtenerXCriterios");
+        $this->commandAddParameter(":vin_fecha_emision_desde", $fechaEmisionInicio);
+        $this->commandAddParameter(":vin_fecha_emision_hasta", $fechaEmisionFin);
+        $this->commandAddParameter(":vin_organizador_ids", $resultadoOrganizadorIds);
+        $this->commandAddParameter(":vin_bien_ids", $bienIdFormateado);
+        $this->commandAddParameter(":vin_bien_tipo_ids", $bienTipoIdFormateado);
+        $this->commandAddParameter(":vin_columna_ordenar", $columnaOrdenar);
+        $this->commandAddParameter(":vin_forma_ordenar", $formaOrdenar);
+        $this->commandAddParameter(":vin_limite", $elementosFiltrados);
+        $this->commandAddParameter(":vin_tamanio", $start);
+        return $this->commandGetData();
+    }
+
+    public function obtenerCantidadDataInventarioXCriterios($fechaEmisionInicio, $fechaEmisionFin, $resultadoOrganizadorIds, $bienIdFormateado, $bienTipoIdFormateado, $columnaOrdenar, $formaOrdenar)
+    {
+        $this->commandPrepare("sp_inventario_obtenerXCriterios_contador");
+        $this->commandAddParameter(":vin_fecha_emision_desde", $fechaEmisionInicio);
+        $this->commandAddParameter(":vin_fecha_emision_hasta", $fechaEmisionFin);
+        $this->commandAddParameter(":vin_organizador_ids", $resultadoOrganizadorIds);
+        $this->commandAddParameter(":vin_bien_ids", $bienIdFormateado);
+        $this->commandAddParameter(":vin_bien_tipo_ids", $bienTipoIdFormateado);
+        $this->commandAddParameter(":vin_columna_ordenar", $columnaOrdenar);
+        $this->commandAddParameter(":vin_forma_ordenar", $formaOrdenar);
+        return $this->commandGetData();
+    }
+
+    public function obtenerDataInventarioXCriteriosExcel($fechaEmisionInicio, $fechaEmisionFin, $resultadoOrganizadorIds, $bienIdFormateado, $bienTipoIdFormateado, $columnaOrdenar, $formaOrdenar)
+    {
+        $this->commandPrepare("sp_inventario_obtenerXCriteriosExcel");
+        $this->commandAddParameter(":vin_fecha_emision_desde", $fechaEmisionInicio);
+        $this->commandAddParameter(":vin_fecha_emision_hasta", $fechaEmisionFin);
+        $this->commandAddParameter(":vin_organizador_ids", $resultadoOrganizadorIds);
+        $this->commandAddParameter(":vin_bien_ids", $bienIdFormateado);
+        $this->commandAddParameter(":vin_bien_tipo_ids", $bienTipoIdFormateado);
+        $this->commandAddParameter(":vin_columna_ordenar", $columnaOrdenar);
+        $this->commandAddParameter(":vin_forma_ordenar", $formaOrdenar);
+        return $this->commandGetData();
+    }
+
+    //Recepcion mina
+    public function obtenerPaqueteRecepcionMinaXCriterios($fechaEmisionInicio, $fechaEmisionFin, $almacenIds = null, $serie, $numero, $columnaOrdenar, $formaOrdenar, $elementosFiltrados, $start, $id = null)
+    {
+        $this->commandPrepare("sp_recepcion_mina_obtenerXCriterios");
+        $this->commandAddParameter(":vin_fecha_emision_desde", $fechaEmisionInicio);
+        $this->commandAddParameter(":vin_fecha_emision_hasta", $fechaEmisionFin);
+        $this->commandAddParameter(":vin_organizador_ids", $almacenIds);
+        $this->commandAddParameter(":vin_serie", $serie);
+        $this->commandAddParameter(":vin_numero", $numero);
+        $this->commandAddParameter(":vin_columna_ordenar", $columnaOrdenar);
+        $this->commandAddParameter(":vin_forma_ordenar", $formaOrdenar);
+        $this->commandAddParameter(":vin_limite", $elementosFiltrados);
+        $this->commandAddParameter(":vin_tamanio", $start);
+        $this->commandAddParameter(":vin_id", $id);
+        return $this->commandGetData();
+    }
+
+    public function obtenerCantidadPaqueteRecepcionMinaXCriterios($fechaEmisionInicio, $fechaEmisionFin, $almacenIds = null, $serie, $numero, $columnaOrdenar, $formaOrdenar, $id = null)
+    {
+        $this->commandPrepare("sp_recepcion_mina_obtenerXCriterios_contador");
+        $this->commandAddParameter(":vin_fecha_emision_desde", $fechaEmisionInicio);
+        $this->commandAddParameter(":vin_fecha_emision_hasta", $fechaEmisionFin);
+        $this->commandAddParameter(":vin_organizador_ids", $almacenIds);
+        $this->commandAddParameter(":vin_serie", $serie);
+        $this->commandAddParameter(":vin_numero", $numero);
+        $this->commandAddParameter(":vin_columna_ordenar", $columnaOrdenar);
+        $this->commandAddParameter(":vin_forma_ordenar", $formaOrdenar);
+        $this->commandAddParameter(":vin_id", $id);
         return $this->commandGetData();
     }
 }

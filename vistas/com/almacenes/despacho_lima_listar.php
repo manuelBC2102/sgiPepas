@@ -38,7 +38,7 @@
                 <li class="">
                     <a href="#tabDespachos" data-toggle="tab" aria-expanded="false" onclick="actualizarTabActivo(2)">
                         <span class="visible-xs"><i class="ion-person-stalker"></i></span>
-                        <span class="hidden-xs">Despachos</span>
+                        <span class="hidden-xs">Paquete Despachos</span>
                     </a>
                 </li>
             </ul>
@@ -87,6 +87,27 @@
                                                         </div>
                                                     </div>
                                                 </li>
+                                                <li>
+                                                    <div class="form-group col-md-2">
+                                                        <label style="color: #141719;">Serie/Número</label>
+                                                    </div>
+                                                    <div class="form-group col-md-10">
+                                                        <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                                            <div class="row">
+                                                                <div class="form-group col-md-6">
+                                                                    <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                                                        <input type="text" class="form-control" placeholder="Serie" id="txtSerieDespacho">
+                                                                    </div>
+                                                                </div>
+                                                                <div class="form-group col-md-6">
+                                                                    <div class="input-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                                                        <input type="text" class="form-control" placeholder="Número" id="txtNumeroDespacho">
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </li>  
                                                 <li>
                                                     <div class="form-group col-md-2">
                                                         <label style="color: #141719;">Estado</label>
@@ -351,4 +372,4 @@
         </div>
     </div>
 </div>
-<script src="vistas/com/almacenes/despacho_listar.js"></script>
+<script src="vistas/com/almacenes/despacho_lima_listar.js"></script>

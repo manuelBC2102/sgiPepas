@@ -156,12 +156,29 @@
                         </thead>
                     </table>
                 </div>
+                <div class="row" id="div_paqueteEdit" hidden>
+                    <h4>Editar paquete</h4>
+                    <table id="dtmodalPaquete" class="table table-striped table-bordered" style="width: 100%">
+                        <thead>
+                            <tr>
+                                <th style='text-align:center;'>#</th>
+                                <th style='text-align:center;'>Producto</th>
+                                <th style='text-align:center;'>Cantidad recepcionada</th>
+                                <th style='text-align:center;'>Tipo Distribución</th>
+                                <th style='text-align:center;'>Asignar Distribución QR</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dgDetalleRecepcionado">
+                        </tbody>
+                    </table>
+                </div>                
             </div>
             <div class="modal-footer" style="padding-bottom:  0px;padding-top: 10px;clear:left">
                 <div class="form-group">
                     <div class="col-md-6" style="text-align: left;">
                     </div>
                     <div class="col-md-6">
+                        <button type="button" class="btn btn-primary hidden" id="btn_generarDistribucionQR"><i class="fa fa-qrcode"></i> Generar nueva distribución QR</button>
                         <button type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-close"></i> Cerrar</button>
                     </div>
                 </div>

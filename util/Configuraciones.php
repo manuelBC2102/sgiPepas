@@ -130,6 +130,7 @@ class Configuraciones
   const RUC_EMPRESA = 20490115804;
   const ORGANIZADOR_TRANSITO = 83;
   //Documento tipo ids
+  const CARGA_INICIAL = 58;
   const COTIZACIONES = 104;
   const SOLICITUD_REQUERIMIENTO = 280;
   const GENERAR_COTIZACION = 281;

@@ -82,8 +82,8 @@ function onResponseObtenerConfiguracionesIniciales(data) {
 
         //llenar organizador en cabecera
         llenarComboOrganizadorCabecera(data.organizador);
-        select2.asignarValor("cboOrganizador", $("#almacenId").val());
-        cargarPaquete($("#almacenId").val());
+        select2.asignarValor("cboOrganizador", data.organizador[0]['id']);
+        cargarPaquete(data.organizador[0]['id']);
         $("#cboDocumentoTipo").select2({
             width: "100%"
         }).on("change", function (e) {
@@ -414,7 +414,7 @@ function onResponseObtenerDocumentoTipoDato(data) {
                     break;
                 case 9:
                     fechaEmisionId = item.id;
-                    html += '<input type="text" class="form-control fecha" placeholder="dd/mm/yyyy" id="datepicker_' + item.id + '" >' +
+                    html += '<input type="text" class="form-control fecha" placeholder="dd/mm/yyyy" id="datepicker_' + item.id + '"  disabled>' +
                         '<span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>';
                     break;
                 case 3:
@@ -590,6 +590,7 @@ function onResponseObtenerDocumentoTipoDato(data) {
                     html += '<div id ="div_contacto" ><select name="cbo_' + item.id + '" id="cbo_' + item.id + '" class="select2">';
                     html += '</select>';
                     break;
+                case 41:
                 case 54:
                 case 55:
                     html += '<select name="cbo_' + item.id + '" id="cbo_' + item.id + '" class="select2"></select>';
@@ -710,6 +711,12 @@ function onResponseObtenerDocumentoTipoDato(data) {
                         width: '100%'
                     });
                     break;
+                case 41:
+                    select2.cargar("cbo_" + item.id, item.data, "persona_id", ["num_licencia_conducir", "persona_nombre_completo"]);
+                    $("#cbo_" + item.id).select2({
+                        width: '100%'
+                    });
+                    break;                    
                 case 54:
                     var almacenOrigen = select2.obtenerValor("cboOrganizador");
                     var organizadoreFiltrados = item.data.filter(function (obj) {
@@ -955,5 +962,5 @@ function onResponseGenerarDespacho(data) {
 }
 
 function cargarPantallaListaDespacho() {
-    cargarDiv("#window", "vistas/com/almacenes/despacho_listar.php?documento_tipo=289");
+    cargarDiv("#window", "vistas/com/almacenes/despacho_lima_listar.php?documento_tipo=289");
 }
